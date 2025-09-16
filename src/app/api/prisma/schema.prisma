@@ -17,7 +17,7 @@ model User {
     IDNumber    String?
     email       String          @unique
     phoneNumber String?         @unique
-    password    String          @unique
+    password    String          
     role        UserRole
     employmentStatus EmploymentStatus
     avatarUrl   String?
@@ -30,6 +30,8 @@ model User {
     clientPIC   Project[]      @relation("ClientPIC")
     technician  Project[]      @relation("Technician")
     signatures  Signature[]
+    notifications   Notification[]
+    auditLogs   AuditLog[]
 
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
@@ -99,11 +101,15 @@ model Project {
     workReports WorkReport[]
     masterSettings MasterSetting[]
     cleaningReports ChillerCleaningReport[]
+    reports     Report[]
 
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("projects")
+    @@index([clientId, parentId])
+    @@index([clientPICId])
+    @@index([technicianId])
 }
 
 enum ProjectType {
@@ -170,14 +176,14 @@ model Machine {
     machineHistories MachineHistory[]
     chemicalUsages  ChemicalUsage[]
     labReportDetails LabReportDetail[]
-    condenserLogSheetDetails ChillerLogSheetDetail[]
-    coolingTowerLogSheetDetails CoolingTowerLogSheetDetail[]
+    logSheetDetails LogSheetDetail[]
 
 
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("machines")
+    @@index([projectId])
 }
 enum MachineType {
     CHILLER
@@ -194,6 +200,7 @@ model MachineHistory {
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("machine_histories")
+    @@index([machineId])
 }
 
 enum MachineStatus {
@@ -230,18 +237,17 @@ model ChemicalUsage {
     chemicalId  String
     chemical    Chemical        @relation(fields: [chemicalId], references: [id])
     dosage      Float
-    coolingTowerLogSheetDetailId String?
-    coolingTowerLogSheetDetail CoolingTowerLogSheetDetail? @relation(fields: [coolingTowerLogSheetDetailId], references: [id])
+    coolingTowerLogSheetId   String
+    coolingTowerLogSheet     LogSheetDetail         @relation("LogSheetChemicals",fields: [coolingTowerLogSheetId], references: [id])
     chillerDisinfectant  ChillerCleaningReport?         @relation("ChillerDisinfectant")
     chillerDescaling     ChillerCleaningReport?         @relation("ChillerDescaling")
-
-
-    quantity    Int?
-    unit        String?
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("chemical_usages")
+    @@index([machineId, chemicalId])
+    @@index([chemicalId])
+    @@index([coolingTowerLogSheetId,machineId])
 }
 
 model LabReport {
@@ -257,12 +263,14 @@ model LabReport {
     recommendations Json?
 
     labReportDetails LabReportDetail[]
-
+    fileUrl     String?
+    filePublicId String?
 
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("lab_reports")
+    @@index([projectId])
 }
 
 model LabReportDetail {
@@ -273,27 +281,44 @@ model LabReportDetail {
     machine     Machine?         @relation(fields: [machineId], references: [id])
     parameterId  String
     parameter   Parameter @relation(fields: [parameterId], references: [id])
+    valueType    ValueType
+    numericValue Float?
+    boolValue   Boolean?
+    textValue String?
     
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("lab_report_details")
+    @@index([labReportId, machineId, parameterId])
+    @@index([labReportId, parameterId])
+    @@index([machineId, parameterId])
+    @@index([parameterId])
+}
+
+enum ValueType {
+    NUMBER
+    TEXT
+    BOOLEAN
 }
 
 model Parameter {
     id          String          @id @default(uuid())
     parameter   String          @unique
+    valueType   ValueType
     unit        String?
     type        ParameterType
+    groupId     String?
+    group       ParameterGroup? @relation(fields: [groupId], references: [id])
     labReportDetails LabReportDetail[]
-    labReportStandardMethods LabStandardMethod[]
     limits      ParameterLimit[]
     settings    MasterSettingDetail[]
-    chillerLogSheetDetails ChillerLogSheetDetail[]
+    logSheetDetails LogSheetDetail[]
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("parameters")
+    @@index([groupId])
 }
 
 enum ParameterType {
@@ -304,35 +329,47 @@ enum ParameterType {
     OTHER
 }
 
-model LabStandardMethod {
+model ParameterGroup {
     id          String          @id @default(uuid())
-    parameterId  String
-    parameter   Parameter @relation(fields: [parameterId], references: [id])
-    methodName  String
-    description String?
+    name        String
+    parameters  Parameter[]
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
-    @@map("lab_standard_methods")
+    @@map("parameter_groups")
+}
+
+model StandardMethod {
+    id          String          @id @default(uuid())
+    methodName  String
+    year        Int
+    version     String
+    isActive    Boolean         @default(true)
+    description Json?
+
+    limitParameters  ParameterLimit[]
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("standard_methods")
 }
 
 model ParameterLimit {
     id          String          @id @default(uuid())
     parameterId  String
     parameter   Parameter @relation(fields: [parameterId], references: [id])
+    methodId    String?
+    method      StandardMethod? @relation(fields: [methodId], references: [id])
+    valueType    ValueType
     minValue        Float?
     maxValue        Float?
-    rangeType       RangeType
+    booleanValue    Boolean?
+    textValue     String?
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("parameter_limits")
-}
-
-enum RangeType {
-    BELOW
-    ABOVE
-    BETWEEN
+    @@index([parameterId])
 }
 
 model MasterSetting {
@@ -346,6 +383,7 @@ model MasterSetting {
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("master_settings")
+    @@index([projectId])
 }
 
 model MasterSettingDetail {
@@ -358,6 +396,8 @@ model MasterSettingDetail {
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("master_setting_details")
+    @@index([masterSettingId, parameterId])
+    @@index([parameterId])
 }
 
 model LogSheet {
@@ -365,19 +405,22 @@ model LogSheet {
     projectId  String
     project    Project         @relation(fields: [projectId], references: [id])
     notes      String?
+
+    details     LogSheetDetail[]
+    logSheetHistories LogSheetHistory[]
+    notifications Notification[]
+
     PICSignatureId String      @unique
     PICSignature Signature @relation("LogSheetPIC", fields: [PICSignatureId], references: [id])
     clientPICSignatureId String @unique
     clientPICSignature Signature @relation("LogSheetClient",fields: [clientPICSignatureId], references: [id])
-
-    logSheetHistories LogSheetHistory[]
-    chillerLogSheetDetails ChillerLogSheetDetail[]
-    coolingTowerLogSheetDetails CoolingTowerLogSheetDetail[]
-
+    
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("log_sheets")
+    @@index([projectId])
+
 }
 
 model LogSheetHistory {
@@ -389,6 +432,7 @@ model LogSheetHistory {
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("log_sheet_histories")
+    @@index([logSheetId])
 }
 
 enum LogSheetStatus {
@@ -397,65 +441,42 @@ enum LogSheetStatus {
     APPROVED
 }
 
-model ChillerLogSheetDetail {
-    id                      String          @id @default(uuid())
-    logSheetId              String?
-    logSheet                LogSheet?        @relation(fields: [logSheetId], references: [id])
-    machineId                String?
-    machine                 Machine?         @relation(fields: [machineId], references: [id])
-    name                    String
-    parameterId             String
-    parameter               Parameter @relation(fields: [parameterId], references: [id])
-    checkTime               String?
-    value                   Float
-    type                    ChillerLogSheetDetailType
-
+model LogSheetDetail{
+    id          String          @id @default(uuid())
+    logSheetId   String
+    logSheet     LogSheet         @relation(fields: [logSheetId], references: [id])
+    machineId   String?
+    machine     Machine?         @relation(fields: [machineId], references: [id])
+    parameterId  String
+    parameter   Parameter @relation(fields: [parameterId], references: [id])
+    detailType  LogSheetDetailType
+    checkTime   String?
+    valueType    ValueType
+    numericValue Float?
+    boolValue   Boolean?
+    textValue String?
+    imgUrl      String?
+    imgPublicId String?
+    chemicalUsages ChemicalUsage[]  @relation("LogSheetChemicals")
+    
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
-    @@map("chiller_log_sheet_details")
+    @@map("log_sheet_details")
+    @@index([logSheetId, machineId, parameterId])
+    @@index([logSheetId, parameterId])
+    @@index([machineId, parameterId])
+    @@index([parameterId])
 }
 
-enum ChillerLogSheetDetailType {
-    LOG_SHEET
-    CLEANING_REPORT_BEFORE
-    CLEANING_REPORT_AFTER
-}
-
-
-model CoolingTowerLogSheetDetail {
-    id                      String          @id @default(uuid())
-    logSheetId              String?
-    logSheet                LogSheet?        @relation(fields: [logSheetId], references: [id])
-    machineId                String?
-    machine                 Machine?         @relation(fields: [machineId], references: [id])
-    name                    String
-    checkTime               String?
-    isRawWater              Boolean         @default(false)
-    pH                      Float
-    TDS                     Int
-    conductivity            Float
-    cycleTime               Float
-    isRunning               Boolean         
-    isAlgae                 Boolean         
-    isDeposit               Boolean         
-    cleaningHotBasin        Boolean         
-    cleaningColdBasin       Boolean         
-    cleaningFiller          Boolean         
-    cleaningArea            Boolean
-    waterMeterBefore        Int
-    waterMeterBeforeImgUrl  String?
-    waterMeterBeforeImgPublicId String?
-    waterMeterAfter         Int
-    waterMeterAfterImgUrl   String?
-    waterMeterAfterImgPublicId String?
-    totalWaterConsumption   Int
-    chemicalUsages           ChemicalUsage[]         
-
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("cooling_tower_log_sheet_details")
+enum LogSheetDetailType {
+    CHILLER_CONDENSER
+    CHILLER_EVAPORATOR
+    COOLING_TOWER_WATER_QUALITY
+    COOLING_TOWER_CONDITION
+    COOLING_TOWER_CLEANING
+    COOLING_TOWER_CONSUMPTION
+    OTHER
 }
 
 model ChillerCleaningReport {
@@ -479,6 +500,11 @@ model ChillerCleaningReport {
     afterBrushingNotes  Json
     PICNotes    Json
     clientNotes Json
+
+    PICSignatureId String      @unique
+    PICSignature Signature @relation("ChillerCleaningReportPIC", fields: [PICSignatureId], references: [id])
+    clientPICSignatureId String @unique
+    clientPICSignature Signature @relation("ChillerCleaningReportClient",fields: [clientPICSignatureId], references: [id])
 
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
@@ -507,6 +533,7 @@ model WorkReport {
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("work_reports")
+    @@index([projectId])
 }
 
 model WorkReportPhoto {
@@ -518,6 +545,7 @@ model WorkReportPhoto {
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("work_report_photos")
+    @@index([workReportId])
 }
 
 model Signature {
@@ -526,14 +554,57 @@ model Signature {
     signer      User         @relation(fields: [signerId], references: [id])
     imgUrl      String
     publicId    String
-    workReportPICSignature      WorkReport    @relation("WorkReportPIC", map: "work_report_pic_signature_id")
-    workReportClientSignature   WorkReport    @relation("WorkReportClient", map: "work_report_client_signature_id")
+    workReportPICSignature      WorkReport?    @relation("WorkReportPIC", map: "work_report_pic_signature_id")
+    workReportClientSignature   WorkReport?    @relation("WorkReportClient", map: "work_report_client_signature_id")
     logSheetPICSignature        LogSheet?      @relation("LogSheetPIC", map: "log_sheet_pic_signature_id")
     logSheetClientSignature     LogSheet?     @relation("LogSheetClient", map: "log_sheet_client_signature_id")
+    chillerCleaningReportPICSignature   ChillerCleaningReport? @relation("ChillerCleaningReportPIC", map: "chiller_cleaning_report_pic_signature_id")
+    chillerCleaningReportClientSignature ChillerCleaningReport? @relation("ChillerCleaningReportClient", map: "chiller_cleaning_report_client_signature_id")
     
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("signatures")
+    @@index([signerId])
+}
+
+model Notification {
+    id          String          @id @default(uuid())
+    technicianId String
+    technician  User         @relation(fields: [technicianId], references: [id])
+    logSheetId   String?
+    logSheet     LogSheet?         @relation(fields: [logSheetId], references: [id])
+    message     String
+    isRead      Boolean         @default(false)
+    createdAt   DateTime        @default(now())
+    @@map("notifications")
+    @@index([technicianId, logSheetId])
+    @@index([logSheetId])
+}
+
+model AuditLog {
+    id          String          @id @default(uuid())
+    userId      String
+    user        User         @relation(fields: [userId], references: [id])
+    action      String
+    resourceId  String?
+    details     Json?
+    createdAt   DateTime        @default(now())
+    @@map("audit_logs")
+    @@index([userId])
+}
+
+model Report {
+    id          String          @id @default(uuid())
+    projectId   String
+    project     Project         @relation(fields: [projectId], references: [id])
+    data        Json
+    fileUrl   String
+    filePublicId String
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("reports")
+    @@index([projectId])
 }
 
