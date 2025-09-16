@@ -1,0 +1,539 @@
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+    id          String          @id @default(uuid())
+    firstName   String          
+    lastName    String?
+    IDNumber    String?
+    email       String          @unique
+    phoneNumber String?         @unique
+    password    String          @unique
+    role        UserRole
+    employmentStatus EmploymentStatus
+    avatarUrl   String?
+    avatarPublicId String?
+
+    isActive  Boolean         @default(false)
+    isBlocked   Boolean         @default(false)
+
+    technicianAbsences TechnicianAbsence[]
+    clientPIC   Project[]      @relation("ClientPIC")
+    technician  Project[]      @relation("Technician")
+    signatures  Signature[]
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("users")
+}
+
+enum UserRole {
+    ADMIN
+    SUPERVISOR
+    TECHNICIAN
+    DIRECTOR
+    CLIENT_PIC
+    CLIENT_MANAGER
+}
+
+enum EmploymentStatus {
+    PERMANENT
+    CONTRACT
+    FREELANCE
+}
+
+model Client {
+    id          String          @id @default(uuid())
+    name        String
+    description String?
+    avatarUrl   String?
+    avatarPublicId String?
+    email       String?
+    phoneNumber String?
+    address     String?
+    websiteUrl  String?
+
+    projects    Project[]
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("clients")
+}
+
+model Project {
+    id          String          @id @default(uuid())
+    parentId    String?         @map("parent_project_id")
+    parent      Project?        @relation("ProjectAddendum", fields: [parentId], references: [id])
+    addenda     Project[]       @relation("ProjectAddendum")
+    clientId    String
+    client      Client          @relation(fields: [clientId], references: [id])
+    name        String
+    description String?
+    quoteNumber String
+    PONumber    String
+    startDate   DateTime
+    endDate     DateTime
+    type        ProjectType
+    contractType ContractType
+    workCategory WorkCategory
+    warranty    Int?
+    clientPICId    String
+    clientPIC      User          @relation("ClientPIC", fields: [clientPICId], references: [id])
+    technicianId   String
+    technician     User          @relation("Technician", fields: [technicianId], references: [id])
+
+    machines    Machine[]
+    labReports  LabReport[]
+    logSheets    LogSheet[]
+    workReports WorkReport[]
+    masterSettings MasterSetting[]
+    cleaningReports ChillerCleaningReport[]
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("projects")
+}
+
+enum ProjectType {
+    MAIN
+    ADDENDUM
+}
+
+enum ContractType {
+    DIRECT
+    SUBCONTRACT
+}
+
+enum WorkCategory {
+    OPERATIONAL
+    CONSTRUCTION
+    AD_HOC
+    MAINTENANCE
+}
+
+model ProjectHistory {
+    id          String          @id @default(uuid())
+    projectId   String
+    status      ProjectStatus
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("project_histories")
+}
+
+enum ProjectStatus {
+    PENDING
+    ONGOING
+    PAUSED
+    COMPLETED
+    CANCELLED
+}
+
+model TechnicianAbsence {
+    id          String          @id @default(uuid())
+    technicianId   String
+    technician     User         @relation(fields: [technicianId], references: [id])
+    clockIn     DateTime
+    clockInImgUrl String
+    clockInPublicId String
+    clockOut     DateTime?
+    clockOutImgUrl String?
+    clockOutPublicId String?
+    totalHours   Float
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("technician_absences")
+}
+
+model Machine {
+    id          String          @id @default(uuid())
+    projectId   String
+    project     Project         @relation(fields: [projectId], references: [id])
+    type        MachineType
+    brand       String?
+    model       String?
+    serialNumber String?
+
+    machineHistories MachineHistory[]
+    chemicalUsages  ChemicalUsage[]
+    labReportDetails LabReportDetail[]
+    condenserLogSheetDetails ChillerLogSheetDetail[]
+    coolingTowerLogSheetDetails CoolingTowerLogSheetDetail[]
+
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("machines")
+}
+enum MachineType {
+    CHILLER
+    COOLING_TOWER
+}
+
+
+model MachineHistory {
+    id          String          @id @default(uuid())
+    machineId   String
+    machine     Machine         @relation(fields: [machineId], references: [id])
+    status      MachineStatus
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("machine_histories")
+}
+
+enum MachineStatus {
+    RUNNING
+    IDLE
+    MAINTENANCE
+}
+
+model Chemical {
+    id          String          @id @default(uuid())
+    code        String
+    name        String
+    type        ChemicalType
+    description String?
+    unit        String?
+    usages      ChemicalUsage[]
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("chemicals")
+}
+
+enum ChemicalType {
+    BOILER_SYSTEM
+    COOLING_SYSTEM
+    CHEMICAL_CLEANING
+    WASTE_WATER_TREATMENT
+}
+
+model ChemicalUsage {
+    id          String          @id @default(uuid())
+    machineId   String
+    machine     Machine         @relation(fields: [machineId], references: [id])
+    chemicalId  String
+    chemical    Chemical        @relation(fields: [chemicalId], references: [id])
+    dosage      Float
+    coolingTowerLogSheetDetailId String?
+    coolingTowerLogSheetDetail CoolingTowerLogSheetDetail? @relation(fields: [coolingTowerLogSheetDetailId], references: [id])
+    chillerDisinfectant  ChillerCleaningReport?         @relation("ChillerDisinfectant")
+    chillerDescaling     ChillerCleaningReport?         @relation("ChillerDescaling")
+
+
+    quantity    Int?
+    unit        String?
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("chemical_usages")
+}
+
+model LabReport {
+    id          String          @id @default(uuid())
+    projectId   String
+    project     Project         @relation(fields: [projectId], references: [id])
+    attention   String?
+    carbonCopy  String?
+    faxNumber   String?
+    labReportNumber String
+    remarks     Json
+    comments     Json?
+    recommendations Json?
+
+    labReportDetails LabReportDetail[]
+
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("lab_reports")
+}
+
+model LabReportDetail {
+    id          String          @id @default(uuid())
+    labReportId   String
+    labReport     LabReport         @relation(fields: [labReportId], references: [id])
+    machineId   String?
+    machine     Machine?         @relation(fields: [machineId], references: [id])
+    parameterId  String
+    parameter   Parameter @relation(fields: [parameterId], references: [id])
+    
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("lab_report_details")
+}
+
+model Parameter {
+    id          String          @id @default(uuid())
+    parameter   String          @unique
+    unit        String?
+    type        ParameterType
+    labReportDetails LabReportDetail[]
+    labReportStandardMethods LabStandardMethod[]
+    limits      ParameterLimit[]
+    settings    MasterSettingDetail[]
+    chillerLogSheetDetails ChillerLogSheetDetail[]
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("parameters")
+}
+
+enum ParameterType {
+    LAB_REPORT
+    LOG_SHEET
+    MASTER_SETTING
+    MACHINE_MONITORING
+    OTHER
+}
+
+model LabStandardMethod {
+    id          String          @id @default(uuid())
+    parameterId  String
+    parameter   Parameter @relation(fields: [parameterId], references: [id])
+    methodName  String
+    description String?
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("lab_standard_methods")
+}
+
+model ParameterLimit {
+    id          String          @id @default(uuid())
+    parameterId  String
+    parameter   Parameter @relation(fields: [parameterId], references: [id])
+    minValue        Float?
+    maxValue        Float?
+    rangeType       RangeType
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("parameter_limits")
+}
+
+enum RangeType {
+    BELOW
+    ABOVE
+    BETWEEN
+}
+
+model MasterSetting {
+    id          String          @id @default(uuid())
+    name        String
+    projectId   String?
+    project     Project?         @relation(fields: [projectId], references: [id])
+    details     MasterSettingDetail[]
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("master_settings")
+}
+
+model MasterSettingDetail {
+    id          String          @id @default(uuid())
+    masterSettingId   String
+    masterSetting     MasterSetting         @relation(fields: [masterSettingId], references: [id])
+    parameterId  String
+    parameter   Parameter @relation(fields: [parameterId], references: [id])
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("master_setting_details")
+}
+
+model LogSheet {
+    id         String          @id @default(uuid())
+    projectId  String
+    project    Project         @relation(fields: [projectId], references: [id])
+    notes      String?
+    PICSignatureId String      @unique
+    PICSignature Signature @relation("LogSheetPIC", fields: [PICSignatureId], references: [id])
+    clientPICSignatureId String @unique
+    clientPICSignature Signature @relation("LogSheetClient",fields: [clientPICSignatureId], references: [id])
+
+    logSheetHistories LogSheetHistory[]
+    chillerLogSheetDetails ChillerLogSheetDetail[]
+    coolingTowerLogSheetDetails CoolingTowerLogSheetDetail[]
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("log_sheets")
+}
+
+model LogSheetHistory {
+    id          String          @id @default(uuid())
+    logSheetId   String
+    logSheet     LogSheet         @relation(fields: [logSheetId], references: [id])
+    status      LogSheetStatus
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("log_sheet_histories")
+}
+
+enum LogSheetStatus {
+    DRAFT
+    SUBMITTED
+    APPROVED
+}
+
+model ChillerLogSheetDetail {
+    id                      String          @id @default(uuid())
+    logSheetId              String?
+    logSheet                LogSheet?        @relation(fields: [logSheetId], references: [id])
+    machineId                String?
+    machine                 Machine?         @relation(fields: [machineId], references: [id])
+    name                    String
+    parameterId             String
+    parameter               Parameter @relation(fields: [parameterId], references: [id])
+    checkTime               String?
+    value                   Float
+    type                    ChillerLogSheetDetailType
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("chiller_log_sheet_details")
+}
+
+enum ChillerLogSheetDetailType {
+    LOG_SHEET
+    CLEANING_REPORT_BEFORE
+    CLEANING_REPORT_AFTER
+}
+
+
+model CoolingTowerLogSheetDetail {
+    id                      String          @id @default(uuid())
+    logSheetId              String?
+    logSheet                LogSheet?        @relation(fields: [logSheetId], references: [id])
+    machineId                String?
+    machine                 Machine?         @relation(fields: [machineId], references: [id])
+    name                    String
+    checkTime               String?
+    isRawWater              Boolean         @default(false)
+    pH                      Float
+    TDS                     Int
+    conductivity            Float
+    cycleTime               Float
+    isRunning               Boolean         
+    isAlgae                 Boolean         
+    isDeposit               Boolean         
+    cleaningHotBasin        Boolean         
+    cleaningColdBasin       Boolean         
+    cleaningFiller          Boolean         
+    cleaningArea            Boolean
+    waterMeterBefore        Int
+    waterMeterBeforeImgUrl  String?
+    waterMeterBeforeImgPublicId String?
+    waterMeterAfter         Int
+    waterMeterAfterImgUrl   String?
+    waterMeterAfterImgPublicId String?
+    totalWaterConsumption   Int
+    chemicalUsages           ChemicalUsage[]         
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("cooling_tower_log_sheet_details")
+}
+
+model ChillerCleaningReport {
+    id          String          @id @default(uuid())
+    projectId   String
+    project     Project         @relation(fields: [projectId], references: [id])
+    zone        String?
+    workToDo    String
+    logSheetNotes   Json
+    chemicalStartTime DateTime
+    chemicalEndTime DateTime
+    chemicalTotalTime   Int
+    disinfectantChemicalId    String    @unique    
+    disinfectantChemical    ChemicalUsage @relation("ChillerDisinfectant",fields: [disinfectantChemicalId], references: [id])
+    descalingChemicalId    String       @unique
+    descalingChemical    ChemicalUsage @relation("ChillerDescaling",fields: [descalingChemicalId], references: [id])
+    
+    chemicalNotes   Json
+    endTime     DateTime
+    beforeBrushingNotes Json
+    afterBrushingNotes  Json
+    PICNotes    Json
+    clientNotes Json
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("cleaning_reports")
+}
+
+model WorkReport {
+    id          String          @id @default(uuid())
+    projectId   String
+    project     Project         @relation(fields: [projectId], references: [id])
+    zone        String?
+    startTime   DateTime
+    endTime     DateTime
+    type        MachineType 
+    currentCondition String
+    workDone    String
+    endResult   String
+    photos      WorkReportPhoto[]
+    PICSignatureId String       @unique
+    PICSignature Signature     @relation("WorkReportPIC",fields: [PICSignatureId], references: [id])
+    clientPICSignatureId String @unique
+    clientPICSignature Signature @relation("WorkReportClient",fields: [clientPICSignatureId], references: [id])
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("work_reports")
+}
+
+model WorkReportPhoto {
+    id          String          @id @default(uuid())
+    workReportId   String
+    workReport     WorkReport         @relation(fields: [workReportId], references: [id])
+    imgUrl      String
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("work_report_photos")
+}
+
+model Signature {
+    id          String          @id @default(uuid())
+    signerId    String
+    signer      User         @relation(fields: [signerId], references: [id])
+    imgUrl      String
+    publicId    String
+    workReportPICSignature      WorkReport    @relation("WorkReportPIC", map: "work_report_pic_signature_id")
+    workReportClientSignature   WorkReport    @relation("WorkReportClient", map: "work_report_client_signature_id")
+    logSheetPICSignature        LogSheet?      @relation("LogSheetPIC", map: "log_sheet_pic_signature_id")
+    logSheetClientSignature     LogSheet?     @relation("LogSheetClient", map: "log_sheet_client_signature_id")
+    
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("signatures")
+}
+

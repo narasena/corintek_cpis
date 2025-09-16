@@ -11,9 +11,11 @@
     "precommit": "lint-staged"
   },
   "dependencies": {
+    "@prisma/client": "^6.16.1",
+    "next": "15.5.3",
+    "prisma": "^6.16.1",
     "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "next": "15.5.3"
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
