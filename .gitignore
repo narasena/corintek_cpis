@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# vs-code
+.vscode
+
 # dependencies
 /node_modules
 /.pnp
@@ -25,7 +28,7 @@
 *.pem
 
 # Prisma Generated
-/generated/
+**/generated/**
 
 # debug
 npm-debug.log*
