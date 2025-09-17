@@ -1,0 +1,16 @@
+model TechnicianAbsence {
+    id          String          @id @default(uuid())
+    technicianId   String
+    technician     User         @relation(fields: [technicianId], references: [id])
+    clockIn     DateTime
+    clockInImgUrl String
+    clockInPublicId String
+    clockOut     DateTime?
+    clockOutImgUrl String?
+    clockOutPublicId String?
+    totalHours   Float
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("technician_absences")
+}

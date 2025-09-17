@@ -1,0 +1,40 @@
+model Chemical {
+    id          String          @id @default(uuid())
+    code        String
+    name        String
+    type        ChemicalType
+    description String?
+    unit        String?
+    usages      ChemicalUsage[]
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("chemicals")
+}
+
+enum ChemicalType {
+    BOILER_SYSTEM
+    COOLING_SYSTEM
+    CHEMICAL_CLEANING
+    WASTE_WATER_TREATMENT
+}
+
+model ChemicalUsage {
+    id          String          @id @default(uuid())
+    machineId   String
+    machine     Machine         @relation(fields: [machineId], references: [id])
+    chemicalId  String
+    chemical    Chemical        @relation(fields: [chemicalId], references: [id])
+    dosage      Float
+    coolingTowerLogSheetId   String
+    coolingTowerLogSheet     LogSheetDetail         @relation("LogSheetChemicals",fields: [coolingTowerLogSheetId], references: [id])
+    chillerDisinfectant  ChillerCleaningReport?         @relation("ChillerDisinfectant")
+    chillerDescaling     ChillerCleaningReport?         @relation("ChillerDescaling")
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("chemical_usages")
+    @@index([machineId, chemicalId])
+    @@index([chemicalId])
+    @@index([coolingTowerLogSheetId,machineId])
+}

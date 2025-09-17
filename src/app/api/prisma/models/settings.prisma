@@ -1,0 +1,27 @@
+model MasterSetting {
+    id          String          @id @default(uuid())
+    name        String
+    projectId   String?
+    project     Project?         @relation(fields: [projectId], references: [id])
+    details     MasterSettingDetail[]
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("master_settings")
+    @@index([projectId])
+}
+
+model MasterSettingDetail {
+    id          String          @id @default(uuid())
+    masterSettingId   String
+    masterSetting     MasterSetting         @relation(fields: [masterSettingId], references: [id])
+    parameterId  String
+    parameter   Parameter @relation(fields: [parameterId], references: [id])
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("master_setting_details")
+    @@index([masterSettingId, parameterId])
+    @@index([parameterId])
+}

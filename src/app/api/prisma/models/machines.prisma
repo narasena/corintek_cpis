@@ -1,0 +1,42 @@
+model Machine {
+    id          String          @id @default(uuid())
+    projectId   String
+    project     Project         @relation(fields: [projectId], references: [id])
+    type        MachineType
+    brand       String?
+    model       String?
+    serialNumber String?
+
+    machineHistories MachineHistory[]
+    chemicalUsages  ChemicalUsage[]
+    labReportDetails LabReportDetail[]
+    logSheetDetails LogSheetDetail[]
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("machines")
+    @@index([projectId])
+}
+enum MachineType {
+    CHILLER
+    COOLING_TOWER
+}
+
+model MachineHistory {
+    id          String          @id @default(uuid())
+    machineId   String
+    machine     Machine         @relation(fields: [machineId], references: [id])
+    status      MachineStatus
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("machine_histories")
+    @@index([machineId])
+}
+
+enum MachineStatus {
+    RUNNING
+    IDLE
+    MAINTENANCE
+}

@@ -1,0 +1,82 @@
+model ChillerCleaningReport {
+    id          String          @id @default(uuid())
+    projectId   String
+    project     Project         @relation(fields: [projectId], references: [id])
+    zone        String?
+    workToDo    String
+    logSheetNotes   Json
+    chemicalStartTime DateTime
+    chemicalEndTime DateTime
+    chemicalTotalTime   Int
+    disinfectantChemicalId    String    @unique    
+    disinfectantChemical    ChemicalUsage @relation("ChillerDisinfectant",fields: [disinfectantChemicalId], references: [id])
+    descalingChemicalId    String       @unique
+    descalingChemical    ChemicalUsage @relation("ChillerDescaling",fields: [descalingChemicalId], references: [id])
+    
+    chemicalNotes   Json
+    endTime     DateTime
+    beforeBrushingNotes Json
+    afterBrushingNotes  Json
+    PICNotes    Json
+    clientNotes Json
+
+    PICSignatureId String      @unique
+    PICSignature Signature @relation("ChillerCleaningReportPIC", fields: [PICSignatureId], references: [id])
+    clientPICSignatureId String @unique
+    clientPICSignature Signature @relation("ChillerCleaningReportClient",fields: [clientPICSignatureId], references: [id])
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("cleaning_reports")
+}
+
+model WorkReport {
+    id          String          @id @default(uuid())
+    projectId   String
+    project     Project         @relation(fields: [projectId], references: [id])
+    zone        String?
+    startTime   DateTime
+    endTime     DateTime
+    type        MachineType 
+    currentCondition String
+    workDone    String
+    endResult   String
+    photos      WorkReportPhoto[]
+    PICSignatureId String       @unique
+    PICSignature Signature     @relation("WorkReportPIC",fields: [PICSignatureId], references: [id])
+    clientPICSignatureId String @unique
+    clientPICSignature Signature @relation("WorkReportClient",fields: [clientPICSignatureId], references: [id])
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("work_reports")
+    @@index([projectId])
+}
+
+model WorkReportPhoto {
+    id          String          @id @default(uuid())
+    workReportId   String
+    workReport     WorkReport         @relation(fields: [workReportId], references: [id])
+    imgUrl      String
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("work_report_photos")
+    @@index([workReportId])
+}
+
+model ProjectReport {
+    id          String          @id @default(uuid())
+    projectId   String
+    project     Project         @relation(fields: [projectId], references: [id])
+    data        Json
+    fileUrl   String
+    filePublicId String
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("reports")
+    @@index([projectId])
+}

@@ -1,0 +1,69 @@
+model Parameter {
+    id          String          @id @default(uuid())
+    parameter   String          @unique
+    valueType   ValueType
+    unit        String?
+    type        ParameterType
+    groupId     String?
+    group       ParameterGroup? @relation(fields: [groupId], references: [id])
+    labReportDetails LabReportDetail[]
+    limits      ParameterLimit[]
+    settings    MasterSettingDetail[]
+    logSheetDetails LogSheetDetail[]
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("parameters")
+    @@index([groupId])
+}
+
+enum ParameterType {
+    LAB_REPORT
+    LOG_SHEET
+    MASTER_SETTING
+    MACHINE_MONITORING
+    OTHER
+}
+
+model ParameterGroup {
+    id          String          @id @default(uuid())
+    name        String
+    parameters  Parameter[]
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("parameter_groups")
+}
+
+model StandardMethod {
+    id          String          @id @default(uuid())
+    methodName  String
+    year        Int
+    version     String
+    isActive    Boolean         @default(true)
+    description Json?
+
+    limitParameters  ParameterLimit[]
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("standard_methods")
+}
+
+model ParameterLimit {
+    id          String          @id @default(uuid())
+    parameterId  String
+    parameter   Parameter @relation(fields: [parameterId], references: [id])
+    methodId    String?
+    method      StandardMethod? @relation(fields: [methodId], references: [id])
+    valueType    ValueType
+    minValue        Float?
+    maxValue        Float?
+    booleanValue    Boolean?
+    textValue     String?
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("parameter_limits")
+    @@index([parameterId])
+}

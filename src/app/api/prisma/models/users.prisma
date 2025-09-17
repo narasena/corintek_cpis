@@ -1,0 +1,43 @@
+model User {
+    id          String          @id @default(uuid())
+    firstName   String          
+    lastName    String?
+    IDNumber    String?
+    email       String          @unique
+    phoneNumber String?         @unique
+    password    String          
+    role        UserRole
+    employmentStatus EmploymentStatus
+    avatarUrl   String?
+    avatarPublicId String?
+
+    isActive  Boolean         @default(false)
+    isBlocked   Boolean         @default(false)
+
+    technicianAbsences TechnicianAbsence[]
+    clientPIC   Project[]      @relation("ClientPIC")
+    technician  Project[]      @relation("Technician")
+    signatures  Signature[]
+    notifications   Notification[]
+    auditLogs   AuditLog[]
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("users")
+}
+
+enum UserRole {
+    ADMIN
+    SUPERVISOR
+    TECHNICIAN
+    DIRECTOR
+    CLIENT_PIC
+    CLIENT_MANAGER
+}
+
+enum EmploymentStatus {
+    PERMANENT
+    CONTRACT
+    FREELANCE
+}
