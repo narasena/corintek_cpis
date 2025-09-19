@@ -16,7 +16,7 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="max-sm:bg-transparent">
         <CardHeader>
           <CardTitle>Login ke Akun CPIS Corintek</CardTitle>
           <CardDescription>
@@ -33,6 +33,7 @@ export function LoginForm({
                   type="email"
                   placeholder="john@mail.com / 088812345678"
                   required
+                  className="bg-white !h-12"
                 />
               </div>
               <div className="grid gap-3">
@@ -45,7 +46,7 @@ export function LoginForm({
                     Lupa password?
                   </a>
                 </div>
-                <Input id="password" type="password" required />
+                <Input id="password" type="password" required className="bg-white !h-12" />
               </div>
               <div className="flex flex-col gap-3">
                 <Button type="submit" className="w-full">

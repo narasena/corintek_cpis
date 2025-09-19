@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 export default function Page() {
   return (
-    <div className="flex flex-col min-h-svh w-full bg-blue-100 items-center justify-center sm:p-6 md:p-10 gap-y-6">
+    <div className="flex flex-col min-h-svh w-full bg-blue-100 items-center justify-center px-3 sm:p-6 md:p-10 gap-y-6">
       <Image
         src={'/logo.png'}
         alt="Logo"
@@ -11,7 +11,7 @@ export default function Page() {
         height={150}
         className="object-contain"
       />
-      <div className="w-full max-w-sm">
+      <div className="w-full sm:max-w-sm">
         <LoginForm />
       </div>
     </div>
