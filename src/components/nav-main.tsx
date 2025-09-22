@@ -10,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import Link from 'next/link';
 
 export function NavMain({
   items,
@@ -43,16 +44,22 @@ export function NavMain({
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+          {items.map((item, index) => (
+            <Link href={item.url} key={index}>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip={item.title}
+                  key={item.title}
+                  className="cursor-pointer hover:bg-primary hover:text-white hover:font-semibold active:ring-2 active:ring-blue-800"
+                >
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </Link>
           ))}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
-  )
+  );
 }
