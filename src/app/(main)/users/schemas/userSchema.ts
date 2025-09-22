@@ -11,7 +11,9 @@ const userSchema = z.object({
   role: z.enum(UserRole),
   employmentStatus: z.enum(EmploymentStatus),
   avatarUrl: z.string().optional(),
-  avatarPublicId: z.string().optional()
+  avatarPublicId: z.string().optional(),
+  isActive: z.boolean(),
+  isBlocked: z.boolean(),
 })
 
 export default userSchema

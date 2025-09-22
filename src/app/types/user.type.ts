@@ -4,4 +4,6 @@ import userSchema from "../(main)/users/schemas/userSchema"
 
 type TUserAttributes = z.infer<typeof userSchema>
 
-export interface IUser extends TUserAttributes, ITableHelper {}
+export interface IUser extends TUserAttributes, ITableHelper {
+  
+}

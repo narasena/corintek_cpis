@@ -1,8 +1,9 @@
+"use client"
 import { useSortable } from "@dnd-kit/sortable"
 import { Button } from "./ui/button"
 import { IconGripVertical } from "@tabler/icons-react"
 
-export default function DragHandleTable ({ id }: { id: number }) {
+export default function DragHandleTable ({ id }: { id: string | number }) {
    const { attributes, listeners } = useSortable({
     id,
   })

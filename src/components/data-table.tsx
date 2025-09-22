@@ -107,6 +107,8 @@ import {
 } from "@/components/ui/tabs"
 import DragHandleTable from "./drag-handle-table"
 
+type TColumns<TData, TValue> = ColumnDef<TData, TValue>
+
 export const schema = z.object({
   id: z.number(),
   header: z.string(),
@@ -116,7 +118,6 @@ export const schema = z.object({
   limit: z.string(),
   reviewer: z.string(),
 })
-
 
 const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
@@ -293,7 +294,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   },
 ]
 
-function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
+function DraggableRow<T extends { id: UniqueIdentifier}>({ row }: { row: Row<T> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   })
@@ -318,10 +319,14 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   )
 }
 
-export function DataTable({
+export function DataTable<TData extends { id: UniqueIdentifier
+  
+}, TValue>({
   data: initialData,
+  columns
 }: {
-  data: z.infer<typeof schema>[]
+  data: TData[],
+  columns: ColumnDef<TData, TValue>[]
 }) {
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
@@ -343,7 +348,7 @@ export function DataTable({
   )
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => data?.map(({ id }) => id) || [],
+    () => data?.map(({ id}:{ id: UniqueIdentifier }) => id) || [],
     [data]
   )
 
