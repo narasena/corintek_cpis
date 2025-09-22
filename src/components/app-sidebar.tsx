@@ -2,20 +2,23 @@
 
 import * as React from "react"
 import {
+  IconAddressBook,
+  IconBuildings,
   IconCamera,
   IconChartBar,
+  IconClock2,
   IconDashboard,
   IconDatabase,
   IconFileAi,
   IconFileDescription,
   IconFileWord,
+  IconFlaskFilled,
   IconFolder,
   IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
   IconReport,
   IconSearch,
   IconSettings,
+  IconTableFilled,
   IconUsers,
 } from "@tabler/icons-react"
 
@@ -32,38 +35,45 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import Image from "next/image"
+import Link from "next/link"
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "Admin Corintek 01",
+    email: "admin@corintek.co.id",
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
+      title: "Clients",
+      url: "/clients",
+      icon: IconAddressBook,
     },
     {
       title: "Projects",
-      url: "#",
-      icon: IconFolder,
+      url: "/projects",
+      icon: IconBuildings,
     },
     {
-      title: "Team",
-      url: "#",
+      title: "Log Sheets",
+      url: "log-sheets",
+      icon: IconTableFilled,
+    },
+    {
+      title: "Users",
+      url: "/users",
       icon: IconUsers,
+    },
+    {
+      title: "Absence",
+      url: "/absence",
+      icon: IconClock2,
     },
   ],
   navClouds: [
@@ -133,9 +143,9 @@ const data = {
   ],
   documents: [
     {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
+      name: "Lab Reports",
+      url: "lab-reports",
+      icon: IconFlaskFilled,
     },
     {
       name: "Reports",
@@ -160,10 +170,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
+              <Link href="/dashboard" className="flex items-center justify-center">
+                <Image src="/logo.png" alt="Logo" width={130} height={15} className="object-contain" />
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

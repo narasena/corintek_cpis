@@ -20,7 +20,7 @@ export default function MainLayout({
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        {children}
+        <main>{children}</main>
       </SidebarInset>
     </SidebarProvider>
     );
