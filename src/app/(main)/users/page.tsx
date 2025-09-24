@@ -5,6 +5,7 @@ import data from "./data.json"
 import { IUser } from "@/app/types/user.type";
 import { EmploymentStatus, UserRole } from "@/app/api/generated/prisma";
 import { userColumns } from "./components/user-columns";
+import CreateUser from "./components/create-user";
 
 export default function UsersPage () {
     const users: IUser[] = data.map((user) => ({
@@ -16,7 +17,7 @@ export default function UsersPage () {
     }));
     return (
         <div>
-            <DataTable data={users} columns={userColumns()} />
+            <DataTable data={users} columns={userColumns()} addNewRow={<CreateUser />} />
         </div>
     )
 }

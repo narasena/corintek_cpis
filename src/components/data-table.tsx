@@ -323,10 +323,12 @@ export function DataTable<TData extends { id: UniqueIdentifier
   
 }, TValue>({
   data: initialData,
-  columns
+  columns,
+  addNewRow
 }: {
   data: TData[],
   columns: ColumnDef<TData, TValue>[]
+  addNewRow?: React.ReactNode
 }) {
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
@@ -456,10 +458,11 @@ export function DataTable<TData extends { id: UniqueIdentifier
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm">
+          {addNewRow? (addNewRow):(<Button variant="outline" size="sm">
             <IconPlus />
             <span className="hidden lg:inline">Add Section</span>
-          </Button>
+          </Button>)}
+          
         </div>
       </div>
       <TabsContent

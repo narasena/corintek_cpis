@@ -1,0 +1,218 @@
+import { TUserAttributes } from '@/app/types/user.type';
+import React from 'react';
+import { ControllerRenderProps, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import userSchema from '../schemas/userSchema';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { IconInfoSquareFilled, IconLockFilled } from '@tabler/icons-react';
+import z from 'zod';
+
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+
+export default function UserForm() {
+  const form = useForm<TUserAttributes>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      IDNumber: '',
+      email: '',
+      phoneNumber: '',
+      role: 'TECHNICIAN',
+      employmentStatus: 'PERMANENT',
+      avatarUrl: '',
+      avatarPublicId: '',
+      isActive: true,
+      isBlocked: false,
+    },
+  });
+
+  const formFields = [
+    {
+      name: 'firstName',
+      type: 'text',
+      label: 'Nama Depan',
+      placeHolder: 'John',
+      description:
+        'Masukkan nama depan sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+    },
+    {
+      name: 'lastName',
+      type: 'text',
+      label: 'Nama Belakang',
+      placeHolder: 'Doe',
+      description:
+        'Masukkan nama belakang sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+    },
+    {
+      name: 'IDNumber',
+      type: 'text',
+      label: 'ID Number',
+      placeHolder: 'ID-12345',
+      description:
+        'Masukkan nomor identitas sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+    },
+    {
+      name: 'email',
+      type: 'email',
+      label: 'Email',
+      placeHolder: 'Y2mE2@example.com',
+      description:
+        'Masukkan email sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+    },
+    {
+      name: 'phoneNumber',
+      type: 'text',
+      label: 'Nomor Telepon',
+      placeHolder: '088812345678',
+      description:
+        'Masukkan nomor telepon sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+    },
+    {
+      name: 'role',
+      type: 'selectEnum',
+      label: 'Role',
+      placeHolder: 'TECHNICIAN',
+      description:
+        'Masukkan role sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+    },
+    {
+      name: 'employmentStatus',
+      type: 'selectEnum',
+      label: 'Employment Status',
+      placeHolder: 'PERMANENT',
+      description:
+        'Masukkan status kerja sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+    },
+    {
+      name: 'isActive',
+      type: 'boolean',
+      label: 'Aktif',
+      placeHolder: 'true',
+      description:
+        'Berikan centang apabila pengguna masih aktif bekerja di perusahaan Anda',
+    },
+    {
+      name: 'isBlocked',
+      icon: IconLockFilled,
+      type: 'boolean',
+      label: 'Blokir',
+      placeHolder: 'false',
+      description:
+        'Blokir / membatasi agar pengguna tidak dapat mengakses perusahaan Anda',
+    },
+  ];
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(() => {})} className="space-y-8">
+        <div className="grid grid-cols-2 gap-4">
+          {formFields.map(formField => (
+            <FormField
+              key={formField.name}
+              control={form.control}
+              name={formField.name as keyof TUserAttributes}
+              render={({ field }) => {
+                const fieldSchema =
+                  userSchema.shape[formField.name as keyof TUserAttributes];
+                const Icon = formField.icon;
+
+                return (
+                  <FormItem
+                    className={formField.type === 'boolean' ? 'col-span-2' : ''}
+                  >
+                    {formField.type !== 'boolean' && (
+                      <FormLabel>
+                        {formField.label}{' '}
+                        <Tooltip delayDuration={800}>
+                          <TooltipTrigger>
+                            <IconInfoSquareFilled className="size-4 text-gray-500" />
+                          </TooltipTrigger>
+                          <TooltipContent className="!max-w-[160px] flex flex-wrap">
+                            <p>{formField.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </FormLabel>
+                    )}
+                    <FormControl>
+                      {formField.type === 'selectEnum' &&
+                      fieldSchema instanceof z.ZodEnum ? (
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value as string}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Pilih salah satu" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fieldSchema.options.map(option => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : formField.type === 'boolean' ? (
+                        <div className="flex items-center space-x-2">
+                          <Label className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950">
+                            <Checkbox
+                              id="toggle-2"
+                              className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
+                            />
+                            <div className="grid gap-1.5 font-normal">
+                              <p className="text-sm leading-none font-medium flex items-center gap-2">
+                                {formField.label}
+                                {Icon && (
+                                  <Icon className="size-4 text-gray-500" />
+                                )}
+                              </p>
+                              <p className="text-muted-foreground text-sm">
+                                {formField.description}
+                              </p>
+                            </div>
+                          </Label>
+                        </div>
+                      ) : (
+                        <Input
+                          placeholder={formField.placeHolder}
+                          {...field}
+                          value={(field.value as string) || ''}
+                        />
+                      )}
+                    </FormControl>
+                    <FormDescription></FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+          ))}
+        </div>
+        <Button type="submit">Submit</Button>
+      </form>
+    </Form>
+  );
+}
