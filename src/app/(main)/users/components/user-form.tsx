@@ -41,8 +41,8 @@ export default function UserForm() {
       IDNumber: '',
       email: '',
       phoneNumber: '',
-      role: 'TECHNICIAN',
-      employmentStatus: 'PERMANENT',
+      role: undefined,
+      employmentStatus: undefined,
       avatarUrl: '',
       avatarPublicId: '',
       isActive: true,
@@ -76,6 +76,14 @@ export default function UserForm() {
         'Masukkan nomor identitas sesuai dengan yang terdaftar di perusahaan Anda bekerja',
     },
     {
+      name: 'phoneNumber',
+      type: 'text',
+      label: 'Nomor Telepon',
+      placeHolder: '088812345678',
+      description:
+        'Masukkan nomor telepon sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+    },
+    {
       name: 'email',
       type: 'email',
       label: 'Email',
@@ -84,12 +92,11 @@ export default function UserForm() {
         'Masukkan email sesuai dengan yang terdaftar di perusahaan Anda bekerja',
     },
     {
-      name: 'phoneNumber',
-      type: 'text',
-      label: 'Nomor Telepon',
-      placeHolder: '088812345678',
-      description:
-        'Masukkan nomor telepon sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+      name: 'password',
+      type: 'password',
+      label: 'Password',
+      placeHolder: 'Password',
+      description: "Buat password untuk user"
     },
     {
       name: 'role',
@@ -113,7 +120,7 @@ export default function UserForm() {
       label: 'Aktif',
       placeHolder: 'true',
       description:
-        'Berikan centang apabila pengguna masih aktif bekerja di perusahaan Anda',
+        'Masih aktif bekerja',
     },
     {
       name: 'isBlocked',
@@ -122,7 +129,7 @@ export default function UserForm() {
       label: 'Blokir',
       placeHolder: 'false',
       description:
-        'Blokir / membatasi agar pengguna tidak dapat mengakses perusahaan Anda',
+        'Blokir / batasi akses user / pengguna',
     },
   ];
 
@@ -176,8 +183,8 @@ export default function UserForm() {
                           </SelectContent>
                         </Select>
                       ) : formField.type === 'boolean' ? (
-                        <div className="flex items-center space-x-2">
-                          <Label className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950">
+                        <div className="flex items-center space-x-2 w-full">
+                          <Label className="w-full hover:bg-primary/30 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950">
                             <Checkbox
                               id="toggle-2"
                               className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
@@ -211,7 +218,9 @@ export default function UserForm() {
             />
           ))}
         </div>
-        <Button type="submit">Submit</Button>
+        
+        <Button className='w-full' type="submit">Submit</Button>
+        
       </form>
     </Form>
   );
