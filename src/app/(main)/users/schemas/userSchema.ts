@@ -2,7 +2,6 @@ import { EmploymentStatus, UserRole } from "@/app/api/generated/prisma";
 import z from "zod";
 
 const userSchema = z.object({
-  id: z.string(),
   firstName: z.string(),
   lastName: z.string().optional(),
   IDNumber: z.string(),
