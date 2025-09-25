@@ -19,8 +19,8 @@ export default function Modal(props: IModalProps) {
   return (
     <Dialog>
       <DialogTrigger asChild className='flex items-center gap-2'>{props.trigger}</DialogTrigger>
-      <DialogContent className='w-full'>
-        <DialogHeader>
+      <DialogContent className=' !max-w-2xl !overflow-y-auto !max-h-screen my-4'>
+        <DialogHeader className=''>
           <DialogTitle>{props.title}</DialogTitle>
           {props.description && <DialogDescription>{props.description}</DialogDescription>}
         </DialogHeader>
