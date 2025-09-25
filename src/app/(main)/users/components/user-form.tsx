@@ -243,7 +243,7 @@ export default function UserForm() {
                         <div className="flex items-center space-x-2 w-full">
                           <Checkbox
                             id={field.name} // Use field name for unique id
-                            checked={field.value}
+                            checked={field.value === "true"}
                             onCheckedChange={field.onChange}
                             className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
                           />
@@ -269,7 +269,7 @@ export default function UserForm() {
                           type={formField.type}
                           placeholder={formField.placeHolder}
                           {...field}
-                          value={field.value || ''}
+                          value={field.value as string || ''}
                         />
                       )}
                     </FormControl>

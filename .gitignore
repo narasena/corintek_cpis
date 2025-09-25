@@ -52,3 +52,9 @@ coverage
 # QODO Agents
 AGENTS.md
 agent.*
+
+# Aider
+.aider*
+
+# Continue
+.continue*
