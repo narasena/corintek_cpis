@@ -26,7 +26,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { IconInfoSquareFilled, IconLockFilled } from '@tabler/icons-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  IconInfoSquareFilled,
+  IconLockFilled,
+  IconUserCircle,
+} from '@tabler/icons-react';
 import z from 'zod';
 
 import { Checkbox } from '@/components/ui/checkbox';
@@ -48,6 +53,7 @@ export default function UserForm() {
       isActive: true,
       isBlocked: false,
     },
+    
   });
 
   const formFields = [
@@ -133,9 +139,41 @@ export default function UserForm() {
     },
   ];
 
+  const onSubmit = (data: TUserAttributes) => {
+    console.log('onSubmit called');
+    console.log(form.formState.isValid);
+    console.log(data);
+    console.log("Submit");
+  };
+
+  const onInvalid = (errors: any) => {
+    console.log('Form validation failed');
+    console.log('isValid:', form.formState.isValid);
+    console.log('Errors:', errors);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(() => {})} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-8">
+        <div className="flex flex-col gap-3">
+          <Label className="w-40">Upload Foto Profil</Label>
+          <div className="flex items-center gap-6">
+            <Avatar className="size-25 rounded-full">
+              <AvatarImage src="https://github.com/shadcn.png" />
+              <AvatarFallback className="bg-gray-400">
+                <IconUserCircle />
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col gap-2 w-full">
+              <Input
+                type="file"
+                accept="image/*"
+                className="w-full !h-10 !p-0 rounded-md border-none bg-[#4B5563] text-sm text-white file:!cursor-pointer file:h-full file:border-0 file:bg-blue-500 file:px-4 file:text-white hover:file:bg-blue-600"
+                {...form.register('avatarUrl')}
+              />
+          </div>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           {formFields.map(formField => (
             <FormField
@@ -218,9 +256,11 @@ export default function UserForm() {
             />
           ))}
         </div>
-        
-        <Button className='w-full' type="submit">Submit</Button>
-        
+
+        {console.log('Current form isValid:', form.formState.isValid)}
+        <Button className="w-full" type="submit">
+          Submit
+        </Button>
       </form>
     </Form>
   );
