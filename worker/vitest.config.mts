@@ -8,4 +8,7 @@ export default defineWorkersConfig({
 			},
 		},
 	},
+	css: {
+		postcss: false,
+	},
 });
