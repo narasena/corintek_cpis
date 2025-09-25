@@ -1,6 +1,6 @@
 import { TUserAttributes } from '@/app/types/user.type';
 import React from 'react';
-import { ControllerRenderProps, useForm } from 'react-hook-form';
+import { Controller, ControllerRenderProps, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import userSchema from '../schemas/userSchema';
 import { Button } from '@/components/ui/button';
@@ -46,6 +46,7 @@ export default function UserForm() {
       IDNumber: '',
       email: '',
       phoneNumber: '',
+      password: '',
       role: undefined,
       employmentStatus: undefined,
       avatarUrl: '',
@@ -53,7 +54,6 @@ export default function UserForm() {
       isActive: true,
       isBlocked: false,
     },
-    
   });
 
   const formFields = [
@@ -157,22 +157,41 @@ export default function UserForm() {
       <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-8">
         <div className="flex flex-col gap-3">
           <Label className="w-40">Upload Foto Profil</Label>
-          <div className="flex items-center gap-6">
-            <Avatar className="size-25 rounded-full">
-              <AvatarImage src="https://github.com/shadcn.png" />
-              <AvatarFallback className="bg-gray-400">
-                <IconUserCircle />
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col gap-2 w-full">
-              <Input
-                type="file"
-                accept="image/*"
-                className="w-full !h-10 !p-0 rounded-md border-none bg-[#4B5563] text-sm text-white file:!cursor-pointer file:h-full file:border-0 file:bg-blue-500 file:px-4 file:text-white hover:file:bg-blue-600"
-                {...form.register('avatarUrl')}
-              />
-          </div>
-          </div>
+          <FormField
+            control={form.control}
+            name="avatarUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Controller
+                    control={form.control}
+                    name="avatarUrl"
+                    render={({ field: controllerField }) => (
+                      <div className="flex items-center gap-6">
+                        <Avatar className="size-25 rounded-full">
+                          <AvatarImage src="https://github.com/shadcn.png" />
+                          <AvatarFallback className="bg-gray-400">
+                            <IconUserCircle />
+                          </AvatarFallback>
+                        </Avatar>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          className="w-full !h-10 !p-0 rounded-md border-none bg-[#4B5563] text-sm text-white file:!cursor-pointer file:h-full file:border-0 file:bg-blue-500 file:px-4 file:text-white hover:file:bg-blue-600"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            controllerField.onChange(file ? file.name : '');
+                          }}
+                          value={controllerField.value || ''}
+                        />
+                      </div>
+                    )}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
         <div className="grid grid-cols-2 gap-4">
           {formFields.map(formField => (
@@ -207,10 +226,10 @@ export default function UserForm() {
                       fieldSchema instanceof z.ZodEnum ? (
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value as string}
+                          value={field.value as string}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Pilih salah satu" />
+                            <SelectValue placeholder={formField.placeHolder} />
                           </SelectTrigger>
                           <SelectContent>
                             {fieldSchema.options.map(option => (
@@ -222,12 +241,17 @@ export default function UserForm() {
                         </Select>
                       ) : formField.type === 'boolean' ? (
                         <div className="flex items-center space-x-2 w-full">
-                          <Label className="w-full hover:bg-primary/30 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950">
-                            <Checkbox
-                              id="toggle-2"
-                              className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
-                            />
-                            <div className="grid gap-1.5 font-normal">
+                          <Checkbox
+                            id={field.name} // Use field name for unique id
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
+                          />
+                          <Label
+                            htmlFor={field.name}
+                            className="w-full hover:bg-primary/30 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950 font-normal cursor-pointer"
+                          >
+                            <div className="grid gap-1.5">
                               <p className="text-sm leading-none font-medium flex items-center gap-2">
                                 {formField.label}
                                 {Icon && (
@@ -242,9 +266,10 @@ export default function UserForm() {
                         </div>
                       ) : (
                         <Input
+                          type={formField.type}
                           placeholder={formField.placeHolder}
                           {...field}
-                          value={(field.value as string) || ''}
+                          value={field.value || ''}
                         />
                       )}
                     </FormControl>
@@ -256,8 +281,6 @@ export default function UserForm() {
             />
           ))}
         </div>
-
-        {console.log('Current form isValid:', form.formState.isValid)}
         <Button className="w-full" type="submit">
           Submit
         </Button>
