@@ -1,4 +1,5 @@
 import { TUserAttributes } from '@/types/user.type';
+import { useImagePreview } from '@/hooks/useImagePreview';
 import React from 'react';
 import { Controller, ControllerRenderProps, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -55,6 +56,8 @@ export default function UserForm() {
       isBlocked: false,
     },
   });
+
+  const { previewUrl, handleImagePreview } = useImagePreview<TUserAttributes, 'avatarUrl'>();
 
   const formFields = [
     {
@@ -163,30 +166,20 @@ export default function UserForm() {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Controller
-                    control={form.control}
-                    name="avatarUrl"
-                    render={({ field: controllerField }) => (
-                      <div className="flex items-center gap-6">
-                        <Avatar className="size-25 rounded-full">
-                          <AvatarImage src="https://github.com/shadcn.png" />
-                          <AvatarFallback className="bg-gray-400">
-                            <IconUserCircle />
-                          </AvatarFallback>
-                        </Avatar>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          className="w-full !h-10 !p-0 rounded-md border-none bg-[#4B5563] text-sm text-white file:!cursor-pointer file:h-full file:border-0 file:bg-blue-500 file:px-4 file:text-white hover:file:bg-blue-600"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            controllerField.onChange(file ? file.name : '');
-                          }}
-                          value={controllerField.value || ''}
-                        />
-                      </div>
-                    )}
-                  />
+                  <div className="flex items-center gap-6">
+                    <Avatar className="size-25 rounded-full">
+                      <AvatarImage src={previewUrl || field.value || "https://github.com/shadcn.png"} />
+                      <AvatarFallback className="bg-gray-400">
+                        <IconUserCircle />
+                      </AvatarFallback>
+                    </Avatar>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="w-full !h-10 !p-0 rounded-md border-none bg-[#4B5563] text-sm text-white file:!cursor-pointer file:h-full file:border-0 file:bg-blue-500 file:px-4 file:text-white hover:file:bg-blue-600"
+                      onChange={(e) => handleImagePreview(e, field)}
+                    />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
