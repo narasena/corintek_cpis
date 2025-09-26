@@ -3,9 +3,9 @@
 import { ColumnDef } from '@tanstack/react-table';
 import DragHandleTable from '@/components/drag-handle-table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { IUser } from '@/app/types/user.type';
+import { IUser } from '@/types/user.type';
 
-import { EmploymentStatus, UserRole } from '@/app/api/generated/prisma';
+import { EmploymentStatus, UserRole } from '@/features/api/generated/prisma';
 import { IconCrown, IconDeviceDesktopStar, IconTool, IconUserCheck, IconUserHexagon, IconUserScreen } from '@tabler/icons-react';
 
 const userRoles = [
@@ -28,7 +28,7 @@ export const userColumns = (): ColumnDef<IUser>[] => {
     {
       id: 'drag',
       header: () => null,
-      cell: ({ row }) => <DragHandleTable id={row.original.id} />,
+      cell: ({ row }) => <DragHandleTable id={row.original.id!} />,
     },
     {
       id: 'select',
@@ -70,7 +70,7 @@ export const userColumns = (): ColumnDef<IUser>[] => {
       accessorKey: 'IDNumber',
       header: 'ID Number',
       cell: ({ row }) => {
-        return row.original.IDNumber;
+        return row.original.idNumber;
       },
       enableHiding: false,
     },

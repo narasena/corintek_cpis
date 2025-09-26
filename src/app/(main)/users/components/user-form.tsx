@@ -1,4 +1,4 @@
-import { TUserAttributes } from '@/app/types/user.type';
+import { TUserAttributes } from '@/types/user.type';
 import React from 'react';
 import { Controller, ControllerRenderProps, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,7 +43,7 @@ export default function UserForm() {
     defaultValues: {
       firstName: '',
       lastName: '',
-      IDNumber: '',
+      idNumber: '',
       email: '',
       phoneNumber: '',
       password: '',
@@ -74,7 +74,7 @@ export default function UserForm() {
         'Masukkan nama belakang sesuai dengan yang terdaftar di perusahaan Anda bekerja',
     },
     {
-      name: 'IDNumber',
+      name: 'idNumber',
       type: 'text',
       label: 'ID Number',
       placeHolder: 'ID-12345',
