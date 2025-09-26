@@ -1,6 +1,6 @@
 export interface ITableHelper{
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
+  id: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  deletedAt?: string | null;
 }
