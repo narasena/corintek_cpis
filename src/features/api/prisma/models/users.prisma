@@ -4,7 +4,7 @@ model User {
     lastName    String?
     IDNumber    String?
     email       String          @unique
-    phoneNumber String?         @unique
+    phoneNumber String         @unique
     password    String          
     role        UserRole
     employmentStatus EmploymentStatus
