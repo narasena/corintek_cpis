@@ -4,7 +4,7 @@ import {userCreationSchema, userEditSchema} from "@/app/(main)/users/schemas/use
 
 export type TUserCreationAttributes = z.infer<typeof userCreationSchema>
 export type TUserEditAttributes = z.infer<typeof userEditSchema>
-export interface IUser extends Omit<TUserEditAttributes,"avatarImg">, ITableHelper  {
+export interface IUser extends Omit<TUserEditAttributes,"avatarImg"|"confirmPassword">, ITableHelper  {
   avatarUrl: string
   avatarPublicId: string
 }
