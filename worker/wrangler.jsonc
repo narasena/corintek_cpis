@@ -11,10 +11,6 @@
 	"observability": {
 		"enabled": true
 	},
-	"vars": {
-		"AUTH_SECRET": "your-secret",
-		"CF_API_TOKEN": "your-cloudflare-api-token"
-	},
 	"r2_buckets": [
 		{
 			"binding": "MY_BUCKET",
