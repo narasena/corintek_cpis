@@ -52,7 +52,7 @@ export const formFields = [
       name: 'role',
       type: 'selectEnum',
       label: 'Role',
-      placeHolder: 'TECHNICIAN',
+      placeHolder: 'Pilih Salah Satu',
       description:
         'Masukkan role sesuai dengan yang terdaftar di perusahaan Anda bekerja',
     },
@@ -60,7 +60,7 @@ export const formFields = [
       name: 'employmentStatus',
       type: 'selectEnum',
       label: 'Employment Status',
-      placeHolder: 'PERMANENT',
+      placeHolder: 'Pilih Salah Satu',
       description:
         'Masukkan status kerja sesuai dengan yang terdaftar di perusahaan Anda bekerja',
     },

@@ -38,7 +38,7 @@ import z from 'zod';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import useImageUpload from '@/hooks/useImageUpload';
-import { formFields } from '../data/formFiels';
+import { formFields } from '../data/formFields';
 
 export default function UserForm() {
   const form = useForm<TUserAttributes>({
@@ -161,13 +161,14 @@ export default function UserForm() {
                       {formField.type === 'selectEnum' &&
                       fieldSchema instanceof z.ZodEnum ? (
                         <Select
-                          onValueChange={field.onChange}
-                          value={field.value as string}
+                          onValueChange={(value) => field.onChange(value === "" ? undefined : value)}
+                          value={field.value as string | undefined}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder={formField.placeHolder} />
+                            <SelectValue placeholder="Pilih Salah Satu" />
                           </SelectTrigger>
                           <SelectContent>
+                            
                             {fieldSchema.options.map(option => (
                               <SelectItem key={option} value={option}>
                                 {option}
@@ -179,7 +180,7 @@ export default function UserForm() {
                         <div className="flex items-center space-x-2 w-full">
                           <Checkbox
                             id={field.name} // Use field name for unique id
-                            checked={field.value === "true"}
+                            checked={field.value as boolean}
                             onCheckedChange={field.onChange}
                             className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
                           />
