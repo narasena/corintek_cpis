@@ -52,21 +52,41 @@ export default function UserForm() {
       password: '',
       role: undefined,
       employmentStatus: undefined,
-      avatarUrl: '',
-      avatarPublicId: '',
+      avatarUrl: null,
+      avatarPublicId: null,
       isActive: true,
       isBlocked: false,
     },
   });
 
   const { previewUrl, handleImagePreview } = useImagePreview<TUserAttributes, 'avatarUrl'>();
-  const {file,handleUpload,result,setFile,uploading} = useImageUpload()  
+  const {file,handleUpload,result,setFile,uploading} = useImageUpload()
 
-  const onSubmit = (data: TUserAttributes) => {
-    console.log('onSubmit called');
-    console.log(form.formState.isValid);
-    console.log(data);
-    console.log("Submit");
+  const onSubmit = async (data: TUserAttributes) => {
+   try {
+     console.log('onSubmit called');
+     console.log(form.formState.isValid);
+     console.log(data);
+     
+     if (file) {
+       try {
+         const uploadedUrl = await handleUpload('avatar');
+         if (uploadedUrl) {
+           form.setValue('avatarUrl', uploadedUrl);
+           console.log('Avatar uploaded and URL set:', uploadedUrl);
+         }
+       } catch (uploadError) {
+         console.error('Avatar upload failed, proceeding without URL:', uploadError);
+       }
+     }
+     
+     // Log the final form data (including updated avatarUrl if any)
+     const finalData = form.getValues();
+     console.log('Final form data:', finalData);
+     console.log("Submit");
+   } catch (error) {
+     console.error('Submit error:', error);
+   }
   };
 
   const onInvalid = (errors: any) => {
@@ -97,7 +117,10 @@ export default function UserForm() {
                       type="file"
                       accept="image/*"
                       className="w-full !h-10 !p-0 rounded-md border-none bg-[#4B5563] text-sm text-white file:!cursor-pointer file:h-full file:border-0 file:bg-blue-500 file:px-4 file:text-white hover:file:bg-blue-600"
-                      onChange={(e) => handleImagePreview(e, field)}
+                      onChange={(e) => {
+                        handleImagePreview(e)
+                        setFile(e.target.files?.[0] || null)
+                      }}
                     />
                   </div>
                 </FormControl>

@@ -13,8 +13,7 @@ export function useImagePreview<TFormData extends FieldValues, TFieldName extend
   }, [previewUrl]);
 
   const handleImagePreview = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: ControllerRenderProps<TFormData, TFieldName>
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -29,7 +28,6 @@ export function useImagePreview<TFormData extends FieldValues, TFieldName extend
       }
       setPreviewUrl(null);
     }
-    field.onChange(file ? file.name : '');
   };
 
   return { previewUrl, handleImagePreview };

@@ -5,6 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const prefix = formData.get('prefix') as string || 'default';
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -20,8 +21,8 @@ export async function POST(request: NextRequest) {
       contentType = 'image/jpeg';
     }
 
-    const timestamp = Date.now();
-    const fileKey = `temp/test-session/${timestamp}-${file.name}`;
+    const timestamp = new Date(Date.now()).toISOString();
+    const fileKey = `${prefix}-${timestamp}-${file.name}`;
 
     const response = await fetch(`${API_CONFIG.WORKER_URL}/${fileKey}`, {
       method: 'PUT',
@@ -38,7 +39,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: text }, { status: response.status });
     }
 
-    return NextResponse.json({ success: true, message: text, key: fileKey });
+    const url = `${API_CONFIG.WORKER_URL}/${fileKey}`;
+
+    return NextResponse.json({ success: true, message: text, key: fileKey, url });
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

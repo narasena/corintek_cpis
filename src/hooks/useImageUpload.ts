@@ -26,8 +26,8 @@ export default function useImageUpload () {
         });
       };
     
-      const handleUpload = async () => {
-        if (!file) return;
+      const handleUpload = async (prefix: string = 'default'): Promise<string | null> => {
+        if (!file) return null;
         
         setUploading(true);
         const originalSize = file.size;
@@ -44,27 +44,35 @@ export default function useImageUpload () {
           
           const formData = new FormData();
           formData.append('file', uploadBody, file.name);
+          formData.append('prefix', prefix);
           
           const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData
           });
           
-          const data = await response.json() as { success?: boolean; message?: string; error?: string; key?: string };
+          const data = await response.json() as { success?: boolean; message?: string; error?: string; key?: string; url?: string };
           const compression = file.type.startsWith('image/')
             ? `Original: ${(originalSize/1024/1024).toFixed(2)}MB → Compressed: ${(compressedSize/1024/1024).toFixed(2)}MB`
             : `PDF uploaded: ${(originalSize/1024/1024).toFixed(2)}MB (no compression)`;
           
-          if (response.ok) {
-            setResult(`${data.message || 'Upload successful'}\n${compression}`);
+          if (response.ok && data.url) {
+            setResult(`${data.message || 'Upload successful'}\n${compression}\nURL: ${data.url}`);
+            return data.url;
           } else {
-            setResult(`Error: ${data.error || 'Upload failed'}\n${compression}`);
+            const errorMsg = data.error || 'Upload failed';
+            setResult(`Error: ${errorMsg}\n${compression}`);
+            console.error('Upload failed:', errorMsg);
+            return null;
           }
         } catch (error) {
-          setResult(`Error: ${error}`);
+          const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+          setResult(`Error: ${errorMsg}`);
+          console.error('Upload error:', error);
+          return null;
+        } finally {
+          setUploading(false);
         }
-        
-        setUploading(false);
       };
 
     return {
