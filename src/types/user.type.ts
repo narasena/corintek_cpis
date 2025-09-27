@@ -1,6 +1,10 @@
 import z from "zod"
 import { ITableHelper } from "./base.dto"
-import userSchema from "@/app/(main)/users/schemas/userSchema"
+import {userCreationSchema, userEditSchema} from "@/app/(main)/users/schemas/userSchema"
 
-export type TUserAttributes = z.infer<typeof userSchema>
-export interface IUser extends TUserAttributes, ITableHelper {}
+export type TUserCreationAttributes = z.infer<typeof userCreationSchema>
+export type TUserEditAttributes = z.infer<typeof userEditSchema>
+export interface IUser extends Omit<TUserEditAttributes,"avatarImg">, ITableHelper  {
+  avatarUrl: string
+  avatarPublicId: string
+}
