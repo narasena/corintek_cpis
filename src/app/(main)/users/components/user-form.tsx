@@ -1,9 +1,9 @@
-import { TUserAttributes } from '@/types/user.type';
+import { TUserCreationAttributes } from '@/types/user.type';
 import { useImagePreview } from '@/hooks/useImagePreview';
-import React from 'react';
-import { Controller, ControllerRenderProps, useForm } from 'react-hook-form';
+import React, { JSX } from 'react';
+import {  useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import userSchema from '../schemas/userSchema';
+import { userCreationSchema } from '../schemas/userSchema';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -30,7 +30,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   IconInfoSquareFilled,
-  IconLockFilled,
   IconUserCircle,
 } from '@tabler/icons-react';
 import z from 'zod';
@@ -38,11 +37,14 @@ import z from 'zod';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import useImageUpload from '@/hooks/useImageUpload';
-import { formFields } from '../data/formFields';
+import { createUserFormFields } from '../data/formFields';
+import { toast } from 'sonner';
+import errorMessageResponse from '@/utils/errorMessageResponse';
+import apiInstance from '@/utils/apiInstance';
 
 export default function UserForm() {
-  const form = useForm<TUserAttributes>({
-    resolver: zodResolver(userSchema),
+  const createUserForm = useForm<TUserCreationAttributes>({
+    resolver: zodResolver(userCreationSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -50,76 +52,142 @@ export default function UserForm() {
       email: '',
       phoneNumber: '',
       password: '',
+      confirmPassword: '',
       role: undefined,
       employmentStatus: undefined,
-      avatarUrl: null,
-      avatarPublicId: null,
-      isActive: true,
-      isBlocked: false,
+      avatarImg: null,
     },
   });
 
-  const { previewUrl, handleImagePreview } = useImagePreview<TUserAttributes, 'avatarUrl'>();
-  const {file,handleUpload,result,setFile,uploading} = useImageUpload()
+  const { previewUrl, handleImagePreview } = useImagePreview<
+    TUserCreationAttributes,
+    'avatarImg'
+  >();
+  const { file, handleUpload, result, setFile, uploading } = useImageUpload();
 
-  const onSubmit = async (data: TUserAttributes) => {
-   try {
-     console.log('onSubmit called');
-     console.log(form.formState.isValid);
-     console.log(data);
-     
-     if (file) {
-       try {
-         const uploadedUrl = await handleUpload('avatar');
-         if (uploadedUrl) {
-           form.setValue('avatarUrl', uploadedUrl);
-           console.log('Avatar uploaded and URL set:', uploadedUrl);
-         }
-       } catch (uploadError) {
-         console.error('Avatar upload failed, proceeding without URL:', uploadError);
-       }
-     }
-     
-     // Log the final form data (including updated avatarUrl if any)
-     const finalData = form.getValues();
-     console.log('Final form data:', finalData);
-     console.log("Submit");
-   } catch (error) {
-     console.error('Submit error:', error);
-   }
+  const onSubmit = async (data: TUserCreationAttributes) => {
+    try {
+      console.log('onSubmit called');
+      console.log('Valid form:', createUserForm.formState.isValid);
+      console.log(
+        'avatarImg in data:',
+        data.avatarImg instanceof File ? 'File object' : data.avatarImg
+      );
+
+      // Create FormData
+      const formData = new FormData();
+
+      // Append non-file fields
+      Object.entries(data).forEach(([key, value]) => {
+        if (key !== 'avatarImg' && value !== undefined && value !== null) {
+          formData.append(key, String(value));
+        }
+      });
+
+      // Append file
+      const avatarFile = data.avatarImg;
+      if (avatarFile) {
+        if (avatarFile instanceof File) {
+          formData.append('avatarImg', avatarFile);
+          console.log('Appended file to FormData:', avatarFile.name); // Log for validation
+        }
+      }
+
+      console.log('FormData has avatarImg:', formData.has('avatarImg')); // Log for validation
+      console.log(
+        'All FormData entries:',
+        Array.from(formData.entries()).map(
+          ([k, v]) => `${k}: ${v instanceof File ? 'File' : v}`
+        )
+      ); // Detailed log
+
+      // // Use fetch for multipart
+      // const response = await fetch('/api/users/create', {
+      //   method: 'POST',
+      //   body: formData, // Auto-sets multipart/form-data
+      // });
+
+      // if (!response.ok) {
+      //   const errorData = (await response.json().catch(() => ({}))) as {
+      //     message?: string;
+      //     errors?: Array<{ message: string }>;
+      //   };
+      //   console.error('Backend response error:', errorData);
+      //   throw new Error(
+      //     errorData.message ||
+      //       errorData.errors?.[0]?.message ||
+      //       'Submission failed'
+      //   );
+      // }
+
+      // const result = (await response.json()) as {
+      //   message?: string;
+      //   data?: any;
+      // };
+
+      const response = await apiInstance.postForm("users/create", formData);
+      if(response.data.status !== 201){
+        throw new Error('Submission failed');
+      }
+      const result = response.data as {
+        message?: string;
+        data?: any;
+      }
+
+
+      console.log('Backend success response:', result);
+      toast.success(result.message || 'User created successfully');
+      createUserForm.reset();
+    } catch (error) {
+      toast.error(errorMessageResponse(error));
+      console.error('Submit error:', error);
+    }
   };
 
-  const onInvalid = (errors: any) => {
+  const onInvalid = (errors: Record<string, any>) => {
     console.log('Form validation failed');
-    console.log('isValid:', form.formState.isValid);
-    console.log('Errors:', errors);
+    console.log('isValid:', createUserForm.formState.isValid);
+    console.log('Full errors:', JSON.stringify(errors, null, 2));
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-8">
+    <Form {...createUserForm}>
+      <form
+        onSubmit={createUserForm.handleSubmit(onSubmit, onInvalid)}
+        className="space-y-8"
+      >
         <div className="flex flex-col gap-3">
           <Label className="w-40">Upload Foto Profil</Label>
           <FormField
-            control={form.control}
-            name="avatarUrl"
+            control={createUserForm.control}
+            name="avatarImg"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
                   <div className="flex items-center gap-6">
                     <Avatar className="size-25 rounded-full">
-                      <AvatarImage src={previewUrl || field.value || "https://github.com/shadcn.png"} />
-                      <AvatarFallback className="bg-gray-400">
-                        <IconUserCircle />
+                      <AvatarImage
+                        src={previewUrl || field.value || undefined}
+                      />
+                      <AvatarFallback className="bg-gray-400 p-3">
+                        <IconUserCircle className='size-full text-slate-700'/>
                       </AvatarFallback>
                     </Avatar>
                     <Input
                       type="file"
                       accept="image/*"
                       className="w-full !h-10 !p-0 rounded-md border-none bg-[#4B5563] text-sm text-white file:!cursor-pointer file:h-full file:border-0 file:bg-blue-500 file:px-4 file:text-white hover:file:bg-blue-600"
-                      onChange={(e) => {
-                        handleImagePreview(e)
-                        setFile(e.target.files?.[0] || null)
+                      onChange={e => {
+                        const selectedFile = e.target.files?.[0] || null;
+                        handleImagePreview(e);
+                        setFile(selectedFile);
+                        field.onChange(selectedFile);
+                        console.log(
+                          'Selected file in onChange:',
+                          selectedFile
+                            ? `${selectedFile.name} (${selectedFile.size} bytes)`
+                            : 'No file'
+                        );
                       }}
                     />
                   </div>
@@ -130,19 +198,21 @@ export default function UserForm() {
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          {formFields.map(formField => (
+          {createUserFormFields.map(formField => (
             <FormField
               key={formField.name}
-              control={form.control}
-              name={formField.name as keyof TUserAttributes}
+              control={createUserForm.control}
+              name={formField.name as keyof TUserCreationAttributes}
               render={({ field }) => {
                 const fieldSchema =
-                  userSchema.shape[formField.name as keyof TUserAttributes];
-                const Icon = formField.icon;
+                  userCreationSchema.shape[
+                    formField.name as keyof TUserCreationAttributes
+                  ];
+                const Icon = formField.icon as JSX.ElementType;
 
                 return (
                   <FormItem
-                    className={formField.type === 'boolean' ? 'col-span-2' : ''}
+                    className={formField.type === 'boolean' ? 'col-span-2' : formField.className? formField.className : ''}
                   >
                     {formField.type !== 'boolean' && (
                       <FormLabel>
@@ -161,14 +231,15 @@ export default function UserForm() {
                       {formField.type === 'selectEnum' &&
                       fieldSchema instanceof z.ZodEnum ? (
                         <Select
-                          onValueChange={(value) => field.onChange(value === "" ? undefined : value)}
+                          onValueChange={value =>
+                            field.onChange(value === '' ? undefined : value)
+                          }
                           value={field.value as string | undefined}
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Pilih Salah Satu" />
                           </SelectTrigger>
                           <SelectContent>
-                            
                             {fieldSchema.options.map(option => (
                               <SelectItem key={option} value={option}>
                                 {option}
@@ -179,8 +250,8 @@ export default function UserForm() {
                       ) : formField.type === 'boolean' ? (
                         <div className="flex items-center space-x-2 w-full">
                           <Checkbox
-                            id={field.name} // Use field name for unique id
-                            checked={field.value as boolean}
+                            id={field.name}
+                            checked={field.value as boolean | undefined}
                             onCheckedChange={field.onChange}
                             className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
                           />
@@ -206,7 +277,7 @@ export default function UserForm() {
                           type={formField.type}
                           placeholder={formField.placeHolder}
                           {...field}
-                          value={field.value as string || ''}
+                          value={(field.value as string) || ''}
                         />
                       )}
                     </FormControl>
