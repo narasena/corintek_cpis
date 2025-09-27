@@ -1,5 +1,6 @@
 'use client'
 
+import apiInstance from "@/utils/apiInstance";
 import { useState } from "react";
 
 export default function useImageUpload () {
@@ -46,17 +47,14 @@ export default function useImageUpload () {
           formData.append('file', uploadBody, file.name);
           formData.append('prefix', prefix);
           
-          const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-          });
+          const response = await apiInstance.post('/upload', formData );
           
-          const data = await response.json() as { success?: boolean; message?: string; error?: string; key?: string; url?: string };
+          const data = await response.data
           const compression = file.type.startsWith('image/')
             ? `Original: ${(originalSize/1024/1024).toFixed(2)}MB → Compressed: ${(compressedSize/1024/1024).toFixed(2)}MB`
             : `PDF uploaded: ${(originalSize/1024/1024).toFixed(2)}MB (no compression)`;
           
-          if (response.ok && data.url) {
+          if (response.status === 200 && data.url) {
             setResult(`${data.message || 'Upload successful'}\n${compression}\nURL: ${data.url}`);
             return data.url;
           } else {
