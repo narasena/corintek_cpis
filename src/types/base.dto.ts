@@ -1,5 +1,7 @@
+import { UniqueIdentifier } from "@dnd-kit/core";
+
 export interface ITableHelper{
-  id: string| null;
+  id: UniqueIdentifier;
   createdAt: string | null;
   updatedAt: string | null;
   deletedAt?: string | null;
