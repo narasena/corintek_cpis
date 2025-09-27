@@ -1,6 +1,16 @@
 import { IconLockFilled } from "@tabler/icons-react";
 
-export const formFields = [
+export interface IUserFormFields {
+  name: string;
+  icon?: React.ComponentType;
+  className?: string;
+  type: string;
+  label: string;
+  placeHolder: string;
+  description: string;
+}
+
+export const createUserFormFields: IUserFormFields[] = [
     {
       name: 'firstName',
       type: 'text',
@@ -36,6 +46,7 @@ export const formFields = [
     {
       name: 'email',
       type: 'email',
+      className: 'col-span-2',
       label: 'Email',
       placeHolder: 'Y2mE2@example.com',
       description:
@@ -47,6 +58,13 @@ export const formFields = [
       label: 'Password',
       placeHolder: 'Password',
       description: "Buat password untuk user"
+    },
+    {
+      name: 'confirmPassword',
+      type: 'password',
+      label: 'Konfirmasi Password',
+      placeHolder: 'Password',
+      description: "Konfirmasi password untuk user"
     },
     {
       name: 'role',
@@ -64,6 +82,10 @@ export const formFields = [
       description:
         'Masukkan status kerja sesuai dengan yang terdaftar di perusahaan Anda bekerja',
     },
+  ];
+
+  export const editUserFormFields: IUserFormFields[] = [
+    ...createUserFormFields,
     {
       name: 'isActive',
       type: 'boolean',
