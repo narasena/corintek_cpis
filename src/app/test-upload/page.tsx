@@ -1,74 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { API_CONFIG } from '@/lib/config';
+import useImageUpload from '@/hooks/useImageUpload';
 
 export default function TestUpload() {
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [result, setResult] = useState<string>('');
-
-  const compressImage = (file: File): Promise<Blob> => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
-      const img = new Image();
-      
-      img.onload = () => {
-        canvas.width = Math.min(img.width, 1024);
-        canvas.height = (img.height * canvas.width) / img.width;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob((blob) => {
-          resolve(blob!);
-        }, 'image/jpeg', 0.8);
-      };
-      
-      img.src = URL.createObjectURL(file);
-    });
-  };
-
-  const handleUpload = async () => {
-    if (!file) return;
-    
-    setUploading(true);
-    const originalSize = file.size;
-    
-    try {
-      let uploadBody: Blob = file;
-      let contentType = file.type;
-      
-      // Compress images only
-      if (file.type.startsWith('image/')) {
-        uploadBody = await compressImage(file);
-        contentType = 'image/jpeg';
-      }
-      
-      const compressedSize = uploadBody.size;
-      
-      const timestamp = Date.now();
-      const fileKey = `temp/test-session/${timestamp}-${file.name}`;
-      
-      const response = await fetch(`${API_CONFIG.WORKER_URL}/${fileKey}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${API_CONFIG.AUTH_SECRET}`,
-          'Content-Type': contentType
-        },
-        body: uploadBody
-      });
-      
-      const text = await response.text();
-      const compression = file.type.startsWith('image/') 
-        ? `Original: ${(originalSize/1024/1024).toFixed(2)}MB → Compressed: ${(compressedSize/1024/1024).toFixed(2)}MB`
-        : `PDF uploaded: ${(originalSize/1024/1024).toFixed(2)}MB (no compression)`;
-      
-      setResult(`${text}\n${compression}`);
-    } catch (error) {
-      setResult(`Error: ${error}`);
-    }
-    
-    setUploading(false);
-  };
+  const { file, setFile, uploading, result, handleUpload } = useImageUpload();
 
   return (
     <div className="p-8">
