@@ -1,11 +1,9 @@
-import { IUser, TUserAttributes } from "@/types/user.type";
-import { prisma } from "../../connection/prisma";
+import { TUserCreationAttributes } from "@/types/user.type";
 import { Prisma, User } from "../../generated/prisma";
 import { hashPassword } from "@/utils/passwordHash";
 import { AppError } from "@/lib/app-error";
 
-// This is where your actual database logic lives.
-export async function createUserService(payload: TUserAttributes) {
+export async function createUserWithoutAvatar(payload: Omit<TUserCreationAttributes, 'avatarImg'>, tx: any) {
   const whereClause: Prisma.UserWhereInput = {
     OR: [
       { email: payload.email },
@@ -17,24 +15,55 @@ export async function createUserService(payload: TUserAttributes) {
     whereClause.OR?.push({ phoneNumber: payload.phoneNumber });
   }
 
-  const existingUser: User | null = await prisma.user.findFirst({
+  const existingUser: User | null = await tx.user.findFirst({
     where: whereClause,
   });
 
+  console.log('Duplicate check result:', existingUser ? 'User exists' : 'No duplicate');
 
   if (existingUser) {
     throw new AppError({
-      message:"User with this email or phone number already exists",
-      status:409,
-      isExpose:true,
-  });
+      message: "User with this email or phone number already exists",
+      status: 409,
+      isExpose: true,
+    });
   }
 
-  const hashedPassword = hashPassword(payload.password);
-
-  const createdUser = await prisma.user.create({
-    data: { ...payload, password: hashedPassword },
+  console.log('Creating user with data:', {
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    email: payload.email,
+    phoneNumber: payload.phoneNumber,
+    role: payload.role,
+    // Omit password for security
   });
 
+  const createdUser = await tx.user.create({
+    data: {
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      idNumber: payload.idNumber || null,
+      email: payload.email,
+      phoneNumber: payload.phoneNumber,
+      role: payload.role,
+      employmentStatus: payload.employmentStatus,
+      password: hashPassword(payload.password),
+      avatarUrl: null,
+      avatarPublicId: null,
+    },
+  });
+
+  console.log('User created successfully without avatar:', { id: createdUser.id, email: createdUser.email });
+
   return createdUser;
+}
+
+export async function updateUserAvatar(userId: string, avatarUrl: string, avatarPublicId: string, tx: any) {
+  return tx.user.update({
+    where: { id: userId },
+    data: {
+      avatarUrl,
+      avatarPublicId,
+    },
+  });
 }
