@@ -4,6 +4,7 @@ import { DataTable } from '@/components/data-table';
 import { IClient } from '@/types/client.type';
 import React from 'react';
 import { clientColumns } from './components/client-columns';
+import CreateData from '@/components/features/data/create-data';
 
 export default function ClientsPage() {
   return (
@@ -11,7 +12,14 @@ export default function ClientsPage() {
       <DataTable
         data={[] as IClient[]}
         columns={clientColumns()}
-        addNewRow={<></>}
+        addNewRow={
+        <CreateData
+        buttonText='Tambah Client'
+        modalTitle='Tambah Client Baru'
+        modalDescription='Menambahkan client baru ke dalam sistem CPIS'
+        content={<></>}
+        />
+      }
       />
     </div>
   );
