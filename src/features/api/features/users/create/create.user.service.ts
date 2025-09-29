@@ -1,5 +1,5 @@
 import { TUserCreationAttributes } from "@/types/user.type";
-import { Prisma, User } from "../../generated/prisma";
+import { Prisma, User } from "../../../generated/prisma";
 import { hashPassword } from "@/utils/passwordHash";
 import { AppError } from "@/lib/app-error";
 
