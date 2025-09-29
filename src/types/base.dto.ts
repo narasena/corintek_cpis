@@ -9,3 +9,8 @@ export interface ITableHelper extends IUniqueIdentifierId {
   updatedAt: string | null;
   deletedAt?: string | null;
 }
+
+export interface IIMage {
+  url?: string;
+  publicId?: string;
+}
