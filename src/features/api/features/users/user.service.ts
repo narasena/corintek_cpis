@@ -1,5 +1,6 @@
+import { prisma } from "@/features/api/connection/prisma";
 import { TUserCreationAttributes } from "@/types/user.type";
-import { Prisma, User } from "../../../generated/prisma";
+import { Prisma, User } from "@/features/api/generated/prisma";
 import { hashPassword } from "@/utils/passwordHash";
 import { AppError } from "@/lib/app-error";
 
@@ -66,4 +67,17 @@ export async function updateUserAvatar(userId: string, avatarUrl: string, avatar
       avatarPublicId,
     },
   });
+}
+
+export async function fetchAllUsersService () {
+  const whereClause: Prisma.UserWhereInput = {
+    deletedAt: null,
+  };
+
+  const allUsers = await prisma.user.findMany({
+    where: whereClause,
+  });
+
+  return allUsers
+
 }
