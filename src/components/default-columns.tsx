@@ -3,7 +3,8 @@ import DragHandleTable from "./drag-handle-table"
 import { IUniqueIdentifierId } from "@/types/base.dto"
 import { Checkbox } from "./ui/checkbox"
 
-export function draggableColumn<T extends IUniqueIdentifierId>():ColumnDef<T>{
+export function defaultColumns<T extends IUniqueIdentifierId>():ColumnDef<T>[]{
+  function draggableColumn():ColumnDef<T>{
   return {
     id: 'drag',
           header: () => null,
@@ -11,7 +12,7 @@ export function draggableColumn<T extends IUniqueIdentifierId>():ColumnDef<T>{
   }
 }
 
-export function selectableColumn<T extends IUniqueIdentifierId>():ColumnDef<T>{
+function selectableColumn():ColumnDef<T>{
   return {
     id: 'select',
       header: ({ table }) => (
@@ -40,7 +41,7 @@ export function selectableColumn<T extends IUniqueIdentifierId>():ColumnDef<T>{
   }
 }
 
-export function actionsColumn <T extends IUniqueIdentifierId>():ColumnDef<T>{
+function actionsColumn ():ColumnDef<T>{
   return {
     id: 'actions',
       header: 'Actions',
@@ -51,4 +52,10 @@ export function actionsColumn <T extends IUniqueIdentifierId>():ColumnDef<T>{
       },
       enableHiding: false,
   }
+}
+  return [
+    draggableColumn(),
+    selectableColumn(),
+    actionsColumn()
+  ]
 }

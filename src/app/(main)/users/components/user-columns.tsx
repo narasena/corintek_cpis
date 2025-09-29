@@ -8,7 +8,7 @@ import { IUser } from '@/types/user.type';
 import { EmploymentStatus, UserRole } from '@/features/api/generated/prisma';
 import { IconCrown, IconDeviceDesktopStar, IconTool, IconUserCheck, IconUserCircle, IconUserHexagon, IconUserScreen } from '@tabler/icons-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { actionsColumn, draggableColumn, selectableColumn } from '@/components/default-columns';
+import {  defaultColumns} from '@/components/default-columns';
 
 const userRoles = [
   { role: UserRole.ADMIN, style: 'bg-purple-900 text-yellow-400', icon: IconCrown },
@@ -26,9 +26,10 @@ const employeeStatus = [
 ];
 
 export const userColumns = (): ColumnDef<IUser>[] => {
+  const [draggableColumn,selectableColumn,actionsColumn ] = defaultColumns<IUser>();
   return [
-    draggableColumn<IUser>(),
-    selectableColumn<IUser>(),
+    draggableColumn,
+    selectableColumn,
     {
       id: 'name',
       header: 'Nama',
@@ -109,6 +110,6 @@ export const userColumns = (): ColumnDef<IUser>[] => {
       },
       enableHiding: false,
     },
-    actionsColumn<IUser>(),
+    actionsColumn,
   ];
 };

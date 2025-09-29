@@ -1,7 +1,10 @@
 import { UniqueIdentifier } from "@dnd-kit/core";
 
-export interface ITableHelper{
+export interface IUniqueIdentifierId {
   id: UniqueIdentifier;
+}
+
+export interface ITableHelper extends IUniqueIdentifierId {
   createdAt: string | null;
   updatedAt: string | null;
   deletedAt?: string | null;
