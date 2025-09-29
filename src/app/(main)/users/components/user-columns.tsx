@@ -26,10 +26,10 @@ const employeeStatus = [
 ];
 
 export const userColumns = (): ColumnDef<IUser>[] => {
-  const [draggableColumn,selectableColumn,actionsColumn ] = defaultColumns<IUser>();
+  const {drag, select, email, phoneNumber,actions} = defaultColumns<IUser>();
   return [
-    draggableColumn,
-    selectableColumn,
+    drag,
+    select,
     {
       id: 'name',
       header: 'Nama',
@@ -61,22 +61,8 @@ export const userColumns = (): ColumnDef<IUser>[] => {
       },
       enableHiding: false,
     },
-    {
-      accessorKey: 'email',
-      header: 'Email',
-      cell: ({ row }) => {
-        return row.original.email;
-      },
-      enableHiding: false,
-    },
-    {
-      accessorKey: 'phoneNumber',
-      header: 'Phone Number',
-      cell: ({ row }) => {
-        return row.original.phoneNumber;
-      },
-      enableHiding: false,
-    },
+    email,
+    phoneNumber,
     {
       accessorKey: 'role',
       header: 'Role',
@@ -110,6 +96,6 @@ export const userColumns = (): ColumnDef<IUser>[] => {
       },
       enableHiding: false,
     },
-    actionsColumn,
+    actions,
   ];
 };

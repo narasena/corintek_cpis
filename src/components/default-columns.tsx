@@ -3,18 +3,18 @@ import DragHandleTable from "./drag-handle-table"
 import { IUniqueIdentifierId } from "@/types/base.dto"
 import { Checkbox } from "./ui/checkbox"
 
-export function defaultColumns<T extends IUniqueIdentifierId>():ColumnDef<T>[]{
-  function draggableColumn():ColumnDef<T>{
-  return {
-    id: 'drag',
-          header: () => null,
-          cell: ({ row }) => <DragHandleTable id={row.original.id!} />,
+export function defaultColumns<T extends IUniqueIdentifierId>() {
+  function draggableColumn(): ColumnDef<T> {
+    return {
+      id: 'drag',
+      header: () => null,
+      cell: ({ row }) => <DragHandleTable id={row.original.id!} />,
+    };
   }
-}
 
-function selectableColumn():ColumnDef<T>{
-  return {
-    id: 'select',
+  function selectableColumn(): ColumnDef<T> {
+    return {
+      id: 'select',
       header: ({ table }) => (
         <div className="flex items-center justify-center">
           <Checkbox
@@ -37,13 +37,29 @@ function selectableColumn():ColumnDef<T>{
         </div>
       ),
       enableSorting: false,
-      enableHiding: false
+      enableHiding: false,
+    };
   }
-}
 
-function actionsColumn ():ColumnDef<T>{
-  return {
-    id: 'actions',
+  function emailColumn(): ColumnDef<T> {
+    return {
+      accessorKey: 'email',
+      header: 'Email',
+      enableHiding: false,
+    };
+  }
+
+  function phoneNumberColumn(): ColumnDef<T> {
+    return {
+      accessorKey: 'phoneNumber',
+      header: 'Nomor Telepon',
+      enableHiding: false,
+    };
+  }
+
+  function actionsColumn(): ColumnDef<T> {
+    return {
+      id: 'actions',
       header: 'Actions',
       cell: ({ row }) => {
         return (
@@ -51,11 +67,14 @@ function actionsColumn ():ColumnDef<T>{
         );
       },
       enableHiding: false,
+    };
   }
-}
-  return [
-    draggableColumn(),
-    selectableColumn(),
-    actionsColumn()
-  ]
+
+  return {
+    drag: draggableColumn(),
+    select: selectableColumn(),
+    email: emailColumn(),
+    phoneNumber: phoneNumberColumn(),
+    actions: actionsColumn(),
+  } as const
 }
