@@ -331,6 +331,10 @@ export function DataTable<TData extends { id: UniqueIdentifier
   addNewRow?: React.ReactNode
 }) {
   const [data, setData] = React.useState(() => initialData)
+
+  React.useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})

@@ -76,6 +76,9 @@ export async function fetchAllUsersService () {
 
   const allUsers = await prisma.user.findMany({
     where: whereClause,
+    omit:{
+      password: true
+    }
   });
 
   return allUsers

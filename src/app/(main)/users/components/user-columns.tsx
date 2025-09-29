@@ -6,7 +6,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { IUser } from '@/types/user.type';
 
 import { EmploymentStatus, UserRole } from '@/features/api/generated/prisma';
-import { IconCrown, IconDeviceDesktopStar, IconTool, IconUserCheck, IconUserHexagon, IconUserScreen } from '@tabler/icons-react';
+import { IconCrown, IconDeviceDesktopStar, IconTool, IconUserCheck, IconUserCircle, IconUserHexagon, IconUserScreen } from '@tabler/icons-react';
+import Image from 'next/image';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const userRoles = [
   { role: UserRole.ADMIN, style: 'bg-purple-900 text-yellow-400', icon: IconCrown },
@@ -58,10 +60,23 @@ export const userColumns = (): ColumnDef<IUser>[] => {
     },
     {
       id: 'name',
-      header: 'Header',
+      header: 'Nama',
       cell: ({ row }) => {
+        const name = row.original.firstName + ' ' + row.original.lastName;
         return (
-          (row.original.firstName || '') + ' ' + (row.original.lastName || '')
+          <div className='flex gap-2 items-center'>
+            <Avatar className="size-10 rounded-full">
+                      <AvatarImage
+                        src={row.original.avatarUrl} alt='avatar'
+                      />
+                      <AvatarFallback className="bg-gray-400 p-3">
+                        <IconUserCircle className='size-full text-slate-700'/>
+                      </AvatarFallback>
+                    </Avatar>
+            <div>
+              {name}
+            </div>
+          </div>
         );
       },
       enableHiding: false,
@@ -91,22 +106,24 @@ export const userColumns = (): ColumnDef<IUser>[] => {
       enableHiding: false,
     },
     {
-  accessorKey: 'role',
-  header: 'Role',
-  cell: ({ row }) => {
-    const role = userRoles.find((r) => r.role === row.original.role);
-    if (role) {
-      return (
-        <div className={`flex items-center gap-2 ${role.style} px-2 py-1 w-max rounded-full text-xs font-semibold`}>
-          <role.icon className="w-4 h-4" />
-          {role.role}
-        </div>
-      );
-    }
-    return null; // or return some default value if the role is not found
-  },
-  enableHiding: false,
-},
+      accessorKey: 'role',
+      header: 'Role',
+      cell: ({ row }) => {
+        const role = userRoles.find(r => r.role === row.original.role);
+        if (role) {
+          return (
+            <div
+              className={`flex items-center gap-2 ${role.style} px-2 py-1 w-max rounded-full text-xs font-semibold`}
+            >
+              <role.icon className="w-4 h-4" />
+              {role.role}
+            </div>
+          );
+        }
+        return null; // or return some default value if the role is not found
+      },
+      enableHiding: false,
+    },
     {
       accessorKey: 'employmentStatus',
       header: 'Employment Status',
