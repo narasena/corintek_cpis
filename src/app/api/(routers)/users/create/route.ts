@@ -1,4 +1,4 @@
-import { createUser } from "@/features/api/features/users/user.controller";
+import { createUser } from "@/features/api/features/users/create/create.user.controller";
 import { NextRequest, NextResponse } from "next/server";
 import { createErrorResponse } from "@/lib/error-handler";
 
