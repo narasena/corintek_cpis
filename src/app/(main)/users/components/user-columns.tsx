@@ -7,8 +7,8 @@ import { IUser } from '@/types/user.type';
 
 import { EmploymentStatus, UserRole } from '@/features/api/generated/prisma';
 import { IconCrown, IconDeviceDesktopStar, IconTool, IconUserCheck, IconUserCircle, IconUserHexagon, IconUserScreen } from '@tabler/icons-react';
-import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { actionsColumn, draggableColumn, selectableColumn } from '@/components/default-columns';
 
 const userRoles = [
   { role: UserRole.ADMIN, style: 'bg-purple-900 text-yellow-400', icon: IconCrown },
@@ -27,37 +27,8 @@ const employeeStatus = [
 
 export const userColumns = (): ColumnDef<IUser>[] => {
   return [
-    {
-      id: 'drag',
-      header: () => null,
-      cell: ({ row }) => <DragHandleTable id={row.original.id!} />,
-    },
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && 'indeterminate')
-            }
-            onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
-          />
-        </div>
-      ),
-      cell: ({ row }) => (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={value => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        </div>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
+    draggableColumn<IUser>(),
+    selectableColumn<IUser>(),
     {
       id: 'name',
       header: 'Nama',
@@ -138,15 +109,6 @@ export const userColumns = (): ColumnDef<IUser>[] => {
       },
       enableHiding: false,
     },
-    {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center justify-start gap-2">Actions</div>
-        );
-      },
-      enableHiding: false,
-    },
+    actionsColumn<IUser>(),
   ];
 };
