@@ -1,41 +1,9 @@
 import { TUserCreationAttributes } from '@/types/user.type';
 import { useImagePreview } from '@/hooks/useImagePreview';
-import React, { JSX } from 'react';
+import React from 'react';
 import {  useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { userCreationSchema } from '../schemas/userSchema';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  IconInfoSquareFilled,
-  IconUserCircle,
-} from '@tabler/icons-react';
-import z from 'zod';
-
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import useImageUpload from '@/hooks/useImageUpload';
 import { createUserFormFields } from '../data/userFormFields';
 import { toast } from 'sonner';
