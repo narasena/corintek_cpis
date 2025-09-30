@@ -5,6 +5,7 @@ import { IClient } from '@/types/client.type';
 import React from 'react';
 import { clientColumns } from './components/client-columns';
 import CreateData from '@/components/features/data/create-data';
+import ClientForm from './components/client-form';
 
 export default function ClientsPage() {
   return (
@@ -17,7 +18,7 @@ export default function ClientsPage() {
         buttonText='Tambah Client'
         modalTitle='Tambah Client Baru'
         modalDescription='Menambahkan client baru ke dalam sistem CPIS'
-        content={<></>}
+        content={<ClientForm />}
         />
       }
       />
