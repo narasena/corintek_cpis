@@ -37,10 +37,11 @@ import z from 'zod';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import useImageUpload from '@/hooks/useImageUpload';
-import { createUserFormFields } from '../data/formFields';
+import { createUserFormFields } from '../data/userFormFields';
 import { toast } from 'sonner';
 import errorMessageResponse from '@/utils/errorMessageResponse';
 import apiInstance from '@/utils/apiInstance';
+import DefaultForm from '@/components/default-form';
 
 export default function UserForm() {
   const createUserForm = useForm<TUserCreationAttributes>({
@@ -151,148 +152,19 @@ export default function UserForm() {
   };
 
   return (
-    <Form {...createUserForm}>
-      <form
-        onSubmit={createUserForm.handleSubmit(onSubmit, onInvalid)}
-        className="space-y-8"
-      >
-        <div className="flex flex-col gap-3">
-          <Label className="w-40">Upload Foto Profil</Label>
-          <FormField
-            control={createUserForm.control}
-            name="avatarImg"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <div className="flex items-center gap-6">
-                    <Avatar className="size-25 rounded-full">
-                      <AvatarImage
-                        src={previewUrl || field.value || undefined}
-                      />
-                      <AvatarFallback className="bg-gray-400 p-3">
-                        <IconUserCircle className='size-full text-slate-700'/>
-                      </AvatarFallback>
-                    </Avatar>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      className="w-full !h-10 !p-0 rounded-md border-none bg-[#4B5563] text-sm text-white file:!cursor-pointer file:h-full file:border-0 file:bg-blue-500 file:px-4 file:text-white hover:file:bg-blue-600"
-                      onChange={e => {
-                        const selectedFile = e.target.files?.[0] || null;
-                        handleImagePreview(e);
-                        setFile(selectedFile);
-                        field.onChange(selectedFile);
-                        console.log(
-                          'Selected file in onChange:',
-                          selectedFile
-                            ? `${selectedFile.name} (${selectedFile.size} bytes)`
-                            : 'No file'
-                        );
-                      }}
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          {createUserFormFields.map(formField => (
-            <FormField
-              key={formField.name}
-              control={createUserForm.control}
-              name={formField.name as keyof TUserCreationAttributes}
-              render={({ field }) => {
-                const fieldSchema =
-                  userCreationSchema.shape[
-                    formField.name as keyof TUserCreationAttributes
-                  ];
-                const Icon = formField.icon as JSX.ElementType;
-
-                return (
-                  <FormItem
-                    className={formField.type === 'boolean' ? 'col-span-2' : formField.className? formField.className : ''}
-                  >
-                    {formField.type !== 'boolean' && (
-                      <FormLabel>
-                        {formField.label}{' '}
-                        <Tooltip delayDuration={800}>
-                          <TooltipTrigger>
-                            <IconInfoSquareFilled className="size-4 text-gray-500" />
-                          </TooltipTrigger>
-                          <TooltipContent className="!max-w-[160px] flex flex-wrap">
-                            <p>{formField.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </FormLabel>
-                    )}
-                    <FormControl>
-                      {formField.type === 'selectEnum' &&
-                      fieldSchema instanceof z.ZodEnum ? (
-                        <Select
-                          onValueChange={value =>
-                            field.onChange(value === '' ? undefined : value)
-                          }
-                          value={field.value as string | undefined}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Pilih Salah Satu" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {fieldSchema.options.map(option => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : formField.type === 'boolean' ? (
-                        <div className="flex items-center space-x-2 w-full">
-                          <Checkbox
-                            id={field.name}
-                            checked={field.value as boolean | undefined}
-                            onCheckedChange={field.onChange}
-                            className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
-                          />
-                          <Label
-                            htmlFor={field.name}
-                            className="w-full hover:bg-primary/30 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950 font-normal cursor-pointer"
-                          >
-                            <div className="grid gap-1.5">
-                              <p className="text-sm leading-none font-medium flex items-center gap-2">
-                                {formField.label}
-                                {Icon && (
-                                  <Icon className="size-4 text-gray-500" />
-                                )}
-                              </p>
-                              <p className="text-muted-foreground text-sm">
-                                {formField.description}
-                              </p>
-                            </div>
-                          </Label>
-                        </div>
-                      ) : (
-                        <Input
-                          type={formField.type}
-                          placeholder={formField.placeHolder}
-                          {...field}
-                          value={(field.value as string) || ''}
-                        />
-                      )}
-                    </FormControl>
-                    <FormDescription></FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
-            />
-          ))}
-        </div>
-        <Button className="w-full" type="submit">
-          Submit
-        </Button>
-      </form>
-    </Form>
+    <DefaultForm<TUserCreationAttributes>
+    form={createUserForm}
+    onSubmit={onSubmit}
+    onInvalid={onInvalid}
+    avatar={
+      {
+        key: 'avatarImg',
+        previewUrl: previewUrl || '',
+        onChange: handleImagePreview
+      }
+    }
+    formFields={createUserFormFields}
+    validationSchema={userCreationSchema as any}
+    />
   );
 }

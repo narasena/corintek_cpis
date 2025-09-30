@@ -1,6 +1,6 @@
 import { IconLockFilled } from "@tabler/icons-react";
 
-export interface IUserFormFields {
+export interface IFormFields {
   name: string;
   icon?: React.ComponentType;
   className?: string;
@@ -10,7 +10,7 @@ export interface IUserFormFields {
   description: string;
 }
 
-export const createUserFormFields: IUserFormFields[] = [
+export const createUserFormFields: IFormFields[] = [
     {
       name: 'firstName',
       type: 'text',
@@ -84,7 +84,7 @@ export const createUserFormFields: IUserFormFields[] = [
     },
   ];
 
-  export const editUserFormFields: IUserFormFields[] = [
+  export const editUserFormFields: IFormFields[] = [
     ...createUserFormFields,
     {
       name: 'isActive',

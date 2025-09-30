@@ -16,6 +16,6 @@ export const clientCreationSchema = z.object({
     .nullable()
     .optional(),
   address: z.string().nullable().optional(),
-  avatarImg: z.file().nullable().optional(),
+  avatarImg: z.file().max(1,defaultSchemaMessage.image_max_file(1)).mime(['image/png', 'image/jpeg', 'image/jpg', 'image/webp'], defaultSchemaMessage.supported_image_format).nullable().optional(),
   websiteUrl: z.url().nullable().optional(),
 });

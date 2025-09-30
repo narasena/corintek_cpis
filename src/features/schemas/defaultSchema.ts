@@ -24,4 +24,8 @@ export const defaultSchemaMessage = {
     return { message: `Maksimal ${num} karakter` };
   },
   passwordMismatch: "Password tidak sesuai",
+  supported_image_format: "Format gambar tidak didukung (jpg, jpeg, png, webp)",
+  image_max_file(num:number) {
+    return {message: `Maksimal hanya ${num} file` }
+  }
 };
