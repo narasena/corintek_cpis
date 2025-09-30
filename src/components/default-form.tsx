@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { IconInfoSquareFilled, IconUserCircle } from "@tabler/icons-react";
 import { Input } from "./ui/input";
 import { IFormFields } from "@/app/(main)/users/data/userFormFields";
-import z, { ZodObject, ZodTypeAny } from "zod";
+import z, { ZodObject, ZodType } from "zod";
 import { JSX } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -22,7 +22,7 @@ interface IDefaultFormProps <TFormAttributes extends FieldValues> {
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   }
   formFields: IFormFields[]
-  validationSchema: z.ZodObject<any>
+  validationSchema: z.ZodObject<{ [K in keyof TFormAttributes]: z.ZodType<TFormAttributes[K]> }>
 }
 
 export default function DefaultForm<TFormAttributes extends FieldValues> (props: IDefaultFormProps<TFormAttributes>) {
@@ -81,7 +81,7 @@ export default function DefaultForm<TFormAttributes extends FieldValues> (props:
               control={props.form.control}
               name={(formField.name as keyof TFormAttributes) as Path<TFormAttributes>}
               render={({ field }) => {
-                const fieldSchema: ZodTypeAny = props.validationSchema.shape[
+                const fieldSchema = props.validationSchema.shape[
                   formField.name as keyof TFormAttributes
                 ];
                 const Icon = formField.icon as JSX.ElementType;
