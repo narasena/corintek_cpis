@@ -164,7 +164,7 @@ export default function UserForm() {
       }
     }
     formFields={createUserFormFields}
-    validationSchema={userCreationSchema as any}
+    validationSchema={userCreationSchema}
     />
   );
 }

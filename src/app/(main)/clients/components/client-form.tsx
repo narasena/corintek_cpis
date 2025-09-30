@@ -38,7 +38,7 @@ export default function ClientForm() {
           }
         }
         formFields={createClientFormFields}
-        validationSchema={clientCreationSchema as any}
+        validationSchema={clientCreationSchema}
         />
   )
 }
