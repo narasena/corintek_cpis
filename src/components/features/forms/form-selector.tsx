@@ -18,7 +18,6 @@ import {
   UseFormStateReturn,
 } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
-import z from 'zod';
 
 type RenderProps<TFormAttributes extends FieldValues> = {
   field: ControllerRenderProps<TFormAttributes, Path<TFormAttributes>>;
@@ -28,49 +27,48 @@ type RenderProps<TFormAttributes extends FieldValues> = {
 
 interface FormSelectorProps<TFormAttributes extends FieldValues> {
   formField: IFormFields;
-  schema?: z.ZodObject<{
-    [K in keyof TFormAttributes]: z.ZodType<TFormAttributes[K]>;
-  }>;
   renderProps: RenderProps<TFormAttributes>;
 }
 
 export default function FormSelector<TFormAttributes extends FieldValues>(
-  { formField, schema, renderProps }: FormSelectorProps<TFormAttributes>
+  { formField, renderProps }: FormSelectorProps<TFormAttributes>
 ) {
   const { field, fieldState } = renderProps;
   const isInvalid = fieldState.invalid;
   const disabled = isInvalid; // Consistent disable on error
   const Icon = formField.icon as JSX.ElementType;
-  const fieldSchema = schema?.shape[formField.name as keyof TFormAttributes];
 
   switch (formField.type) {
     case EFieldType.SELECT:
     case EFieldType.ENUM:
+      // For enums, provide predefined options based on field name (avoid schema introspection to prevent TS hangs)
       let enumValues: string[] = [];
-      if (fieldSchema && 'enum' in fieldSchema && fieldSchema.enum && typeof fieldSchema.enum.values === 'object') {
-        enumValues = Object.values(fieldSchema.enum.values);
-      } else if (fieldSchema && typeof fieldSchema === 'object' && '_def' in fieldSchema && fieldSchema._def.typeName === 'ZodEnum') {
-        // Fallback for ZodEnum internal structure
-        enumValues = (fieldSchema as any)._def.values || [];
+      if (formField.name === 'role') {
+        enumValues = ['ADMIN', 'SUPERVISOR', 'TECHNICIAN', 'DIRECTOR'];
+      } else if (formField.name === 'employmentStatus') {
+        enumValues = ['PERMANENT', 'FREELANCE', 'CONTRACT'];
       }
       return (
-        <Select
-          onValueChange={value =>
-            field.onChange(value === '' ? undefined : value)
-          }
-          value={field.value as string | undefined}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Pilih Salah Satu" />
-          </SelectTrigger>
-          <SelectContent>
-            {enumValues.map(option => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={formField.name}>{formField.label}</Label>
+          <Select
+            onValueChange={value =>
+              field.onChange(value === '' ? undefined : value)
+            }
+            value={field.value as string | undefined}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={formField.placeHolder} />
+            </SelectTrigger>
+            <SelectContent>
+              {enumValues.map(option => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       );
     case EFieldType.BOOLEAN:
       return (

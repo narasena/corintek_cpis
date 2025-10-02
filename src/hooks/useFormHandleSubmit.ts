@@ -10,9 +10,8 @@ import {
 import { toast } from "sonner";
 
 interface IUseFormHandleSubmit<T extends FieldValues> {
-  data: T;
   form: UseFormReturn<T>;
-  key: Path<T> | keyof T;
+  key: Path<T>;
 }
 
 function isFile(value: unknown): value is File {
@@ -22,19 +21,17 @@ function isFile(value: unknown): value is File {
 export default function useFormHandleSubmit<
   TFormAttributes extends FieldValues,
 >(params: IUseFormHandleSubmit<TFormAttributes>) {
-  async function onSubmitWithImage() {
+  const onSubmitWithImage: SubmitHandler<TFormAttributes> = async (data) => {
     try {
-      const dataField = params.form.getValues();
-      const fieldKey = String(params.key);
-      const fieldValue = params
-        .data[params.key as keyof TFormAttributes]?.[0] as unknown;
-
       if (
         process.env.NODE_ENV === "development" ||
         process.env.NODE_ENV === "test"
       ) {
         console.log("onSubmit called");
         console.log("Valid form:", params.form.formState.isValid);
+
+        const fieldKey = String(params.key);
+        const fieldValue = data[params.key];
 
         const logValue = (() => {
           if (fieldValue === undefined || fieldValue === null) {
@@ -58,21 +55,20 @@ export default function useFormHandleSubmit<
 
       const formData = new FormData();
 
-      Object.entries(dataField).forEach(([key, value]) => {
-        if (key !== fieldKey && value !== undefined && value !== null) {
-          formData.append(key, String(value));
+      Object.entries(data).forEach(([key, value]) => {
+        const stringKey = String(key);
+        if (stringKey !== String(params.key) && value !== undefined && value !== null && value !== '') {
+          formData.append(stringKey, String(value));
         }
       });
 
-      const avatarFile = fieldValue;
-      if (avatarFile) {
-        if (avatarFile instanceof File) {
-          formData.append("avatarImg", avatarFile);
-          console.log("Appended file to FormData:", avatarFile.name);
-        }
+      const avatarFile = data[params.key];
+      if (avatarFile && isFile(avatarFile)) {
+        formData.append(String(params.key), avatarFile);
+        console.log("Appended file to FormData:", avatarFile.name);
       }
 
-      console.log("FormData has avatarImg:", formData.has("avatarImg")); // Log for validation
+      console.log("FormData has avatarImg:", formData.has(String(params.key)));
       console.log(
         "All FormData entries:",
         Array.from(formData.entries()).map(
@@ -96,7 +92,7 @@ export default function useFormHandleSubmit<
       toast.error(errorMessageResponse(error));
       console.error("Submit error:", error);
     }
-  }
+  };
 
   const onInvalid = (errors: FieldErrors<TFormAttributes>) => {
     console.log("Form validation failed");

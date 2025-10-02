@@ -20,9 +20,8 @@ export default function UsersPage() {
             modalTitle="Tambah User Baru"
             modalDescription="Menambahkan user baru ke dalam sistem CPIS"
             content={
-            // <UserForm />
-            <></>
-          }
+              <UserForm />
+            }
           />
         }
       />
