@@ -1,13 +1,13 @@
-import apiInstance from "@/utils/apiInstance";
-import errorMessageResponse from "@/utils/errorMessageResponse";
+import apiInstance from '@/utils/apiInstance';
+import errorMessageResponse from '@/utils/errorMessageResponse';
 import {
   FieldErrors,
   FieldValues,
   Path,
   SubmitHandler,
   UseFormReturn,
-} from "react-hook-form";
-import { toast } from "sonner";
+} from 'react-hook-form';
+import { toast } from 'sonner';
 
 interface IUseFormHandleSubmit<T extends FieldValues> {
   form: UseFormReturn<T>;
@@ -21,26 +21,26 @@ function isFile(value: unknown): value is File {
 export default function useFormHandleSubmit<
   TFormAttributes extends FieldValues,
 >(params: IUseFormHandleSubmit<TFormAttributes>) {
-  const onSubmitWithImage: SubmitHandler<TFormAttributes> = async (data) => {
+  const onSubmitWithImage: SubmitHandler<TFormAttributes> = async data => {
     try {
       if (
-        process.env.NODE_ENV === "development" ||
-        process.env.NODE_ENV === "test"
+        process.env.NODE_ENV === 'development' ||
+        process.env.NODE_ENV === 'test'
       ) {
-        console.log("onSubmit called");
-        console.log("Valid form:", params.form.formState.isValid);
+        console.log('onSubmit called');
+        console.log('Valid form:', params.form.formState.isValid);
 
         const fieldKey = String(params.key);
-        const fieldValue = data[params.key];
+        const fieldValue = data[params.key] as unknown;
 
         const logValue = (() => {
           if (fieldValue === undefined || fieldValue === null) {
-            return "Null/No file";
+            return 'Null/No file';
           }
 
           if (isFile(fieldValue)) {
             return `File object: ${
-              fieldValue.name || "[unnamed file]"
+              fieldValue.name || '[unnamed file]'
             } (${fieldValue.size} bytes)`;
           }
 
@@ -57,7 +57,12 @@ export default function useFormHandleSubmit<
 
       Object.entries(data).forEach(([key, value]) => {
         const stringKey = String(key);
-        if (stringKey !== String(params.key) && value !== undefined && value !== null && value !== '') {
+        if (
+          stringKey !== String(params.key) &&
+          value !== undefined &&
+          value !== null &&
+          value !== ''
+        ) {
           formData.append(stringKey, String(value));
         }
       });
@@ -65,43 +70,43 @@ export default function useFormHandleSubmit<
       const avatarFile = data[params.key];
       if (avatarFile && isFile(avatarFile)) {
         formData.append(String(params.key), avatarFile);
-        console.log("Appended file to FormData:", avatarFile.name);
+        console.log('Appended file to FormData:', avatarFile.name);
       }
 
-      console.log("FormData has avatarImg:", formData.has(String(params.key)));
+      console.log('FormData has avatarImg:', formData.has(String(params.key)));
       console.log(
-        "All FormData entries:",
+        'All FormData entries:',
         Array.from(formData.entries()).map(
-          ([k, v]) => `${k}: ${v instanceof File ? "File" : v}`,
-        ),
+          ([k, v]) => `${k}: ${v instanceof File ? 'File' : v}`
+        )
       );
 
-      const response = await apiInstance.postForm("users/create", formData);
+      const response = await apiInstance.postForm('users/create', formData);
       if (response.data.status !== 201) {
-        throw new Error("Submission failed");
+        throw new Error('Submission failed');
       }
       const result = response.data as {
         message?: string;
         data?: unknown;
       };
 
-      console.log("Backend success response:", result);
-      toast.success(result.message || "User created successfully");
+      console.log('Backend success response:', result);
+      toast.success(result.message || 'User created successfully');
       params.form.reset();
     } catch (error) {
       toast.error(errorMessageResponse(error));
-      console.error("Submit error:", error);
+      console.error('Submit error:', error);
     }
   };
 
   const onInvalid = (errors: FieldErrors<TFormAttributes>) => {
-    console.log("Form validation failed");
-    console.log("isValid:", params.form.formState.isValid);
-    console.log("Full errors:", JSON.stringify(errors, null, 2));
+    console.log('Form validation failed');
+    console.log('isValid:', params.form.formState.isValid);
+    console.log('Full errors:', JSON.stringify(errors, null, 2));
   };
 
   return {
     onSubmitWithImage,
-    onInvalid
+    onInvalid,
   };
 }

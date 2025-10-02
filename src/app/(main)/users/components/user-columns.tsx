@@ -1,23 +1,68 @@
-"use client"
+'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import DragHandleTable from '@/components/drag-handle-table';
-import { Checkbox } from '@/components/ui/checkbox';
 import { IUser } from '@/types/user.type';
 
-import { EmploymentStatus, UserRole } from '@/features/api/generated/prisma';
-import { IconCrown, IconDeviceDesktopStar, IconTool, IconUserCheck, IconUserCircle, IconUserHexagon, IconUserScreen } from '@tabler/icons-react';
+import {
+  IconCrown,
+  IconDeviceDesktopStar,
+  IconTool,
+  IconUserCheck,
+  IconUserCircle,
+  IconUserHexagon,
+  IconUserScreen,
+} from '@tabler/icons-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {  defaultColumns} from '@/components/default-columns';
+import { defaultColumns } from '@/components/default-columns';
+
+// Local enums to avoid importing from massive Prisma generated file
+enum UserRole {
+  ADMIN = 'ADMIN',
+  SUPERVISOR = 'SUPERVISOR',
+  TECHNICIAN = 'TECHNICIAN',
+  DIRECTOR = 'DIRECTOR',
+  CLIENT_MANAGER = 'CLIENT_MANAGER',
+  CLIENT_PIC = 'CLIENT_PIC',
+}
+
+enum EmploymentStatus {
+  PERMANENT = 'PERMANENT',
+  FREELANCE = 'FREELANCE',
+  CONTRACT = 'CONTRACT',
+}
 
 const userRoles = [
-  { role: UserRole.ADMIN, style: 'bg-purple-900 text-yellow-400', icon: IconCrown },
-  { role: UserRole.SUPERVISOR, style: 'bg-sky-700 text-yellow-200', icon:IconUserCheck },
-  { role: UserRole.TECHNICIAN, style: 'bg-blue-800 text-gray-200', icon:IconTool },
-  {role: UserRole.DIRECTOR, style: 'text-cyan-600 bg-lime-300', icon: IconDeviceDesktopStar },
-  {role: UserRole.CLIENT_MANAGER, style: 'bg-pink-600', icon: IconUserHexagon },
-  {role: UserRole.CLIENT_PIC, style: 'bg-violet-800 text-gray-200', icon: IconUserScreen },
-]
+  {
+    role: UserRole.ADMIN,
+    style: 'bg-purple-900 text-yellow-400',
+    icon: IconCrown,
+  },
+  {
+    role: UserRole.SUPERVISOR,
+    style: 'bg-sky-700 text-yellow-200',
+    icon: IconUserCheck,
+  },
+  {
+    role: UserRole.TECHNICIAN,
+    style: 'bg-blue-800 text-gray-200',
+    icon: IconTool,
+  },
+  {
+    role: UserRole.DIRECTOR,
+    style: 'text-cyan-600 bg-lime-300',
+    icon: IconDeviceDesktopStar,
+  },
+  {
+    role: UserRole.CLIENT_MANAGER,
+    style: 'bg-pink-600',
+    icon: IconUserHexagon,
+  },
+  {
+    role: UserRole.CLIENT_PIC,
+    style: 'bg-violet-800 text-gray-200',
+    icon: IconUserScreen,
+  },
+];
 
 const employeeStatus = [
   { status: EmploymentStatus.PERMANENT, style: 'bg-green-600' },
@@ -26,7 +71,7 @@ const employeeStatus = [
 ];
 
 export const userColumns = (): ColumnDef<IUser>[] => {
-  const {drag, select, email, phoneNumber,actions} = defaultColumns<IUser>();
+  const { drag, select, email, phoneNumber, actions } = defaultColumns<IUser>();
   return [
     drag,
     select,
@@ -36,18 +81,14 @@ export const userColumns = (): ColumnDef<IUser>[] => {
       cell: ({ row }) => {
         const name = row.original.firstName + ' ' + row.original.lastName;
         return (
-          <div className='flex gap-2 items-center'>
+          <div className="flex gap-2 items-center">
             <Avatar className="size-10 rounded-full">
-                      <AvatarImage
-                        src={row.original.avatarUrl} alt='avatar'
-                      />
-                      <AvatarFallback className="bg-gray-400 p-3">
-                        <IconUserCircle className='size-full text-slate-700'/>
-                      </AvatarFallback>
-                    </Avatar>
-            <div>
-              {name}
-            </div>
+              <AvatarImage src={row.original.avatarUrl} alt="avatar" />
+              <AvatarFallback className="bg-gray-400 p-3">
+                <IconUserCircle className="size-full text-slate-700" />
+              </AvatarFallback>
+            </Avatar>
+            <div>{name}</div>
           </div>
         );
       },

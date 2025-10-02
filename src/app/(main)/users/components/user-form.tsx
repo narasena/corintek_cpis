@@ -9,7 +9,10 @@ import DefaultForm from '@/components/features/forms/default-form';
 import useFormHandleSubmit from '@/hooks/useFormHandleSubmit';
 
 export default function UserForm() {
-  const { previewUrl, handleImagePreview } = useImagePreview<TUserCreationAttributes, 'avatarImg'>();
+  const { previewUrl, handleImagePreview } = useImagePreview<
+    TUserCreationAttributes,
+    'avatarImg'
+  >();
 
   const createUserForm = useForm<TUserCreationAttributes>({
     resolver: zodResolver(userCreationSchema),
@@ -29,7 +32,7 @@ export default function UserForm() {
 
   const { onSubmitWithImage, onInvalid } = useFormHandleSubmit({
     form: createUserForm,
-    key: 'avatarImg'
+    key: 'avatarImg',
   });
 
   return (
