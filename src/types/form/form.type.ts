@@ -15,6 +15,7 @@ export enum EFieldType {
   BOOLEAN = 'boolean',
   FILE = 'file',
   PASSWORD = 'password',
+  URL = 'url',
   EMAIL = 'email',
   NUMBER = 'number',
   TEXTAREA = 'textarea',
