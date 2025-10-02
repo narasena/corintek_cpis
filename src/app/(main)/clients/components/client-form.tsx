@@ -1,10 +1,10 @@
-import { TClientCreationAttributes } from "@/types/client.type";
-import { useForm } from "react-hook-form";
-import { clientCreationSchema } from "../schemas/clientSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import DefaultForm from "@/components/default-form";
-import { useImagePreview } from "@/hooks/useImagePreview";
-import { createClientFormFields } from "../data/clientFormFields";
+import { TClientCreationAttributes } from '@/types/client.type';
+import { useForm } from 'react-hook-form';
+import { clientCreationSchema } from '../schemas/clientSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
+import DefaultForm from '@/components/features/forms/default-form';
+import { useImagePreview } from '@/hooks/useImagePreview';
+import { createClientFormFields } from '../data/clientFormFields';
 
 export default function ClientForm() {
   const createClientForm = useForm<TClientCreationAttributes>({
@@ -16,29 +16,27 @@ export default function ClientForm() {
       phoneNumber: '',
       websiteUrl: '',
       address: '',
-      avatarImg: null
+      avatarImg: null,
     },
-  })
+  });
 
   const { previewUrl, handleImagePreview } = useImagePreview<
-      TClientCreationAttributes,
-      'avatarImg'
-    >();
+    TClientCreationAttributes,
+    'avatarImg'
+  >();
 
-  return(
+  return (
     <DefaultForm<TClientCreationAttributes>
-        form={createClientForm}
-        onSubmit={() => {}}
-        onInvalid={() => {}}
-        avatar={
-          {
-            key: 'avatarImg',
-            previewUrl: previewUrl || '',
-            onChange: handleImagePreview
-          }
-        }
-        formFields={createClientFormFields}
-        validationSchema={clientCreationSchema}
-        />
-  )
+      form={createClientForm}
+      onSubmit={() => {}}
+      onInvalid={() => {}}
+      avatar={{
+        key: 'avatarImg',
+        previewUrl: previewUrl || '',
+        onChange: handleImagePreview,
+      }}
+      formFields={createClientFormFields}
+      validationSchema={clientCreationSchema}
+    />
+  );
 }
