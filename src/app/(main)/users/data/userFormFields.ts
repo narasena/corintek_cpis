@@ -1,19 +1,11 @@
+import { EFieldType, IFormFields } from "@/types/form/form.type";
 import { IconLockFilled } from "@tabler/icons-react";
 
-export interface IFormFields {
-  name: string;
-  icon?: React.ComponentType;
-  className?: string;
-  type: string;
-  label: string;
-  placeHolder: string;
-  description: string;
-}
 
 export const createUserFormFields: IFormFields[] = [
     {
       name: 'firstName',
-      type: 'text',
+      type: EFieldType.TEXT,
       label: 'Nama Depan',
       placeHolder: 'John',
       description:
@@ -21,7 +13,7 @@ export const createUserFormFields: IFormFields[] = [
     },
     {
       name: 'lastName',
-      type: 'text',
+      type: EFieldType.TEXT,
       label: 'Nama Belakang',
       placeHolder: 'Doe',
       description:
@@ -29,7 +21,7 @@ export const createUserFormFields: IFormFields[] = [
     },
     {
       name: 'idNumber',
-      type: 'text',
+      type: EFieldType.TEXT,
       label: 'ID Number',
       placeHolder: 'ID-12345',
       description:
@@ -37,7 +29,7 @@ export const createUserFormFields: IFormFields[] = [
     },
     {
       name: 'phoneNumber',
-      type: 'text',
+      type: EFieldType.TEXT,
       label: 'Nomor Telepon',
       placeHolder: '088812345678',
       description:
@@ -45,7 +37,7 @@ export const createUserFormFields: IFormFields[] = [
     },
     {
       name: 'email',
-      type: 'email',
+      type: EFieldType.EMAIL,
       className: 'col-span-2',
       label: 'Email',
       placeHolder: 'Y2mE2@example.com',
@@ -54,21 +46,21 @@ export const createUserFormFields: IFormFields[] = [
     },
     {
       name: 'password',
-      type: 'password',
+      type: EFieldType.PASSWORD,
       label: 'Password',
       placeHolder: 'Password',
       description: "Buat password untuk user"
     },
     {
       name: 'confirmPassword',
-      type: 'password',
+      type: EFieldType.PASSWORD,
       label: 'Konfirmasi Password',
       placeHolder: 'Password',
       description: "Konfirmasi password untuk user"
     },
     {
       name: 'role',
-      type: 'selectEnum',
+      type: EFieldType.ENUM,
       label: 'Role',
       placeHolder: 'Pilih Salah Satu',
       description:
@@ -76,7 +68,7 @@ export const createUserFormFields: IFormFields[] = [
     },
     {
       name: 'employmentStatus',
-      type: 'selectEnum',
+      type: EFieldType.ENUM,
       label: 'Employment Status',
       placeHolder: 'Pilih Salah Satu',
       description:
@@ -88,7 +80,7 @@ export const createUserFormFields: IFormFields[] = [
     ...createUserFormFields,
     {
       name: 'isActive',
-      type: 'boolean',
+      type: EFieldType.BOOLEAN,
       label: 'Aktif',
       placeHolder: 'true',
       description:
@@ -97,7 +89,7 @@ export const createUserFormFields: IFormFields[] = [
     {
       name: 'isBlocked',
       icon: IconLockFilled,
-      type: 'boolean',
+      type: EFieldType.BOOLEAN,
       label: 'Blokir',
       placeHolder: 'false',
       description:

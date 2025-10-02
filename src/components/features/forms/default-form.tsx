@@ -1,0 +1,107 @@
+import { FieldValues, Path, UseFormReturn } from 'react-hook-form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '../../ui/form';
+import { IconInfoSquareFilled } from '@tabler/icons-react';
+import z from 'zod';
+import { JSX } from 'react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../ui/tooltip';
+import { Button } from '../../ui/button';
+import { EFieldType, IFormFields } from '@/types/form/form.type';
+import FormSelector from './form-selector';
+import ImageFormField from './image-form-field';
+
+interface IDefaultFormProps<TFormAttributes extends FieldValues> {
+  form: UseFormReturn<TFormAttributes>;
+  onSubmit: (data: TFormAttributes) => void;
+  onInvalid: (errors: Record<string, unknown>) => void;
+  avatar: {
+    key: Path<TFormAttributes>;
+    previewUrl: string;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  };
+  formFields: IFormFields[];
+  validationSchema: z.ZodObject<{
+    [K in keyof TFormAttributes]: z.ZodType<TFormAttributes[K]>;
+  }>;
+}
+
+export default function DefaultForm<TFormAttributes extends FieldValues>(
+  props: IDefaultFormProps<TFormAttributes>
+) {
+  return (
+    <Form {...props.form}>
+      <form
+        onSubmit={props.form.handleSubmit(props.onSubmit, props.onInvalid)}
+        className="space-y-8"
+      >
+        <ImageFormField 
+          form={props.form}
+          avatar={props.avatar}
+        />
+        <div className="grid grid-cols-2 gap-4">
+          {props.formFields.map(formField => (
+            <FormField
+              key={formField.name}
+              control={props.form.control}
+              name={
+                formField.name as keyof TFormAttributes as Path<TFormAttributes>
+              }
+              render={({ field, fieldState, formState }) => {
+                const fieldSchema =
+                  props.validationSchema.shape[
+                    formField.name as keyof TFormAttributes
+                  ];
+                const Icon = formField.icon as JSX.ElementType;
+
+                return (
+                  <FormItem
+                    className={
+                      formField.type === EFieldType.BOOLEAN
+                        ? 'col-span-2'
+                        : formField.className
+                          ? formField.className
+                          : ''
+                    }
+                  >
+                    {formField.type !== EFieldType.BOOLEAN && (
+                      <FormLabel>
+                        {formField.label}{' '}
+                        <Tooltip delayDuration={800}>
+                          <TooltipTrigger>
+                            <IconInfoSquareFilled className="size-4 text-gray-500" />
+                          </TooltipTrigger>
+                          <TooltipContent className="!max-w-[160px] flex flex-wrap">
+                            <p>{formField.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </FormLabel>
+                    )}
+                    <FormControl>
+                      <FormSelector<TFormAttributes>
+                        formField={formField}
+                        schema={props.validationSchema}
+                        renderProps={{ field, fieldState, formState }}
+                      />
+                    </FormControl>
+                    <FormDescription></FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+          ))}
+        </div>
+        <Button className="w-full" type="submit">
+          Submit
+        </Button>
+      </form>
+    </Form>
+  );
+}
