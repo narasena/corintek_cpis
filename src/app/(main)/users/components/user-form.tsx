@@ -1,30 +1,39 @@
 import { TUserCreationAttributes } from '@/types/user.type';
 import React from 'react';
-import { Field, FieldErrors, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { userCreationSchema } from '../schemas/userSchema';
+import { useImagePreview } from '@/hooks/useImagePreview';
 import useImageUpload from '@/hooks/useImageUpload';
 import { createUserFormFields } from '../data/userFormFields';
-import { toast } from 'sonner';
-import errorMessageResponse from '@/utils/errorMessageResponse';
-import apiInstance from '@/utils/apiInstance';
 import DefaultForm from '@/components/features/forms/default-form';
-import useUsers from '../hooks/useUsers';
+import useFormHandleSubmit from '@/hooks/useFormHandleSubmit';
 
 export default function UserForm() {
-  const {
-    allUsers,
-    previewUrl,
-    handleImagePreview,
-    file,
-    handleUpload,
-    result,
-    setFile,
-    uploading,
-    createUserForm,
-    onSubmitWithImage,
-    onInvalid,
-  } = useUsers();
+  const { previewUrl, handleImagePreview } = useImagePreview<TUserCreationAttributes, 'avatarImg'>();
+  const { file, handleUpload, result, setFile, uploading } = useImageUpload();
+
+  const createUserForm = useForm<TUserCreationAttributes>({
+    resolver: zodResolver(userCreationSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      idNumber: '',
+      email: '',
+      phoneNumber: '',
+      password: '',
+      confirmPassword: '',
+      role: undefined,
+      employmentStatus: undefined,
+      avatarImg: null,
+    },
+  });
+
+  const { onSubmitWithImage, onInvalid } = useFormHandleSubmit({
+    data: createUserForm,
+    form: createUserForm,
+    key: 'avatarImg'
+  });
 
   return (
     <DefaultForm<TUserCreationAttributes>
