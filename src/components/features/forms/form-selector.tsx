@@ -46,7 +46,13 @@ export default function FormSelector<TFormAttributes extends FieldValues>(
   switch (formField.type) {
     case EFieldType.SELECT:
     case EFieldType.ENUM:
-
+      let enumValues: string[] = [];
+      if (fieldSchema && 'enum' in fieldSchema && fieldSchema.enum && typeof fieldSchema.enum.values === 'object') {
+        enumValues = Object.values(fieldSchema.enum.values);
+      } else if (fieldSchema && typeof fieldSchema === 'object' && '_def' in fieldSchema && fieldSchema._def.typeName === 'ZodEnum') {
+        // Fallback for ZodEnum internal structure
+        enumValues = (fieldSchema as any)._def.values || [];
+      }
       return (
         <Select
           onValueChange={value =>
@@ -58,7 +64,7 @@ export default function FormSelector<TFormAttributes extends FieldValues>(
             <SelectValue placeholder="Pilih Salah Satu" />
           </SelectTrigger>
           <SelectContent>
-            {((fieldSchema as z.ZodEnum<TFormAttributes>).options as string[]).map(option => (
+            {enumValues.map(option => (
               <SelectItem key={option} value={option}>
                 {option}
               </SelectItem>
