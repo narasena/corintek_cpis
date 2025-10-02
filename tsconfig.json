@@ -24,6 +24,12 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules","src/features/api/generated/**"]
+  "include": [
+  "next-env.d.ts",
+  "src/**/*.ts",
+  "src/**/*.tsx",
+  "src/**/*.js",
+  "src/**/*.jsx"
+],
+  "exclude": ["node_modules",".next","src/features/api/generated/**","wrangler/**","out/**","worker/**","trace/**","**/*.log"]
 }
