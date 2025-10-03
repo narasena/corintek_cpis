@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 interface IUseFormHandleSubmit<T extends FieldValues> {
   form: UseFormReturn<T>;
   key: Path<T>;
+  apiUrl: string;
 }
 
 function isFile(value: unknown): value is File {
@@ -81,17 +82,13 @@ export default function useFormHandleSubmit<
         )
       );
 
-      const response = await apiInstance.postForm('users/create', formData);
+      const response = await apiInstance.postForm(params.apiUrl, formData);
+      console.log(response);
       if (response.data.status !== 201) {
         throw new Error('Submission failed');
       }
-      const result = response.data as {
-        message?: string;
-        data?: unknown;
-      };
-
-      console.log('Backend success response:', result);
-      toast.success(result.message || 'User created successfully');
+      console.log('Backend success response:', response.data);
+      toast.success(response.data.message || 'Data created successfully');
       params.form.reset();
     } catch (error) {
       toast.error(errorMessageResponse(error));
