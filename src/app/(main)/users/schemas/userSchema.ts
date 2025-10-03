@@ -48,7 +48,9 @@ export const userCreationSchema = z
     lastName: z
       .string()
       .regex(nameRegex, defaultSchemaMessage.only.alphabet)
-      .nonempty(defaultSchemaMessage.nonempty),
+      .nonempty(defaultSchemaMessage.nonempty)
+      .nullable()
+      .optional(),
     idNumber: z.string().nullable().optional(),
     email: z
       .email(defaultSchemaMessage.email)
