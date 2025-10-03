@@ -1,111 +1,94 @@
-import { fetchAllUsersService } from "./user.service";
-import { TUserCreationAttributes } from "@/types/user.type";
-import { NextRequest, NextResponse } from "next/server";
-import { createUserWithoutAvatar, updateUserAvatar } from "./user.service";
-import {userCreationSchema} from "@/app/(main)/users/schemas/userSchema";
-import z from "zod";
-import { prisma } from "@/features/api/connection/prisma";
+import { fetchAllUsersService } from './user.service';
+import { TUserCreationAttributes } from '@/types/user.type';
+import { NextRequest, NextResponse } from 'next/server';
+import { createUserWithoutAvatar, updateUserAvatar } from './user.service';
+import { userCreationSchema } from '@/app/(main)/users/schemas/userSchema';
+import requestValidation from '@/utils/api/validation/requestValidation';
+import { prisma } from '@/features/api/connection/prisma';
+import formDataLogs from '@/utils/api/logs/formDataLogs';
+import formDataToObject from '@/utils/api/form-data/formDataToObject';
+import uploadFormDataFormatter from '@/utils/api/form-data/uploadFormDataFormatter';
+import { EFileFolders } from '@/utils/api/form-data/formDataNameFormatter';
+import { imageUpload } from '../upload/upload.service';
 
 export async function createUser(req: NextRequest) {
-  let formData: FormData;
-  try {
-    formData = await req.formData();
-    console.log('FormData keys:', Array.from(formData.keys())); // Log for validation
-    console.log('Full FormData entries:', Array.from(formData.entries()).map(([k, v]) => `${k}: ${v instanceof File ? `File(${v.name}, ${v.size} bytes)` : v}`));
-  } catch (error) {
-    console.error('FormData parse error:', error);
-    return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
+  const formData = await formDataLogs(req);
+
+  if (formData instanceof NextResponse) {
+    return formData;
   }
 
-  // Extract fields to object
-  const data: Partial<Omit<TUserCreationAttributes, 'avatarImg'>> = {};
-  const avatarImg = formData.get('avatarImg') as File | null;
-  console.log('Parsed avatarImg:', avatarImg instanceof File ? `${avatarImg.name} (${avatarImg.size} bytes)` : 'Null/No file'); // Log for validation
-  console.log('Full FormData entries:', Array.from(formData.entries()).map(([k, v]) => `${k}: ${v instanceof File ? `File(${v.name}, ${v.size} bytes)` : v}`));
+  const { data, image: avatarImg } = formDataToObject<TUserCreationAttributes>(
+    formData,
+    'avatarImg'
+  );
 
-  for (const [key, value] of formData.entries()) {
-    if (key !== 'avatarImg' && value !== null) {
-      const fieldKey = key as keyof Omit<TUserCreationAttributes, 'avatarImg'>;
-      if (fieldKey === 'role' || fieldKey === 'employmentStatus') {
-        data[fieldKey] = value as any; // Enums as strings
-      } else {
-        (data as any)[fieldKey] = value as string;
-      }
-    }
+  const validatedResult = requestValidation<TUserCreationAttributes>({
+    validationSchema: userCreationSchema,
+    data,
+    imageField: 'avatarImg',
+  });
+
+  if (validatedResult instanceof NextResponse) {
+    return validatedResult;
   }
 
-  console.log('Extracted data before Zod:', data); // Log for validation
-
-  // Validate non-file fields
-  const schemaWithoutFile = userCreationSchema.omit({ avatarImg: true });
-  let validatedData: z.infer<typeof schemaWithoutFile>;
-  try {
-    validatedData = schemaWithoutFile.parse(data);
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      const errors = error.issues.map(issue => ({
-        field: issue.path.join('.'),
-        message: issue.message
-      }));
-      return NextResponse.json({ errors }, { status: 400 });
-    }
-    throw error;
-  }
-
-  console.log('Validated non-file data:', validatedData);
+  const validatedData = validatedResult;
 
   // Create user first without avatar in transaction
   let newUser;
-  let avatarUrl: string | null = null;
-  let avatarPublicId: string | null = null;
   try {
-    await prisma.$transaction(async (tx) => {
-      newUser = await createUserWithoutAvatar(validatedData, tx);
-      console.log('User created without avatar:', newUser);
+    await prisma.$transaction(async tx => {
+      newUser = await createUserWithoutAvatar(
+        validatedData as TUserCreationAttributes,
+        tx
+      );
 
       if (avatarImg && avatarImg.size > 0) {
-        const timestamp = new Date().toISOString();
-        const extension = avatarImg.name.split('.').pop() || 'jpg';
-        const fileName = `avatar-${timestamp}-${newUser.id}`;
-        const customKey = `avatars/users/${fileName}.${extension}`;
-
-        const uploadFormData = new FormData();
-        uploadFormData.append('file', avatarImg, avatarImg.name);
-        uploadFormData.append('prefix', 'avatars/users');
-        uploadFormData.append('key', customKey);
-
-        // Fetch to your upload route (adjust baseURL if needed; assumes same origin)
-        const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : `https://${process.env.VERCEL_URL}`;
-        const uploadResponse = await fetch(`${baseUrl}/api/upload`, { // Full URL for server-side fetch
-          method: 'POST',
-          body: uploadFormData,
+        const uploadFormData = uploadFormDataFormatter({
+          file: avatarImg,
+          fileType: 'image',
+          fileFolder: EFileFolders.USERS,
+          fileNamePrefix: 'avatar',
+          relativeId: newUser.id,
         });
-
-        if (!uploadResponse.ok) {
-          const errorData = await uploadResponse.json().catch(() => ({})) as { error?: string };
-          throw new Error(`Upload failed: ${errorData.error || 'Worker error'}`);
-        }
-
-        const uploadResult = await uploadResponse.json() as { url?: string; publicId?: string };
-        avatarUrl = uploadResult.url || null;
-        avatarPublicId = uploadResult.publicId || null;
-        console.log('Uploaded avatar URL:', avatarUrl, 'Public ID:', avatarPublicId); // Log for validation
+        // Fetch to your upload route (adjust baseURL if needed; assumes same origin)
+        const { url: avatarUrl, publicId: avatarPublicId } = (await imageUpload(
+          uploadFormData
+        )) as {
+          url: string;
+          publicId: string;
+        };
 
         // Update user with avatar in the same transaction
-        await updateUserAvatar(newUser.id, avatarUrl!, avatarPublicId!, tx);
-        console.log('User updated with avatar in transaction');
+        newUser = await updateUserAvatar(
+          newUser.id,
+          avatarUrl!,
+          avatarPublicId!,
+          tx
+        );
       }
+    });
+    console.log('New user created:', newUser);
+    return NextResponse.json({
+      success: true,
+      status: 201,
+      message: 'User created successfully',
+      newUser,
     });
   } catch (error) {
     console.error('Transaction error:', error);
-    return NextResponse.json({ error: 'User creation failed', details: error instanceof Error ? error.message : 'Unknown' }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        status: 500,
+        message: 'Error creating user',
+      },
+      { status: 500 }
+    );
   }
-
-  console.log('Final user with avatar:', { id: newUser!.id, avatarUrl });
-
-  return NextResponse.json({ message: 'User created successfully', data: newUser }, { status: 201 });
 }
 
-export async function fetchAllUsers () {
-  return await fetchAllUsersService()
+export async function fetchAllUsers() {
+  return await fetchAllUsersService();
 }

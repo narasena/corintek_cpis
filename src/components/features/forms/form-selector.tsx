@@ -47,7 +47,6 @@ export default function FormSelector<TFormAttributes extends FieldValues>({
       }
       return (
         <div className="flex flex-col gap-2">
-          <Label htmlFor={formField.name}>{formField.label}</Label>
           <Select
             onValueChange={value =>
               field.onChange(value === '' ? undefined : value)

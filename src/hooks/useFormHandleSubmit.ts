@@ -85,7 +85,7 @@ export default function useFormHandleSubmit<
       const response = await apiInstance.postForm(params.apiUrl, formData);
       console.log(response);
       if (response.data.status !== 201) {
-        throw new Error('Submission failed');
+        throw new Error(response.data.message || 'Submission failed');
       }
       console.log('Backend success response:', response.data);
       toast.success(response.data.message || 'Data created successfully');

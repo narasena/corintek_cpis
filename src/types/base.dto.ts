@@ -1,16 +1,16 @@
-import { UniqueIdentifier } from "@dnd-kit/core";
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 export interface IUniqueIdentifierId {
   id: UniqueIdentifier;
 }
 
 export interface ITableHelper extends IUniqueIdentifierId {
-  createdAt: string | null;
-  updatedAt: string | null;
-  deletedAt?: string | null;
+  createdAt: Date | string | null;
+  updatedAt: Date | string | null;
+  deletedAt?: Date | string | null;
 }
 
 export interface IIMage {
-  url?: string;
-  publicId?: string;
+  url?: string | null;
+  publicId?: string | null;
 }
