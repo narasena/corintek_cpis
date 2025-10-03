@@ -11,7 +11,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
 import React, { JSX } from 'react';
 import {
-  ControllerFieldState,
   ControllerRenderProps,
   FieldValues,
   Path,
@@ -21,7 +20,6 @@ import { Label } from '@/components/ui/label';
 
 type RenderProps<TFormAttributes extends FieldValues> = {
   field: ControllerRenderProps<TFormAttributes, Path<TFormAttributes>>;
-  fieldState: ControllerFieldState;
   formState: UseFormStateReturn<TFormAttributes>;
 };
 
@@ -30,12 +28,11 @@ interface FormSelectorProps<TFormAttributes extends FieldValues> {
   renderProps: RenderProps<TFormAttributes>;
 }
 
-export default function FormSelector<TFormAttributes extends FieldValues>(
-  { formField, renderProps }: FormSelectorProps<TFormAttributes>
-) {
-  const { field, fieldState } = renderProps;
-  const isInvalid = fieldState.invalid;
-  const disabled = isInvalid; // Consistent disable on error
+export default function FormSelector<TFormAttributes extends FieldValues>({
+  formField,
+  renderProps,
+}: FormSelectorProps<TFormAttributes>) {
+  const { field } = renderProps;
   const Icon = formField.icon as JSX.ElementType;
 
   switch (formField.type) {
@@ -97,28 +94,16 @@ export default function FormSelector<TFormAttributes extends FieldValues>(
       );
     case EFieldType.FILE:
       return (
-        <Input
-          type="file"
-          placeholder={formField.placeHolder}
-          {...field}
-          disabled={disabled}
-        />
+        <Input type="file" placeholder={formField.placeHolder} {...field} />
       );
     case EFieldType.TEXTAREA:
-      return (
-        <Textarea
-          placeholder={formField.placeHolder}
-          {...field}
-          disabled={disabled}
-        />
-      );
+      return <Textarea placeholder={formField.placeHolder} {...field} />;
     default:
       return (
         <Input
           type={formField.type as React.HTMLInputTypeAttribute}
           placeholder={formField.placeHolder}
           {...field}
-          disabled={disabled}
         />
       );
   }

@@ -10,7 +10,6 @@ import {
 } from '../../ui/form';
 import { IconInfoSquareFilled } from '@tabler/icons-react';
 import z from 'zod';
-import { JSX } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../ui/tooltip';
 import { Button } from '../../ui/button';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
@@ -41,10 +40,7 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
         onSubmit={props.form.handleSubmit(props.onSubmit, props.onInvalid)}
         className="space-y-8"
       >
-        <ImageFormField 
-          form={props.form}
-          avatar={props.avatar}
-        />
+        <ImageFormField form={props.form} avatar={props.avatar} />
         <div className="grid grid-cols-2 gap-4">
           {props.formFields.map(formField => (
             <FormField
@@ -53,48 +49,37 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
               name={
                 formField.name as keyof TFormAttributes as Path<TFormAttributes>
               }
-              render={({ field, fieldState, formState }) => {
-                const fieldSchema =
-                  props.validationSchema.shape[
-                    formField.name as keyof TFormAttributes
-                  ];
-                const Icon = formField.icon as JSX.ElementType;
-
-                return (
-                  <FormItem
-                    className={
-                      formField.type === EFieldType.BOOLEAN
-                        ? 'col-span-2'
-                        : formField.className
-                          ? formField.className
-                          : ''
-                    }
-                  >
-                    {formField.type !== EFieldType.BOOLEAN && (
-                      <FormLabel>
-                        {formField.label}{' '}
-                        <Tooltip delayDuration={800}>
-                          <TooltipTrigger>
-                            <IconInfoSquareFilled className="size-4 text-gray-500" />
-                          </TooltipTrigger>
-                          <TooltipContent className="!max-w-[160px] flex flex-wrap">
-                            <p>{formField.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </FormLabel>
-                    )}
-                    <FormControl>
-                      <FormSelector<TFormAttributes>
-                        formField={formField}
-                        schema={props.validationSchema}
-                        renderProps={{ field, fieldState, formState }}
-                      />
-                    </FormControl>
-                    <FormDescription></FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
+              render={({ field, formState }) => (
+                <FormItem
+                  className={
+                    formField.type === EFieldType.BOOLEAN
+                      ? 'col-span-2'
+                      : (formField.className ?? '')
+                  }
+                >
+                  {formField.type !== EFieldType.BOOLEAN && (
+                    <FormLabel>
+                      {formField.label}{' '}
+                      <Tooltip delayDuration={800}>
+                        <TooltipTrigger>
+                          <IconInfoSquareFilled className="size-4 text-gray-500" />
+                        </TooltipTrigger>
+                        <TooltipContent className="!max-w-[160px] flex flex-wrap">
+                          <p>{formField.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </FormLabel>
+                  )}
+                  <FormControl>
+                    <FormSelector<TFormAttributes>
+                      formField={formField}
+                      renderProps={{ field, formState }}
+                    />
+                  </FormControl>
+                  <FormDescription></FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           ))}
         </div>
