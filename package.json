@@ -9,12 +9,12 @@
     "lint": "eslint",
     "prepare": "husky",
     "precommit": "lint-staged",
-    "prisma:migrate": "dotenv -e .env.local -- npx prisma migrate dev",
-    "prisma:studio": "dotenv -e .env.local -- npx prisma studio",
-    "prisma:generate": "dotenv -e .env.local -- npx prisma generate",
-    "prisma:format": "dotenv -e .env.local -- npx prisma format",
-    "prisma:push": "dotenv -e .env.local -- npx prisma db push",
-    "prisma:seed": "dotenv -e .env.local -- npx prisma db seed"
+    "prisma:migrate": "dotenv -e .env.development -- npx prisma migrate dev",
+    "prisma:studio": "dotenv -e .env.development -- npx prisma studio",
+    "prisma:generate": "dotenv -e .env.development -- npx prisma generate",
+    "prisma:format": "dotenv -e .env.development -- npx prisma format",
+    "prisma:push": "dotenv -e .env.development -- npx prisma db push",
+    "prisma:seed": "dotenv -e .env.development -- npx prisma db seed"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
