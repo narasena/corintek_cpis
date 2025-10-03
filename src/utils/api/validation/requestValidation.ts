@@ -29,7 +29,10 @@ export default function requestValidation<TFormAttributes extends FieldValues>(
         field: issue.path.join('.'),
         message: issue.message,
       }));
-      return NextResponse.json({ errors }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: 'Validation Error', errors },
+        { status: 400 }
+      );
     }
     throw error;
   }

@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { API_CONFIG } from '@/lib/config';
+import { AppError } from '@/lib/app-error';
+import { createErrorResponse } from '@/lib/error-handler';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-    const prefix = formData.get('prefix') as string || 'default';
+    const prefix = (formData.get('prefix') as string) || 'default';
     const customKey = formData.get('key') as string | null;
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      throw new AppError({
+        status: 400,
+        message: 'No file uploaded',
+        isExpose: true,
+      });
     }
 
     // Compress images only (simple server-side compression if needed, but for now, upload as-is)
-    let uploadBody: Blob = file;
+    const uploadBody: Blob = file;
     let contentType = file.type || 'application/octet-stream';
 
     // Optional: Basic image compression could be added here if needed
@@ -21,7 +27,7 @@ export async function POST(request: NextRequest) {
       // For now, skip compression on server; handle in worker if required
       contentType = 'image/jpeg';
     }
-  
+
     let fileKey: string;
     if (customKey) {
       fileKey = customKey;
@@ -34,23 +40,33 @@ export async function POST(request: NextRequest) {
     const response = await fetch(`${API_CONFIG.WORKER_URL}/${fileKey}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${API_CONFIG.AUTH_SECRET}`,
-        'Content-Type': contentType
+        Authorization: `Bearer ${API_CONFIG.AUTH_SECRET}`,
+        'Content-Type': contentType,
       },
-      body: uploadBody
+      body: uploadBody,
     });
 
     const text = await response.text();
 
     if (!response.ok) {
-      return NextResponse.json({ error: text }, { status: response.status });
+      throw new AppError({
+        status: response.status,
+        message: text,
+        isExpose: true,
+      });
     }
 
     const url = `${API_CONFIG.WORKER_URL}/${fileKey}`;
-  
-    return NextResponse.json({ success: true, message: text, key: fileKey, url, publicId: fileKey });
+
+    return NextResponse.json({
+      success: true,
+      message: text,
+      key: fileKey,
+      url,
+      publicId: fileKey,
+    });
   } catch (error) {
     console.error('Upload error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return createErrorResponse(error);
   }
 }

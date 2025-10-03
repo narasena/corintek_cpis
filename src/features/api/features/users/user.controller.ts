@@ -10,6 +10,7 @@ import formDataToObject from '@/utils/api/form-data/formDataToObject';
 import uploadFormDataFormatter from '@/utils/api/form-data/uploadFormDataFormatter';
 import { EFileFolders } from '@/utils/api/form-data/formDataNameFormatter';
 import { imageUpload } from '../upload/upload.service';
+import { createErrorResponse } from '@/lib/error-handler';
 
 export async function createUser(req: NextRequest) {
   const formData = await formDataLogs(req);
@@ -78,14 +79,7 @@ export async function createUser(req: NextRequest) {
     });
   } catch (error) {
     console.error('Transaction error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        status: 500,
-        message: 'Error creating user',
-      },
-      { status: 500 }
-    );
+    return createErrorResponse(error);
   }
 }
 

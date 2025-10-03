@@ -1,6 +1,6 @@
 import baseUrl from '@/utils/api/baseUrl';
 import apiInstance from '@/utils/apiInstance';
-import { NextResponse } from 'next/server';
+import { AppError } from '@/lib/app-error';
 
 export async function imageUpload(imageFormData: FormData) {
   try {
@@ -21,10 +21,10 @@ export async function imageUpload(imageFormData: FormData) {
     };
   } catch (error) {
     console.error('Error uploading image:', error);
-    NextResponse.json({
-      success: false,
-      status: 406,
+    throw new AppError({
+      status: 500,
       message: 'Error uploading image',
+      isExpose: true,
     });
   }
 }

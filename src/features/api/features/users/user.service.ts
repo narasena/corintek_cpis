@@ -2,8 +2,8 @@ import { prisma } from '@/features/api/connection/prisma';
 import { TUserCreationAttributes } from '@/types/user.type';
 import { Prisma, User } from '@/features/api/generated/prisma';
 import { hashPassword } from '@/utils/passwordHash';
-import { AppError } from '@/lib/app-error';
 import { UniqueIdentifier } from '@dnd-kit/core';
+import { AppError } from '@/lib/app-error';
 
 export async function createUserWithoutAvatar(
   payload: Omit<TUserCreationAttributes, 'avatarImg'>,
@@ -24,8 +24,8 @@ export async function createUserWithoutAvatar(
 
   if (existingUser) {
     throw new AppError({
-      message: 'User with this email or phone number already exists',
       status: 409,
+      message: 'User already exists',
       isExpose: true,
     });
   }

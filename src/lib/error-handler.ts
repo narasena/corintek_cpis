@@ -1,12 +1,15 @@
 import { AppError } from './app-error';
 import { NextResponse } from 'next/server';
 
-export function getErrorResponse(error: unknown): { status: number; message: string } {
+export function getErrorResponse(error: unknown): {
+  status: number;
+  message: string;
+} {
   console.log('Error in getErrorResponse:', {
     name: error?.constructor?.name,
     message: (error as Error)?.message,
     isAppError: error instanceof AppError,
-    stack: (error as Error)?.stack?.split('\n').slice(0, 3)
+    stack: (error as Error)?.stack?.split('\n').slice(0, 3),
   });
 
   if (error instanceof AppError) {

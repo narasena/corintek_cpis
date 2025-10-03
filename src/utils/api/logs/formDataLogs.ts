@@ -18,7 +18,10 @@ export default async function formDataLogs(req: NextRequest) {
     }
   } catch (error) {
     console.error('FormData parse error:', error);
-    return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
+    return NextResponse.json(
+      { succes: false, message: 'Invalid form data' },
+      { status: 400 }
+    );
   }
   return formData;
 }
