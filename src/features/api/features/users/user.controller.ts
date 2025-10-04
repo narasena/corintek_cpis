@@ -83,6 +83,10 @@ export async function createUser(req: NextRequest) {
   }
 }
 
-export async function fetchAllUsers() {
-  return await fetchAllUsersService();
+export async function fetchAllUsers(req: NextRequest) {
+  try {
+    return await fetchAllUsersService(req);
+  } catch (error) {
+    return createErrorResponse(error);
+  }
 }
