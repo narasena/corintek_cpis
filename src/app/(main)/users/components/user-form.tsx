@@ -32,7 +32,7 @@ export default function UserForm() {
 
   const { onSubmitWithImage, onInvalid } = useFormHandleSubmit({
     form: createUserForm,
-    key: 'avatarImg',
+    imageKey: 'avatarImg',
     apiUrl: '/users/create',
   });
 
