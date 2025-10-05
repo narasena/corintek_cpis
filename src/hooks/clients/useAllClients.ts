@@ -1,0 +1,25 @@
+import { IClient } from '@/types/client.type';
+import apiInstance from '@/utils/apiInstance';
+import errorMessageResponse from '@/utils/errorMessageResponse';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+
+export default function useAllClients() {
+  const [clients, setClients] = useState<IClient[]>([]);
+
+  const fetchClients = async () => {
+    try {
+      const response = await apiInstance.get('/clients');
+      setClients(response.data.clients);
+    } catch (error) {
+      toast.error(errorMessageResponse(error));
+      console.error('Submit error:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  return { clients };
+}

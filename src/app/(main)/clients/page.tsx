@@ -1,26 +1,27 @@
 'use client';
 
 import { DataTable } from '@/components/data-table';
-import { IClient } from '@/types/client.type';
 import React from 'react';
 import { clientColumns } from './components/client-columns';
 import CreateData from '@/components/features/data/create-data';
 import ClientForm from './components/client-form';
+import useAllClients from '@/hooks/clients/useAllClients';
 
 export default function ClientsPage() {
+  const { clients } = useAllClients();
   return (
     <div>
       <DataTable
-        data={[] as IClient[]}
+        data={clients}
         columns={clientColumns()}
         addNewRow={
-        <CreateData
-        buttonText='Tambah Client'
-        modalTitle='Tambah Client Baru'
-        modalDescription='Menambahkan client baru ke dalam sistem CPIS'
-        content={<ClientForm />}
-        />
-      }
+          <CreateData
+            buttonText="Tambah Client"
+            modalTitle="Tambah Client Baru"
+            modalDescription="Menambahkan client baru ke dalam sistem CPIS"
+            content={<ClientForm />}
+          />
+        }
       />
     </div>
   );

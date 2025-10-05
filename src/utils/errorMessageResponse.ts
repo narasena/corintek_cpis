@@ -1,6 +1,9 @@
 import { AxiosError } from 'axios';
 
-export default function errorMessageResponse(error: unknown) {
+export default function errorMessageResponse(
+  error: unknown,
+  customMessage?: string
+) {
   const axiosError = error as AxiosError<{ message: string }>;
   if (axiosError.response?.data?.message) {
     return axiosError.response.data.message;
@@ -8,5 +11,8 @@ export default function errorMessageResponse(error: unknown) {
   if (error instanceof Error) {
     return error.message;
   }
-  return 'An error occurred';
+  if (customMessage) {
+    return customMessage;
+  }
+  return 'Terjadi kesalahan pada server';
 }

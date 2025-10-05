@@ -10,6 +10,7 @@ import { Prisma } from '../../generated/prisma';
 import uploadFormDataFormatter from '@/utils/api/form-data/uploadFormDataFormatter';
 import {
   createClientWithoutAvatar,
+  fetchAllClientsService,
   updateClientAvatar,
 } from './client.service';
 import { EFileFolders } from '@/utils/api/form-data/formDataNameFormatter';
@@ -75,6 +76,18 @@ export async function createClient(req: NextRequest) {
       status: 201,
       message: newClientMessage,
       newClient,
+    });
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+export async function fetchAllClients(req: NextRequest) {
+  try {
+    const clients = await fetchAllClientsService(req);
+    return NextResponse.json({
+      success: true,
+      clients,
     });
   } catch (error) {
     return createErrorResponse(error);

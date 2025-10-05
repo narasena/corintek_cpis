@@ -2,6 +2,8 @@ import { TClientCreationAttributes } from '@/types/client.type';
 import { Client, Prisma } from '../../generated/prisma';
 import { AppError } from '@/lib/app-error';
 import { UniqueIdentifier } from '@dnd-kit/core';
+import { prisma } from '../../connection/prisma';
+import { NextRequest } from 'next/server';
 
 export async function createClientWithoutAvatar(
   payload: Omit<TClientCreationAttributes, 'avatarImg'>,
@@ -121,6 +123,27 @@ export async function updateClientAvatar(
     throw new AppError({
       status: 500,
       message: 'Error updating client avatar',
+      isExpose: true,
+    });
+  }
+}
+
+export async function fetchAllClientsService(req: NextRequest) {
+  try {
+    const whereClause: Prisma.ClientWhereInput = {
+      deletedAt: null,
+    };
+
+    const allClients = await prisma.client.findMany({
+      where: whereClause,
+    });
+
+    return allClients;
+  } catch (error) {
+    console.error('Error fetching clients:', error);
+    throw new AppError({
+      status: 500,
+      message: 'Error fetching clients',
       isExpose: true,
     });
   }
