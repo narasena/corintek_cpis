@@ -1,6 +1,6 @@
 model Client {
     id          String          @id @default(uuid())
-    name        String
+    name        String          @unique
     description String?
     avatarUrl   String?
     avatarPublicId String?
