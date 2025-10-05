@@ -1,5 +1,9 @@
-import { ContractType, ProjectType, WorkCategory } from "@/features/api/generated/prisma";
-import z from "zod";
+import {
+  ContractType,
+  ProjectType,
+  WorkCategory,
+} from '@/features/api/generated/prisma';
+import z from 'zod';
 
 export const projectCreationSchema = z.object({
   parentId: z.string().nonempty(),
@@ -16,4 +20,4 @@ export const projectCreationSchema = z.object({
   warranty: z.number().nullable().optional(),
   clientPICId: z.string().nonempty(),
   technicianId: z.string().nonempty(),
-})
+});

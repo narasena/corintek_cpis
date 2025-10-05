@@ -36,8 +36,8 @@ model Project {
     warranty    Int?
     clientPICId    String
     clientPIC      User          @relation("ClientPIC", fields: [clientPICId], references: [id])
-    technicianId   String
-    technician     User          @relation("Technician", fields: [technicianId], references: [id])
+    internalPICId   String
+    internalPIC     User          @relation("InternalPIC", fields: [internalPICId], references: [id])
 
     machines    Machine[]
     labReports  LabReport[]
@@ -53,7 +53,7 @@ model Project {
     @@map("projects")
     @@index([clientId, parentId])
     @@index([clientPICId])
-    @@index([technicianId])
+    @@index([internalPICId])
 }
 
 enum ProjectType {

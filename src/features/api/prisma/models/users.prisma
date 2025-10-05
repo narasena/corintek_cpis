@@ -16,7 +16,7 @@ model User {
 
     technicianAbsences TechnicianAbsence[]
     clientPIC   Project[]      @relation("ClientPIC")
-    technician  Project[]      @relation("Technician")
+    internalPIC  Project[]      @relation("InternalPIC")
     signatures  Signature[]
     notifications   Notification[]
     auditLogs   AuditLog[]
