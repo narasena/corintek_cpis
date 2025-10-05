@@ -11,6 +11,7 @@ import uploadFormDataFormatter from '@/utils/api/form-data/uploadFormDataFormatt
 import { EFileFolders } from '@/utils/api/form-data/formDataNameFormatter';
 import { imageUpload } from '../upload/upload.service';
 import { createErrorResponse } from '@/lib/error-handler';
+import { Prisma } from '../../generated/prisma';
 
 export async function createUser(req: NextRequest) {
   const formData = await formDataLogs(req);
@@ -39,7 +40,7 @@ export async function createUser(req: NextRequest) {
   // Create user first without avatar in transaction
   let newUser;
   try {
-    await prisma.$transaction(async tx => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       newUser = await createUserWithoutAvatar(
         validatedData as TUserCreationAttributes,
         tx

@@ -1,15 +1,16 @@
-import { defaultColumns } from "@/components/default-columns"
-import { IClient } from "@/types/client.type"
-import { ColumnDef } from "@tanstack/react-table"
+import { defaultColumns } from '@/components/default-columns';
+import { IClient } from '@/types/client.type';
+import { ColumnDef } from '@tanstack/react-table';
 
-export const clientColumns = ():ColumnDef<IClient>[] => {
-  const {drag,select,email, phoneNumber,actions} = defaultColumns<IClient>()
+export const clientColumns = (): ColumnDef<IClient>[] => {
+  const { drag, select, email, phoneNumber, actions } =
+    defaultColumns<IClient>();
   return [
     drag,
     select,
     {
       accessorKey: 'name',
-      header: 'Client'
+      header: 'Client',
     },
     email,
     phoneNumber,
@@ -17,6 +18,6 @@ export const clientColumns = ():ColumnDef<IClient>[] => {
       accessorKey: 'websiteUrl',
       header: 'Website',
     },
-    actions
-  ]
-}
+    actions,
+  ];
+};

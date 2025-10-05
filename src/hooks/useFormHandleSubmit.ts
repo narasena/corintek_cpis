@@ -59,13 +59,13 @@ export default function useFormHandleSubmit<
 
         Object.entries(data).forEach(([key, value]) => {
           const stringKey = String(key);
-          if (
-            stringKey !== String(params.imageKey) &&
-            value !== undefined &&
-            value !== null &&
-            value !== ''
-          ) {
-            formData.append(stringKey, String(value));
+          if (stringKey !== String(params.imageKey)) {
+            // For optional fields, send empty string instead of excluding
+            if (value === null || value === undefined) {
+              formData.append(stringKey, '');
+            } else {
+              formData.append(stringKey, String(value));
+            }
           }
         });
 

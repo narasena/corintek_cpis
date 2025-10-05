@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import DefaultForm from '@/components/features/forms/default-form';
 import { useImagePreview } from '@/hooks/useImagePreview';
 import { createClientFormFields } from '../data/clientFormFields';
+import useFormHandleSubmit from '@/hooks/useFormHandleSubmit';
 
 export default function ClientForm() {
   const createClientForm = useForm<TClientCreationAttributes>({
@@ -25,11 +26,17 @@ export default function ClientForm() {
     'avatarImg'
   >();
 
+  const { onSubmitWithImage, onInvalid } = useFormHandleSubmit({
+    form: createClientForm,
+    imageKey: 'avatarImg',
+    apiUrl: '/clients/create',
+  });
+
   return (
     <DefaultForm<TClientCreationAttributes>
       form={createClientForm}
-      onSubmit={() => {}}
-      onInvalid={() => {}}
+      onSubmit={onSubmitWithImage}
+      onInvalid={onInvalid}
       avatar={{
         key: 'avatarImg',
         previewUrl: previewUrl || '',

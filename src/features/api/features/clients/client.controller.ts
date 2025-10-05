@@ -1,0 +1,82 @@
+import { clientCreationSchema } from '@/app/(main)/clients/schemas/clientSchema';
+import { createErrorResponse } from '@/lib/error-handler';
+import { TClientCreationAttributes } from '@/types/client.type';
+import formDataToObject from '@/utils/api/form-data/formDataToObject';
+import formDataLogs from '@/utils/api/logs/formDataLogs';
+import requestValidation from '@/utils/api/validation/requestValidation';
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '../../connection/prisma';
+import { Prisma } from '../../generated/prisma';
+import uploadFormDataFormatter from '@/utils/api/form-data/uploadFormDataFormatter';
+import {
+  createClientWithoutAvatar,
+  updateClientAvatar,
+} from './client.service';
+import { EFileFolders } from '@/utils/api/form-data/formDataNameFormatter';
+import { imageUpload } from '../upload/upload.service';
+
+export async function createClient(req: NextRequest) {
+  try {
+    const formData = await formDataLogs(req);
+
+    if (formData instanceof NextResponse) {
+      return formData;
+    }
+
+    const { data, image: avatarImg } =
+      formDataToObject<TClientCreationAttributes>(formData, 'avatarImg');
+
+    const validatedResult = requestValidation<TClientCreationAttributes>({
+      validationSchema: clientCreationSchema,
+      data,
+      imageField: 'avatarImg',
+    });
+    if (validatedResult instanceof NextResponse) {
+      return validatedResult;
+    }
+
+    const validatedData = validatedResult;
+    let newClient;
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      newClient = await createClientWithoutAvatar(
+        validatedData as TClientCreationAttributes,
+        tx
+      );
+
+      if (avatarImg && avatarImg.size > 0) {
+        const uploadFormData = uploadFormDataFormatter({
+          file: avatarImg,
+          fileType: 'image',
+          fileFolder: EFileFolders.CLIENTS,
+          fileNamePrefix: 'avatar',
+          relativeId: newClient.id,
+        });
+        // Fetch to your upload route (adjust baseURL if needed; assumes same origin)
+        const { url: avatarUrl, publicId: avatarPublicId } = (await imageUpload(
+          uploadFormData
+        )) as {
+          url: string;
+          publicId: string;
+        };
+
+        // Update user with avatar in the same transaction
+        newClient = await updateClientAvatar(
+          newClient.id,
+          avatarUrl!,
+          avatarPublicId!,
+          tx
+        );
+      }
+    });
+    const newClientMessage = 'Klien baru berhasil ditambahkan';
+    console.log(`${newClientMessage}:`, newClient);
+    return NextResponse.json({
+      success: true,
+      status: 201,
+      message: newClientMessage,
+      newClient,
+    });
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
