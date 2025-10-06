@@ -29,7 +29,7 @@ export default function ClientForm() {
   const { onSubmitWithImage, onInvalid } = useFormHandleSubmit({
     form: createClientForm,
     imageKey: 'avatarImg',
-    apiUrl: '/clients/create',
+    apiUrl: '/clients',
   });
 
   return (
