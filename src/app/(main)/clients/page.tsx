@@ -5,10 +5,10 @@ import React from 'react';
 import { clientColumns } from './components/client-columns';
 import CreateData from '@/components/features/data/create-data';
 import ClientForm from './components/client-form';
-import useAllClients from '@/hooks/clients/useAllClients';
+import useClients from './hooks/useClients';
 
 export default function ClientsPage() {
-  const { clients } = useAllClients();
+  const { clients } = useClients();
   return (
     <div>
       <DataTable

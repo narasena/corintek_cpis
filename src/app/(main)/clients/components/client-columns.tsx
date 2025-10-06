@@ -17,11 +17,10 @@ export const clientColumns = (): ColumnDef<IClient>[] => {
         return (
           <SlugData
             type="nameSlug"
-            onClick={() => {}}
             buttonText={row.original.name}
             modalTitle={row.original.name}
             modalDescription={row.original.description || ''}
-            content={<ClientData />}
+            content={<ClientData clientId={row.original.id} />}
           />
         );
       },

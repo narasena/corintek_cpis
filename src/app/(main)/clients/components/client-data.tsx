@@ -9,13 +9,56 @@ import { IUser } from '@/types/user.type';
 import { clientPICColumns } from './client-pic-column';
 import CreateData from '@/components/features/data/create-data';
 import ClientPicForm from './client-pic-form';
+import useClientById from '@/hooks/clients/useClientById';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
-export default function ClientData() {
+interface IClientDataProps {
+  clientId: UniqueIdentifier;
+}
+
+export default function ClientData(props: IClientDataProps) {
+  const { clientData, isLoading } = useClientById(String(props.clientId));
+
   const data = [
     {
       value: 'client-info',
       triggerLabel: 'Informasi Klien',
-      content: <div>Informasi Klien</div>,
+      content: (
+        <div className="space-y-4">
+          {clientData ? (
+            <>
+              <div>
+                <h3 className="font-semibold text-lg">{clientData.name}</h3>
+                <p className="text-gray-600">{clientData.description}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="font-medium">Email:</label>
+                  <p>{String(clientData.email || 'N/A')}</p>
+                </div>
+                <div>
+                  <label className="font-medium">Phone:</label>
+                  <p>{String(clientData.phoneNumber || 'N/A')}</p>
+                </div>
+                <div>
+                  <label className="font-medium">Website:</label>
+                  <p>{String(clientData.websiteUrl || 'N/A')}</p>
+                </div>
+                <div>
+                  <label className="font-medium">Address:</label>
+                  <p>{String(clientData.address || 'N/A')}</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div>
+              {isLoading
+                ? '⏳ Loading client information...'
+                : 'No client data available'}
+            </div>
+          )}
+        </div>
+      ),
     },
     {
       value: 'client-pic',

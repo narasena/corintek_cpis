@@ -4,7 +4,7 @@ import { IconEye } from '@tabler/icons-react';
 
 interface ISlugDataProps {
   type: 'nameSlug' | 'quickView';
-  onClick: () => void;
+  onClick?: () => void;
   buttonText?: string;
   modalTitle: string;
   modalDescription?: string;

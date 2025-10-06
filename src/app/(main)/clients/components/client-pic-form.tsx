@@ -32,7 +32,7 @@ export default function ClientPicForm() {
   const { onSubmitWithImage, onInvalid } = useFormHandleSubmit({
     form: createClientPICForm,
     imageKey: 'avatarImg',
-    apiUrl: '/clients/create',
+    apiUrl: '/clients/pic/create',
   });
 
   return (
