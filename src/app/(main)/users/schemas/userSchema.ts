@@ -28,8 +28,8 @@ const passwordSchema = z
   );
 
 const omittedRoles: readonly UserRole[] = [
-  UserRole.CLIENT_PIC,
-  UserRole.CLIENT_MANAGER,
+  UserRole.CLIENT_TECHNICIAN,
+  UserRole.CLIENT_SUPERVISOR,
 ];
 const allowedRoles = Object.values(UserRole).filter(
   role => !omittedRoles.includes(role)
