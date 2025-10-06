@@ -4,10 +4,10 @@ import { IconPlus } from '@tabler/icons-react';
 import * as React from 'react';
 
 interface ICreateDataProps {
-  buttonText: string
-  modalTitle:string
-  modalDescription?:string
-  content: React.ReactNode
+  buttonText: string;
+  modalTitle: string;
+  modalDescription?: string;
+  content: React.ReactNode;
 }
 
 export default function CreateData(props: ICreateDataProps) {
