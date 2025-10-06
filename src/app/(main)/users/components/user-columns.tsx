@@ -31,7 +31,7 @@ enum EmploymentStatus {
   CONTRACT = 'CONTRACT',
 }
 
-const userRoles = [
+export const userRoles = [
   {
     role: UserRole.ADMIN,
     style: 'bg-purple-900 text-yellow-400',

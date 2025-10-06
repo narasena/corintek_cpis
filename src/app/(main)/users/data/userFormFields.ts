@@ -7,8 +7,7 @@ export const createUserFormFields: IFormFields[] = [
     type: EFieldType.TEXT,
     label: 'Nama Depan',
     placeHolder: 'John',
-    description:
-      'Masukkan nama depan sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+    description: 'Masukkan nama depan sesuai dengan yang terdaftar di Corintek',
   },
   {
     name: 'lastName',
@@ -16,7 +15,7 @@ export const createUserFormFields: IFormFields[] = [
     label: 'Nama Belakang',
     placeHolder: 'Doe',
     description:
-      'Masukkan nama belakang sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+      'Masukkan nama belakang sesuai dengan yang terdaftar di Corintek',
   },
   {
     name: 'idNumber',
@@ -24,7 +23,7 @@ export const createUserFormFields: IFormFields[] = [
     label: 'ID Number',
     placeHolder: 'ID-12345',
     description:
-      'Masukkan nomor identitas sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+      'Masukkan nomor identitas sesuai dengan yang terdaftar di Corintek',
   },
   {
     name: 'phoneNumber',
@@ -32,7 +31,7 @@ export const createUserFormFields: IFormFields[] = [
     label: 'Nomor Telepon',
     placeHolder: '088812345678',
     description:
-      'Masukkan nomor telepon sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+      'Masukkan nomor telepon sesuai dengan yang terdaftar di Corintek',
   },
   {
     name: 'email',
@@ -40,8 +39,7 @@ export const createUserFormFields: IFormFields[] = [
     className: 'col-span-2',
     label: 'Email',
     placeHolder: 'Y2mE2@example.com',
-    description:
-      'Masukkan email sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+    description: 'Masukkan email sesuai dengan yang terdaftar di Corintek',
   },
   {
     name: 'password',
@@ -62,8 +60,7 @@ export const createUserFormFields: IFormFields[] = [
     type: EFieldType.ENUM,
     label: 'Role',
     placeHolder: 'Pilih Salah Satu',
-    description:
-      'Masukkan role sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+    description: 'Masukkan role sesuai dengan yang terdaftar di Corintek',
   },
   {
     name: 'employmentStatus',
@@ -71,7 +68,7 @@ export const createUserFormFields: IFormFields[] = [
     label: 'Employment Status',
     placeHolder: 'Pilih Salah Satu',
     description:
-      'Masukkan status kerja sesuai dengan yang terdaftar di perusahaan Anda bekerja',
+      'Masukkan status kerja sesuai dengan yang terdaftar di Corintek',
   },
 ];
 
