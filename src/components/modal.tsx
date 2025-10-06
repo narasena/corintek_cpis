@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 interface IModalProps {
   trigger: React.ReactNode | string;
@@ -23,8 +24,10 @@ export default function Modal(props: IModalProps) {
         {props.trigger}
       </DialogTrigger>
       <DialogContent
-        className={`sm:!${props.className ? `${props.className}` : 'max-w-2xl'}
-         !overflow-y-auto !max-h-screen my-4`}
+        className={cn(
+          'sm:max-w-2xl !overflow-y-auto !max-h-screen my-4',
+          props.className
+        )}
       >
         <DialogHeader className="">
           <DialogTitle>{props.title}</DialogTitle>

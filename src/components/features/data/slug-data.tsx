@@ -14,7 +14,7 @@ interface ISlugDataProps {
 export default function SlugData(props: ISlugDataProps) {
   return (
     <Modal
-      className="max-w-5xl"
+      className="sm:max-w-5xl"
       trigger={
         props.type === 'nameSlug' ? (
           <span
