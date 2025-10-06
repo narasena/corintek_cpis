@@ -1,7 +1,12 @@
 import { UniqueIdentifier } from '@dnd-kit/core';
 import timestampFormatter from './timestampFormatter';
 
-export type TFileNamePrefixes = 'default' | 'avatar' | 'log_sheet' | 'file';
+export type TFileNamePrefixes =
+  | 'default'
+  | 'logo'
+  | 'avatar'
+  | 'log_sheet'
+  | 'file';
 export type TFileTypes = 'image' | 'document' | 'file';
 export enum EFileFolders {
   USERS = 'users',
