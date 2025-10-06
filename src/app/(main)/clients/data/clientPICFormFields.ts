@@ -1,3 +1,4 @@
+import { clientPersonnelRoles } from '../../users/components/user-columns';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
 import { IconLockFilled } from '@tabler/icons-react';
 
@@ -58,6 +59,7 @@ export const createClientPICFormFields: IFormFields[] = [
     label: 'Role',
     placeHolder: 'Pilih Salah Satu',
     description: 'Masukkan role PIC Klien',
+    enumOptions: clientPersonnelRoles.map(r => r.role),
   },
   {
     name: 'employmentStatus',

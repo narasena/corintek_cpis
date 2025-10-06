@@ -6,6 +6,7 @@ export interface IFormFields {
   label: string;
   placeHolder: string;
   description: string;
+  enumOptions?: string[];
 }
 
 export enum EFieldType {

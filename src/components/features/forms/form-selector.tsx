@@ -40,7 +40,9 @@ export default function FormSelector<TFormAttributes extends FieldValues>({
     case EFieldType.ENUM:
       // For enums, provide predefined options based on field name (avoid schema introspection to prevent TS hangs)
       let enumValues: string[] = [];
-      if (formField.name === 'role') {
+      if (formField.enumOptions) {
+        enumValues = formField.enumOptions;
+      } else if (formField.name === 'role') {
         enumValues = ['ADMIN', 'SUPERVISOR', 'TECHNICIAN', 'DIRECTOR'];
       } else if (formField.name === 'employmentStatus') {
         enumValues = ['PERMANENT', 'FREELANCE', 'CONTRACT'];

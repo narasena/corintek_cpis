@@ -10,14 +10,13 @@ import { clientPICColumns } from './client-pic-column';
 import CreateData from '@/components/features/data/create-data';
 import ClientPicForm from './client-pic-form';
 import useClientById from '@/hooks/clients/useClientById';
-import { UniqueIdentifier } from '@dnd-kit/core';
 
 interface IClientDataProps {
-  clientId: UniqueIdentifier;
+  clientId: string;
 }
 
 export default function ClientData(props: IClientDataProps) {
-  const { clientData, isLoading } = useClientById(String(props.clientId));
+  const { clientData, isLoading } = useClientById(props.clientId);
 
   const data = [
     {
@@ -72,7 +71,7 @@ export default function ClientData(props: IClientDataProps) {
               buttonText="Tambah PIC Klien"
               modalTitle="Tambah PIC Klien Baru"
               modalDescription="Menambahkan PIC Klien baru ke dalam data klien di CPIS"
-              content={<ClientPicForm />}
+              content={<ClientPicForm clientId={props.clientId} />}
             />
           }
         />

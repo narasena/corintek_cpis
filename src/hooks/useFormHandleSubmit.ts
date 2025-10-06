@@ -13,6 +13,7 @@ interface IUseFormHandleSubmit<T extends FieldValues> {
   form: UseFormReturn<T>;
   imageKey?: Path<T>;
   apiUrl: string;
+  refetch?: () => void;
 }
 
 function isFile(value: unknown): value is File {
@@ -92,6 +93,10 @@ export default function useFormHandleSubmit<
           throw new Error(response.data.message || 'Submission failed');
         }
         console.log('Backend success response:', response.data);
+
+        if (params.refetch) {
+          params.refetch();
+        }
         toast.success(response.data.message || 'Data created successfully');
         params.form.reset();
       }

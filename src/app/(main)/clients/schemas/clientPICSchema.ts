@@ -27,20 +27,24 @@ const passwordSchema = z
     defaultSchemaMessage.at_least_one.special_character
   );
 
-const omittedRoles: readonly UserRole[] = [
+const clientOmittedRoles: readonly UserRole[] = [
   UserRole.ADMIN,
   UserRole.SUPERVISOR,
   UserRole.TECHNICIAN,
   UserRole.DIRECTOR,
 ];
-const allowedRoles = Object.values(UserRole).filter(
-  role => !omittedRoles.includes(role)
+const clientAllowedRoles = Object.values(UserRole).filter(
+  role => !clientOmittedRoles.includes(role)
 ) as [UserRole, ...UserRole[]];
-const filteredUserRole = z.enum(allowedRoles, defaultSchemaMessage.choose_one);
+
+const filteredClientRole = z.enum(
+  clientAllowedRoles,
+  defaultSchemaMessage.choose_one
+);
 
 const nameRegex = /^[a-zA-Z .'\-]+$/;
 
-export const clientPICCreationSchema = z
+export const clientPersonnelCreateSchema = z
   .object({
     firstName: z
       .string(defaultSchemaMessage.only.alphabet)
@@ -64,7 +68,7 @@ export const clientPICCreationSchema = z
       .regex(/^[0-9]+$/, defaultSchemaMessage.only.number)
       .min(10, defaultSchemaMessage.min(10))
       .max(17, defaultSchemaMessage.max(17)),
-    role: filteredUserRole,
+    role: filteredClientRole,
     employmentStatus: z.enum(EmploymentStatus, defaultSchemaMessage.choose_one),
     avatarImg: z.file().nullable().optional(),
   })
@@ -73,7 +77,7 @@ export const clientPICCreationSchema = z
     passwordMismatchError
   );
 
-export const userEditSchema = clientPICCreationSchema
+export const clientPersonnelEditSchema = clientPersonnelCreateSchema
   .safeExtend({
     isActive: z.boolean().nullable().optional(),
     isBlocked: z.boolean().nullable().optional(),

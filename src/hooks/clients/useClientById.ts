@@ -33,5 +33,6 @@ export default function useClientById(clientId: string) {
   return {
     clientData,
     isLoading,
+    refetch: fetchClientData,
   };
 }

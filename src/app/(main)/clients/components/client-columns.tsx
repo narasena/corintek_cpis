@@ -20,7 +20,7 @@ export const clientColumns = (): ColumnDef<IClient>[] => {
             buttonText={row.original.name}
             modalTitle={row.original.name}
             modalDescription={row.original.description || ''}
-            content={<ClientData clientId={row.original.id} />}
+            content={<ClientData clientId={row.original.id as string} />}
           />
         );
       },

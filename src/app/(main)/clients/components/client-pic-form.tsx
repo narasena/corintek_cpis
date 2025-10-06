@@ -1,15 +1,21 @@
 import { TClientPICCreationAttributes } from '@/types/client.type';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { clientPICCreationSchema } from '../schemas/clientPICSchema';
+import { clientPersonnelCreateSchema } from '../schemas/clientPICSchema';
 import { useImagePreview } from '@/hooks/useImagePreview';
 import useFormHandleSubmit from '@/hooks/useFormHandleSubmit';
 import DefaultForm from '@/components/features/forms/default-form';
 import { createClientPICFormFields } from '../data/clientPICFormFields';
+import useClientById from '@/hooks/clients/useClientById';
 
-export default function ClientPicForm() {
+interface IClientPicFormProps {
+  clientId: string;
+}
+
+export default function ClientPicForm(props: IClientPicFormProps) {
+  const { refetch } = useClientById(props.clientId);
   const createClientPICForm = useForm<TClientPICCreationAttributes>({
-    resolver: zodResolver(clientPICCreationSchema),
+    resolver: zodResolver(clientPersonnelCreateSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -32,7 +38,8 @@ export default function ClientPicForm() {
   const { onSubmitWithImage, onInvalid } = useFormHandleSubmit({
     form: createClientPICForm,
     imageKey: 'avatarImg',
-    apiUrl: '/clients/pic/create',
+    apiUrl: `/clients/id/${props.clientId}/personnels`,
+    refetch,
   });
 
   return (
@@ -46,7 +53,7 @@ export default function ClientPicForm() {
         onChange: handleImagePreview,
       }}
       formFields={createClientPICFormFields}
-      validationSchema={clientPICCreationSchema}
+      validationSchema={clientPersonnelCreateSchema}
     />
   );
 }

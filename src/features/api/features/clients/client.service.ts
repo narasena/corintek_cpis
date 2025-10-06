@@ -1,9 +1,13 @@
-import { TClientCreationAttributes } from '@/types/client.type';
-import { Client, Prisma } from '../../generated/prisma';
+import {
+  TClientCreationAttributes,
+  TClientPICCreationAttributes,
+} from '@/types/client.type';
+import { Client, Prisma, User } from '../../generated/prisma';
 import { AppError } from '@/lib/app-error';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { prisma } from '../../connection/prisma';
 import { NextRequest } from 'next/server';
+import { hashPassword } from '@/utils/passwordHash';
 
 export async function createClientWithoutAvatar(
   payload: Omit<TClientCreationAttributes, 'avatarImg'>,
@@ -154,12 +158,13 @@ export async function fetchClientByIdService(
   clientId: string
 ) {
   try {
-    const whereClause: Prisma.ClientWhereInput = {
-      deletedAt: null,
-    };
+    const whereClause: Prisma.ClientWhereInput | Prisma.ClientWhereUniqueInput =
+      {
+        deletedAt: null,
+      };
     const client = await prisma.client.findUnique({
       where: {
-        ...whereClause,
+        ...(whereClause as Prisma.ClientWhereUniqueInput),
         id: clientId,
       },
     });
@@ -179,6 +184,91 @@ export async function fetchClientByIdService(
     throw new AppError({
       status: 500,
       message: errMessage,
+      isExpose: true,
+    });
+  }
+}
+
+export async function createClientPersonnelWithoutAvatar(
+  payload: Omit<TClientPICCreationAttributes, 'avatarImg'>,
+  tx: Prisma.TransactionClient,
+  clientId: string
+) {
+  try {
+    const whereClause: Prisma.UserWhereInput | Prisma.UserWhereUniqueInput = {
+      OR: [{ email: payload.email }],
+      deletedAt: null,
+    };
+
+    if (payload.phoneNumber) {
+      whereClause.OR?.push({ phoneNumber: payload.phoneNumber });
+    }
+
+    const existingClientPersonnel: User | null = await tx.user.findFirst({
+      where: whereClause,
+    });
+
+    if (existingClientPersonnel) {
+      throw new AppError({
+        status: 409,
+        message: 'PIC Klien sudah pernah terdaftar',
+        isExpose: true,
+      });
+    }
+
+    const createdClientPersonnel = await tx.user.create({
+      data: {
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        idNumber: payload.idNumber || null,
+        email: payload.email,
+        phoneNumber: payload.phoneNumber,
+        role: payload.role,
+        employmentStatus: payload.employmentStatus,
+        password: hashPassword(payload.password),
+        avatarUrl: null,
+        avatarPublicId: null,
+      },
+    });
+
+    await tx.clientPersonnel.create({
+      data: {
+        clientId,
+        personnelId: createdClientPersonnel.id,
+      },
+    });
+
+    return createdClientPersonnel;
+  } catch (error) {
+    const errMessage = 'Terjadi kesalahan saat menambahkan PIC klien';
+    console.error(`${errMessage}:`, error);
+    throw new AppError({
+      status: 500,
+      message: errMessage,
+      isExpose: true,
+    });
+  }
+}
+
+export async function updateClientPersonnelAvatar(
+  clientPersonnelId: UniqueIdentifier,
+  avatarUrl: string,
+  avatarPublicId: string,
+  tx: Prisma.TransactionClient
+) {
+  try {
+    return tx.user.update({
+      where: { id: clientPersonnelId as string },
+      data: {
+        avatarUrl,
+        avatarPublicId,
+      },
+    });
+  } catch (error) {
+    console.error('Error updating client personnel avatar:', error);
+    throw new AppError({
+      status: 500,
+      message: 'Error updating client personnel avatar',
       isExpose: true,
     });
   }

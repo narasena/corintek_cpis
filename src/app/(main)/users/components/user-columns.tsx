@@ -14,23 +14,9 @@ import {
 } from '@tabler/icons-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { defaultColumns } from '@/components/default-columns';
+import { EmploymentStatus, UserRole } from '@/features/api/generated/prisma';
 
-// Local enums to avoid importing from massive Prisma generated file
-enum UserRole {
-  ADMIN = 'ADMIN',
-  SUPERVISOR = 'SUPERVISOR',
-  TECHNICIAN = 'TECHNICIAN',
-  DIRECTOR = 'DIRECTOR',
-  CLIENT_MANAGER = 'CLIENT_MANAGER',
-  CLIENT_PIC = 'CLIENT_PIC',
-}
-
-enum EmploymentStatus {
-  PERMANENT = 'PERMANENT',
-  FREELANCE = 'FREELANCE',
-  CONTRACT = 'CONTRACT',
-}
-
+// Local enums to avoid importing from massive Prisma generated fil
 export const userRoles = [
   {
     role: UserRole.ADMIN,
@@ -53,16 +39,23 @@ export const userRoles = [
     icon: IconDeviceDesktopStar,
   },
   {
-    role: UserRole.CLIENT_MANAGER,
+    role: UserRole.CLIENT_SUPERVISOR,
     style: 'bg-pink-600',
     icon: IconUserHexagon,
   },
   {
-    role: UserRole.CLIENT_PIC,
+    role: UserRole.CLIENT_TECHNICIAN,
     style: 'bg-violet-800 text-gray-200',
     icon: IconUserScreen,
   },
 ];
+
+export const clientPersonnelRoles = userRoles.filter(
+  role =>
+    role.role === UserRole.CLIENT_TECHNICIAN ||
+    role.role === UserRole.CLIENT_SUPERVISOR
+);
+
 
 const employeeStatus = [
   { status: EmploymentStatus.PERMANENT, style: 'bg-green-600' },
