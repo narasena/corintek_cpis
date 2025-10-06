@@ -15,6 +15,7 @@ model User {
     isBlocked   Boolean         @default(false)
 
     technicianAbsences TechnicianAbsence[]
+    clientPersonnel   ClientPersonnel[]
     clientPIC   Project[]      @relation("ClientPIC")
     internalPIC  Project[]      @relation("InternalPIC")
     signatures  Signature[]
