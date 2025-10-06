@@ -11,6 +11,7 @@ import uploadFormDataFormatter from '@/utils/api/form-data/uploadFormDataFormatt
 import {
   createClientWithoutAvatar,
   fetchAllClientsService,
+  fetchClientByIdService,
   updateClientAvatar,
 } from './client.service';
 import { EFileFolders } from '@/utils/api/form-data/formDataNameFormatter';
@@ -88,6 +89,18 @@ export async function fetchAllClients(req: NextRequest) {
     return NextResponse.json({
       success: true,
       clients,
+    });
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+export async function fetchClientById(req: NextRequest, clientId: string) {
+  try {
+    const client = await fetchClientByIdService(req, clientId);
+    return NextResponse.json({
+      success: true,
+      client,
     });
   } catch (error) {
     return createErrorResponse(error);

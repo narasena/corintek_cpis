@@ -148,3 +148,38 @@ export async function fetchAllClientsService(req: NextRequest) {
     });
   }
 }
+
+export async function fetchClientByIdService(
+  req: NextRequest,
+  clientId: string
+) {
+  try {
+    const whereClause: Prisma.ClientWhereInput = {
+      deletedAt: null,
+    };
+    const client = await prisma.client.findUnique({
+      where: {
+        ...whereClause,
+        id: clientId,
+      },
+    });
+
+    if (!client) {
+      throw new AppError({
+        status: 404,
+        message: 'Klien tidak ditemukan',
+        isExpose: true,
+      });
+    }
+
+    return client;
+  } catch (error) {
+    const errMessage = 'Error ketika mencari client';
+    console.error(`${errMessage}:`, error);
+    throw new AppError({
+      status: 500,
+      message: errMessage,
+      isExpose: true,
+    });
+  }
+}
