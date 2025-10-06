@@ -11,7 +11,7 @@ export default function useClientById(clientId: string) {
   const fetchClientData = async () => {
     try {
       setIsLoading(true);
-      const response = await apiInstance.get(`/clients/id/${clientId}`);
+      const response = await apiInstance.get(`/clients/${clientId}`);
       setClientData(response.data.client);
     } catch (error) {
       console.error('❌ Error fetching client data:', error);
