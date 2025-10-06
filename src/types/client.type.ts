@@ -10,15 +10,22 @@ export interface IClient
     ITableHelper {
   avatarUrl?: IIMage['url'];
   avatarPublicId?: IIMage['publicId'];
+  personnels: IClientPersonnel[];
 }
 
 export type TClientPICCreationAttributes = z.infer<
   typeof clientPICCreationSchema
 >;
 
-export interface IClientPIC
+export interface IClientPICDetail
   extends Omit<TClientPICCreationAttributes, 'avatarImg'>,
     ITableHelper {
   avatarUrl?: IIMage['url'];
   avatarPublicId?: IIMage['publicId'];
+}
+
+export interface IClientPersonnel extends ITableHelper {
+  clientId: string;
+  personnelId: string;
+  personnel: IClientPICDetail;
 }

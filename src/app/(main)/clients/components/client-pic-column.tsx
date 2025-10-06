@@ -1,23 +1,29 @@
 import { defaultColumns } from '@/components/default-columns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { IUser } from '@/types/user.type';
 import { IconUserCircle } from '@tabler/icons-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { userRoles } from '../../users/components/user-columns';
+import { IClientPersonnel } from '@/types/client.type';
 
-export const clientPICColumns = (): ColumnDef<IUser>[] => {
-  const { select, actions } = defaultColumns<IUser>();
+export const clientPICColumns = (): ColumnDef<IClientPersonnel>[] => {
+  const { select, actions } = defaultColumns<IClientPersonnel>();
   return [
     select,
     {
       id: 'name',
       header: 'Nama',
       cell: ({ row }) => {
-        const name = row.original.firstName + ' ' + row.original.lastName;
+        const name =
+          row.original.personnel.firstName +
+          ' ' +
+          row.original.personnel.lastName;
         return (
           <div className="flex gap-2 items-center">
             <Avatar className="size-10 rounded-full">
-              <AvatarImage src={row.original.avatarUrl} alt="avatar" />
+              <AvatarImage
+                src={row.original.personnel.avatarUrl as string}
+                alt="avatar"
+              />
               <AvatarFallback className="bg-gray-400 p-3">
                 <IconUserCircle className="size-full text-slate-700" />
               </AvatarFallback>
@@ -32,7 +38,9 @@ export const clientPICColumns = (): ColumnDef<IUser>[] => {
       accessorKey: 'role',
       header: 'Role',
       cell: ({ row }) => {
-        const role = userRoles.find(r => r.role === row.original.role);
+        const role = userRoles.find(
+          r => r.role === row.original.personnel.role
+        );
         if (role) {
           return (
             <div

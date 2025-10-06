@@ -10,6 +10,7 @@ import { clientPICColumns } from './client-pic-column';
 import CreateData from '@/components/features/data/create-data';
 import ClientPicForm from './client-pic-form';
 import useClientById from '@/hooks/clients/useClientById';
+import { IClientPersonnel } from '@/types/client.type';
 
 interface IClientDataProps {
   clientId: string;
@@ -64,7 +65,7 @@ export default function ClientData(props: IClientDataProps) {
       triggerLabel: 'PIC Klien',
       content: (
         <DataTable
-          data={[] as IUser[]}
+          data={clientData?.personnels || []}
           columns={clientPICColumns()}
           addNewRow={
             <CreateData

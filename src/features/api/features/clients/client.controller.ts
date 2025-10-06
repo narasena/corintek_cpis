@@ -16,6 +16,7 @@ import {
   createClientWithoutAvatar,
   fetchAllClientsService,
   fetchClientByIdService,
+  fetchClientPersonnelService,
   updateClientAvatar,
 } from './client.service';
 import { EFileFolders } from '@/utils/api/form-data/formDataNameFormatter';
@@ -176,6 +177,17 @@ export async function createClientPersonnel(
       status: 201,
       message: newClientPersnonnelMessage,
       newClientPersonnel,
+    });
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+export async function fetchClientPersonnel(req: NextRequest, clientId: string) {
+  try {
+    return NextResponse.json({
+      success: true,
+      clientPersonnel: await fetchClientPersonnelService(req, clientId),
     });
   } catch (error) {
     return createErrorResponse(error);

@@ -1,4 +1,4 @@
-import { createClientPersonnel } from '@/features/api/features/clients/client.controller';
+import { createClientPersonnel, fetchClientPersonnel } from '@/features/api/features/clients/client.controller';
 import { NextRequest } from 'next/server';
 
 export async function POST(
@@ -6,4 +6,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   return await createClientPersonnel(req, params.id);
+}
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  return await fetchClientPersonnel(req, params.id);
 }

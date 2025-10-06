@@ -167,6 +167,13 @@ export async function fetchClientByIdService(
         ...(whereClause as Prisma.ClientWhereUniqueInput),
         id: clientId,
       },
+      include: {
+        personnels: {
+          include: {
+            personnel: { omit: { password: true } },
+          },
+        },
+      },
     });
 
     if (!client) {
@@ -269,6 +276,35 @@ export async function updateClientPersonnelAvatar(
     throw new AppError({
       status: 500,
       message: 'Error updating client personnel avatar',
+      isExpose: true,
+    });
+  }
+}
+
+export async function fetchClientPersonnelService(
+  req: NextRequest,
+  clientId: string
+) {
+  try {
+    const whereClause: Prisma.ClientPersonnelWhereInput = {
+      deletedAt: null,
+    };
+
+    const clientPersonnels = await prisma.clientPersonnel.findMany({
+      where: {
+        clientId,
+        ...whereClause,
+      },
+      include: { personnel: { omit: { password: true } } },
+    });
+
+    return clientPersonnels;
+  } catch (error) {
+    const errMessage = 'Error ketika mencari client personnel';
+    console.error(`${errMessage}:`, error);
+    throw new AppError({
+      status: 500,
+      message: errMessage,
       isExpose: true,
     });
   }
