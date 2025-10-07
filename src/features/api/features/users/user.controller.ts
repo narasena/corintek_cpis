@@ -86,7 +86,12 @@ export async function createUser(req: NextRequest) {
 
 export async function fetchAllUsers(req: NextRequest) {
   try {
-    return await fetchAllUsersService(req);
+    const users = await fetchAllUsersService(req);
+    return NextResponse.json({
+      success: true,
+      status: 200,
+      users,
+    });
   } catch (error) {
     return createErrorResponse(error);
   }

@@ -5,8 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { projectCreationFormFields } from '../data/projectFormFields';
 import DefaultForm from '@/components/features/forms/default-form';
 import useFormHandleSubmit from '@/hooks/useFormHandleSubmit';
+import useAllPersonnels from '@/hooks/users/useAllPersonnels';
 
 export default function ProjectForm() {
+  const { internalPersonnels } = useAllPersonnels();
   const projectCreationForm = useForm<TProjectCreationAttributes>({
     resolver: zodResolver(projectCreationSchema),
     defaultValues: {
@@ -37,7 +39,7 @@ export default function ProjectForm() {
       form={projectCreationForm}
       onSubmit={onSubmit}
       onInvalid={onInvalid}
-      formFields={projectCreationFormFields}
+      formFields={projectCreationFormFields(internalPersonnels)}
       validationSchema={projectCreationSchema}
     />
   );

@@ -26,6 +26,8 @@ type RenderProps<TFormAttributes extends FieldValues> = {
 interface FormSelectorProps<TFormAttributes extends FieldValues> {
   formField: IFormFields;
   renderProps: RenderProps<TFormAttributes>;
+  customComponent?: JSX.ElementType;
+  selectComponent?: JSX.ElementType;
 }
 
 export default function FormSelector<TFormAttributes extends FieldValues>({
@@ -34,8 +36,16 @@ export default function FormSelector<TFormAttributes extends FieldValues>({
 }: FormSelectorProps<TFormAttributes>) {
   const { field } = renderProps;
   const Icon = formField.icon as JSX.ElementType;
+  const CustomComponent = formField.customComponent as JSX.ElementType;
+
+  // Helper function to generate display value from item properties
 
   switch (formField.type) {
+    case EFieldType.CUSTOM:
+      if (typeof formField.customComponent === 'function') {
+        return formField.customComponent(field) as React.ReactElement;
+      }
+      return <CustomComponent />;
     case EFieldType.SELECT:
     case EFieldType.ENUM:
       // For enums, provide predefined options based on field name (avoid schema introspection to prevent TS hangs)
@@ -53,7 +63,13 @@ export default function FormSelector<TFormAttributes extends FieldValues>({
             onValueChange={value =>
               field.onChange(value === '' ? undefined : value)
             }
-            value={field.value as string | undefined}
+            value={
+              Array.isArray(field.value)
+                ? field.value.length > 0
+                  ? field.value[0]
+                  : undefined
+                : (field.value as string | undefined)
+            }
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={formField.placeHolder} />

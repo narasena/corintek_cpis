@@ -1,3 +1,5 @@
+import React from 'react';
+
 export interface IFormFields {
   name: string;
   icon?: React.ComponentType;
@@ -7,6 +9,7 @@ export interface IFormFields {
   placeHolder: string;
   description: string;
   enumOptions?: string[];
+  customComponent?: React.ReactNode | ((field: any) => React.ReactNode);
 }
 
 export enum EFieldType {
@@ -22,4 +25,5 @@ export enum EFieldType {
   TEXTAREA = 'textarea',
   DATE = 'date',
   DATETIME = 'datetime',
+  CUSTOM = 'custom',
 }
