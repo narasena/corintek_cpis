@@ -20,7 +20,7 @@ interface IDefaultFormProps<TFormAttributes extends FieldValues> {
   form: UseFormReturn<TFormAttributes>;
   onSubmit: (data: TFormAttributes) => void;
   onInvalid: (errors: Record<string, unknown>) => void;
-  avatar: {
+  avatar?: {
     key: Path<TFormAttributes>;
     previewUrl: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -40,7 +40,9 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
         onSubmit={props.form.handleSubmit(props.onSubmit, props.onInvalid)}
         className="space-y-8"
       >
-        <ImageFormField form={props.form} avatar={props.avatar} />
+        {props.avatar && (
+          <ImageFormField form={props.form} avatar={props.avatar} />
+        )}
         <div className="grid grid-cols-2 gap-4">
           {props.formFields.map(formField => (
             <FormField

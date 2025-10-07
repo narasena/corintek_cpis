@@ -18,6 +18,6 @@ export const projectCreationSchema = z.object({
   contractType: z.enum(ContractType),
   workCategory: z.enum(WorkCategory),
   warranty: z.number().nullable().optional(),
-  clientPICId: z.string().nonempty(),
-  technicianId: z.string().nonempty(),
+  clientPersonnelIds: z.array(z.string()).nonempty(),
+  personnelIds: z.array(z.string()).nonempty(),
 });

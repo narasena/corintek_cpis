@@ -5,6 +5,7 @@ import CreateData from '@/components/features/data/create-data';
 import { IProject } from '@/types/project.type';
 import React from 'react';
 import { projectColumns } from './components/project-columns';
+import ProjectForm from './components/project-form';
 
 export default function page() {
   return (
@@ -14,10 +15,10 @@ export default function page() {
         columns={projectColumns()}
         addNewRow={
           <CreateData
-            buttonText="Tambah Client"
-            modalTitle="Tambah Client Baru"
-            modalDescription="Menambahkan client baru ke dalam sistem CPIS"
-            content={<></>}
+            buttonText="Tambah Proyek"
+            modalTitle="Tambah Proyek Baru"
+            modalDescription="Menambahkan proyek baru ke dalam sistem CPIS"
+            content={<ProjectForm />}
           />
         }
       />

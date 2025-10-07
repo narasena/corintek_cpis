@@ -106,6 +106,27 @@ export default function useFormHandleSubmit<
     }
   };
 
+  const onSubmit: SubmitHandler<TFormAttributes> = async data => {
+    try {
+      if (
+        process.env.NODE_ENV === 'development' ||
+        process.env.NODE_ENV === 'test'
+      ) {
+        console.log('onSubmit called');
+        console.log('Valid form:', params.form.formState.isValid);
+      }
+      const response = await apiInstance.post(params.apiUrl, data);
+      console.log(response);
+      if (response.data.status !== 201) {
+        throw new Error(response.data.message || 'Submission failed');
+      }
+      console.log('Backend success response:', response.data);
+    } catch (error) {
+      toast.error(errorMessageResponse(error));
+      console.error('Submit error:', error);
+    }
+  };
+
   const onInvalid = (errors: FieldErrors<TFormAttributes>) => {
     console.log('Form validation failed');
     console.log('isValid:', params.form.formState.isValid);
@@ -114,6 +135,7 @@ export default function useFormHandleSubmit<
 
   return {
     onSubmitWithImage,
+    onSubmit,
     onInvalid,
   };
 }

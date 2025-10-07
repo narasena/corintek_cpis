@@ -20,4 +20,6 @@ export enum EFieldType {
   EMAIL = 'email',
   NUMBER = 'number',
   TEXTAREA = 'textarea',
+  DATE = 'date',
+  DATETIME = 'datetime',
 }

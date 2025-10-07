@@ -15,11 +15,8 @@ model Project {
     contractType ContractType
     workCategory WorkCategory
     warranty    Int?
-    clientPICId    String
-    clientPIC      User          @relation("ClientPIC", fields: [clientPICId], references: [id])
-    internalPICId   String
-    internalPIC     User          @relation("InternalPIC", fields: [internalPICId], references: [id])
 
+    assignments   ProjectAssignment[]   @relation("Assignments")
     machines    Machine[]
     labReports  LabReport[]
     logSheets    LogSheet[]
@@ -33,8 +30,6 @@ model Project {
     deletedAt  DateTime?
     @@map("projects")
     @@index([clientId, parentId])
-    @@index([clientPICId])
-    @@index([internalPICId])
 }
 
 enum ProjectType {
@@ -70,4 +65,23 @@ enum ProjectStatus {
     PAUSED
     COMPLETED
     CANCELLED
+}
+
+model ProjectAssignment {
+    id          String          @id @default(uuid())
+    projectId   String
+    project     Project         @relation("Assignments", fields: [projectId], references: [id])
+    assigneeId      String
+    assignee        User            @relation("Assignees",fields: [assigneeId], references: [id])
+    role        ProjectAssignmentRole
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("project_assignments")
+}
+
+enum ProjectAssignmentRole {
+    INTERNAL
+    CLIENT
 }

@@ -9,20 +9,20 @@ export const projectColumns = (): ColumnDef<IProject>[] => {
     select,
     {
       accessorKey: 'name',
-      header: 'Project'
+      header: 'Project',
     },
     {
       accessorKey: 'clientId',
-      header: 'Client'
+      header: 'Client',
     },
     {
       accessorKey: 'startDate',
-      header: 'Start Date'
+      header: 'Start Date',
     },
     {
       accessorKey: 'endDate',
-      header: 'End Date'
+      header: 'End Date',
     },
-    actions
-  ]
+    actions,
+  ];
 };

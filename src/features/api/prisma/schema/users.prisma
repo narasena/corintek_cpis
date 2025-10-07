@@ -14,10 +14,9 @@ model User {
     isActive  Boolean         @default(true)
     isBlocked   Boolean         @default(false)
 
+    assignees   ProjectAssignment[]      @relation("Assignees")
     technicianAbsences TechnicianAbsence[]
     clientPersonnel   ClientPersonnel[]
-    clientPIC   Project[]      @relation("ClientPIC")
-    internalPIC  Project[]      @relation("InternalPIC")
     signatures  Signature[]
     notifications   Notification[]
     auditLogs   AuditLog[]
