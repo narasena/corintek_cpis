@@ -178,3 +178,39 @@ export async function fetchAllProjectsService(req: NextRequest) {
     });
   }
 }
+
+export async function fetchAssignedProjectsService(userId: string) {
+  try {
+    const projects = await prisma.project.findMany({
+      where: {
+        deletedAt: null,
+        assignments: {
+          some: {
+            assigneeId: userId,
+            deletedAt: null,
+          },
+        },
+      },
+      include: {
+        client: true,
+        assignments: {
+          include: {
+            assignee: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return projects;
+  } catch (error) {
+    console.error('Error fetching assigned projects:', error);
+    throw new AppError({
+      status: 500,
+      message: 'Error fetching assigned projects',
+      isExpose: true,
+    });
+  }
+}

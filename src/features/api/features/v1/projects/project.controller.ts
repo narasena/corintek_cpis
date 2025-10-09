@@ -4,12 +4,19 @@ import {
   fetchInternalPersonnelsService,
   createProjectService,
   fetchAllProjectsService,
+  fetchAssignedProjectsService,
 } from './project.service';
 import { projectCreationSchema } from '@/app/(main)/projects/schemas/projectSchema';
 import requestValidation from '@/utils/api/v1/validation/requestValidation';
 import { TProjectCreationAttributes } from '@/types/project.type';
 import { prisma } from '@/features/api/connection/prisma';
 import { Prisma } from '@/features/api/generated/prisma';
+import jwt from 'jsonwebtoken';
+
+interface ITokenPayload {
+  id: string;
+  role: string;
+}
 
 export async function fetchInternalPersonnels(req: NextRequest) {
   try {
@@ -62,6 +69,30 @@ export async function createProject(req: NextRequest) {
 export async function fetchAllProjects(req: NextRequest) {
   try {
     const projects = await fetchAllProjectsService(req);
+    return NextResponse.json({
+      success: true,
+      projects,
+    });
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+export async function fetchAssignedProjects(req: NextRequest) {
+  try {
+    const token = req.cookies.get('auth_token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as ITokenPayload;
+
+    if (!decoded || !decoded.id) {
+      return NextResponse.json({ message: 'Invalid token' }, { status: 401 });
+    }
+
+    const projects = await fetchAssignedProjectsService(decoded.id);
     return NextResponse.json({
       success: true,
       projects,
