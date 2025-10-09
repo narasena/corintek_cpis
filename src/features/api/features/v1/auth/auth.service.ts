@@ -1,6 +1,7 @@
 import { prisma } from '@/features/api/connection/prisma';
 import { Prisma } from '@/features/api/generated/prisma';
 import { AppError } from '@/lib/app-error';
+import { serviceErrorResponse } from '@/lib/error-handler';
 import { TAuthLoginFormAttributes } from '@/types/auth.type';
 import { comparePassword } from '@/utils/api/v1/passwordHash';
 import { createToken } from '@/utils/api/v1/token';
@@ -49,12 +50,10 @@ export const userLoginService = async (payload: TAuthLoginFormAttributes) => {
     });
     return token;
   } catch (error) {
-    const errMessage = 'Gagal masuk ke akun';
-    console.log(`${errMessage}:`, error);
-    throw new AppError({
-      isExpose: true,
+    serviceErrorResponse({
+      error,
+      customErrorMessage: 'Gagal masuk ke akun',
       status: 401,
-      message: errMessage,
     });
   }
 };

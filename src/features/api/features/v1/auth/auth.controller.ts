@@ -20,9 +20,10 @@ export const userLogin = async (req: NextRequest) => {
     const loginToken = await userLoginService(validatedData);
     return NextResponse.json({
       success: true,
+      message: 'Login berhasil',
       loginToken,
     });
   } catch (error) {
-    createErrorResponse(error);
+    return createErrorResponse(error);
   }
 };

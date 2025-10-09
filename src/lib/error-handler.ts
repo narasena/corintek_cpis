@@ -34,3 +34,22 @@ export function createErrorResponse(error: unknown) {
   const { status, message } = getErrorResponse(error);
   return NextResponse.json({ message }, { status });
 }
+
+interface IServiceErrorResponseParams {
+  error: unknown;
+  customErrorMessage?: string;
+  status?: number;
+}
+export function serviceErrorResponse(params: IServiceErrorResponseParams) {
+  if (params.error instanceof AppError) {
+    throw params.error;
+  }
+  const errMessage =
+    params.customErrorMessage || 'Terjadi kesalahan pada layanan';
+  console.log(`${errMessage}:`, params.error);
+  throw new AppError({
+    isExpose: true,
+    status: params.status || 500,
+    message: errMessage,
+  });
+}

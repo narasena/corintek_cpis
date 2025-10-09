@@ -89,7 +89,7 @@ export default function useFormHandleSubmit<
 
         const response = await apiInstance.postForm(params.apiUrl, formData);
         console.log(response);
-        if (response.data.status !== 201) {
+        if ([200, 201].includes(response.data.status)) {
           throw new Error(response.data.message || 'Submission failed');
         }
         console.log('Backend success response:', response.data);
@@ -118,9 +118,10 @@ export default function useFormHandleSubmit<
       }
       const response = await apiInstance.post(params.apiUrl, data);
       console.log(response);
-      if (response.data.status !== 201) {
+      if ([200, 201].includes(response.data.status)) {
         throw new Error(response.data.message || 'Submission failed');
       }
+      toast.success(response.data.message || 'Data created successfully');
       console.log('Backend success response:', response.data);
     } catch (error) {
       toast.error(errorMessageResponse(error));
