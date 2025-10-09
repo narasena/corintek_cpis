@@ -27,7 +27,7 @@ export default function useFormHandleSubmit<
   TFormAttributes extends FieldValues,
 >(params: IUseFormHandleSubmit<TFormAttributes>) {
   const route = useRouter();
-  const { setAuth } = useAuthStore();
+  const { setUser } = useAuthStore();
   const onSubmitWithImage: SubmitHandler<TFormAttributes> = async data => {
     try {
       if (params.imageKey) {
@@ -148,16 +148,18 @@ export default function useFormHandleSubmit<
       if (![200, 201].includes(response.data.status)) {
         throw new Error(response.data.message || 'Submission failed');
       }
-      // Extract auth data from response
-      const { id, role } = response.data.loginToken || {};
-      if (id && role) {
-        setAuth(id, role);
+      // The server response on login contains the user data (without the token)
+      const user = response.data.loginToken;
+      if (user && user.id && user.role) {
+        setUser(user);
       }
       toast.success(response.data.message || 'Login success');
       setTimeout(() => {
         route.push('/');
       }, 3500);
     } catch (error) {
+      // On login error, ensure the user state is cleared
+      setUser(null);
       toast.error(errorMessageResponse(error));
       console.error('Submit error:', error);
     }
