@@ -23,9 +23,8 @@ export function LoginForm() {
     },
   });
 
-  const { onSubmit, onInvalid } = useFormHandleSubmit({
-    form: authLoginForm,
-    apiUrl: '/auth',
+  const { onSubmitLogin, onInvalid } = useFormHandleSubmit({
+    form: authLoginForm
   });
 
   return (
@@ -40,7 +39,7 @@ export function LoginForm() {
         <CardContent>
           <DefaultForm<TAuthLoginFormAttributes>
             form={authLoginForm}
-            onSubmit={onSubmit}
+            onSubmit={onSubmitLogin}
             onInvalid={onInvalid}
             formFields={loginFormFields}
             validationSchema={authLoginSchema}

@@ -8,11 +8,13 @@ import {
   UseFormReturn,
 } from 'react-hook-form';
 import { toast } from 'sonner';
+import { TAuthLoginFormAttributes } from '@/types/auth.type';
+import { useRouter } from 'next/navigation';
 
 interface IUseFormHandleSubmit<T extends FieldValues> {
   form: UseFormReturn<T>;
   imageKey?: Path<T>;
-  apiUrl: string;
+  apiUrl?: string;
   refetch?: () => void;
 }
 
@@ -23,6 +25,7 @@ function isFile(value: unknown): value is File {
 export default function useFormHandleSubmit<
   TFormAttributes extends FieldValues,
 >(params: IUseFormHandleSubmit<TFormAttributes>) {
+  const route = useRouter();
   const onSubmitWithImage: SubmitHandler<TFormAttributes> = async data => {
     try {
       if (params.imageKey) {
@@ -87,7 +90,7 @@ export default function useFormHandleSubmit<
           )
         );
 
-        const response = await apiInstance.postForm(params.apiUrl, formData);
+        const response = await apiInstance.postForm(params.apiUrl!, formData);
         console.log(response);
         if ([200, 201].includes(response.data.status)) {
           throw new Error(response.data.message || 'Submission failed');
@@ -116,13 +119,37 @@ export default function useFormHandleSubmit<
         console.log('Valid form:', params.form.formState.isValid);
         console.log('All FormData entries:', data);
       }
-      const response = await apiInstance.post(params.apiUrl, data);
+      const response = await apiInstance.post(params.apiUrl!, data);
       console.log(response);
       if ([200, 201].includes(response.data.status)) {
         throw new Error(response.data.message || 'Submission failed');
       }
       toast.success(response.data.message || 'Data created successfully');
       console.log('Backend success response:', response.data);
+    } catch (error) {
+      toast.error(errorMessageResponse(error));
+      console.error('Submit error:', error);
+    }
+  };
+
+  const onSubmitLogin: SubmitHandler<TAuthLoginFormAttributes> = async data => {
+    try {
+      if (
+        process.env.NODE_ENV === 'development' ||
+        process.env.NODE_ENV === 'test'
+      ) {
+        console.log('onSubmit called');
+        console.log('Valid form:', params.form.formState.isValid);
+        console.log('All FormData entries:', data);
+      }
+      const response = await apiInstance.post('/auth', data);
+      if ([200, 201].includes(response.data.status)) {
+        throw new Error(response.data.message || 'Submission failed');
+      }
+      toast.success(response.data.message || 'Login success');
+      setTimeout(() => {
+        route.push('/');
+      }, 3500);
     } catch (error) {
       toast.error(errorMessageResponse(error));
       console.error('Submit error:', error);
@@ -138,6 +165,7 @@ export default function useFormHandleSubmit<
   return {
     onSubmitWithImage,
     onSubmit,
+    onSubmitLogin,
     onInvalid,
   };
 }
