@@ -5,12 +5,29 @@ import {
 } from '@/features/api/generated/prisma';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
 import { IPersonnelGroup } from '@/types/project.type';
+import { IClient } from '@/types/client.type';
 import { SelectPersonnels } from '../components/select-personnels';
 import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 import React from 'react';
+import { SelectClients } from '../components/select-clients';
+import { SelectClientPersonnels } from '../components/select-client-personnels';
 
-export const projectCreationFormFields = (data: IPersonnelGroup[]) => {
+export const projectCreationFormFields = (
+  data: IPersonnelGroup[],
+  clients: IClient[] = [],
+  clientPersonnels: any[] = []
+) => {
   return [
+    {
+      name: 'clientId',
+      label: 'Klien',
+      type: EFieldType.CUSTOM,
+      placeHolder: '',
+      description: '',
+      customComponent: (
+        field: ControllerRenderProps<FieldValues, Path<FieldValues>>
+      ) => React.createElement(SelectClients, { field, data: clients }),
+    },
     {
       name: 'name',
       label: 'Nama Proyek',
@@ -95,9 +112,16 @@ export const projectCreationFormFields = (data: IPersonnelGroup[]) => {
     {
       name: 'clientPersonnelIds',
       label: 'PIC Klien',
-      type: EFieldType.SELECT,
+      type: EFieldType.CUSTOM,
       placeHolder: '',
       description: '',
+      customComponent: (
+        field: ControllerRenderProps<FieldValues, Path<FieldValues>>
+      ) =>
+        React.createElement(SelectClientPersonnels, {
+          field,
+          data: clientPersonnels,
+        }),
     },
     {
       name: 'personnelIds',

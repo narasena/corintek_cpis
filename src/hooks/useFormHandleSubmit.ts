@@ -114,6 +114,7 @@ export default function useFormHandleSubmit<
       ) {
         console.log('onSubmit called');
         console.log('Valid form:', params.form.formState.isValid);
+        console.log('All FormData entries:', data);
       }
       const response = await apiInstance.post(params.apiUrl, data);
       console.log(response);
