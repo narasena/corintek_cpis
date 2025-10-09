@@ -1,4 +1,4 @@
-import baseUrl from '@/utils/api/baseUrl';
+import baseUrl from '@/utils/api/v1/baseUrl';
 import apiInstance from '@/utils/apiInstance';
 import { AppError } from '@/lib/app-error';
 

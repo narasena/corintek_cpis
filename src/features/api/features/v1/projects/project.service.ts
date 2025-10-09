@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server';
-import { Prisma } from '../../generated/prisma';
-import { prisma } from '../../connection/prisma';
+
 import { AppError } from '@/lib/app-error';
 import {
   IPersonnelGroup,
   TPersonnelDetail,
   TProjectCreationAttributes,
 } from '@/types/project.type';
+import { Prisma } from '@/features/api/generated/prisma';
+import { prisma } from '@/features/api/connection/prisma';
 
 export async function fetchInternalPersonnelsService(req: NextRequest) {
   try {

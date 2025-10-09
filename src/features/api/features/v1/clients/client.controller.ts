@@ -4,13 +4,11 @@ import {
   TClientCreationAttributes,
   TClientPICCreationAttributes,
 } from '@/types/client.type';
-import formDataToObject from '@/utils/api/form-data/formDataToObject';
-import formDataLogs from '@/utils/api/logs/formDataLogs';
-import requestValidation from '@/utils/api/validation/requestValidation';
+import formDataToObject from '@/utils/api/v1/form-data/formDataToObject';
+import formDataLogs from '@/utils/api/v1/logs/formDataLogs';
+import requestValidation from '@/utils/api/v1/validation/requestValidation';
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../connection/prisma';
-import { Prisma } from '../../generated/prisma';
-import uploadFormDataFormatter from '@/utils/api/form-data/uploadFormDataFormatter';
+import uploadFormDataFormatter from '@/utils/api/v1/form-data/uploadFormDataFormatter';
 import {
   createClientPersonnelWithoutAvatar,
   createClientWithoutAvatar,
@@ -19,9 +17,11 @@ import {
   fetchClientPersonnelService,
   updateClientAvatar,
 } from './client.service';
-import { EFileFolders } from '@/utils/api/form-data/formDataNameFormatter';
+import { EFileFolders } from '@/utils/api/v1/form-data/formDataNameFormatter';
 import { imageUpload } from '../upload/upload.service';
 import { clientPersonnelCreateSchema } from '@/app/(main)/clients/schemas/clientPICSchema';
+import { prisma } from '@/features/api/connection/prisma';
+import { Prisma } from '@/features/api/generated/prisma';
 
 export async function createClient(req: NextRequest) {
   try {

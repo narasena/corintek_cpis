@@ -1,4 +1,4 @@
-import { createUser } from '@/features/api/features/users/user.controller';
+import { createUser } from '@/features/api/features/v1/users/user.controller';
 import { NextRequest } from 'next/server';
 
 export async function POST(req: NextRequest) {

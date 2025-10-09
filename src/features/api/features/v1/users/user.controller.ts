@@ -3,15 +3,15 @@ import { TUserCreationAttributes } from '@/types/user.type';
 import { NextRequest, NextResponse } from 'next/server';
 import { createUserWithoutAvatar, updateUserAvatar } from './user.service';
 import { userCreationSchema } from '@/app/(main)/users/schemas/userSchema';
-import requestValidation from '@/utils/api/validation/requestValidation';
+import requestValidation from '@/utils/api/v1/validation/requestValidation';
 import { prisma } from '@/features/api/connection/prisma';
-import formDataLogs from '@/utils/api/logs/formDataLogs';
-import formDataToObject from '@/utils/api/form-data/formDataToObject';
-import uploadFormDataFormatter from '@/utils/api/form-data/uploadFormDataFormatter';
-import { EFileFolders } from '@/utils/api/form-data/formDataNameFormatter';
+import formDataLogs from '@/utils/api/v1/logs/formDataLogs';
+import formDataToObject from '@/utils/api/v1/form-data/formDataToObject';
+import uploadFormDataFormatter from '@/utils/api/v1/form-data/uploadFormDataFormatter';
+import { EFileFolders } from '@/utils/api/v1/form-data/formDataNameFormatter';
 import { imageUpload } from '../upload/upload.service';
 import { createErrorResponse } from '@/lib/error-handler';
-import { Prisma } from '../../generated/prisma';
+import { Prisma } from '@/features/api/generated/prisma';
 
 export async function createUser(req: NextRequest) {
   const formData = await formDataLogs(req);

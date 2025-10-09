@@ -1,7 +1,7 @@
 import {
   createClientPersonnel,
   fetchClientPersonnel,
-} from '@/features/api/features/clients/client.controller';
+} from '@/features/api/features/v1/clients/client.controller';
 import { NextRequest } from 'next/server';
 
 export async function POST(

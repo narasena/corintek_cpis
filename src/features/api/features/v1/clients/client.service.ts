@@ -2,12 +2,14 @@ import {
   TClientCreationAttributes,
   TClientPICCreationAttributes,
 } from '@/types/client.type';
-import { Client, Prisma, User } from '../../generated/prisma';
+
 import { AppError } from '@/lib/app-error';
 import { UniqueIdentifier } from '@dnd-kit/core';
-import { prisma } from '../../connection/prisma';
+
 import { NextRequest } from 'next/server';
-import { hashPassword } from '@/utils/passwordHash';
+import { hashPassword } from '@/utils/api/v1/passwordHash';
+import { Client, Prisma, User } from '@/features/api/generated/prisma';
+import { prisma } from '@/features/api/connection/prisma';
 
 export async function createClientWithoutAvatar(
   payload: Omit<TClientCreationAttributes, 'avatarImg'>,

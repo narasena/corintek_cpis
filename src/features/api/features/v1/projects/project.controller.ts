@@ -6,10 +6,10 @@ import {
   fetchAllProjectsService,
 } from './project.service';
 import { projectCreationSchema } from '@/app/(main)/projects/schemas/projectSchema';
-import requestValidation from '@/utils/api/validation/requestValidation';
+import requestValidation from '@/utils/api/v1/validation/requestValidation';
 import { TProjectCreationAttributes } from '@/types/project.type';
-import { prisma } from '../../connection/prisma';
-import { Prisma } from '../../generated/prisma';
+import { prisma } from '@/features/api/connection/prisma';
+import { Prisma } from '@/features/api/generated/prisma';
 
 export async function fetchInternalPersonnels(req: NextRequest) {
   try {

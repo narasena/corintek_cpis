@@ -1,6 +1,6 @@
 import { IUser } from '@/types/user.type';
 import apiInstance from '@/utils/apiInstance';
-import errorMessageResponse from '@/utils/errorMessageResponse';
+import errorMessageResponse from '@/utils/api/v1/errorMessageResponse';
 import React from 'react';
 
 export default function useAllUsers() {
