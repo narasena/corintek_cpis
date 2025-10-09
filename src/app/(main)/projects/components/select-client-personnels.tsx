@@ -4,15 +4,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
-import { IPersonnelGroup } from '@/types/project.type';
+import { IClientPersonnel } from '@/types/client.type';
 
-interface ISelectPersonnelsProps<TFormAttributes extends FieldValues> {
+interface ISelectClientPersonnelsProps<TFormAttributes extends FieldValues> {
   field: ControllerRenderProps<TFormAttributes, Path<TFormAttributes>>;
-  dataGroup: IPersonnelGroup[];
+  data: IClientPersonnel[];
 }
 
-export function SelectPersonnels<TFormAttributes extends FieldValues>(
-  props: ISelectPersonnelsProps<TFormAttributes>
+export function SelectClientPersonnels<TFormAttributes extends FieldValues>(
+  props: ISelectClientPersonnelsProps<TFormAttributes>
 ) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -49,10 +49,12 @@ export function SelectPersonnels<TFormAttributes extends FieldValues>(
   };
 
   const getSelectedPersonnelNames = () => {
-    const allPersonnels = props.dataGroup.flatMap(group => group.personnels);
-    return allPersonnels
-      .filter(personnel => selectedValues.includes(personnel.id))
-      .map(personnel => `${personnel.firstName} ${personnel.lastName}`);
+    return props.data
+      .filter(personnel => selectedValues.includes(personnel.personnelId))
+      .map(
+        personnel =>
+          `${personnel.personnel.firstName} ${personnel.personnel.lastName}`
+      );
   };
 
   return (
@@ -90,40 +92,36 @@ export function SelectPersonnels<TFormAttributes extends FieldValues>(
           onClick={() => setIsOpen(!isOpen)}
         >
           {selectedValues.length > 0
-            ? `${selectedValues.length} PIC Corintek dipilih`
-            : 'Pilih PIC Corintek'}
+            ? `${selectedValues.length} PIC Klien dipilih`
+            : 'Pilih PIC Klien'}
         </Button>
 
         {isOpen && (
           <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-            {props.dataGroup.map((group, groupIndex) => (
-              <div key={groupIndex}>
-                <div className="px-2 py-1 bg-gray-100 text-sm font-medium text-gray-700">
-                  {group.role}
-                </div>
-                {group.personnels.map(personnel => {
-                  const isSelected = selectedValues.includes(personnel.id);
-                  return (
-                    <div
-                      key={personnel.id}
-                      className={`flex items-center justify-between p-2 cursor-pointer hover:bg-gray-50 ${
-                        isSelected ? 'bg-blue-50' : ''
-                      }`}
-                      onClick={() => togglePersonnel(personnel.id)}
-                    >
-                      <span className="text-sm">
-                        {personnel.firstName} {personnel.lastName}
-                      </span>
-                      {isSelected && (
-                        <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
-                        </div>
-                      )}
+            {props.data.map(clientPersonnel => {
+              const isSelected = selectedValues.includes(
+                clientPersonnel.personnelId
+              );
+              return (
+                <div
+                  key={clientPersonnel.id}
+                  className={`flex items-center justify-between p-2 cursor-pointer hover:bg-gray-50 ${
+                    isSelected ? 'bg-blue-50' : ''
+                  }`}
+                  onClick={() => togglePersonnel(clientPersonnel.personnelId)}
+                >
+                  <span className="text-sm">
+                    {clientPersonnel.personnel.firstName}{' '}
+                    {clientPersonnel.personnel.lastName}
+                  </span>
+                  {isSelected && (
+                    <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
                     </div>
-                  );
-                })}
-              </div>
-            ))}
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
