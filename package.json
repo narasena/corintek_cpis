@@ -10,6 +10,7 @@
     "prepare": "husky",
     "precommit": "lint-staged",
     "prisma:migrate": "dotenv -e .env.development -- npx prisma migrate dev",
+    "prisma:status": "dotenv -e .env.development -- npx prisma migrate status",
     "prisma:studio": "dotenv -e .env.development -- npx prisma studio",
     "prisma:generate": "dotenv -e .env.development -- npx prisma generate",
     "prisma:validate": "dotenv -e .env.development -- npx prisma validate",
