@@ -6,8 +6,8 @@ export interface IFormFields {
   className?: string;
   type: EFieldType;
   label: string;
-  placeHolder: string;
-  description: string;
+  placeHolder?: string;
+  description?: string;
   enumOptions?: string[];
   customComponent?: React.ReactNode | ((field: any) => React.ReactNode);
 }
