@@ -18,11 +18,27 @@ export const userLogin = async (req: NextRequest) => {
 
     const validatedData = validatedResult;
     const loginToken = await userLoginService(validatedData);
-    return NextResponse.json({
+    const secureToken = loginToken?.token;
+
+    const res = NextResponse.json({
       success: true,
+      status: 200,
       message: 'Login berhasil',
-      loginToken,
+      loginToken: {
+        id: loginToken?.id,
+        role: loginToken?.role,
+      },
     });
+
+    res.cookies.set('auth_token', secureToken!, {
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    });
+
+    return res;
   } catch (error) {
     return createErrorResponse(error);
   }

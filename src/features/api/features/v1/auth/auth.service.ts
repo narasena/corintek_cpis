@@ -48,7 +48,12 @@ export const userLoginService = async (payload: TAuthLoginFormAttributes) => {
       id: user.id,
       role: user.role,
     });
-    return token;
+    const loginToken = {
+      token,
+      id: user.id,
+      role: user.role,
+    };
+    return loginToken;
   } catch (error) {
     serviceErrorResponse({
       error,

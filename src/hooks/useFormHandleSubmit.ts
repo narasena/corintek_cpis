@@ -10,6 +10,7 @@ import {
 import { toast } from 'sonner';
 import { TAuthLoginFormAttributes } from '@/types/auth.type';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/stores/authStore';
 
 interface IUseFormHandleSubmit<T extends FieldValues> {
   form: UseFormReturn<T>;
@@ -26,6 +27,7 @@ export default function useFormHandleSubmit<
   TFormAttributes extends FieldValues,
 >(params: IUseFormHandleSubmit<TFormAttributes>) {
   const route = useRouter();
+  const { setAuth } = useAuthStore();
   const onSubmitWithImage: SubmitHandler<TFormAttributes> = async data => {
     try {
       if (params.imageKey) {
@@ -92,7 +94,7 @@ export default function useFormHandleSubmit<
 
         const response = await apiInstance.postForm(params.apiUrl!, formData);
         console.log(response);
-        if ([200, 201].includes(response.data.status)) {
+        if (![200, 201].includes(response.data.status)) {
           throw new Error(response.data.message || 'Submission failed');
         }
         console.log('Backend success response:', response.data);
@@ -121,7 +123,7 @@ export default function useFormHandleSubmit<
       }
       const response = await apiInstance.post(params.apiUrl!, data);
       console.log(response);
-      if ([200, 201].includes(response.data.status)) {
+      if (![200, 201].includes(response.data.status)) {
         throw new Error(response.data.message || 'Submission failed');
       }
       toast.success(response.data.message || 'Data created successfully');
@@ -143,8 +145,13 @@ export default function useFormHandleSubmit<
         console.log('All FormData entries:', data);
       }
       const response = await apiInstance.post('/auth', data);
-      if ([200, 201].includes(response.data.status)) {
+      if (![200, 201].includes(response.data.status)) {
         throw new Error(response.data.message || 'Submission failed');
+      }
+      // Extract auth data from response
+      const { id, role } = response.data.loginToken || {};
+      if (id && role) {
+        setAuth(id, role);
       }
       toast.success(response.data.message || 'Login success');
       setTimeout(() => {
