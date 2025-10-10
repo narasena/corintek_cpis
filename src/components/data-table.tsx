@@ -196,7 +196,10 @@ export function DataTable<TData extends { id: UniqueIdentifier }>({
 
   return (
     <Tabs
-      defaultValue={activeTab.value}
+      value={activeTab.value}
+      onValueChange={value =>
+        setActiveTab(tabs.find(tab => tab.value === value)!)
+      }
       className="w-full flex-col justify-start gap-6"
     >
       <div className="flex items-center justify-between px-4 lg:px-6">
@@ -408,21 +411,6 @@ export function DataTable<TData extends { id: UniqueIdentifier }>({
             </div>
           </div>
         </div>
-      </TabsContent>
-      <TabsContent
-        value="past-performance"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent
-        value="focus-documents"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
     </Tabs>
   );

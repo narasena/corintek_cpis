@@ -12,10 +12,6 @@ export const parameterColumns = (): ColumnDef<IParameter>[] => {
       header: 'Nama Parameter',
     },
     {
-      accessorKey: 'type',
-      header: 'Peruntukan Parameter',
-    },
-    {
       accessorKey: 'valueType',
       header: 'Tipe Nilai Parameter',
     },

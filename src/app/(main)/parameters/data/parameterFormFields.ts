@@ -1,4 +1,4 @@
-import { ParameterType, ValueType } from '@/features/api/generated/prisma';
+import { ValueType } from '@/features/api/generated/prisma';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
 import React from 'react';
 import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
@@ -11,15 +11,6 @@ export const parameterFormFields: IFormFields[] = [
     type: EFieldType.TEXT,
     className: 'col-span-2',
     description: '',
-  },
-  {
-    name: 'type',
-    label: 'Peruntukan Parameter',
-    type: EFieldType.ENUM,
-    description: '',
-    enumOptions: Object.keys(ParameterType).map(
-      key => ParameterType[key as keyof typeof ParameterType]
-    ) as string[],
   },
   {
     name: 'valueType',

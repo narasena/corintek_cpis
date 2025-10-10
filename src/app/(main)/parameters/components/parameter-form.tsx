@@ -13,7 +13,6 @@ export default function ParameterForm() {
       name: '',
       valueType: undefined,
       unit: null,
-      type: undefined,
       groupId: null,
     },
   });
