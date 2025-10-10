@@ -3,7 +3,6 @@ model Parameter {
     name        String          @unique
     valueType   ValueType
     unit        String?
-    type        ParameterType
     groupId     String?
     group       ParameterGroup? @relation(fields: [groupId], references: [id])
     labReportDetails LabReportDetail[]
@@ -17,17 +16,19 @@ model Parameter {
     @@index([groupId])
 }
 
-enum ParameterType {
-    LAB_REPORT
-    LOG_SHEET
-    MASTER_SETTING
-    MACHINE_MONITORING
-    OTHER
+enum ParameterGroupType {
+    MACHINE
+    WATER
+    ENVIRONMENTAL
+    CHEMICAL
+    OPERATIONAL
 }
 
 model ParameterGroup {
     id          String          @id @default(uuid())
     name        String
+    type        ParameterGroupType
+    description String?
     parameters  Parameter[]
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
