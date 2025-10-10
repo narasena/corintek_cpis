@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { IProject } from '@/types/project.type';
+import apiInstance from '@/utils/apiInstance';
 
 export default function useProjects() {
   const [projects, setProjects] = useState<IProject[]>([]);
@@ -11,14 +12,9 @@ export default function useProjects() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/projects');
-      const result = await response.json();
+      const response = await apiInstance.get('/projects');
 
-      if (result.success) {
-        setProjects(result.projects);
-      } else {
-        setError(result.message || 'Failed to fetch projects');
-      }
+      setProjects(response.data.projects);
     } catch (err) {
       setError('Error fetching projects');
       console.error('Error fetching projects:', err);

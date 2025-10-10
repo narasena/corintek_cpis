@@ -1,6 +1,6 @@
 'use client';
 
-import { DataTable } from '@/components/data-table';
+import { DataTable, ITableTab } from '@/components/data-table';
 import CreateData from '@/components/features/data/create-data';
 import { IProject } from '@/types/project.type';
 import React from 'react';
@@ -29,20 +29,26 @@ export default function ProjectsPage() {
     );
   }
 
+  const projectsTabs: ITableTab<IProject>[] = [
+    {
+      value: 'default',
+      label: 'Default',
+      data: projects,
+      columns: projectColumns(),
+      addNewRow: (
+        <CreateData
+          buttonText="Tambah Proyek"
+          modalTitle="Tambah Proyek Baru"
+          modalDescription="Menambahkan proyek baru ke dalam sistem CPIS"
+          content={<ProjectForm />}
+        />
+      ),
+    },
+  ];
+
   return (
     <div>
-      <DataTable
-        data={projects as IProject[]}
-        columns={projectColumns()}
-        addNewRow={
-          <CreateData
-            buttonText="Tambah Proyek"
-            modalTitle="Tambah Proyek Baru"
-            modalDescription="Menambahkan proyek baru ke dalam sistem CPIS"
-            content={<ProjectForm />}
-          />
-        }
-      />
+      <DataTable tabs={projectsTabs} />
     </div>
   );
 }

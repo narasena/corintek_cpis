@@ -1,4 +1,4 @@
-import { DataTable } from '@/components/data-table';
+import { DataTable, ITableTab } from '@/components/data-table';
 import {
   Accordion,
   AccordionContent,
@@ -65,15 +65,23 @@ export default function ClientData(props: IClientDataProps) {
       triggerLabel: 'PIC Klien',
       content: (
         <DataTable
-          data={clientData?.personnels || []}
-          columns={clientPICColumns()}
-          addNewRow={
-            <CreateData
-              buttonText="Tambah PIC Klien"
-              modalTitle="Tambah PIC Klien Baru"
-              modalDescription="Menambahkan PIC Klien baru ke dalam data klien di CPIS"
-              content={<ClientPicForm clientId={props.clientId} />}
-            />
+          tabs={
+            [
+              {
+                value: 'default',
+                label: 'PIC Klien',
+                data: clientData?.personnels || [],
+                columns: clientPICColumns(),
+                addNewRow: (
+                  <CreateData
+                    buttonText="Tambah PIC Klien"
+                    modalTitle="Tambah PIC Klien Baru"
+                    modalDescription="Menambahkan PIC Klien baru ke dalam data klien di CPIS"
+                    content={<ClientPicForm clientId={props.clientId} />}
+                  />
+                ),
+              },
+            ] as ITableTab<IClientPersonnel>[]
           }
         />
       ),
