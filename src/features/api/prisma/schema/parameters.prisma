@@ -3,8 +3,7 @@ model Parameter {
     name        String          @unique
     valueType   ValueType
     unit        String?
-    groupId     String?
-    group       ParameterGroup? @relation(fields: [groupId], references: [id])
+    groups      ParameterGroupMember[]
     labReportDetails LabReportDetail[]
     limits      ParameterLimit[]
     settings    MasterSettingDetail[]
@@ -13,7 +12,6 @@ model Parameter {
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("parameters")
-    @@index([groupId])
 }
 
 enum ParameterGroupType {
@@ -29,11 +27,27 @@ model ParameterGroup {
     name        String
     type        ParameterGroupType
     description String?
-    parameters  Parameter[]
+    members     ParameterGroupMember[]
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
     @@map("parameter_groups")
+}
+
+model ParameterGroupMember {
+    id          String          @id @default(uuid())
+    parameterId  String
+    parameter   Parameter @relation(fields: [parameterId], references: [id])
+
+    groupId     String
+    group       ParameterGroup @relation(fields: [groupId], references: [id])
+
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+    deletedAt  DateTime?
+    @@map("parameter_group_members")
+    @@index([parameterId])
+    @@index([groupId])
 }
 
 model StandardMethod {

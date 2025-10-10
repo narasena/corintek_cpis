@@ -127,7 +127,10 @@ export default function useFormHandleSubmit<
         throw new Error(response.data.message || 'Submission failed');
       }
       toast.success(response.data.message || 'Data created successfully');
-      console.log('Backend success response:', response.data);
+      if (params.refetch) {
+        params.refetch();
+      }
+      params.form.reset();
     } catch (error) {
       toast.error(errorMessageResponse(error));
       console.error('Submit error:', error);

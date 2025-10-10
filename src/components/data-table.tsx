@@ -222,8 +222,10 @@ export function DataTable<TData extends { id: UniqueIdentifier }>({
                 <SelectValue placeholder="Select a view" />
               </SelectTrigger>
               <SelectContent>
-                {tabs.map(tab => (
-                  <SelectItem value={tab.value}>{tab.label}</SelectItem>
+                {tabs.map((tab, index) => (
+                  <SelectItem key={index} value={tab.value}>
+                    {tab.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </>
@@ -231,8 +233,10 @@ export function DataTable<TData extends { id: UniqueIdentifier }>({
         </Select>
         <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
           {tabs.length > 1 &&
-            tabs.map(tab => (
-              <TabsTrigger value={tab.value}>{tab.label}</TabsTrigger>
+            tabs.map((tab, index) => (
+              <TabsTrigger key={index} value={tab.value}>
+                {tab.label}
+              </TabsTrigger>
             ))}
         </TabsList>
         <div className="flex items-center gap-2">

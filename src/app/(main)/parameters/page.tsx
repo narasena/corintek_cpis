@@ -17,6 +17,7 @@ import ParameterLimitForm from './components/parameter-limit-form';
 import { parameterLimitColumns } from './components/parameter-limit-columns';
 import StandardMethodForm from './components/standard-method-form';
 import { standardMethodColumns } from './components/standard-method-columns';
+import useAllParameterGroups from '@/hooks/parameters/useAllParameterGroups';
 
 type TParameter =
   | IParameter
@@ -25,6 +26,7 @@ type TParameter =
   | IStandardMethod;
 
 export default function ParametersPage() {
+  const { allParameterGroups, refetchParameterGroups } = useAllParameterGroups();
   const parametersTabs: ITableTab<TParameter>[] = [
     {
       value: 'parameter',
@@ -43,14 +45,14 @@ export default function ParametersPage() {
     {
       value: 'parameterGroup',
       label: 'Grup Parameter',
-      data: [],
+      data: allParameterGroups,
       columns: parameterGroupColumns() as ColumnDef<TParameter>[],
       addNewRow: (
         <CreateData
           buttonText="Tambah Grup"
           modalTitle="Tambah Grup Parameter Baru"
           modalDescription="Menambahkan grup parameter baru ke dalam sistem CPIS"
-          content={<ParameterGroupForm />}
+          content={<ParameterGroupForm refetch={refetchParameterGroups} />}
         />
       ),
     },
