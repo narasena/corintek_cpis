@@ -1,31 +1,29 @@
-"use client"
+'use client';
 
-import * as React from "react"
+import * as React from 'react';
 import {
   IconAddressBook,
   IconBuildings,
   IconCamera,
-  IconChartBar,
   IconClock2,
   IconDashboard,
-  IconDatabase,
   IconFileAi,
   IconFileDescription,
   IconFileWord,
   IconFlaskFilled,
-  IconFolder,
   IconHelp,
   IconReport,
   IconSearch,
   IconSettings,
   IconTableFilled,
   IconUsers,
-} from "@tabler/icons-react"
+  IconVariable,
+} from '@tabler/icons-react';
 
-import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+import { NavDocuments } from '@/components/nav-documents';
+import { NavMain } from '@/components/nav-main';
+import { NavSecondary } from '@/components/nav-secondary';
+import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -34,131 +32,136 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import Image from "next/image"
-import Link from "next/link"
+} from '@/components/ui/sidebar';
+import Image from 'next/image';
+import Link from 'next/link';
 
 const data = {
   user: {
-    name: "Admin Corintek 01",
-    email: "admin@corintek.co.id",
-    avatar: "/avatars/shadcn.jpg",
+    name: 'Admin Corintek 01',
+    email: 'admin@corintek.co.id',
+    avatar: '/avatars/shadcn.jpg',
   },
   navMain: [
     {
-      title: "Dashboard",
-      url: "/",
+      title: 'Dashboard',
+      url: '/',
       icon: IconDashboard,
     },
     {
-      title: "Clients",
-      url: "/clients",
+      title: 'Clients',
+      url: '/clients',
       icon: IconAddressBook,
     },
     {
-      title: "Projects",
-      url: "/projects",
+      title: 'Projects',
+      url: '/projects',
       icon: IconBuildings,
     },
     {
-      title: "Log Sheets",
-      url: "log-sheets",
+      title: 'Log Sheets',
+      url: 'log-sheets',
       icon: IconTableFilled,
     },
     {
-      title: "Users",
-      url: "/users",
+      title: 'Parameters',
+      url: 'parameters',
+      icon: IconVariable,
+    },
+    {
+      title: 'Users',
+      url: '/users',
       icon: IconUsers,
     },
     {
-      title: "Absence",
-      url: "/absence",
+      title: 'Absence',
+      url: '/absence',
       icon: IconClock2,
     },
   ],
   navClouds: [
     {
-      title: "Capture",
+      title: 'Capture',
       icon: IconCamera,
       isActive: true,
-      url: "#",
+      url: '#',
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: 'Active Proposals',
+          url: '#',
         },
         {
-          title: "Archived",
-          url: "#",
+          title: 'Archived',
+          url: '#',
         },
       ],
     },
     {
-      title: "Proposal",
+      title: 'Proposal',
       icon: IconFileDescription,
-      url: "#",
+      url: '#',
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: 'Active Proposals',
+          url: '#',
         },
         {
-          title: "Archived",
-          url: "#",
+          title: 'Archived',
+          url: '#',
         },
       ],
     },
     {
-      title: "Prompts",
+      title: 'Prompts',
       icon: IconFileAi,
-      url: "#",
+      url: '#',
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: 'Active Proposals',
+          url: '#',
         },
         {
-          title: "Archived",
-          url: "#",
+          title: 'Archived',
+          url: '#',
         },
       ],
     },
   ],
   navSecondary: [
     {
-      title: "Settings",
-      url: "#",
+      title: 'Settings',
+      url: '#',
       icon: IconSettings,
     },
     {
-      title: "Get Help",
-      url: "#",
+      title: 'Get Help',
+      url: '#',
       icon: IconHelp,
     },
     {
-      title: "Search",
-      url: "#",
+      title: 'Search',
+      url: '#',
       icon: IconSearch,
     },
   ],
   documents: [
     {
-      name: "Lab Reports",
-      url: "lab-reports",
+      name: 'Lab Reports',
+      url: 'lab-reports',
       icon: IconFlaskFilled,
     },
     {
-      name: "Reports",
-      url: "#",
+      name: 'Reports',
+      url: '#',
       icon: IconReport,
     },
     {
-      name: "Word Assistant",
-      url: "#",
+      name: 'Word Assistant',
+      url: '#',
       icon: IconFileWord,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -170,8 +173,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <Link href="/dashboard" className="flex items-center justify-center">
-                <Image src="/logo.png" alt="Logo" width={130} height={15} className="object-contain" />
+              <Link
+                href="/dashboard"
+                className="flex items-center justify-center"
+              >
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  width={130}
+                  height={15}
+                  className="object-contain"
+                />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -186,5 +198,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

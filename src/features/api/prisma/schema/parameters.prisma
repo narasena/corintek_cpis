@@ -1,6 +1,6 @@
 model Parameter {
     id          String          @id @default(uuid())
-    parameter   String          @unique
+    name        String          @unique
     valueType   ValueType
     unit        String?
     type        ParameterType
