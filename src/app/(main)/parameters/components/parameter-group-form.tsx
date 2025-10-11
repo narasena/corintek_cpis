@@ -6,13 +6,13 @@ import useFormHandleSubmit from '@/hooks/useFormHandleSubmit';
 import DefaultForm from '@/components/features/forms/default-form';
 import { parameterGroupFormFields } from '../data/parameterGroupFormFields';
 
-interface ParameterGroupFormProps {
+interface IParameterGroupFormProps {
   refetch?: () => void;
 }
 
 export default function ParameterGroupForm({
   refetch,
-}: ParameterGroupFormProps) {
+}: IParameterGroupFormProps) {
   const parameterGroupForm = useForm<TParameterGroupAttributes>({
     resolver: zodResolver(parameterGroupSchema),
     defaultValues: {

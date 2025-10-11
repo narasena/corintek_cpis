@@ -6,20 +6,24 @@ import DefaultForm from '@/components/features/forms/default-form';
 import useFormHandleSubmit from '@/hooks/useFormHandleSubmit';
 import { parameterFormFields } from '../data/parameterFormFields';
 
-export default function ParameterForm() {
+export interface IParameterFormProps {
+  refetch: () => void;
+}
+
+export default function ParameterForm({ refetch }: IParameterFormProps) {
   const parameterForm = useForm<TParameterAttributes>({
     resolver: zodResolver(parameterSchema),
     defaultValues: {
       name: '',
       valueType: undefined,
-      unit: null,
-      groupId: null,
+      unit: '',
     },
   });
 
-  const { onSubmit, onInvalid } = useFormHandleSubmit({
+  const { onSubmit, onInvalid, isLoading } = useFormHandleSubmit({
     form: parameterForm,
     apiUrl: '/parameters',
+    refetch,
   });
 
   return (
@@ -29,6 +33,7 @@ export default function ParameterForm() {
       onInvalid={onInvalid}
       formFields={parameterFormFields}
       validationSchema={parameterSchema}
+      isLoading={isLoading}
     />
   );
 }

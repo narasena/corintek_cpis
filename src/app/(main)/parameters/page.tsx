@@ -26,6 +26,7 @@ type TParameter =
   | IStandardMethod;
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import useAllParameters from '@/hooks/parameters/useAllParameters';
 
 export default function ParametersPage() {
   const router = useRouter();
@@ -37,19 +38,21 @@ export default function ParametersPage() {
     router.push(`${pathname}?tab=${value}`);
   };
 
-  const { allParameterGroups, refetchParameterGroups } = useAllParameterGroups();
+  const { allParameters, refetchAllParameters } = useAllParameters();
+  const { allParameterGroups, refetchParameterGroups } =
+    useAllParameterGroups();
   const parametersTabs: ITableTab<TParameter>[] = [
     {
       value: 'parameter',
       label: 'Parameter',
-      data: [],
+      data: allParameters,
       columns: parameterColumns() as ColumnDef<TParameter>[],
       addNewRow: (
         <CreateData
           buttonText="Tambah Parameter"
           modalTitle="Tambah Parameter Baru"
           modalDescription="Menambahkan parameter baru ke dalam sistem CPIS"
-          content={<ParameterForm />}
+          content={<ParameterForm refetch={refetchAllParameters} />}
         />
       ),
     },
@@ -98,11 +101,7 @@ export default function ParametersPage() {
   ];
   return (
     <div>
-      <DataTable
-        tabs={parametersTabs}
-        tab={tab}
-        onTabChange={onTabChange}
-      />
+      <DataTable tabs={parametersTabs} tab={tab} onTabChange={onTabChange} />
     </div>
   );
 }

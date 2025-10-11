@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { TAuthLoginFormAttributes } from '@/types/auth.type';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
+import { useState } from 'react';
 
 interface IUseFormHandleSubmit<T extends FieldValues> {
   form: UseFormReturn<T>;
@@ -28,6 +29,7 @@ export default function useFormHandleSubmit<
 >(params: IUseFormHandleSubmit<TFormAttributes>) {
   const route = useRouter();
   const { setUser } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
   const onSubmitWithImage: SubmitHandler<TFormAttributes> = async data => {
     try {
       if (params.imageKey) {
@@ -103,7 +105,9 @@ export default function useFormHandleSubmit<
           params.refetch();
         }
         toast.success(response.data.message || 'Data created successfully');
-        params.form.reset();
+        params.form.reset(
+          params.form.formState.defaultValues as TFormAttributes
+        );
       }
     } catch (error) {
       toast.error(errorMessageResponse(error));
@@ -113,6 +117,7 @@ export default function useFormHandleSubmit<
 
   const onSubmit: SubmitHandler<TFormAttributes> = async data => {
     try {
+      setIsLoading(true);
       if (
         process.env.NODE_ENV === 'development' ||
         process.env.NODE_ENV === 'test'
@@ -122,8 +127,7 @@ export default function useFormHandleSubmit<
         console.log('All FormData entries:', data);
       }
       const response = await apiInstance.post(params.apiUrl!, data);
-      console.log(response);
-      if (![200, 201].includes(response.data.status)) {
+      if (!response.data.success) {
         throw new Error(response.data.message || 'Submission failed');
       }
       toast.success(response.data.message || 'Data created successfully');
@@ -131,9 +135,12 @@ export default function useFormHandleSubmit<
         params.refetch();
       }
       params.form.reset();
+      setIsLoading(false);
     } catch (error) {
       toast.error(errorMessageResponse(error));
       console.error('Submit error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -179,5 +186,6 @@ export default function useFormHandleSubmit<
     onSubmit,
     onSubmitLogin,
     onInvalid,
+    isLoading,
   };
 }

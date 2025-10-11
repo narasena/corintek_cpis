@@ -19,10 +19,6 @@ export const parameterColumns = (): ColumnDef<IParameter>[] => {
       accessorKey: 'unit',
       header: 'Satuan Parameter',
     },
-    {
-      accessorKey: 'groupId',
-      header: 'Grup Parameter',
-    },
     actions,
   ];
 };
