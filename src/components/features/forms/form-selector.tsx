@@ -71,10 +71,6 @@ export default function FormSelector<TFormAttributes extends FieldValues>({
       let enumValues: string[] = [];
       if (formField.enumOptions) {
         enumValues = formField.enumOptions;
-      } else if (formField.name === 'role') {
-        enumValues = ['ADMIN', 'SUPERVISOR', 'TECHNICIAN', 'DIRECTOR'];
-      } else if (formField.name === 'employmentStatus') {
-        enumValues = ['PERMANENT', 'FREELANCE', 'CONTRACT'];
       }
       return (
         <div className="flex flex-col gap-2">
@@ -82,13 +78,7 @@ export default function FormSelector<TFormAttributes extends FieldValues>({
             onValueChange={value =>
               field.onChange(value === '' ? undefined : value)
             }
-            value={
-              Array.isArray(field.value)
-                ? field.value.length > 0
-                  ? field.value[0]
-                  : undefined
-                : (field.value as string | undefined)
-            }
+            value={field.value || ''}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={formField.placeHolder} />

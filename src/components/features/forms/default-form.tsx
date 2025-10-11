@@ -15,6 +15,7 @@ import { Button } from '../../ui/button';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
 import FormSelector from './form-selector';
 import ImageFormField from './image-form-field';
+import { Spinner } from '@/components/ui/spinner';
 
 interface IDefaultFormProps<TFormAttributes extends FieldValues> {
   form: UseFormReturn<TFormAttributes>;
@@ -29,6 +30,7 @@ interface IDefaultFormProps<TFormAttributes extends FieldValues> {
   validationSchema: z.ZodObject<{
     [K in keyof TFormAttributes]: z.ZodType<TFormAttributes[K]>;
   }>;
+  isLoading?: boolean;
 }
 
 export default function DefaultForm<TFormAttributes extends FieldValues>(
@@ -85,8 +87,12 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
             />
           ))}
         </div>
-        <Button className="w-full" type="submit">
-          Submit
+        <Button
+          className={`w-full ${props.isLoading ? 'cursor-not-allowed bg-gray-700' : ''}`}
+          type="submit"
+          disabled={props.isLoading}
+        >
+          {props.isLoading ? <Spinner /> : ''} Submit
         </Button>
       </form>
     </Form>
