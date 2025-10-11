@@ -3,6 +3,7 @@ model Parameter {
     name        String          @unique
     valueType   ValueType
     unit        String?
+    description String?
     groups      ParameterGroupMember[]
     labReportDetails LabReportDetail[]
     limits      ParameterLimit[]
