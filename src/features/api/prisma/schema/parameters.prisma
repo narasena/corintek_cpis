@@ -71,8 +71,8 @@ model ParameterLimit {
     id          String          @id @default(uuid())
     parameterId  String
     parameter   Parameter @relation(fields: [parameterId], references: [id])
-    groupId     String
-    group       ParameterGroup @relation(fields: [groupId], references: [id])
+    groupId     String?
+    group       ParameterGroup? @relation(fields: [groupId], references: [id])
     methodId    String?
     method      StandardMethod? @relation(fields: [methodId], references: [id])
     valueType    ValueType
