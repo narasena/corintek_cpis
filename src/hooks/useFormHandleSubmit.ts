@@ -32,6 +32,7 @@ export default function useFormHandleSubmit<
   const [isLoading, setIsLoading] = useState(false);
   const onSubmitWithImage: SubmitHandler<TFormAttributes> = async data => {
     try {
+      setIsLoading(true);
       if (params.imageKey) {
         if (
           process.env.NODE_ENV === 'development' ||
@@ -109,9 +110,12 @@ export default function useFormHandleSubmit<
           params.form.formState.defaultValues as TFormAttributes
         );
       }
+      setIsLoading(false);
     } catch (error) {
       toast.error(errorMessageResponse(error));
       console.error('Submit error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -146,6 +150,7 @@ export default function useFormHandleSubmit<
 
   const onSubmitLogin: SubmitHandler<TAuthLoginFormAttributes> = async data => {
     try {
+      setIsLoading(true);
       if (
         process.env.NODE_ENV === 'development' ||
         process.env.NODE_ENV === 'test'
@@ -164,6 +169,7 @@ export default function useFormHandleSubmit<
         setUser(user);
       }
       toast.success(response.data.message || 'Login success');
+      setIsLoading(false);
       setTimeout(() => {
         route.push('/');
       }, 3500);
@@ -172,6 +178,8 @@ export default function useFormHandleSubmit<
       setUser(null);
       toast.error(errorMessageResponse(error));
       console.error('Submit error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 

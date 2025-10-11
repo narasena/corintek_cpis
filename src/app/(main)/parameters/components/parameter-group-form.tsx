@@ -21,7 +21,7 @@ export default function ParameterGroupForm({
       description: '',
     },
   });
-  const { onSubmit, onInvalid } = useFormHandleSubmit({
+  const { onSubmit, onInvalid, isLoading } = useFormHandleSubmit({
     form: parameterGroupForm,
     apiUrl: '/parameters/groups',
     refetch,
@@ -34,6 +34,7 @@ export default function ParameterGroupForm({
       onInvalid={onInvalid}
       formFields={parameterGroupFormFields}
       validationSchema={parameterGroupSchema}
+      isLoading={isLoading}
     />
   );
 }
