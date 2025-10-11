@@ -28,6 +28,7 @@ model ParameterGroup {
     type        ParameterGroupType
     description String?
     members     ParameterGroupMember[]
+    limits      ParameterLimit[]
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
@@ -69,6 +70,8 @@ model ParameterLimit {
     id          String          @id @default(uuid())
     parameterId  String
     parameter   Parameter @relation(fields: [parameterId], references: [id])
+    groupId     String
+    group       ParameterGroup @relation(fields: [groupId], references: [id])
     methodId    String?
     method      StandardMethod? @relation(fields: [methodId], references: [id])
     valueType    ValueType
