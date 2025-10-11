@@ -6,7 +6,7 @@ import {
   fetchParameterGroupByIdService,
   updateParameterGroupService,
   deleteParameterGroupService,
-} from './parameter.service';
+} from './parameterGroups.service';
 import requestValidation from '@/utils/api/v1/validation/requestValidation';
 import { prisma } from '@/features/api/connection/prisma';
 import { Prisma } from '@/features/api/generated/prisma';

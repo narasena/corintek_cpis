@@ -3,7 +3,7 @@ import {
   fetchParameterGroupById,
   updateParameterGroup,
   deleteParameterGroup,
-} from '@/features/api/features/v1/parameters/parameter.controller';
+} from '@/features/api/features/v1/parameters/groups/parameterGroups.controller';
 
 export async function GET(
   req: NextRequest,
