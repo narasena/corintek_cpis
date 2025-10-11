@@ -27,13 +27,4 @@ export const parameterFormFields: IFormFields[] = [
     type: EFieldType.TEXT,
     description: '',
   },
-  {
-    name: 'groupId',
-    label: 'Grup Parameter',
-    type: EFieldType.CUSTOM,
-    description: '',
-    customComponent: (
-      field: ControllerRenderProps<FieldValues, Path<FieldValues>>
-    ) => React.createElement(SelectParameterGroup, { field, data: [] as any }),
-  },
 ];

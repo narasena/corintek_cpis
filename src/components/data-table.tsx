@@ -119,21 +119,34 @@ export interface ITableTab<TData extends { id: UniqueIdentifier }> {
 
 export function DataTable<TData extends { id: UniqueIdentifier }>({
   tabs,
+  tab,
+  onTabChange,
 }: {
   tabs: ITableTab<TData>[];
+  tab?: string;
+  onTabChange?: (value: string) => void;
 }) {
-  const [activeTab, setActiveTab] = React.useState(tabs[0]);
-  const [data, setData] = React.useState(() => activeTab.data!);
-  React.useEffect(() => {
-    if (tabs.length > 0) {
-      setActiveTab(tabs[0]);
+  const [internalActiveTab, setInternalActiveTab] = React.useState(tabs[0]);
+
+  const activeTab = tab
+    ? tabs.find(t => t.value === tab) || tabs[0]
+    : internalActiveTab;
+
+  const handleTabChange = (value: string) => {
+    const newTab = tabs.find(t => t.value === value)!;
+    if (onTabChange) {
+      onTabChange(value);
+    } else {
+      setInternalActiveTab(newTab);
     }
-  }, [tabs]);
+  };
+
+  const [data, setData] = React.useState(() => activeTab.data!);
   React.useEffect(() => {
     if (activeTab) {
       setData(activeTab.data || []);
     }
-  }, [activeTab]);
+  }, [activeTab, tabs]);
 
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -197,21 +210,14 @@ export function DataTable<TData extends { id: UniqueIdentifier }>({
   return (
     <Tabs
       value={activeTab.value}
-      onValueChange={value =>
-        setActiveTab(tabs.find(tab => tab.value === value)!)
-      }
+      onValueChange={handleTabChange}
       className="w-full flex-col justify-start gap-6"
     >
       <div className="flex items-center justify-between px-4 lg:px-6">
         <Label htmlFor="view-selector" className="sr-only">
           View
         </Label>
-        <Select
-          defaultValue={activeTab.value}
-          onValueChange={value =>
-            setActiveTab(tabs.find(tab => tab.value === value)!)
-          }
-        >
+        <Select value={activeTab.value} onValueChange={handleTabChange}>
           {tabs.length > 1 && (
             <>
               <SelectTrigger

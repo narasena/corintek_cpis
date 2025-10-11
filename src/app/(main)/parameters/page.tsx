@@ -25,7 +25,18 @@ type TParameter =
   | IParameterLimit
   | IStandardMethod;
 
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+
 export default function ParametersPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab') || 'parameter';
+
+  const onTabChange = (value: string) => {
+    router.push(`${pathname}?tab=${value}`);
+  };
+
   const { allParameterGroups, refetchParameterGroups } = useAllParameterGroups();
   const parametersTabs: ITableTab<TParameter>[] = [
     {
@@ -87,7 +98,11 @@ export default function ParametersPage() {
   ];
   return (
     <div>
-      <DataTable tabs={parametersTabs} />
+      <DataTable
+        tabs={parametersTabs}
+        tab={tab}
+        onTabChange={onTabChange}
+      />
     </div>
   );
 }
