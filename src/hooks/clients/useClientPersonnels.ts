@@ -3,7 +3,9 @@ import apiInstance from '@/utils/apiInstance';
 import { IClientPersonnel } from '@/types/client.type';
 
 export default function useClientPersonnels(clientId: string | null) {
-  const [clientPersonnels, setClientPersonnels] = useState<IClientPersonnel[]>([]);
+  const [clientPersonnels, setClientPersonnels] = useState<IClientPersonnel[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +20,9 @@ export default function useClientPersonnels(clientId: string | null) {
       setError(null);
 
       try {
-        const response = await apiInstance.get(`/clients/${clientId}/personnels`);
+        const response = await apiInstance.get(
+          `/clients/${clientId}/personnels`
+        );
         if (response.data.success) {
           setClientPersonnels(response.data.clientPersonnel || []);
         } else {

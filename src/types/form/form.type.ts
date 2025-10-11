@@ -1,3 +1,4 @@
+import { UniqueIdentifier } from '@dnd-kit/core';
 import React from 'react';
 
 export interface IFormFields {
@@ -10,6 +11,12 @@ export interface IFormFields {
   description?: string;
   enumOptions?: string[];
   customComponent?: React.ReactNode | ((field: any) => React.ReactNode);
+  selectData?: ISelectDataFormField[];
+}
+
+export interface ISelectDataFormField {
+  label: string;
+  value: UniqueIdentifier;
 }
 
 export enum EFieldType {

@@ -5,12 +5,12 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function useAllClients() {
-  const [clients, setClients] = useState<IClient[]>([]);
+  const [allClients, setAllClients] = useState<IClient[]>([]);
 
   const fetchClients = async () => {
     try {
       const response = await apiInstance.get('/clients');
-      setClients(response.data.clients);
+      setAllClients(response.data.clients);
     } catch (error) {
       toast.error(errorMessageResponse(error));
       console.error('Submit error:', error);
@@ -21,5 +21,5 @@ export default function useAllClients() {
     fetchClients();
   }, []);
 
-  return { clients };
+  return { allClients };
 }

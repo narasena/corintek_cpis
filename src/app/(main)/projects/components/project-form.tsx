@@ -12,7 +12,10 @@ import useClientPersonnels from '@/hooks/clients/useClientPersonnels';
 
 export default function ProjectForm() {
   const { internalPersonnels } = useAllPersonnels();
-  const { clients } = useAllClients();
+  const { allClients } = useAllClients();
+  const clients = allClients.map(client => {
+    return { label: client.name, value: client.id };
+  });
 
   const projectCreationForm = useForm<TProjectCreationAttributes>({
     resolver: zodResolver(projectCreationSchema),
@@ -49,21 +52,22 @@ export default function ProjectForm() {
   const selectedClientId = projectCreationForm.watch('clientId');
   const { clientPersonnels } = useClientPersonnels(selectedClientId);
 
-  const { onSubmit, onInvalid } = useFormHandleSubmit({
-    form: projectCreationForm,
-    apiUrl: '/projects',
-  });
+  const { onSubmit, onInvalid } =
+    useFormHandleSubmit<TProjectCreationAttributes>({
+      form: projectCreationForm,
+      apiUrl: '/projects',
+    });
 
   return (
     <DefaultForm<TProjectCreationAttributes>
       form={projectCreationForm}
       onSubmit={onSubmit}
       onInvalid={onInvalid}
-      formFields={projectCreationFormFields(
-        internalPersonnels,
+      formFields={projectCreationFormFields({
         clients,
-        clientPersonnels
-      )}
+        personnels: internalPersonnels,
+        clientPersonnels: clientPersonnels,
+      })}
       validationSchema={projectCreationSchema}
     />
   );

@@ -3,30 +3,34 @@ import {
   ProjectType,
   WorkCategory,
 } from '@/features/api/generated/prisma';
-import { EFieldType, IFormFields } from '@/types/form/form.type';
+import {
+  EFieldType,
+  IFormFields,
+  ISelectDataFormField,
+} from '@/types/form/form.type';
 import { IPersonnelGroup } from '@/types/project.type';
-import { IClient } from '@/types/client.type';
 import { SelectPersonnels } from '../components/select-personnels';
-import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 import React from 'react';
-import { SelectClients } from '../components/select-clients';
 import { SelectClientPersonnels } from '../components/select-client-personnels';
+import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
+import { IClientPersonnel } from '@/types/client.type';
 
+interface IProjectCreationFormFields {
+  clients: ISelectDataFormField[];
+  personnels: IPersonnelGroup[];
+  clientPersonnels: IClientPersonnel[];
+}
 export const projectCreationFormFields = (
-  data: IPersonnelGroup[],
-  clients: IClient[] = [],
-  clientPersonnels: any[] = []
+  selectData: IProjectCreationFormFields
 ) => {
   return [
     {
       name: 'clientId',
       label: 'Klien',
-      type: EFieldType.CUSTOM,
+      type: EFieldType.SELECT,
       placeHolder: '',
       description: '',
-      customComponent: (
-        field: ControllerRenderProps<FieldValues, Path<FieldValues>>
-      ) => React.createElement(SelectClients, { field, data: clients }),
+      selectData: selectData.clients,
     },
     {
       name: 'name',
@@ -120,7 +124,7 @@ export const projectCreationFormFields = (
       ) =>
         React.createElement(SelectClientPersonnels, {
           field,
-          data: clientPersonnels,
+          data: selectData.clientPersonnels,
         }),
     },
     {
@@ -131,7 +135,11 @@ export const projectCreationFormFields = (
       description: '',
       customComponent: (
         field: ControllerRenderProps<FieldValues, Path<FieldValues>>
-      ) => React.createElement(SelectPersonnels, { field, dataGroup: data }),
+      ) =>
+        React.createElement(SelectPersonnels, {
+          field,
+          dataGroup: selectData.personnels,
+        }),
     },
     {
       name: 'parentId',

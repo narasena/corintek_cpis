@@ -47,6 +47,25 @@ export default function FormSelector<TFormAttributes extends FieldValues>({
       }
       return <CustomComponent />;
     case EFieldType.SELECT:
+      return (
+        <Select
+          onValueChange={value =>
+            renderProps.field.onChange(value === '' ? undefined : value)
+          }
+          value={renderProps.field.value as string | undefined}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={formField.placeHolder} />
+          </SelectTrigger>
+          <SelectContent>
+            {formField.selectData?.map((item, index) => (
+              <SelectItem key={index} value={String(item.value)}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
     case EFieldType.ENUM:
       // For enums, provide predefined options based on field name (avoid schema introspection to prevent TS hangs)
       let enumValues: string[] = [];
