@@ -35,38 +35,41 @@ export async function createParameterLimitService(
     const whereClause: Prisma.ParameterLimitWhereInput = {
       deletedAt: null,
     };
-    const existingLimitOnly = await prisma.parameterLimit.findFirst({
-      where: { ...whereClause, parameterId: data.parameterId },
-    });
-    const existingLimitWithSameMethod = await prisma.parameterLimit.findFirst({
-      where: {
-        ...whereClause,
-        parameterId: data.parameterId,
-        methodId: data.methodId,
-      },
-    });
-    const existingLimitWithSameGroup = await prisma.parameterLimit.findFirst({
-      where: {
-        ...whereClause,
-        parameterId: data.parameterId,
-        groupId: data.groupId,
-      },
-    });
-    const existingLimitWithSameMethodAndGroup =
-      await prisma.parameterLimit.findFirst({
+    let existingParameterLimit;
+    if (data.groupId && data.methodId) {
+      existingParameterLimit = await prisma.parameterLimit.findFirst({
+        where: {
+          ...whereClause,
+          parameterId: data.parameterId,
+          groupId: data.groupId,
+          methodId: data.methodId,
+        },
+      });
+    } else if (data.groupId) {
+      existingParameterLimit = await prisma.parameterLimit.findFirst({
+        where: {
+          ...whereClause,
+          parameterId: data.parameterId,
+          groupId: data.groupId,
+        },
+      });
+    } else if (data.methodId) {
+      existingParameterLimit = await prisma.parameterLimit.findFirst({
         where: {
           ...whereClause,
           parameterId: data.parameterId,
           methodId: data.methodId,
-          groupId: data.groupId,
         },
       });
-    if (
-      existingLimitOnly ||
-      existingLimitWithSameMethod ||
-      existingLimitWithSameGroup ||
-      existingLimitWithSameMethodAndGroup
-    ) {
+    } else {
+      existingParameterLimit = await prisma.parameterLimit.findFirst({
+        where: {
+          ...whereClause,
+          parameterId: data.parameterId,
+        },
+      });
+    }
+    if (existingParameterLimit) {
       throw new AppError({
         status: 400,
         message: 'Limit parameter sudah ada',

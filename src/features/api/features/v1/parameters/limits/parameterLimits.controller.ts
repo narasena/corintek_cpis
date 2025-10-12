@@ -35,9 +35,9 @@ export async function createParameterLimit(req: NextRequest) {
     }
 
     const validatedData = validatedResult;
-    let newParameterLimit;
+
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      newParameterLimit = await createParameterLimitService(
+      await createParameterLimitService(
         validatedData as TParameterLimitAttributes,
         tx
       );
@@ -45,7 +45,7 @@ export async function createParameterLimit(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        newParameterLimit,
+        message: 'Parameter limit baru berhasil ditambahkan',
       },
       { status: 201 }
     );
