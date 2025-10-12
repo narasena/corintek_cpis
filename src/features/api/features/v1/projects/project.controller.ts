@@ -33,7 +33,6 @@ export async function fetchInternalPersonnels(req: NextRequest) {
 export async function createProject(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log('Body:', body);
 
     const validatedResult = requestValidation<TProjectCreationAttributes>({
       validationSchema: projectCreationSchema,
