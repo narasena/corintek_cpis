@@ -6,11 +6,11 @@ export const parameterLimitColumns =
     return [
       {
         accessorKey: 'parameterId',
-        header: 'Parameter ID',
+        header: 'Parameter',
       },
       {
         accessorKey: 'methodId',
-        header: 'Method ID',
+        header: 'Metode Standar',
       },
       {
         accessorKey: 'valueType',
