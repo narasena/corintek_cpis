@@ -4,7 +4,8 @@ import { z } from 'zod';
 
 export const parameterLimitSchema = z.object({
   parameterId: z.string().min(1, 'Parameter ID harus diisi'),
-  methodId: z.string().optional(),
+  methodId: z.string().nullable().optional(),
+  groupId: z.string().nullable().optional(),
   valueType: z.enum(ValueType),
   minValue: preprocessBlank(z.string().nullable().optional()),
   maxValue: preprocessBlank(z.string().nullable().optional()),

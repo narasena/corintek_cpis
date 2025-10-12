@@ -1,8 +1,5 @@
 import { ValueType } from '@/features/api/generated/prisma';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
-import React from 'react';
-import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
-import { SelectParameterGroup } from '../components/select-parameter-group';
 
 export const parameterFormFields: IFormFields[] = [
   {

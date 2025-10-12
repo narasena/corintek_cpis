@@ -27,6 +27,7 @@ type TParameter =
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import useAllParameters from '@/hooks/parameters/useAllParameters';
+import useAllParameterLimits from '@/hooks/parameters/useAllParameterLimits';
 
 export default function ParametersPage() {
   const router = useRouter();
@@ -41,6 +42,8 @@ export default function ParametersPage() {
   const { allParameters, refetchAllParameters } = useAllParameters();
   const { allParameterGroups, refetchParameterGroups } =
     useAllParameterGroups();
+  const { allParameterLimits, refetchAllParameterLimits } =
+    useAllParameterLimits();
   const parametersTabs: ITableTab<TParameter>[] = [
     {
       value: 'parameter',
@@ -73,14 +76,14 @@ export default function ParametersPage() {
     {
       value: 'parameterLimit',
       label: 'Limit Parameter',
-      data: [],
+      data: allParameterLimits,
       columns: parameterLimitColumns() as ColumnDef<TParameter>[],
       addNewRow: (
         <CreateData
           buttonText="Tambah Limit"
           modalTitle="Tambah Limit Parameter Baru"
           modalDescription="Menambahkan limit parameter baru ke dalam sistem CPIS"
-          content={<ParameterLimitForm />}
+          content={<ParameterLimitForm refetch={refetchAllParameterLimits} />}
         />
       ),
     },

@@ -16,7 +16,11 @@ export interface IParameterGroup
 export type TParameterLimitAttributes = z.infer<typeof parameterLimitSchema>;
 export interface IParameterLimit
   extends TParameterLimitAttributes,
-    ITableHelper {}
+    ITableHelper {
+  parameter: Partial<IParameter>;
+  group: Partial<IParameterGroup>;
+  method: Partial<IStandardMethod>;
+}
 
 export type TStandardMethodAttributes = z.infer<typeof standardMethodSchema>;
 export interface IStandardMethod
