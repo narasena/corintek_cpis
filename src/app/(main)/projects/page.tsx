@@ -7,17 +7,14 @@ import React from 'react';
 import { projectColumns } from './components/project-columns';
 import ProjectForm from './components/project-form';
 import useProjects from './hooks/useProjects';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function ProjectsPage() {
   const { projects, loading, error } = useProjects();
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-96 w-full" />
-      </div>
+      <Spinner className="size-12 text-gray-500 self-center items-center" />
     );
   }
 
