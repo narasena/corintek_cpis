@@ -1,7 +1,7 @@
-import { ColumnDef } from "@tanstack/react-table"
-import DragHandleTable from "./drag-handle-table"
-import { IUniqueIdentifierId } from "@/types/base.dto"
-import { Checkbox } from "./ui/checkbox"
+import { ColumnDef } from '@tanstack/react-table';
+import DragHandleTable from './drag-handle-table';
+import { IUniqueIdentifierId } from '@/types/base.dto';
+import { Checkbox } from './ui/checkbox';
 
 export function defaultColumns<T extends IUniqueIdentifierId>() {
   function draggableColumn(): ColumnDef<T> {
@@ -61,7 +61,7 @@ export function defaultColumns<T extends IUniqueIdentifierId>() {
     return {
       id: 'actions',
       header: 'Actions',
-      cell: ({ row }) => {
+      cell: () => {
         return (
           <div className="flex items-center justify-start gap-2">Actions</div>
         );
@@ -76,5 +76,5 @@ export function defaultColumns<T extends IUniqueIdentifierId>() {
     email: emailColumn(),
     phoneNumber: phoneNumberColumn(),
     actions: actionsColumn(),
-  } as const
+  } as const;
 }

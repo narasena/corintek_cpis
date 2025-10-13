@@ -89,9 +89,9 @@ export async function createClient(req: NextRequest) {
   }
 }
 
-export async function fetchAllClients(req: NextRequest) {
+export async function fetchAllClients() {
   try {
-    const clients = await fetchAllClientsService(req);
+    const clients = await fetchAllClientsService();
     return NextResponse.json({
       success: true,
       clients,

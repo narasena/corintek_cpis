@@ -1,3 +1,1 @@
-export function upload() {
-  
-}
+export function upload() {}

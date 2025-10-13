@@ -21,6 +21,9 @@ const eslintConfig = [
       'build/**',
       'next-env.d.ts',
       'commitlint.config.js',
+      'src/features/api/generated/**',
+      'prisma/generated/**',
+      '**/*.generated.{js,ts}',
     ],
   },
   // Core Next.js, TypeScript, and React rules

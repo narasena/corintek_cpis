@@ -56,7 +56,6 @@ export const clientPersonnelRoles = userRoles.filter(
     role.role === UserRole.CLIENT_SUPERVISOR
 );
 
-
 const employeeStatus = [
   { status: EmploymentStatus.PERMANENT, style: 'bg-green-600' },
   { status: EmploymentStatus.FREELANCE, style: 'bg-yellow-600' },
@@ -76,7 +75,10 @@ export const userColumns = (): ColumnDef<IUser>[] => {
         return (
           <div className="flex gap-2 items-center">
             <Avatar className="size-10 rounded-full">
-              <AvatarImage src={row.original.avatarUrl} alt="avatar" />
+              <AvatarImage
+                src={row.original.avatarUrl as string}
+                alt="avatar"
+              />
               <AvatarFallback className="bg-gray-400 p-3">
                 <IconUserCircle className="size-full text-slate-700" />
               </AvatarFallback>

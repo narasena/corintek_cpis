@@ -21,10 +21,7 @@ export default function ClientForm() {
     },
   });
 
-  const { previewUrl, handleImagePreview } = useImagePreview<
-    TClientCreationAttributes,
-    'avatarImg'
-  >();
+  const { previewUrl, handleImagePreview } = useImagePreview();
 
   const { onSubmitWithImage, onInvalid } = useFormHandleSubmit({
     form: createClientForm,

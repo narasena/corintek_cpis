@@ -4,7 +4,6 @@ import { Prisma, User } from '@/features/api/generated/prisma';
 import { hashPassword } from '@/utils/api/v1/passwordHash';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { AppError } from '@/lib/app-error';
-import { NextRequest } from 'next/server';
 
 export async function createUserWithoutAvatar(
   payload: Omit<TUserCreationAttributes, 'avatarImg'>,
@@ -82,7 +81,7 @@ export async function updateUserAvatar(
   }
 }
 
-export async function fetchAllUsersService(req: NextRequest) {
+export async function fetchAllUsersService() {
   try {
     const whereClause: Prisma.UserWhereInput = {
       deletedAt: null,

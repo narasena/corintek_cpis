@@ -5,7 +5,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { IUser } from '@/types/user.type';
 import { clientPICColumns } from './client-pic-column';
 import CreateData from '@/components/features/data/create-data';
 import ClientPicForm from './client-pic-form';

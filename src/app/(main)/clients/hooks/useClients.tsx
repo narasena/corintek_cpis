@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 export default function useClients() {
   const [clientId, setClientId] = useState<UniqueIdentifier>();
-  const { clients } = useAllClients();
+  const { allClients } = useAllClients();
   const { clientData, isLoading } = useClientById(
     clientId ? String(clientId) : ''
   );
@@ -17,5 +17,5 @@ export default function useClients() {
     }
     setClientId(newClientId);
   };
-  return { clients, clientData, isLoading, handleClickClientData };
+  return { allClients, clientData, isLoading, handleClickClientData };
 }

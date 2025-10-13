@@ -9,12 +9,12 @@ import useClients from './hooks/useClients';
 import { IClient } from '@/types/client.type';
 
 export default function ClientsPage() {
-  const { clients } = useClients();
+  const { allClients } = useClients();
   const clientsTabs: ITableTab<IClient>[] = [
     {
       value: 'default',
       label: 'Default',
-      data: clients,
+      data: allClients,
       columns: clientColumns(),
       addNewRow: (
         <CreateData

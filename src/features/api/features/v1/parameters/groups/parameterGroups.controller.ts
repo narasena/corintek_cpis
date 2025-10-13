@@ -50,9 +50,9 @@ export async function createParameterGroup(req: NextRequest) {
   }
 }
 
-export async function fetchAllParameterGroups(req: NextRequest) {
+export async function fetchAllParameterGroups() {
   try {
-    const parameterGroups = await fetchAllParameterGroupsService(req);
+    const parameterGroups = await fetchAllParameterGroupsService();
     return NextResponse.json({
       success: true,
       parameterGroups,

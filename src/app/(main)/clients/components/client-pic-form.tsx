@@ -30,10 +30,7 @@ export default function ClientPicForm(props: IClientPicFormProps) {
     },
   });
 
-  const { previewUrl, handleImagePreview } = useImagePreview<
-    TClientPICCreationAttributes,
-    'avatarImg'
-  >();
+  const { previewUrl, handleImagePreview } = useImagePreview();
 
   const { onSubmitWithImage, onInvalid } = useFormHandleSubmit({
     form: createClientPICForm,

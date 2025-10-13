@@ -10,9 +10,9 @@ import { parameterSchema } from '@/app/(main)/parameters/schemas/parameterSchema
 import { prisma } from '@/features/api/connection/prisma';
 import { Prisma } from '@/features/api/generated/prisma';
 
-export async function fetchAllParameters(req: NextRequest) {
+export async function fetchAllParameters() {
   try {
-    const parameters = await fetchAllParametersService(req);
+    const parameters = await fetchAllParametersService();
     return NextResponse.json({
       success: true,
       parameters,

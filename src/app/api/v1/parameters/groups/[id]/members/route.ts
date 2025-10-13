@@ -7,21 +7,24 @@ import {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return await fetchParameterGroupMembers(req, params.id);
+  const { id } = await params;
+  return await fetchParameterGroupMembers(req, id);
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return await addParameterGroupMembers(req, params.id);
+  const { id } = await params;
+  return await addParameterGroupMembers(req, id);
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  return await removeParameterGroupMembers(req, params.id);
+  const { id } = await params;
+  return await removeParameterGroupMembers(req, id);
 }

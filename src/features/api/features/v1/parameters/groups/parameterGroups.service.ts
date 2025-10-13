@@ -5,7 +5,7 @@ import { TParameterGroupAttributes } from '@/types/parameter.type';
 import { serviceErrorResponse } from '@/lib/error-handler';
 import { AppError } from '@/lib/app-error';
 
-export async function fetchAllParameterGroupsService(req: NextRequest) {
+export async function fetchAllParameterGroupsService() {
   try {
     const whereClause: Prisma.ParameterGroupWhereInput = {
       deletedAt: null,

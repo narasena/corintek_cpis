@@ -1,5 +1,3 @@
-import { NextRequest } from 'next/server';
-
 import { AppError } from '@/lib/app-error';
 import {
   IPersonnelGroup,
@@ -9,7 +7,7 @@ import {
 import { Prisma } from '@/features/api/generated/prisma';
 import { prisma } from '@/features/api/connection/prisma';
 
-export async function fetchInternalPersonnelsService(req: NextRequest) {
+export async function fetchInternalPersonnelsService() {
   try {
     const whereClause: Prisma.UserWhereInput = {
       deletedAt: null,
@@ -98,10 +96,10 @@ export async function createProjectService(
     // Create project first
     const newProject = await tx.project.create({
       data: {
-        parentId: projectData.parentId || null,
+        parentId: (projectData.parentId as string) || null,
         clientId: projectData.clientId,
         name: projectData.name,
-        description: projectData.description,
+        description: (projectData.description as string) || null,
         quoteNumber: projectData.quoteNumber,
         PONumber: projectData.PONumber,
         startDate: projectData.startDate,
@@ -149,7 +147,7 @@ export async function createProjectService(
   }
 }
 
-export async function fetchAllProjectsService(req: NextRequest) {
+export async function fetchAllProjectsService() {
   try {
     const projects = await prisma.project.findMany({
       where: {

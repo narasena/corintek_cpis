@@ -4,8 +4,8 @@ import {
   fetchAllParameterGroups,
 } from '@/features/api/features/v1/parameters/groups/parameterGroups.controller';
 
-export async function GET(req: NextRequest) {
-  return await fetchAllParameterGroups(req);
+export async function GET() {
+  return await fetchAllParameterGroups();
 }
 
 export async function POST(req: NextRequest) {

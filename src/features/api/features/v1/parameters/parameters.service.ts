@@ -3,9 +3,8 @@ import { Prisma } from '@/features/api/generated/prisma';
 import { AppError } from '@/lib/app-error';
 import { serviceErrorResponse } from '@/lib/error-handler';
 import { TParameterAttributes } from '@/types/parameter.type';
-import { NextRequest } from 'next/server';
 
-export async function fetchAllParametersService(req: NextRequest) {
+export async function fetchAllParametersService() {
   try {
     const whereClause: Prisma.ParameterWhereInput = {
       deletedAt: null,

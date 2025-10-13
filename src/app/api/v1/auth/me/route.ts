@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(user, { status: 200 });
-  } catch (error) {
+  } catch {
     // This will catch errors like invalid signature, token expired, etc.
     return NextResponse.json(
       { message: 'Invalid or expired token' },

@@ -24,7 +24,7 @@ export function LoginForm() {
   });
 
   const { onSubmitLogin, onInvalid } = useFormHandleSubmit({
-    form: authLoginForm
+    form: authLoginForm,
   });
 
   return (

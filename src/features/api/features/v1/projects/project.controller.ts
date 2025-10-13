@@ -18,9 +18,9 @@ interface ITokenPayload {
   role: string;
 }
 
-export async function fetchInternalPersonnels(req: NextRequest) {
+export async function fetchInternalPersonnels() {
   try {
-    const personnels = await fetchInternalPersonnelsService(req);
+    const personnels = await fetchInternalPersonnelsService();
     return NextResponse.json({
       success: true,
       personnels,
@@ -65,9 +65,9 @@ export async function createProject(req: NextRequest) {
   }
 }
 
-export async function fetchAllProjects(req: NextRequest) {
+export async function fetchAllProjects() {
   try {
-    const projects = await fetchAllProjectsService(req);
+    const projects = await fetchAllProjectsService();
     return NextResponse.json({
       success: true,
       projects,

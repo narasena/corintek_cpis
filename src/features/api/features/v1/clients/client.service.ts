@@ -134,7 +134,7 @@ export async function updateClientAvatar(
   }
 }
 
-export async function fetchAllClientsService(req: NextRequest) {
+export async function fetchAllClientsService() {
   try {
     const whereClause: Prisma.ClientWhereInput = {
       deletedAt: null,

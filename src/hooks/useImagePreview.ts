@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ControllerRenderProps, FieldPath, FieldValues } from 'react-hook-form';
 
-export function useImagePreview<TFormData extends FieldValues, TFieldName extends FieldPath<TFormData>>() {
+export function useImagePreview() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -12,9 +11,7 @@ export function useImagePreview<TFormData extends FieldValues, TFieldName extend
     };
   }, [previewUrl]);
 
-  const handleImagePreview = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImagePreview = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (previewUrl) {
