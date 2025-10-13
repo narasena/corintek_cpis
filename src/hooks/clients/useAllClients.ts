@@ -6,22 +6,14 @@ import { toast } from 'sonner';
 
 export default function useAllClients() {
   const [allClients, setAllClients] = useState<IClient[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const fetchClients = async () => {
     try {
-      setLoading(true);
-      setError(null);
       const response = await apiInstance.get('/clients');
       setAllClients(response.data.clients);
     } catch (error) {
-      const errorMessage = errorMessageResponse(error);
-      toast.error(errorMessage);
-      setError(errorMessage);
+      toast.error(errorMessageResponse(error));
       console.error('Submit error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -29,5 +21,5 @@ export default function useAllClients() {
     fetchClients();
   }, []);
 
-  return { allClients, loading, error, refetch: fetchClients };
+  return { allClients };
 }
