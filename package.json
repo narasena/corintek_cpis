@@ -9,6 +9,7 @@
     "lint": "eslint",
     "prepare": "husky",
     "precommit": "lint-staged",
+    "postinstall": "prisma generate",
     "prisma:migrate": "dotenv -e .env.development -- npx prisma migrate dev",
     "prisma:status": "dotenv -e .env.development -- npx prisma migrate status",
     "prisma:studio": "dotenv -e .env.development -- npx prisma studio",

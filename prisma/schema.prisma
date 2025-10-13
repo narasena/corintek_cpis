@@ -1,0 +1,43 @@
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../../generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum ValueType {
+    NUMBER
+    TEXT
+    BOOLEAN
+}
+
+model Notification {
+    id          String          @id @default(uuid())
+    technicianId String
+    technician  User         @relation(fields: [technicianId], references: [id])
+    logSheetId   String?
+    logSheet     LogSheet?         @relation(fields: [logSheetId], references: [id])
+    message     String
+    isRead      Boolean         @default(false)
+    createdAt   DateTime        @default(now())
+    @@map("notifications")
+    @@index([technicianId, logSheetId])
+    @@index([logSheetId])
+}
+
+model AuditLog {
+    id          String          @id @default(uuid())
+    userId      String
+    user        User         @relation(fields: [userId], references: [id])
+    action      String
+    resourceId  String?
+    details     Json?
+    createdAt   DateTime        @default(now())
+    @@map("audit_logs")
+    @@index([userId])
+}
