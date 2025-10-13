@@ -1,4 +1,5 @@
 # CORINTEK PROJECT INFORMATION SYSTEM
+deployed to vercel 
 
 ## Running Cloudflare Worker Development
 ```bash
