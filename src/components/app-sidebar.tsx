@@ -57,12 +57,12 @@ const data = {
     },
     {
       title: 'Log Sheets',
-      url: 'log-sheets',
+      url: '/log-sheets',
       icon: IconTableFilled,
     },
     {
       title: 'Parameters',
-      url: 'parameters',
+      url: '/parameters',
       icon: IconVariable,
     },
     {

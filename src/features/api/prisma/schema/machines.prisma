@@ -4,6 +4,7 @@ model Machine {
     project     Project         @relation(fields: [projectId], references: [id])
     type        MachineType
     ownership   MachineOwnership    @default(CORINTEK)
+    capacity    String?
     brand       String?
     model       String?
     serialNumber String?
