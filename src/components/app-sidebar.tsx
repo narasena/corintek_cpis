@@ -35,13 +35,10 @@ import {
 } from '@/components/ui/sidebar';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useAuthStore } from '@/stores/authStore';
+import { IUser } from '@/types/user.type';
 
 const data = {
-  user: {
-    name: 'Admin Corintek 01',
-    email: 'admin@corintek.co.id',
-    avatar: '/avatars/shadcn.jpg',
-  },
   navMain: [
     {
       title: 'Dashboard',
@@ -164,6 +161,7 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuthStore();
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -192,7 +190,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user as Partial<IUser>} />
       </SidebarFooter>
     </Sidebar>
   );

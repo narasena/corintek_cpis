@@ -18,7 +18,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await apiInstance.get('/auth/me');
       if (response.data) {
-        console.log('SessionProvider: User data:', response.data);
         setUser(response.data);
       }
     } catch (error) {
