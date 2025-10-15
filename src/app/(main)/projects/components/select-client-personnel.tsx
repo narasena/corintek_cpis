@@ -6,13 +6,13 @@ import { X } from 'lucide-react';
 import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 import { IClientPersonnel } from '@/types/client.type';
 
-interface ISelectClientPersonnelsProps<TFormAttributes extends FieldValues> {
+interface ISelectClientPersonnelProps<TFormAttributes extends FieldValues> {
   field: ControllerRenderProps<TFormAttributes, Path<TFormAttributes>>;
   data: IClientPersonnel[];
 }
 
-export function SelectClientPersonnels<TFormAttributes extends FieldValues>(
-  props: ISelectClientPersonnelsProps<TFormAttributes>
+export function SelectClientPersonnel<TFormAttributes extends FieldValues>(
+  props: ISelectClientPersonnelProps<TFormAttributes>
 ) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -59,7 +59,7 @@ export function SelectClientPersonnels<TFormAttributes extends FieldValues>(
 
   return (
     <div className="w-full">
-      {/* Selected personnels display */}
+      {/* Selected personnel display */}
       {selectedValues.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
           {getSelectedPersonnelNames().map((name, index) => (

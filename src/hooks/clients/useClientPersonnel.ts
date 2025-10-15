@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import apiInstance from '@/utils/apiInstance';
 import { IClientPersonnel } from '@/types/client.type';
 
-export default function useClientPersonnels(clientId: string | null) {
-  const [clientPersonnels, setClientPersonnels] = useState<IClientPersonnel[]>(
+export default function useClientPersonnel(clientId: string | null) {
+  const [clientPersonnel, setClientPersonnel] = useState<IClientPersonnel[]>(
     []
   );
   const [loading, setLoading] = useState(false);
@@ -11,36 +11,36 @@ export default function useClientPersonnels(clientId: string | null) {
 
   useEffect(() => {
     if (!clientId) {
-      setClientPersonnels([]);
+      setClientPersonnel([]);
       return;
     }
 
-    const fetchClientPersonnels = async () => {
+    const fetchClientPersonnel = async () => {
       setLoading(true);
       setError(null);
 
       try {
         const response = await apiInstance.get(
-          `/clients/${clientId}/personnels`
+          `/clients/${clientId}/personnel`
         );
         if (response.data.success) {
-          setClientPersonnels(response.data.clientPersonnel || []);
+          setClientPersonnel(response.data.clientPersonnel || []);
         } else {
-          setError('Failed to fetch client personnels');
+          setError('Failed to fetch client personnel');
         }
       } catch (err) {
-        setError('Error fetching client personnels');
-        console.error('Error fetching client personnels:', err);
+        setError('Error fetching client personnel');
+        console.error('Error fetching client personnel:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchClientPersonnels();
+    fetchClientPersonnel();
   }, [clientId]);
 
   return {
-    clientPersonnels,
+    clientPersonnel,
     loading,
     error,
   };

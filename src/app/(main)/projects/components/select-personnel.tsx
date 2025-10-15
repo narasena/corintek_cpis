@@ -6,13 +6,13 @@ import { X } from 'lucide-react';
 import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 import { IPersonnelGroup } from '@/types/project.type';
 
-interface ISelectPersonnelsProps<TFormAttributes extends FieldValues> {
+interface ISelectPersonnelProps<TFormAttributes extends FieldValues> {
   field: ControllerRenderProps<TFormAttributes, Path<TFormAttributes>>;
   dataGroup: IPersonnelGroup[];
 }
 
-export function SelectPersonnels<TFormAttributes extends FieldValues>(
-  props: ISelectPersonnelsProps<TFormAttributes>
+export function SelectPersonnel<TFormAttributes extends FieldValues>(
+  props: ISelectPersonnelProps<TFormAttributes>
 ) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -49,15 +49,15 @@ export function SelectPersonnels<TFormAttributes extends FieldValues>(
   };
 
   const getSelectedPersonnelNames = () => {
-    const allPersonnels = props.dataGroup.flatMap(group => group.personnels);
-    return allPersonnels
+    const allPersonnel = props.dataGroup.flatMap(group => group.personnel);
+    return allPersonnel
       .filter(personnel => selectedValues.includes(personnel.id))
       .map(personnel => `${personnel.firstName} ${personnel.lastName}`);
   };
 
   return (
     <div className="w-full">
-      {/* Selected personnels display */}
+      {/* Selected personnel display */}
       {selectedValues.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
           {getSelectedPersonnelNames().map((name, index) => (
@@ -101,7 +101,7 @@ export function SelectPersonnels<TFormAttributes extends FieldValues>(
                 <div className="px-2 py-1 bg-gray-100 text-sm font-medium text-gray-700">
                   {group.role}
                 </div>
-                {group.personnels.map(personnel => {
+                {group.personnel.map(personnel => {
                   const isSelected = selectedValues.includes(personnel.id);
                   return (
                     <div

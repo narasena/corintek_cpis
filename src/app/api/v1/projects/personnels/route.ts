@@ -1,5 +1,5 @@
-import { fetchInternalPersonnels } from '@/features/api/features/v1/projects/project.controller';
+import { fetchInternalPersonnel } from '@/features/api/features/v1/projects/project.controller';
 
 export async function GET() {
-  return fetchInternalPersonnels();
+  return fetchInternalPersonnel();
 }

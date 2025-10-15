@@ -69,7 +69,7 @@ export default function ClientData(props: IClientDataProps) {
               {
                 value: 'default',
                 label: 'PIC Klien',
-                data: clientData?.personnels || [],
+                data: clientData?.personnel || [],
                 columns: clientPICColumns(),
                 addNewRow: (
                   <CreateData

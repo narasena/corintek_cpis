@@ -35,7 +35,7 @@ export default function ClientPicForm(props: IClientPicFormProps) {
   const { onSubmitWithImage, onInvalid } = useFormHandleSubmit({
     form: createClientPICForm,
     imageKey: 'avatarImg',
-    apiUrl: `/clients/${props.clientId}/personnels`,
+    apiUrl: `/clients/${props.clientId}/personnel`,
     refetch,
   });
 

@@ -10,7 +10,7 @@ export interface IClient
     ITableHelper {
   avatarUrl?: IIMage['url'];
   avatarPublicId?: IIMage['publicId'];
-  personnels: IClientPersonnel[];
+  personnel: IClientPersonnel[];
 }
 
 export type TClientPICCreationAttributes = z.infer<

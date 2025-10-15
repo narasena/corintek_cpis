@@ -170,7 +170,7 @@ export async function fetchClientByIdService(
         id: clientId,
       },
       include: {
-        personnels: {
+        personnel: {
           include: {
             personnel: { omit: { password: true } },
           },
@@ -292,7 +292,7 @@ export async function fetchClientPersonnelService(
       deletedAt: null,
     };
 
-    const clientPersonnels = await prisma.clientPersonnel.findMany({
+    const clientPersonnel = await prisma.clientPersonnel.findMany({
       where: {
         clientId,
         ...whereClause,
@@ -300,7 +300,7 @@ export async function fetchClientPersonnelService(
       include: { personnel: { omit: { password: true } } },
     });
 
-    return clientPersonnels;
+    return clientPersonnel;
   } catch (error) {
     const errMessage = 'Error ketika mencari client personnel';
     console.error(`${errMessage}:`, error);

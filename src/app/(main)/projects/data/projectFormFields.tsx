@@ -9,17 +9,17 @@ import {
   ISelectDataFormField,
 } from '@/types/form/form.type';
 import { IPersonnelGroup } from '@/types/project.type';
-import { SelectPersonnels } from '../components/select-personnels';
+import { SelectPersonnel } from '../components/select-personnel';
 import React from 'react';
-import { SelectClientPersonnels } from '../components/select-client-personnels';
+import { SelectClientPersonnel } from '../components/select-client-personnel';
 import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 import { IClientPersonnel } from '@/types/client.type';
 import enumOptions from '@/utils/enumOptions';
 
 interface IProjectCreationFormFields {
   clients: ISelectDataFormField[];
-  personnels: IPersonnelGroup[];
-  clientPersonnels: IClientPersonnel[];
+  personnel: IPersonnelGroup[];
+  clientPersonnel: IClientPersonnel[];
 }
 export const projectCreationFormFields = (
   selectData: IProjectCreationFormFields
@@ -117,9 +117,9 @@ export const projectCreationFormFields = (
       customComponent: (
         field: ControllerRenderProps<FieldValues, Path<FieldValues>>
       ) =>
-        React.createElement(SelectClientPersonnels, {
+        React.createElement(SelectClientPersonnel, {
           field,
-          data: selectData.clientPersonnels,
+          data: selectData.clientPersonnel,
         }),
     },
     {
@@ -131,9 +131,9 @@ export const projectCreationFormFields = (
       customComponent: (
         field: ControllerRenderProps<FieldValues, Path<FieldValues>>
       ) =>
-        React.createElement(SelectPersonnels, {
+        React.createElement(SelectPersonnel, {
           field,
-          dataGroup: selectData.personnels,
+          dataGroup: selectData.personnel,
         }),
     },
     {

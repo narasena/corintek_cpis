@@ -10,7 +10,7 @@ model Client {
     websiteUrl  String?
 
     projects    Project[]
-    personnels  ClientPersonnel[]
+    personnel  ClientPersonnel[]
 
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt

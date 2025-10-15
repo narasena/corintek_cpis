@@ -6,12 +6,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { projectCreationFormFields } from '../data/projectFormFields';
 import DefaultForm from '@/components/features/forms/default-form';
 import useFormHandleSubmit from '@/hooks/useFormHandleSubmit';
-import useAllPersonnels from '@/hooks/users/useAllPersonnels';
+import useAllPersonnel from '@/hooks/users/useAllPersonnel';
 import useAllClients from '@/hooks/clients/useAllClients';
-import useClientPersonnels from '@/hooks/clients/useClientPersonnels';
+import useClientPersonnel from '@/hooks/clients/useClientPersonnel';
 
 export default function ProjectForm() {
-  const { internalPersonnels } = useAllPersonnels();
+  const { internalPersonnel } = useAllPersonnel();
   const { allClients } = useAllClients();
   const clients = allClients.map(client => {
     return { label: client.name, value: client.id };
@@ -51,7 +51,7 @@ export default function ProjectForm() {
 
   // Watch for client selection changes
   const selectedClientId = projectCreationForm.watch('clientId');
-  const { clientPersonnels } = useClientPersonnels(selectedClientId);
+  const { clientPersonnel } = useClientPersonnel(selectedClientId);
 
   const { onSubmit, onInvalid } =
     useFormHandleSubmit<TProjectCreationAttributes>({
@@ -66,8 +66,8 @@ export default function ProjectForm() {
       onInvalid={onInvalid}
       formFields={projectCreationFormFields({
         clients,
-        personnels: internalPersonnels,
-        clientPersonnels: clientPersonnels,
+        personnel: internalPersonnel,
+        clientPersonnel: clientPersonnel,
       })}
       validationSchema={projectCreationSchema}
     />

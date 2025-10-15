@@ -7,7 +7,7 @@ import {
 import { Prisma } from '@/features/api/generated/prisma';
 import { prisma } from '@/features/api/connection/prisma';
 
-export async function fetchInternalPersonnelsService() {
+export async function fetchInternalPersonnelService() {
   try {
     const whereClause: Prisma.UserWhereInput = {
       deletedAt: null,
@@ -16,7 +16,7 @@ export async function fetchInternalPersonnelsService() {
       },
     };
 
-    const allPersonnels = await prisma.user.findMany({
+    const allPersonnel = await prisma.user.findMany({
       where: whereClause,
       select: {
         id: true,
@@ -26,7 +26,7 @@ export async function fetchInternalPersonnelsService() {
       },
     });
 
-    const groupedPersonnels = allPersonnels.reduce((acc, user) => {
+    const groupedPersonnel = allPersonnel.reduce((acc, user) => {
       // Note: TypeScript should infer 'role' and other fields from 'user'
       // because it comes from the prisma.user.findMany result.
       const { role, ...personnelDetails } = user;
@@ -39,21 +39,21 @@ export async function fetchInternalPersonnelsService() {
       if (!group) {
         group = {
           role: role,
-          personnels: [],
+          personnel: [],
         };
         acc.push(group);
       }
 
-      // 3. Push the user details to the group's personnels array
+      // 3. Push the user details to the group's personnel array
       // Since 'group' is guaranteed to be an object (either found or newly created),
       // the error 'group' is possibly 'undefined' is solved.
-      group.personnels.push(personnelDetails as TPersonnelDetail);
+      group.personnel.push(personnelDetails as TPersonnelDetail);
 
       return acc;
       // 🔑 Crucial fix: Cast the initial empty array to the desired output type (PersonnelGroup[])
     }, [] as IPersonnelGroup[]);
     // ⭐️ FIX: Sort the grouped array to put 'SUPERVISOR' first
-    groupedPersonnels.sort((a, b) => {
+    groupedPersonnel.sort((a, b) => {
       // If 'a' is SUPERVISOR, it should come first (return -1)
       if (a.role === 'SUPERVISOR') {
         return -1;
@@ -66,12 +66,12 @@ export async function fetchInternalPersonnelsService() {
       return 0; // Or a.role.localeCompare(b.role) if you have more than two roles
     });
 
-    return groupedPersonnels;
+    return groupedPersonnel;
   } catch (error) {
-    console.error('Error fetching internal personnels:', error);
+    console.error('Error fetching internal personnel:', error);
     throw new AppError({
       status: 500,
-      message: 'Error fetching internal personnels',
+      message: 'Error fetching internal personnel',
       isExpose: true,
     });
   }

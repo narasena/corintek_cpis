@@ -24,5 +24,5 @@ export type TPersonnelDetail = {
 
 export interface IPersonnelGroup {
   role: string;
-  personnels: TPersonnelDetail[];
+  personnel: TPersonnelDetail[];
 }

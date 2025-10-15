@@ -1,7 +1,7 @@
 import { createErrorResponse } from '@/lib/error-handler';
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  fetchInternalPersonnelsService,
+  fetchInternalPersonnelService,
   createProjectService,
   fetchAllProjectsService,
   fetchAssignedProjectsService,
@@ -18,12 +18,12 @@ interface ITokenPayload {
   role: string;
 }
 
-export async function fetchInternalPersonnels() {
+export async function fetchInternalPersonnel() {
   try {
-    const personnels = await fetchInternalPersonnelsService();
+    const personnel = await fetchInternalPersonnelService();
     return NextResponse.json({
       success: true,
-      personnels,
+      personnel,
     });
   } catch (error) {
     return createErrorResponse(error);
