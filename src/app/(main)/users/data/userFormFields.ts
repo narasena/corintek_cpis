@@ -1,5 +1,8 @@
+import { EmploymentStatus } from '@/features/api/generated/prisma';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
+import enumOptions from '@/utils/enumOptions';
 import { IconLockFilled } from '@tabler/icons-react';
+import { allowedUserRoles } from '../schemas/userSchema';
 
 export const createUserFormFields: IFormFields[] = [
   {
@@ -61,6 +64,7 @@ export const createUserFormFields: IFormFields[] = [
     label: 'Role',
     placeHolder: 'Pilih Salah Satu',
     description: 'Masukkan role sesuai dengan yang terdaftar di Corintek',
+    enumOptions: enumOptions(allowedUserRoles),
   },
   {
     name: 'employmentStatus',
@@ -69,6 +73,7 @@ export const createUserFormFields: IFormFields[] = [
     placeHolder: 'Pilih Salah Satu',
     description:
       'Masukkan status kerja sesuai dengan yang terdaftar di Corintek',
+    enumOptions: enumOptions(EmploymentStatus),
   },
 ];
 

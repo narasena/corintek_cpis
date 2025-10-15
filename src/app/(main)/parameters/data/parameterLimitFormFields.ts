@@ -5,6 +5,7 @@ import {
   IParameterGroup,
   IStandardMethod,
 } from '@/types/parameter.type';
+import enumOptions from '@/utils/enumOptions';
 
 interface IParameterLimitFormFields {
   allParameters: IParameter[];
@@ -51,9 +52,7 @@ export const parameterLimitFormFields = (
       label: 'Tipe Nilai',
       type: EFieldType.ENUM,
       description: 'Tipe nilai untuk limit parameter',
-      enumOptions: Object.keys(ValueType).map(
-        key => ValueType[key as keyof typeof ValueType]
-      ) as string[],
+      enumOptions: enumOptions(ValueType),
     },
     {
       name: 'minValue',

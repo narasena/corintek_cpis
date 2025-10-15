@@ -14,6 +14,7 @@ import React from 'react';
 import { SelectClientPersonnels } from '../components/select-client-personnels';
 import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 import { IClientPersonnel } from '@/types/client.type';
+import enumOptions from '@/utils/enumOptions';
 
 interface IProjectCreationFormFields {
   clients: ISelectDataFormField[];
@@ -82,9 +83,7 @@ export const projectCreationFormFields = (
       type: EFieldType.ENUM,
       placeHolder: '',
       description: '',
-      enumOptions: Object.keys(ProjectType).map(
-        key => ProjectType[key as keyof typeof ProjectType]
-      ) as string[],
+      enumOptions: enumOptions(ProjectType),
     },
     {
       name: 'contractType',
@@ -92,9 +91,7 @@ export const projectCreationFormFields = (
       type: EFieldType.ENUM,
       placeHolder: '',
       description: '',
-      enumOptions: Object.keys(ContractType).map(
-        key => ContractType[key as keyof typeof ContractType]
-      ) as string[],
+      enumOptions: enumOptions(ContractType),
     },
     {
       name: 'workCategory',
@@ -102,9 +99,7 @@ export const projectCreationFormFields = (
       type: EFieldType.ENUM,
       placeHolder: '',
       description: '',
-      enumOptions: Object.keys(WorkCategory).map(
-        key => WorkCategory[key as keyof typeof WorkCategory]
-      ) as string[],
+      enumOptions: enumOptions(WorkCategory),
     },
     {
       name: 'warranty',

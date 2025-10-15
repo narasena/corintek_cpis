@@ -1,5 +1,6 @@
 import { ParameterGroupType } from '@/features/api/generated/prisma';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
+import enumOptions from '@/utils/enumOptions';
 
 export const parameterGroupFormFields: IFormFields[] = [
   {
@@ -14,9 +15,7 @@ export const parameterGroupFormFields: IFormFields[] = [
     label: 'Kategori Grup Parameter',
     type: EFieldType.ENUM,
     description: '',
-    enumOptions: Object.keys(ParameterGroupType).map(
-      key => ParameterGroupType[key as keyof typeof ParameterGroupType]
-    ) as string[],
+    enumOptions: enumOptions(ParameterGroupType),
   },
   {
     name: 'description',

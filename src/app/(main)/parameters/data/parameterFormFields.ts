@@ -1,5 +1,6 @@
 import { ValueType } from '@/features/api/generated/prisma';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
+import enumOptions from '@/utils/enumOptions';
 
 export const parameterFormFields: IFormFields[] = [
   {
@@ -14,9 +15,7 @@ export const parameterFormFields: IFormFields[] = [
     label: 'Tipe Nilai Parameter',
     type: EFieldType.ENUM,
     description: '',
-    enumOptions: Object.keys(ValueType).map(
-      key => ValueType[key as keyof typeof ValueType]
-    ) as string[],
+    enumOptions: enumOptions(ValueType),
   },
   {
     name: 'unit',
