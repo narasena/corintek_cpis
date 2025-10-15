@@ -5,6 +5,7 @@ import {
 } from '@/features/api/generated/prisma';
 import { preprocessBlank } from '@/features/schemas/defaultSchema';
 import z from 'zod';
+import { machineSchema } from './machineSchema';
 
 export const projectCreationSchema = z.object({
   parentId: preprocessBlank(z.string().nullable().optional()),
@@ -21,4 +22,6 @@ export const projectCreationSchema = z.object({
   warranty: preprocessBlank(z.string().nullable().optional()),
   clientPersonnelIds: z.array(z.string()).min(1),
   personnelIds: z.array(z.string()).min(1),
+  chillers: z.array(machineSchema).min(1),
+  coolingTowers: z.array(machineSchema).min(1),
 });

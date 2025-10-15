@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TProjectCreationAttributes } from '@/types/project.type';
 import { projectCreationSchema } from '../schemas/projectSchema';
 import { useForm } from 'react-hook-form';
@@ -9,6 +9,7 @@ import useFormHandleSubmit from '@/hooks/useFormHandleSubmit';
 import useAllPersonnel from '@/hooks/users/useAllPersonnel';
 import useAllClients from '@/hooks/clients/useAllClients';
 import useClientPersonnel from '@/hooks/clients/useClientPersonnel';
+import useProjectsByClient from '@/hooks/projects/useProjectsByClient';
 
 export default function ProjectForm() {
   const { internalPersonnel } = useAllPersonnel();
@@ -35,6 +36,22 @@ export default function ProjectForm() {
       warranty: '',
       clientPersonnelIds: [],
       personnelIds: [],
+      chillers: [] as Array<{
+        type: 'CHILLER';
+        ownership: 'CORINTEK' | 'CLIENT';
+        capacity?: number | null;
+        brand?: string | null;
+        model?: string | null;
+        serialNumber?: string | null;
+      }>,
+      coolingTowers: [] as Array<{
+        type: 'COOLING_TOWER';
+        ownership: 'CORINTEK' | 'CLIENT';
+        capacity?: number | null;
+        brand?: string | null;
+        model?: string | null;
+        serialNumber?: string | null;
+      }>,
     },
   });
 
@@ -47,11 +64,39 @@ export default function ProjectForm() {
     if (typeof currentValues.personnelIds === 'string') {
       projectCreationForm.setValue('personnelIds', []);
     }
+    if (typeof currentValues.chillers === 'string') {
+      projectCreationForm.setValue('chillers', []);
+    }
+    if (typeof currentValues.coolingTowers === 'string') {
+      projectCreationForm.setValue('coolingTowers', []);
+    }
   }, []);
 
   // Watch for client selection changes
   const selectedClientId = projectCreationForm.watch('clientId');
   const { clientPersonnel } = useClientPersonnel(selectedClientId);
+  const watchedType = projectCreationForm.watch('type');
+  const { clientProjects } = useProjectsByClient(selectedClientId);
+
+  const formFields = useMemo(() => {
+    return projectCreationFormFields(
+      {
+        clients,
+        personnel: internalPersonnel,
+        clientPersonnel: clientPersonnel,
+        projects: clientProjects,
+      },
+      {
+        type: watchedType,
+      }
+    );
+  }, [
+    clients,
+    internalPersonnel,
+    clientPersonnel,
+    clientProjects,
+    watchedType,
+  ]);
 
   const { onSubmit, onInvalid } =
     useFormHandleSubmit<TProjectCreationAttributes>({
@@ -64,11 +109,7 @@ export default function ProjectForm() {
       form={projectCreationForm}
       onSubmit={onSubmit}
       onInvalid={onInvalid}
-      formFields={projectCreationFormFields({
-        clients,
-        personnel: internalPersonnel,
-        clientPersonnel: clientPersonnel,
-      })}
+      formFields={formFields}
       validationSchema={projectCreationSchema}
     />
   );

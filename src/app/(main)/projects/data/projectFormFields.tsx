@@ -8,7 +8,7 @@ import {
   IFormFields,
   ISelectDataFormField,
 } from '@/types/form/form.type';
-import { IPersonnelGroup } from '@/types/project.type';
+import { IPersonnelGroup, IProject } from '@/types/project.type';
 import { SelectPersonnel } from '../components/select-personnel';
 import React from 'react';
 import { SelectClientPersonnel } from '../components/select-client-personnel';
@@ -20,17 +20,19 @@ interface IProjectCreationFormFields {
   clients: ISelectDataFormField[];
   personnel: IPersonnelGroup[];
   clientPersonnel: IClientPersonnel[];
+  projects: IProject[];
 }
 export const projectCreationFormFields = (
-  selectData: IProjectCreationFormFields
+  selectData: IProjectCreationFormFields,
+  formValues: { type: ProjectType }
 ) => {
-  return [
+  const fields = [
     {
       name: 'clientId',
       label: 'Klien',
       type: EFieldType.SELECT,
       placeHolder: '',
-      description: '',
+      className: 'col-span-2',
       selectData: selectData.clients,
     },
     {
@@ -136,12 +138,21 @@ export const projectCreationFormFields = (
           dataGroup: selectData.personnel,
         }),
     },
-    {
+  ] as IFormFields[];
+
+  if (formValues?.type === ProjectType.ADDENDUM) {
+    fields.splice(9, 0, {
       name: 'parentId',
       label: 'Proyek Sebelumnya',
       type: EFieldType.SELECT,
+      className: 'col-span-2',
       placeHolder: '',
-      description: '',
-    },
-  ] as IFormFields[];
+      selectData: selectData.projects.map(project => ({
+        label: project.name,
+        value: project.id,
+      })),
+    });
+  }
+
+  return fields;
 };

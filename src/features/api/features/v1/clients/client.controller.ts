@@ -15,6 +15,7 @@ import {
   fetchAllClientsService,
   fetchClientByIdService,
   fetchClientPersonnelService,
+  fetchProjectsByClientService,
   updateClientAvatar,
 } from './client.service';
 import { EFileFolders } from '@/utils/api/v1/form-data/formDataNameFormatter';
@@ -188,6 +189,18 @@ export async function fetchClientPersonnel(req: NextRequest, clientId: string) {
     return NextResponse.json({
       success: true,
       clientPersonnel: await fetchClientPersonnelService(req, clientId),
+    });
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+export async function fetchProjectsByClient(clientId: string) {
+  try {
+    const clientProjects = await fetchProjectsByClientService(clientId);
+    return NextResponse.json({
+      success: true,
+      clientProjects,
     });
   } catch (error) {
     return createErrorResponse(error);

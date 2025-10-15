@@ -10,6 +10,7 @@ import { NextRequest } from 'next/server';
 import { hashPassword } from '@/utils/api/v1/passwordHash';
 import { Client, Prisma, User } from '@/features/api/generated/prisma';
 import { prisma } from '@/features/api/connection/prisma';
+import { serviceErrorResponse } from '@/lib/error-handler';
 
 export async function createClientWithoutAvatar(
   payload: Omit<TClientCreationAttributes, 'avatarImg'>,
@@ -308,6 +309,26 @@ export async function fetchClientPersonnelService(
       status: 500,
       message: errMessage,
       isExpose: true,
+    });
+  }
+}
+
+export async function fetchProjectsByClientService(clientId: string) {
+  try {
+    const whereClause: Prisma.ProjectWhereInput = {
+      deletedAt: null,
+    };
+    return await prisma.project.findMany({
+      where: {
+        clientId,
+        ...whereClause,
+      },
+    });
+  } catch (error) {
+    serviceErrorResponse({
+      error,
+      customErrorMessage: 'Error fetching projects by client',
+      status: 500,
     });
   }
 }
