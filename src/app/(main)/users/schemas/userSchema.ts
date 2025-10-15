@@ -27,14 +27,17 @@ const passwordSchema = z
     defaultSchemaMessage.at_least_one.special_character
   );
 
-const omittedRoles: readonly UserRole[] = [
+const omittedUserRoles: readonly UserRole[] = [
   UserRole.CLIENT_TECHNICIAN,
   UserRole.CLIENT_SUPERVISOR,
 ];
-const allowedRoles = Object.values(UserRole).filter(
-  role => !omittedRoles.includes(role)
+export const allowedUserRoles = Object.values(UserRole).filter(
+  role => !omittedUserRoles.includes(role)
 ) as [UserRole, ...UserRole[]];
-const filteredUserRole = z.enum(allowedRoles, defaultSchemaMessage.choose_one);
+const filteredUserRole = z.enum(
+  allowedUserRoles,
+  defaultSchemaMessage.choose_one
+);
 
 const nameRegex = /^[a-zA-Z .'\-]+$/;
 
