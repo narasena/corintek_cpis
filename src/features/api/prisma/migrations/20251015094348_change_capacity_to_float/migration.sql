@@ -1,0 +1,9 @@
+/*
+  Warnings:
+
+  - The `capacity` column on the `machines` table would be dropped and recreated. This will lead to data loss if there is data in the column.
+
+*/
+-- AlterTable
+ALTER TABLE "public"."machines" DROP COLUMN "capacity",
+ADD COLUMN     "capacity" DOUBLE PRECISION;
