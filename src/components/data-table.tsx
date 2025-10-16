@@ -127,11 +127,9 @@ export function DataTable<TData extends { id: UniqueIdentifier }>({
   onTabChange?: (value: string) => void;
 }) {
   const [internalActiveTab, setInternalActiveTab] = React.useState(tabs[0]);
-  console.log('Internal active tab:', internalActiveTab);
   const activeTab = tab
     ? tabs.find(t => t.value === tab) || tabs[0]
     : internalActiveTab;
-  console.log('Active tab:', activeTab);
 
   const handleTabChange = (value: string) => {
     const newTab = tabs.find(t => t.value === value)!;
