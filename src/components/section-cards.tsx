@@ -1,8 +1,6 @@
 'use client';
 
 import { IconTrendingDown, IconTrendingUp } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
-
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -13,34 +11,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/authStore';
-import apiInstance from '@/utils/apiInstance';
-import { IProject } from '@/types/project.type';
 import { useRouter } from 'next/navigation';
+import useAssignedProjects from '@/hooks/projects/useAssignedProjects';
 
 export function SectionCards() {
   const { user } = useAuthStore();
-  const [assignedProjects, setAssignedProjects] = useState<IProject[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (user && user.id) {
-      const fetchAssignedProjects = async () => {
-        setIsLoading(true);
-        try {
-          const response = await apiInstance.get('/projects/me');
-          if (response.data.success) {
-            setAssignedProjects(response.data.projects);
-          }
-        } catch (error) {
-          console.error('Error fetching assigned projects:', error);
-          setAssignedProjects([]);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchAssignedProjects();
-    }
-  }, [user]);
+  const { assignedProjects, isLoading } = useAssignedProjects();
 
   const router = useRouter();
   const assignedCount = assignedProjects.length;
