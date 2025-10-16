@@ -19,7 +19,7 @@ export const projectCreationSchema = z.object({
   type: z.enum(ProjectType),
   contractType: z.enum(ContractType),
   workCategory: z.enum(WorkCategory),
-  warranty: preprocessBlank(z.string().nullable().optional()),
+  warranty: preprocessBlank(z.number().nullable().optional()),
   clientPersonnelIds: z.array(z.string()).min(1),
   personnelIds: z.array(z.string()).min(1),
   chillers: z.array(machineSchema).min(1),

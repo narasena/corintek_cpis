@@ -10,7 +10,7 @@ import useProjects from './hooks/useProjects';
 import { Spinner } from '@/components/ui/spinner';
 
 export default function ProjectsPage() {
-  const { projects, loading, error } = useProjects();
+  const { projects, loading, error, refetchProjects } = useProjects();
 
   if (loading) {
     return (
@@ -37,7 +37,7 @@ export default function ProjectsPage() {
           buttonText="Tambah Proyek"
           modalTitle="Tambah Proyek Baru"
           modalDescription="Menambahkan proyek baru ke dalam sistem CPIS"
-          content={<ProjectForm />}
+          content={<ProjectForm refetch={refetchProjects} />}
         />
       ),
     },

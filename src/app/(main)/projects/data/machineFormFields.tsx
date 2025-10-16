@@ -1,15 +1,8 @@
-import { MachineOwnership, MachineType } from '@/features/api/generated/prisma';
+import { MachineOwnership } from '@/features/api/generated/prisma';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
 import enumOptions from '@/utils/enumOptions';
 
 export const machineFormFields: IFormFields[] = [
-  {
-    name: 'type',
-    label: 'Jenis Unit Mesin',
-    type: EFieldType.ENUM,
-    description: 'Jenis unit mesin',
-    enumOptions: enumOptions(MachineType),
-  },
   {
     name: 'ownership',
     label: 'Kepmilikan Unit Mesin',

@@ -34,3 +34,7 @@ export enum EFieldType {
   DATETIME = 'datetime',
   CUSTOM = 'custom',
 }
+
+export interface IDefaultFormComponentProps {
+  refetch: () => void;
+}

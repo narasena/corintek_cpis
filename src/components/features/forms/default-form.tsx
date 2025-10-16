@@ -16,6 +16,13 @@ import { EFieldType, IFormFields } from '@/types/form/form.type';
 import FormSelector from './form-selector';
 import ImageFormField from './image-form-field';
 import { Spinner } from '@/components/ui/spinner';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { cn } from '@/lib/utils';
 
 interface IDefaultFormProps<TFormAttributes extends FieldValues> {
   form: UseFormReturn<TFormAttributes>;
@@ -26,16 +33,72 @@ interface IDefaultFormProps<TFormAttributes extends FieldValues> {
     previewUrl: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   };
-  formFields: IFormFields[];
+  formFields?: IFormFields[];
   validationSchema: z.ZodObject<{
     [K in keyof TFormAttributes]: z.ZodType<TFormAttributes[K]>;
   }>;
   isLoading?: boolean;
+  accordion?: {
+    type: 'single' | 'multiple';
+    data: IAccordionDataFormatted[];
+  };
+}
+
+export interface IAccordionDataFormatted {
+  title: string | React.ReactNode;
+  value: string;
+  description?: string | React.ReactNode;
+  className?: string;
+  fields: IFormFields[];
+  children?: Array<{
+    title: React.ReactNode;
+    value: string;
+    className?: string;
+    fields: IFormFields[];
+  }>;
 }
 
 export default function DefaultForm<TFormAttributes extends FieldValues>(
   props: IDefaultFormProps<TFormAttributes>
 ) {
+  const renderFormField = (formField: IFormFields) => (
+    <FormField
+      key={formField.name}
+      control={props.form.control}
+      name={formField.name as keyof TFormAttributes as Path<TFormAttributes>}
+      render={({ field, formState }) => (
+        <FormItem
+          className={
+            formField.type === EFieldType.BOOLEAN
+              ? 'col-span-2'
+              : (formField.className ?? '')
+          }
+        >
+          {formField.type !== EFieldType.BOOLEAN && (
+            <FormLabel>
+              {formField.label}{' '}
+              <Tooltip delayDuration={800}>
+                <TooltipTrigger>
+                  <IconInfoSquareFilled className="size-4 text-gray-500" />
+                </TooltipTrigger>
+                <TooltipContent className="!max-w-[160px] flex flex-wrap">
+                  <p>{formField.description}</p>
+                </TooltipContent>
+              </Tooltip>
+            </FormLabel>
+          )}
+          <FormControl>
+            <FormSelector<TFormAttributes>
+              formField={formField}
+              renderProps={{ field, formState }}
+            />
+          </FormControl>
+          <FormDescription></FormDescription>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
   return (
     <Form {...props.form}>
       <form
@@ -45,48 +108,72 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
         {props.avatar && (
           <ImageFormField form={props.form} avatar={props.avatar} />
         )}
-        <div className="grid grid-cols-2 gap-4">
-          {props.formFields.map(formField => (
-            <FormField
-              key={formField.name}
-              control={props.form.control}
-              name={
-                formField.name as keyof TFormAttributes as Path<TFormAttributes>
-              }
-              render={({ field, formState }) => (
-                <FormItem
-                  className={
-                    formField.type === EFieldType.BOOLEAN
-                      ? 'col-span-2'
-                      : (formField.className ?? '')
-                  }
-                >
-                  {formField.type !== EFieldType.BOOLEAN && (
-                    <FormLabel>
-                      {formField.label}{' '}
-                      <Tooltip delayDuration={800}>
-                        <TooltipTrigger>
-                          <IconInfoSquareFilled className="size-4 text-gray-500" />
-                        </TooltipTrigger>
-                        <TooltipContent className="!max-w-[160px] flex flex-wrap">
-                          <p>{formField.description}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </FormLabel>
+        {props.accordion ? (
+          <Accordion type={props.accordion.type} collapsible>
+            {props.accordion.data.map((accordionData, index) => (
+              <AccordionItem key={index} value={accordionData.value}>
+                <AccordionTrigger
+                  className={cn(
+                    'mb-3 bg-primary hover:bg-blue-800 text-white hover:no-underline px-6',
+                    accordionData.className || ''
                   )}
-                  <FormControl>
-                    <FormSelector<TFormAttributes>
-                      formField={formField}
-                      renderProps={{ field, formState }}
-                    />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-        </div>
+                >
+                  {accordionData.title}
+                </AccordionTrigger>
+                <AccordionContent className="px-2">
+                  {accordionData.description &&
+                  typeof accordionData.description === 'string' ? (
+                    <p>{accordionData.description}</p>
+                  ) : (
+                    (accordionData.description as React.ReactNode)
+                  )}
+                  {accordionData.fields.length > 0 && (
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      {accordionData.fields.map(formField =>
+                        renderFormField(formField)
+                      )}
+                    </div>
+                  )}
+                  {accordionData.children &&
+                    accordionData.children.length > 0 && (
+                      <div className="mt-4">
+                        <Accordion type="multiple" className="w-full">
+                          {accordionData.children.map(
+                            (childAccordion, childIndex) => (
+                              <AccordionItem
+                                key={childIndex}
+                                value={childAccordion.value}
+                              >
+                                <AccordionTrigger
+                                  className={cn(
+                                    'mb-4',
+                                    childAccordion.className
+                                  )}
+                                >
+                                  {childAccordion.title}
+                                </AccordionTrigger>
+                                <AccordionContent className="px-2">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    {childAccordion.fields.map(formField =>
+                                      renderFormField(formField)
+                                    )}
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            )
+                          )}
+                        </Accordion>
+                      </div>
+                    )}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            {props.formFields?.map(formField => renderFormField(formField))}
+          </div>
+        )}
         <Button
           className={`w-full ${props.isLoading ? 'cursor-not-allowed bg-gray-700' : ''}`}
           type="submit"

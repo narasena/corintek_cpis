@@ -1,10 +1,15 @@
 import { AppError } from '@/lib/app-error';
 import {
   IPersonnelGroup,
+  IProject,
   TPersonnelDetail,
   TProjectCreationAttributes,
 } from '@/types/project.type';
-import { Prisma } from '@/features/api/generated/prisma';
+import {
+  MachineOwnership,
+  MachineType,
+  Prisma,
+} from '@/features/api/generated/prisma';
 import { prisma } from '@/features/api/connection/prisma';
 
 export async function fetchInternalPersonnelService() {
@@ -78,8 +83,7 @@ export async function fetchInternalPersonnelService() {
 }
 
 export async function createProjectService(
-  projectData: TProjectCreationAttributes,
-  tx: Prisma.TransactionClient
+  projectData: TProjectCreationAttributes
 ) {
   try {
     // For database compatibility, we need to provide clientPICId and technicianId
@@ -88,53 +92,112 @@ export async function createProjectService(
     const internalPersonnelId = projectData.personnelIds?.[0];
 
     if (!clientPersonnelId || !internalPersonnelId) {
-      throw new Error(
-        'At least one client personnel and one internal personnel are required'
-      );
+      throw new AppError({
+        status: 400,
+        message:
+          'At least one client personnel and one internal personnel are required',
+        isExpose: true,
+      });
     }
 
-    // Create project first
-    const newProject = await tx.project.create({
-      data: {
-        parentId: (projectData.parentId as string) || null,
-        clientId: projectData.clientId,
-        name: projectData.name,
-        description: (projectData.description as string) || null,
-        quoteNumber: projectData.quoteNumber,
-        PONumber: projectData.PONumber,
-        startDate: projectData.startDate,
-        endDate: projectData.endDate,
-        type: projectData.type,
-        contractType: projectData.contractType,
-        workCategory: projectData.workCategory,
-        warranty: Number(projectData.warranty),
-      },
+    const chiller = projectData.chillers?.[0];
+    const coolingTower = projectData.coolingTowers?.[0];
+
+    if (!chiller || !coolingTower) {
+      throw new AppError({
+        status: 400,
+        message: 'At least one chiller and one cooling tower are required',
+        isExpose: true,
+      });
+    }
+
+    let newProject: Partial<IProject> = {};
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const createdProject = await tx.project.create({
+        data: {
+          parentId: (projectData.parentId as string) || null,
+          clientId: projectData.clientId,
+          name: projectData.name,
+          description: (projectData.description as string) || null,
+          quoteNumber: projectData.quoteNumber,
+          PONumber: projectData.PONumber,
+          startDate: new Date(projectData.startDate).toISOString(),
+          endDate: new Date(projectData.endDate).toISOString(),
+          type: projectData.type,
+          contractType: projectData.contractType,
+          workCategory: projectData.workCategory,
+          warranty: Number(projectData.warranty),
+        },
+      });
+
+      newProject = {
+        ...createdProject,
+        startDate: newProject.startDate?.split('T')[0],
+        endDate: newProject.endDate?.split('T')[0],
+      };
+
+      let clientPersonnel;
+      if (
+        projectData.clientPersonnelIds &&
+        projectData.clientPersonnelIds.length > 0
+      ) {
+        clientPersonnel = await tx.projectAssignment.createMany({
+          data: projectData.clientPersonnelIds.map(personnelId => ({
+            projectId: newProject.id as string,
+            assigneeId: personnelId,
+            role: 'CLIENT' as const,
+          })),
+        });
+      }
+
+      let internalPersonnel;
+      if (projectData.personnelIds && projectData.personnelIds.length > 0) {
+        internalPersonnel = await tx.projectAssignment.createMany({
+          data: projectData.personnelIds.map(personnelId => ({
+            projectId: newProject.id as string,
+            assigneeId: personnelId,
+            role: 'INTERNAL' as const,
+          })),
+        });
+      }
+
+      let chillers;
+      if (projectData.chillers && projectData.chillers.length > 0) {
+        chillers = await tx.machine.createMany({
+          data: projectData.chillers.map(chiller => ({
+            projectId: newProject.id as string,
+            type: MachineType.CHILLER,
+            ownership: chiller.ownership as MachineOwnership,
+            capacity: (chiller.capacity as number) || null,
+            brand: (chiller.brand as string) || null,
+            model: (chiller.model as string) || null,
+            serialNumber: (chiller.serialNumber as string) || null,
+          })),
+        });
+      }
+
+      let coolingTowers;
+      if (projectData.coolingTowers && projectData.coolingTowers.length > 0) {
+        coolingTowers = await tx.machine.createMany({
+          data: projectData.coolingTowers.map(tower => ({
+            projectId: newProject.id as string,
+            type: MachineType.COOLING_TOWER,
+            ownership: tower.ownership as MachineOwnership,
+            capacity: (tower.capacity as number) || null,
+            brand: (tower.brand as string) || null,
+            model: (tower.model as string) || null,
+            serialNumber: (tower.serialNumber as string) || null,
+          })),
+        });
+      }
+      return {
+        ...newProject,
+        clientPersonnel,
+        internalPersonnel,
+        chillers,
+        coolingTowers,
+      };
     });
-
-    // Create project assignments for client personnel
-    if (
-      projectData.clientPersonnelIds &&
-      projectData.clientPersonnelIds.length > 0
-    ) {
-      await tx.projectAssignment.createMany({
-        data: projectData.clientPersonnelIds.map(personnelId => ({
-          projectId: newProject.id,
-          assigneeId: personnelId,
-          role: 'CLIENT' as const,
-        })),
-      });
-    }
-
-    // Create project assignments for internal personnel
-    if (projectData.personnelIds && projectData.personnelIds.length > 0) {
-      await tx.projectAssignment.createMany({
-        data: projectData.personnelIds.map(personnelId => ({
-          projectId: newProject.id,
-          assigneeId: personnelId,
-          role: 'INTERNAL' as const,
-        })),
-      });
-    }
 
     return newProject;
   } catch (error) {

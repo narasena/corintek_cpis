@@ -31,6 +31,6 @@ export default function useProjects() {
     projects,
     loading,
     error,
-    refetch: fetchProjects,
+    refetchProjects: fetchProjects,
   };
 }
