@@ -124,6 +124,18 @@ export default function FormSelector<TFormAttributes extends FieldValues>({
       );
     case EFieldType.TEXTAREA:
       return <Textarea placeholder={formField.placeHolder} {...field} />;
+    case EFieldType.NUMBER:
+      return (
+        <Input
+          type="number"
+          placeholder={formField.placeHolder}
+          {...field}
+          onChange={e => {
+            const value = e.target.value;
+            field.onChange(value === '' ? undefined : Number(value));
+          }}
+        />
+      );
     default:
       return (
         <Input
