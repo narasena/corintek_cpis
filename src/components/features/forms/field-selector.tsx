@@ -30,7 +30,7 @@ interface FormSelectorProps<TFormAttributes extends FieldValues> {
   selectComponent?: JSX.ElementType;
 }
 
-export default function FormSelector<TFormAttributes extends FieldValues>({
+export default function FieldSelector<TFormAttributes extends FieldValues>({
   formField,
   renderProps,
 }: FormSelectorProps<TFormAttributes>) {
