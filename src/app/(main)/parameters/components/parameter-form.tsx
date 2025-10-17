@@ -31,7 +31,10 @@ export default function ParameterForm({ refetch }: IParameterFormProps) {
       form={parameterForm}
       onSubmit={onSubmit}
       onInvalid={onInvalid}
-      formFields={parameterFormFields}
+      formFieldSelector={{
+        type: 'default',
+        formFields: parameterFormFields,
+      }}
       validationSchema={parameterSchema}
       isLoading={isLoading}
     />

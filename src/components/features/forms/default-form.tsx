@@ -52,7 +52,7 @@ interface IDefaultFormProps<TFormAttributes extends FieldValues> {
     [K in keyof TFormAttributes]: z.ZodType<TFormAttributes[K]>;
   }>;
   isLoading?: boolean;
-  selector: TFormFieldTypeSelector;
+  formFieldSelector: TFormFieldTypeSelector;
 }
 
 export interface IAccordionDataFormatted {
@@ -72,7 +72,7 @@ export interface IAccordionDataFormatted {
 export default function DefaultForm<TFormAttributes extends FieldValues>(
   props: IDefaultFormProps<TFormAttributes>
 ) {
-  const { selector } = props;
+  const { formFieldSelector } = props;
   const renderFormField = (formField: IFormFields) => (
     <FormField
       key={formField.name}
@@ -112,9 +112,12 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
     />
   );
   function FormSelector() {
-    if (selector.type === 'accordion') {
-      <Accordion type={selector.accordion?.type || 'single'} collapsible>
-        {selector.accordion?.data.map((accordionData, index) => (
+    if (formFieldSelector.type === 'accordion') {
+      <Accordion
+        type={formFieldSelector.accordion?.type || 'single'}
+        collapsible
+      >
+        {formFieldSelector.accordion?.data.map((accordionData, index) => (
           <AccordionItem key={index} value={accordionData.value}>
             <AccordionTrigger
               className={cn(
@@ -169,10 +172,12 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
           </AccordionItem>
         ))}
       </Accordion>;
-    } else if (selector.type === 'default') {
+    } else if (formFieldSelector.type === 'default') {
       return (
         <div className="grid grid-cols-2 gap-4">
-          {selector.formFields?.map(formField => renderFormField(formField))}
+          {formFieldSelector.formFields?.map(formField =>
+            renderFormField(formField)
+          )}
         </div>
       );
     }

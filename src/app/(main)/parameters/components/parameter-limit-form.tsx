@@ -45,11 +45,14 @@ export default function ParameterLimitForm({
       form={parameterLimitForm}
       onSubmit={onSubmit}
       onInvalid={onInvalid}
-      formFields={parameterLimitFormFields({
-        allParameters,
-        allParameterGroups,
-        allStandardMethods,
-      })}
+      formFieldSelector={{
+        type: 'default',
+        formFields: parameterLimitFormFields({
+          allParameters,
+          allParameterGroups,
+          allStandardMethods,
+        }),
+      }}
       validationSchema={parameterLimitSchema}
       isLoading={isLoading}
     />

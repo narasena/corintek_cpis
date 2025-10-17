@@ -43,7 +43,10 @@ export default function UserForm() {
         previewUrl: previewUrl || '',
         onChange: handleImagePreview,
       }}
-      formFields={createUserFormFields}
+      formFieldSelector={{
+        type: 'default',
+        formFields: createUserFormFields,
+      }}
       validationSchema={userCreationSchema}
     />
   );

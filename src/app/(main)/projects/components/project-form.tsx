@@ -293,9 +293,12 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
       onInvalid={onInvalid}
       validationSchema={projectCreationSchema}
       isLoading={isLoading}
-      accordion={{
-        type: 'single',
-        data: accordionData,
+      formFieldSelector={{
+        type: 'accordion',
+        accordion: {
+          type: 'single',
+          data: accordionData,
+        },
       }}
     />
   );

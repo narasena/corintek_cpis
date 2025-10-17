@@ -28,7 +28,10 @@ export default function StandardMethodForm() {
       form={standardMethodForm}
       onSubmit={onSubmit}
       onInvalid={onInvalid}
-      formFields={standardMethodFormFields}
+      formFieldSelector={{
+        type: 'default',
+        formFields: standardMethodFormFields,
+      }}
       validationSchema={standardMethodSchema}
     />
   );

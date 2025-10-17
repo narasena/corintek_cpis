@@ -32,7 +32,10 @@ export default function ParameterGroupForm({
       form={parameterGroupForm}
       onSubmit={onSubmit}
       onInvalid={onInvalid}
-      formFields={parameterGroupFormFields}
+      formFieldSelector={{
+        type: 'default',
+        formFields: parameterGroupFormFields,
+      }}
       validationSchema={parameterGroupSchema}
       isLoading={isLoading}
     />

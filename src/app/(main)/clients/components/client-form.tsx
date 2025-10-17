@@ -39,7 +39,10 @@ export default function ClientForm() {
         previewUrl: previewUrl || '',
         onChange: handleImagePreview,
       }}
-      formFields={createClientFormFields}
+      formFieldSelector={{
+        type: 'default',
+        formFields: createClientFormFields,
+      }}
       validationSchema={clientCreationSchema}
     />
   );
