@@ -61,12 +61,7 @@ export interface IAccordionDataFormatted {
   description?: string | React.ReactNode;
   className?: string;
   fields: IFormFields[];
-  children?: Array<{
-    title: React.ReactNode;
-    value: string;
-    className?: string;
-    fields: IFormFields[];
-  }>;
+  children?: IAccordionDataFormatted[];
 }
 
 export default function DefaultForm<TFormAttributes extends FieldValues>(
