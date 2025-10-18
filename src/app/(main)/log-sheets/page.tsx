@@ -50,7 +50,7 @@ export default function LogSheetsPage() {
           <Card
             key={project.id}
             className="@container/card cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push(`/projects/${project.id}`)}
+            onClick={() => router.push(`/log-sheets/${project.id}`)}
           >
             <CardHeader>
               <CardTitle className="text-lg font-semibold">

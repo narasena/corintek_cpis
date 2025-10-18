@@ -213,7 +213,7 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
         className: 'bg-green-50 hover:bg-green-200 hover:no-underline px-6',
         fields: machineFormFields.map(field => ({
           ...field,
-          name: `chillers.${formIndex}.${field.name}` as any,
+          name: `chillers.${formIndex}.${field.name}` as string,
         })),
       });
     });
@@ -246,7 +246,7 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
         className: 'bg-purple-50 hover:bg-purple-200 hover:no-underline px-6',
         fields: machineFormFields.map(field => ({
           ...field,
-          name: `coolingTowers.${formIndex}.${field.name}` as any,
+          name: `coolingTowers.${formIndex}.${field.name}` as string,
         })),
       });
     });

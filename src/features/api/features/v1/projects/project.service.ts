@@ -2,15 +2,19 @@ import { AppError } from '@/lib/app-error';
 import {
   IPersonnelGroup,
   IProject,
-  TPersonnelDetail,
+  IProjectAssignment,
+  IPersonnelDetail,
   TProjectCreationAttributes,
 } from '@/types/project.type';
 import {
   MachineOwnership,
+  MachineStatus,
   MachineType,
   Prisma,
+  UserRole,
 } from '@/features/api/generated/prisma';
 import { prisma } from '@/features/api/connection/prisma';
+import { serviceErrorResponse } from '@/lib/error-handler';
 
 export async function fetchInternalPersonnelService() {
   try {
@@ -52,7 +56,7 @@ export async function fetchInternalPersonnelService() {
       // 3. Push the user details to the group's personnel array
       // Since 'group' is guaranteed to be an object (either found or newly created),
       // the error 'group' is possibly 'undefined' is solved.
-      group.personnel.push(personnelDetails as TPersonnelDetail);
+      group.personnel.push(personnelDetails as IPersonnelDetail);
 
       return acc;
       // 🔑 Crucial fix: Cast the initial empty array to the desired output type (PersonnelGroup[])
@@ -100,10 +104,7 @@ export async function createProjectService(
       });
     }
 
-    const chiller = projectData.chillers?.[0];
-    const coolingTower = projectData.coolingTowers?.[0];
-
-    if (!chiller || !coolingTower) {
+    if (!projectData.chillers?.length || !projectData.coolingTowers?.length) {
       throw new AppError({
         status: 400,
         message: 'At least one chiller and one cooling tower are required',
@@ -115,10 +116,10 @@ export async function createProjectService(
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const createdProject = await tx.project.create({
         data: {
-          parentId: (projectData.parentId as string) || null,
+          parentId: (projectData.parentId as string) ?? null,
           clientId: projectData.clientId,
           name: projectData.name,
-          description: (projectData.description as string) || null,
+          description: (projectData.description as string) ?? null,
           quoteNumber: projectData.quoteNumber,
           PONumber: projectData.PONumber,
           startDate: new Date(projectData.startDate).toISOString(),
@@ -136,12 +137,11 @@ export async function createProjectService(
         endDate: newProject.endDate?.split('T')[0],
       };
 
-      let clientPersonnel;
       if (
         projectData.clientPersonnelIds &&
         projectData.clientPersonnelIds.length > 0
       ) {
-        clientPersonnel = await tx.projectAssignment.createMany({
+        await tx.projectAssignment.createMany({
           data: projectData.clientPersonnelIds.map(personnelId => ({
             projectId: newProject.id as string,
             assigneeId: personnelId,
@@ -150,9 +150,8 @@ export async function createProjectService(
         });
       }
 
-      let internalPersonnel;
       if (projectData.personnelIds && projectData.personnelIds.length > 0) {
-        internalPersonnel = await tx.projectAssignment.createMany({
+        await tx.projectAssignment.createMany({
           data: projectData.personnelIds.map(personnelId => ({
             projectId: newProject.id as string,
             assigneeId: personnelId,
@@ -161,39 +160,67 @@ export async function createProjectService(
         });
       }
 
-      let chillers;
-      if (projectData.chillers && projectData.chillers.length > 0) {
-        chillers = await tx.machine.createMany({
-          data: projectData.chillers.map(chiller => ({
-            projectId: newProject.id as string,
-            type: MachineType.CHILLER,
-            ownership: chiller.ownership as MachineOwnership,
-            capacity: (chiller.capacity as number) || null,
-            brand: (chiller.brand as string) || null,
-            model: (chiller.model as string) || null,
-            serialNumber: (chiller.serialNumber as string) || null,
-          })),
-        });
-      }
+      // Create chillers and their initial history
+      const chillers =
+        projectData.chillers?.length > 0
+          ? await Promise.all(
+              projectData.chillers.map(async chiller => {
+                const machine = await tx.machine.create({
+                  data: {
+                    projectId: newProject.id as string,
+                    type: MachineType.CHILLER,
+                    ownership: chiller.ownership as MachineOwnership,
+                    capacity: chiller.capacity
+                      ? Number(chiller.capacity)
+                      : null,
+                    brand: (chiller.brand as string) ?? null,
+                    model: (chiller.model as string) ?? null,
+                    serialNumber: (chiller.serialNumber as string) ?? null,
+                  },
+                });
 
-      let coolingTowers;
-      if (projectData.coolingTowers && projectData.coolingTowers.length > 0) {
-        coolingTowers = await tx.machine.createMany({
-          data: projectData.coolingTowers.map(tower => ({
-            projectId: newProject.id as string,
-            type: MachineType.COOLING_TOWER,
-            ownership: tower.ownership as MachineOwnership,
-            capacity: (tower.capacity as number) || null,
-            brand: (tower.brand as string) || null,
-            model: (tower.model as string) || null,
-            serialNumber: (tower.serialNumber as string) || null,
-          })),
-        });
-      }
+                await tx.machineHistory.create({
+                  data: {
+                    machineId: machine.id,
+                    status: MachineStatus.RUNNING,
+                  },
+                });
+
+                return machine;
+              })
+            )
+          : [];
+
+      // Create coolingTowers and their initial history
+      const coolingTowers =
+        projectData.coolingTowers?.length > 0
+          ? await Promise.all(
+              projectData.coolingTowers.map(async tower => {
+                const machine = await tx.machine.create({
+                  data: {
+                    projectId: newProject.id as string,
+                    type: MachineType.COOLING_TOWER,
+                    ownership: tower.ownership as MachineOwnership,
+                    capacity: tower.capacity ? Number(tower.capacity) : null,
+                    brand: (tower.brand as string) ?? null,
+                    model: (tower.model as string) ?? null,
+                    serialNumber: (tower.serialNumber as string) ?? null,
+                  },
+                });
+
+                await tx.machineHistory.create({
+                  data: {
+                    machineId: machine.id,
+                    status: MachineStatus.RUNNING,
+                  },
+                });
+
+                return machine;
+              })
+            )
+          : [];
       return {
         ...newProject,
-        clientPersonnel,
-        internalPersonnel,
         chillers,
         coolingTowers,
       };
@@ -223,9 +250,6 @@ export async function fetchAllProjectsService() {
             assignee: true,
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
       },
     });
 
@@ -260,9 +284,6 @@ export async function fetchAssignedProjectsService(userId: string) {
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
     });
 
     return projects;
@@ -272,6 +293,121 @@ export async function fetchAssignedProjectsService(userId: string) {
       status: 500,
       message: 'Error fetching assigned projects',
       isExpose: true,
+    });
+  }
+}
+
+export async function fetchProjectByIdService(projectId: string) {
+  try {
+    const project = await prisma.project.findUnique({
+      where: {
+        id: projectId,
+        deletedAt: null,
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        assignments: {
+          select: {
+            assignee: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+              },
+            },
+          },
+        },
+        machines: {
+          select: {
+            id: true,
+            type: true,
+            ownership: true,
+            capacity: true,
+            brand: true,
+            model: true,
+            serialNumber: true,
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new AppError({
+        status: 404,
+        message: 'Project not found',
+        isExpose: true,
+      });
+    }
+
+    const internalPersonnelRoles: UserRole[] = [
+      UserRole.SUPERVISOR,
+      UserRole.TECHNICIAN,
+    ];
+    const clientPersonnelRoles: UserRole[] = [
+      UserRole.CLIENT_SUPERVISOR,
+      UserRole.CLIENT_TECHNICIAN,
+    ];
+
+    // Helper function
+    const groupAssignmentsByRoles = (
+      assignments: IProjectAssignment[] | undefined,
+      roles: UserRole[]
+    ): IPersonnelGroup[] => {
+      return roles.map(role => ({
+        role,
+        personnel: assignments
+          ?.filter(assignment => assignment.assignee.role === role)
+          .map(assignment => assignment.assignee) as IPersonnelDetail[],
+      }));
+    };
+
+    const currentPersonnel = project.assignments?.filter(assignment =>
+      internalPersonnelRoles.includes(assignment.assignee.role)
+    );
+
+    const groupedPersonnel = groupAssignmentsByRoles(
+      currentPersonnel,
+      internalPersonnelRoles
+    );
+    const clientPersonnel = project.assignments?.filter(assignment =>
+      clientPersonnelRoles.includes(assignment.assignee.role)
+    );
+    const clientGroupedPersonnel = groupAssignmentsByRoles(
+      clientPersonnel,
+      clientPersonnelRoles
+    );
+
+    const chillers = project.machines?.filter(
+      machine => machine.type === MachineType.CHILLER
+    );
+    const coolingTowers = project.machines?.filter(
+      machine => machine.type === MachineType.COOLING_TOWER
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { assignments, machines, ...projectData } = project;
+    const extendedProject: IProject = {
+      ...projectData,
+      startDate: project.startDate?.toISOString().split('T')[0] || '',
+      endDate: project.endDate?.toISOString().split('T')[0] || '',
+      chillers,
+      coolingTowers,
+      personnel: groupedPersonnel,
+      clientPersonnel: clientGroupedPersonnel,
+    };
+
+    return extendedProject;
+  } catch (error) {
+    serviceErrorResponse({
+      error,
+      customErrorMessage: 'Error fetching project by id',
+      status: 500,
     });
   }
 }

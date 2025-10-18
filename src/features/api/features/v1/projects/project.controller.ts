@@ -5,6 +5,7 @@ import {
   createProjectService,
   fetchAllProjectsService,
   fetchAssignedProjectsService,
+  fetchProjectByIdService,
 } from './project.service';
 import { projectCreationSchema } from '@/app/(main)/projects/schemas/projectSchema';
 import requestValidation from '@/utils/api/v1/validation/requestValidation';
@@ -85,6 +86,18 @@ export async function fetchAssignedProjects(req: NextRequest) {
     return NextResponse.json({
       success: true,
       projects,
+    });
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+export async function fetchProjectById(req: NextRequest, projectId: string) {
+  try {
+    const project = await fetchProjectByIdService(projectId);
+    return NextResponse.json({
+      success: true,
+      project,
     });
   } catch (error) {
     return createErrorResponse(error);
