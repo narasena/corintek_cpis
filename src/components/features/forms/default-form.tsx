@@ -26,15 +26,13 @@ import FieldSelector from './field-selector';
 
 interface IFormFieldTypeDefault {
   type: 'default';
-  formFields?: IFormFields[];
+  className?: string;
+  formFields: IFormFields[];
 }
 
 interface IFormFieldTypeAccordion {
   type: 'accordion';
-  accordion?: {
-    type: 'single' | 'multiple';
-    data: IAccordionDataFormatted[];
-  };
+  accordions: IAccordionDataFormatted[];
 }
 
 type TFormFieldTypeSelector = IFormFieldTypeDefault | IFormFieldTypeAccordion;
@@ -56,10 +54,15 @@ interface IDefaultFormProps<TFormAttributes extends FieldValues> {
 }
 
 export interface IAccordionDataFormatted {
+  type?: 'single' | 'multiple';
   title: string | React.ReactNode;
   value: string;
   description?: string | React.ReactNode;
-  className?: string;
+  className?: {
+    title?: string;
+    content?: string;
+    formFields?: string;
+  };
   fields: IFormFields[];
   children?: IAccordionDataFormatted[];
 }
@@ -68,115 +71,111 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
   props: IDefaultFormProps<TFormAttributes>
 ) {
   const { formFieldSelector } = props;
-  const renderFormField = (formField: IFormFields) => (
-    <FormField
-      key={formField.name}
-      control={props.form.control}
-      name={formField.name as keyof TFormAttributes as Path<TFormAttributes>}
-      render={({ field, formState }) => (
-        <FormItem
-          className={
-            formField.type === EFieldType.BOOLEAN
-              ? 'col-span-2'
-              : (formField.className ?? '')
-          }
-        >
-          {formField.type !== EFieldType.BOOLEAN && (
-            <FormLabel>
-              {formField.label}{' '}
-              <Tooltip delayDuration={800}>
-                <TooltipTrigger>
-                  <IconInfoSquareFilled className="size-4 text-gray-500" />
-                </TooltipTrigger>
-                <TooltipContent className="!max-w-[160px] flex flex-wrap">
-                  <p>{formField.description}</p>
-                </TooltipContent>
-              </Tooltip>
-            </FormLabel>
-          )}
-          <FormControl>
-            <FieldSelector<TFormAttributes>
-              formField={formField}
-              renderProps={{ field, formState }}
-            />
-          </FormControl>
-          <FormDescription></FormDescription>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
-  function FormSelector() {
-    if (formFieldSelector.type === 'accordion') {
+  function RenderFormField({ formField }: { formField: IFormFields }) {
+    return (
+      <FormField
+        key={formField.name}
+        control={props.form.control}
+        name={formField.name as keyof TFormAttributes as Path<TFormAttributes>}
+        render={({ field, formState }) => (
+          <FormItem
+            className={
+              formField.type === EFieldType.BOOLEAN
+                ? 'col-span-2'
+                : (formField.className ?? '')
+            }
+          >
+            {formField.type !== EFieldType.BOOLEAN && (
+              <FormLabel>
+                {formField.label}{' '}
+                <Tooltip delayDuration={800}>
+                  <TooltipTrigger>
+                    <IconInfoSquareFilled className="size-4 text-gray-500" />
+                  </TooltipTrigger>
+                  <TooltipContent className="!max-w-[160px] flex flex-wrap">
+                    <p>{formField.description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </FormLabel>
+            )}
+            <FormControl>
+              <FieldSelector<TFormAttributes>
+                formField={formField}
+                renderProps={{ field, formState }}
+              />
+            </FormControl>
+            <FormDescription></FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    );
+  }
+
+  function FormFieldsGenerator({
+    formFields,
+    className,
+  }: {
+    formFields: IFormFields[];
+    className?: string;
+  }) {
+    return (
+      <div className={cn('grid grid-cols-2 gap-4 mb-4', className)}>
+        {formFields.map((formField, index) => (
+          <RenderFormField key={index} formField={formField} />
+        ))}
+      </div>
+    );
+  }
+
+  function AccordionForm({
+    accordions,
+  }: {
+    accordions: IAccordionDataFormatted[];
+  }) {
+    return accordions.map((accordion, accordionIndex) => {
+      const { children } = accordion;
       return (
-        <Accordion
-          type={formFieldSelector.accordion?.type || 'single'}
-          collapsible
-        >
-          {formFieldSelector.accordion?.data.map((accordionData, index) => (
-            <AccordionItem key={index} value={accordionData.value}>
-              <AccordionTrigger
-                className={cn(
-                  'mb-3 bg-primary hover:bg-blue-800 text-white hover:no-underline px-6',
-                  accordionData.className || ''
-                )}
-              >
-                {accordionData.title}
-              </AccordionTrigger>
-              <AccordionContent className="px-2">
-                {accordionData.description &&
-                typeof accordionData.description === 'string' ? (
-                  <p>{accordionData.description}</p>
-                ) : (
-                  (accordionData.description as React.ReactNode)
-                )}
-                {accordionData.fields.length > 0 && (
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    {accordionData.fields.map(formField =>
-                      renderFormField(formField)
-                    )}
-                  </div>
-                )}
-                {accordionData.children &&
-                  accordionData.children.length > 0 && (
-                    <div className="mt-4">
-                      <Accordion type="multiple" className="w-full">
-                        {accordionData.children.map(
-                          (childAccordion, childIndex) => (
-                            <AccordionItem
-                              key={childIndex}
-                              value={childAccordion.value}
-                            >
-                              <AccordionTrigger
-                                className={cn('mb-4', childAccordion.className)}
-                              >
-                                {childAccordion.title}
-                              </AccordionTrigger>
-                              <AccordionContent className="px-2">
-                                <div className="grid grid-cols-2 gap-4">
-                                  {childAccordion.fields.map(formField =>
-                                    renderFormField(formField)
-                                  )}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          )
-                        )}
-                      </Accordion>
-                    </div>
-                  )}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
+        <Accordion type={accordion.type || 'single'} collapsible>
+          <AccordionItem key={accordionIndex} value={accordion.value}>
+            <AccordionTrigger
+              className={cn(
+                'mb-3 bg-primary hover:bg-blue-800 text-white hover:no-underline px-6',
+                accordion.className?.title || ''
+              )}
+            >
+              {accordion.title}
+            </AccordionTrigger>
+            <AccordionContent className={cn('', accordion.className?.content)}>
+              {accordion.description &&
+              typeof accordion.description === 'string' ? (
+                <p>{accordion.description}</p>
+              ) : (
+                (accordion.description as React.ReactNode)
+              )}
+              {accordion.fields.length > 0 && (
+                <FormFieldsGenerator
+                  formFields={accordion.fields}
+                  className={accordion.className?.formFields}
+                />
+              )}
+              {children && <AccordionForm accordions={children} />}
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
       );
+    });
+  }
+
+  function FormSelector() {
+    if (formFieldSelector.type === 'accordion') {
+      return <AccordionForm accordions={formFieldSelector.accordions} />;
     } else if (formFieldSelector.type === 'default') {
       return (
-        <div className="grid grid-cols-2 gap-4">
-          {formFieldSelector.formFields?.map(formField =>
-            renderFormField(formField)
-          )}
-        </div>
+        <FormFieldsGenerator
+          formFields={formFieldSelector.formFields}
+          className={formFieldSelector.className}
+        />
       );
     }
   }

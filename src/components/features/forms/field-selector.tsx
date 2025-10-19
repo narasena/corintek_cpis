@@ -30,22 +30,50 @@ interface FormSelectorProps<TFormAttributes extends FieldValues> {
   selectComponent?: JSX.ElementType;
 }
 
+const getHtmlInputType = (
+  fieldType: EFieldType
+): React.HTMLInputTypeAttribute => {
+  switch (fieldType) {
+    case EFieldType.TEXT:
+      return 'text';
+    case EFieldType.PASSWORD:
+      return 'password';
+    case EFieldType.EMAIL:
+      return 'email';
+    case EFieldType.URL:
+      return 'url';
+    case EFieldType.DATE:
+      return 'date';
+    case EFieldType.DATETIME:
+      return 'datetime-local';
+    case EFieldType.NUMBER:
+      return 'number';
+    case EFieldType.FILE:
+      return 'file';
+    default:
+      return 'text';
+  }
+};
+
 export default function FieldSelector<TFormAttributes extends FieldValues>({
   formField,
   renderProps,
 }: FormSelectorProps<TFormAttributes>) {
   const { field } = renderProps;
   const Icon = formField.icon as JSX.ElementType;
-  const CustomComponent = formField.customComponent as JSX.ElementType;
+  const CustomComponent =
+    formField.type === EFieldType.CUSTOM
+      ? (formField.customComponent as JSX.ElementType)
+      : null;
 
   // Helper function to generate display value from item properties
 
   switch (formField.type) {
     case EFieldType.CUSTOM:
-      if (typeof formField.customComponent === 'function') {
-        return formField.customComponent(field) as React.ReactElement;
+      if (CustomComponent) {
+        return <CustomComponent />;
       }
-      return <CustomComponent />;
+      return null;
     case EFieldType.SELECT:
       return (
         <Select
@@ -139,7 +167,7 @@ export default function FieldSelector<TFormAttributes extends FieldValues>({
     default:
       return (
         <Input
-          type={formField.type as React.HTMLInputTypeAttribute}
+          type={getHtmlInputType(formField.type)}
           placeholder={formField.placeHolder}
           {...field}
         />

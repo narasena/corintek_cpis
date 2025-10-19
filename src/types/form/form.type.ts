@@ -36,7 +36,6 @@ export interface IFormFieldBasic extends IFormFieldsBase {
     | EFieldType.FILE
     | EFieldType.NUMBER
     | EFieldType.PASSWORD
-    | EFieldType.SELECT
     | EFieldType.TEXT
     | EFieldType.TEXTAREA
     | EFieldType.URL;
