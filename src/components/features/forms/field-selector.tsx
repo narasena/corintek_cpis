@@ -17,6 +17,8 @@ import {
   UseFormStateReturn,
 } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 type RenderProps<TFormAttributes extends FieldValues> = {
   field: ControllerRenderProps<TFormAttributes, Path<TFormAttributes>>;
@@ -77,10 +79,16 @@ export default function FieldSelector<TFormAttributes extends FieldValues>({
     case EFieldType.SELECT:
       return (
         <Select
-          onValueChange={value =>
-            renderProps.field.onChange(value === '' ? undefined : value)
-          }
-          value={renderProps.field.value as string | undefined}
+          onValueChange={value => {
+            if (value === '' || value === undefined) {
+              renderProps.field.onChange(undefined);
+            } else {
+              // Convert string values to booleans for boolean fields
+              const booleanValue = value === 'true';
+              renderProps.field.onChange(booleanValue);
+            }
+          }}
+          value={renderProps.field.value?.toString() || ''}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder={formField.placeHolder} />
@@ -151,11 +159,18 @@ export default function FieldSelector<TFormAttributes extends FieldValues>({
         <Input type="file" placeholder={formField.placeHolder} {...field} />
       );
     case EFieldType.TEXTAREA:
-      return <Textarea placeholder={formField.placeHolder} {...field} />;
+      return (
+        <Textarea
+          className={cn('w-full', formField.className)}
+          placeholder={formField.placeHolder}
+          {...field}
+        />
+      );
     case EFieldType.NUMBER:
       return (
         <Input
           type="number"
+          className={cn('w-full', formField.className)}
           placeholder={formField.placeHolder}
           {...field}
           onChange={e => {
@@ -164,9 +179,21 @@ export default function FieldSelector<TFormAttributes extends FieldValues>({
           }}
         />
       );
+    case EFieldType.SEPARATOR:
+      return (
+        <div
+          className={cn('w-full flex flex-col gap-0.5', formField.className)}
+        >
+          <Label className="text-primary text-left font-semibold italic text-base">
+            {formField.label}
+          </Label>
+          <Separator />
+        </div>
+      );
     default:
       return (
         <Input
+          className={cn('w-full', formField.className)}
           type={getHtmlInputType(formField.type)}
           placeholder={formField.placeHolder}
           {...field}

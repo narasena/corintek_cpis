@@ -10,6 +10,7 @@ import { IProject } from '@/types/project.type';
 import { IAccordionDataFormatted } from '@/components/features/forms/default-form';
 import { valueLogSheetFormFieldGenerator } from '../data/logSheetFormFields';
 import { ValueType } from '@/features/api/generated/prisma';
+import { EFieldType, IFormFieldBasic } from '@/types/form/form.type';
 
 interface ILogSheetsFormProps {
   projectData: IProject | null;
@@ -55,7 +56,7 @@ export default function LogSheetsForm({
 
   const { onSubmit, onInvalid, isLoading } = useFormHandleSubmit({
     form: logSheetForm,
-    apiUrl: '/log-sheets',
+    apiUrl: `/projects/${projectData?.id}/log-sheets`,
     refetch,
   });
 
@@ -84,61 +85,72 @@ export default function LogSheetsForm({
           title: `Chiller Unit ${index + 1}`,
           value: `chiller-${index}`,
           fields: [
+            {
+              name: `separator-${index}`,
+              label: 'Unit Condenser',
+              type: EFieldType.SEPARATOR,
+              className: 'col-span-2',
+            } as IFormFieldBasic,
             // Condenser Data
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
               name: `condenserData[${index}].tempIn`,
-              label: 'Condenser Temp In (°C)',
+              label: 'Temp In (°C)',
               description: 'Temperature input for condenser unit',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
               name: `condenserData[${index}].tempOut`,
-              label: 'Condenser Temp Out (°C)',
+              label: 'Temp Out (°C)',
               description: 'Temperature output for condenser unit',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
               name: `condenserData[${index}].saturatedTemp`,
-              label: 'Condenser Saturated Temp (°C)',
+              label: 'Saturated Temp (°C)',
               description: 'Saturated temperature for condenser',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
               name: `condenserData[${index}].approachTemp`,
-              label: 'Condenser Approach Temp (°C)',
+              label: 'Approach Temp (°C)',
               description: 'Approach temperature for condenser',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
               name: `condenserData[${index}].loadDemand`,
-              label: 'Condenser Load Demand (%)',
+              label: 'Load Demand (%)',
               description: 'Load demand percentage (0-100)',
             }),
-
+            {
+              name: `separator-${index}`,
+              label: 'Unit Evaporator',
+              type: EFieldType.SEPARATOR,
+              className: 'col-span-2',
+            } as IFormFieldBasic,
             // Evaporator Data
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
               name: `evaporatorData[${index}].tempIn`,
-              label: 'Evaporator Temp In (°C)',
+              label: 'Temp In (°C)',
               description: 'Temperature input for evaporator unit',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
               name: `evaporatorData[${index}].tempOut`,
-              label: 'Evaporator Temp Out (°C)',
+              label: 'Temp Out (°C)',
               description: 'Temperature output for evaporator unit',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
               name: `evaporatorData[${index}].saturatedTemp`,
-              label: 'Evaporator Saturated Temp (°C)',
+              label: 'Saturated Temp (°C)',
               description: 'Saturated temperature for evaporator',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
               name: `evaporatorData[${index}].approachTemp`,
-              label: 'Evaporator Approach Temp (°C)',
+              label: 'Approach Temp (°C)',
               description: 'Approach temperature for evaporator',
             }),
           ].filter(
@@ -159,6 +171,12 @@ export default function LogSheetsForm({
           title: `Cooling Tower ${index + 1}`,
           value: `cooling-tower-${index}`,
           fields: [
+            {
+              name: `separator-${index}`,
+              label: 'Water Quality',
+              type: EFieldType.SEPARATOR,
+              className: 'col-span-2',
+            } as IFormFieldBasic,
             // Water Quality Data
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
@@ -184,7 +202,12 @@ export default function LogSheetsForm({
               label: 'Cycle Count',
               description: 'Number of cycles completed',
             }),
-
+            {
+              name: `separator-${index}`,
+              label: 'General Condition',
+              type: EFieldType.SEPARATOR,
+              className: 'col-span-2',
+            } as IFormFieldBasic,
             // General Condition Data
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.BOOLEAN,
@@ -216,7 +239,12 @@ export default function LogSheetsForm({
                 falseLabel: 'Absent',
               },
             }),
-
+            {
+              name: `separator-${index}`,
+              label: 'Jobs',
+              type: EFieldType.SEPARATOR,
+              className: 'col-span-2',
+            } as IFormFieldBasic,
             // Job Data
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.BOOLEAN,
@@ -269,6 +297,12 @@ export default function LogSheetsForm({
       value: 'additional-data',
       description: 'Additional measurements and notes',
       fields: [
+        {
+          name: `separator-additional-data`,
+          label: 'Raw Water Quality',
+          type: EFieldType.SEPARATOR,
+          className: 'col-span-2',
+        } as IFormFieldBasic,
         // Raw Water Quality Data
         valueLogSheetFormFieldGenerator({
           valueType: ValueType.NUMBER,
@@ -294,13 +328,12 @@ export default function LogSheetsForm({
           label: 'Raw Water Cycle Count',
           description: 'Number of cycles for raw water',
         }),
-        valueLogSheetFormFieldGenerator({
-          valueType: ValueType.TEXT,
-          name: 'rawWaterQualityData.notes',
-          label: 'Raw Water Notes',
-          description: 'Additional notes for raw water quality',
-        }),
-
+        {
+          name: `separator-additional-data`,
+          label: 'Water Meter',
+          type: EFieldType.SEPARATOR,
+          className: 'col-span-2',
+        } as IFormFieldBasic,
         // Water Meter Consumption Data
         valueLogSheetFormFieldGenerator({
           valueType: ValueType.NUMBER,
@@ -320,10 +353,17 @@ export default function LogSheetsForm({
           label: 'Total Consumption (m³)',
           description: 'Calculated total water consumption',
         }),
-
+        {
+          name: `separator-additional-data`,
+          label: 'Notes',
+          type: EFieldType.SEPARATOR,
+          className: 'col-span-2',
+        } as IFormFieldBasic,
         // Notes
         valueLogSheetFormFieldGenerator({
           valueType: ValueType.TEXT,
+          textType: EFieldType.TEXTAREA,
+          className: 'col-span-2',
           name: 'notes',
           label: 'General Notes',
           description: 'Additional general notes for this log sheet',

@@ -24,6 +24,33 @@ function isFile(value: unknown): value is File {
   return value instanceof File;
 }
 
+// Transform string boolean values to actual booleans for form submission
+function transformBooleanStrings(data: unknown): unknown {
+  if (data === null || data === undefined) {
+    return data;
+  }
+
+  if (typeof data === 'string') {
+    if (data === 'true') return true;
+    if (data === 'false') return false;
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    return data.map(item => transformBooleanStrings(item));
+  }
+
+  if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+    const transformed: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data)) {
+      transformed[key] = transformBooleanStrings(value);
+    }
+    return transformed;
+  }
+
+  return data;
+}
+
 export default function useFormHandleSubmit<
   TFormAttributes extends FieldValues,
 >(params: IUseFormHandleSubmit<TFormAttributes>) {
@@ -130,7 +157,11 @@ export default function useFormHandleSubmit<
         console.log('Valid form:', params.form.formState.isValid);
         console.log('All FormData entries:', data);
       }
-      const response = await apiInstance.post(params.apiUrl!, data);
+
+      // Transform string boolean values to actual booleans for log sheet forms
+      const transformedData = transformBooleanStrings(data);
+
+      const response = await apiInstance.post(params.apiUrl!, transformedData);
       if (!response.data.success) {
         throw new Error(response.data.message || 'Submission failed');
       }

@@ -14,6 +14,7 @@ interface IValueLogSheetFormFieldGeneratorParam<T extends ValueType>
   icon?: React.ComponentType;
   label: string;
   className?: string;
+  textType?: EFieldType.TEXT | EFieldType.TEXTAREA;
   placeHolder?: string;
   description?: string;
   customBooleanSelect?: {
@@ -29,6 +30,7 @@ export function valueLogSheetFormFieldGenerator<T extends ValueType>(
     name,
     icon,
     className,
+    textType,
     label,
     placeHolder,
     description,
@@ -50,13 +52,12 @@ export function valueLogSheetFormFieldGenerator<T extends ValueType>(
       return {
         name,
         icon,
-        type: EFieldType.TEXT,
+        type: textType ?? EFieldType.TEXT,
         label,
         className,
-        placeHolder: placeHolder ?? 'Nilai',
+        placeHolder: placeHolder ?? '',
         description,
       } as IFormFieldBasic;
-
     case ValueType.BOOLEAN:
       return {
         name,

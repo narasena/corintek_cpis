@@ -85,17 +85,21 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
                 : (formField.className ?? '')
             }
           >
-            {formField.type !== EFieldType.BOOLEAN && (
+            {![EFieldType.BOOLEAN, EFieldType.SEPARATOR].includes(
+              formField.type
+            ) && (
               <FormLabel>
-                {formField.label}{' '}
-                <Tooltip delayDuration={800}>
-                  <TooltipTrigger>
-                    <IconInfoSquareFilled className="size-4 text-gray-500" />
-                  </TooltipTrigger>
-                  <TooltipContent className="!max-w-[160px] flex flex-wrap">
-                    <p>{formField.description}</p>
-                  </TooltipContent>
-                </Tooltip>
+                <span className="pl-2 font-semibold">{formField.label}</span>{' '}
+                {formField.description && (
+                  <Tooltip delayDuration={800}>
+                    <TooltipTrigger>
+                      <IconInfoSquareFilled className="size-4 text-gray-500" />
+                    </TooltipTrigger>
+                    <TooltipContent className="!max-w-[160px] flex flex-wrap">
+                      <p>{formField.description}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
               </FormLabel>
             )}
             <FormControl>
@@ -184,7 +188,7 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
     <Form {...props.form}>
       <form
         onSubmit={props.form.handleSubmit(props.onSubmit, props.onInvalid)}
-        className="space-y-8"
+        className="space-y-2"
       >
         {props.avatar && (
           <ImageFormField form={props.form} avatar={props.avatar} />

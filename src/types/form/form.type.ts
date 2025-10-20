@@ -16,6 +16,7 @@ export enum EFieldType {
   DATE,
   DATETIME,
   CUSTOM,
+  SEPARATOR,
 }
 
 export interface IFormFieldsBase {
@@ -38,7 +39,8 @@ export interface IFormFieldBasic extends IFormFieldsBase {
     | EFieldType.PASSWORD
     | EFieldType.TEXT
     | EFieldType.TEXTAREA
-    | EFieldType.URL;
+    | EFieldType.URL
+    | EFieldType.SEPARATOR;
 }
 
 export interface IFormFieldsTypeEnum extends IFormFieldsBase {
