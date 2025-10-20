@@ -65,6 +65,7 @@ export default function LogSheetsForm({
     // If no project data, show a loading section
     if (!projectData) {
       data.push({
+        type: 'single',
         title: 'Loading Project Data...',
         value: 'loading',
         fields: [],
@@ -77,12 +78,11 @@ export default function LogSheetsForm({
       data.push({
         title: 'Chillers',
         value: 'chillers',
-        description: `Configure data for ${projectData.chillers.length} chiller unit(s)`,
+        description: `Isi data untuk ${projectData.chillers.length} unit chiller`,
         fields: [],
         children: projectData.chillers.map((chiller, index) => ({
           title: `Chiller Unit ${index + 1}`,
           value: `chiller-${index}`,
-          className: 'bg-blue-600 hover:bg-blue-700 text-white',
           fields: [
             // Condenser Data
             valueLogSheetFormFieldGenerator({
@@ -158,7 +158,6 @@ export default function LogSheetsForm({
         children: projectData.coolingTowers.map((tower, index) => ({
           title: `Cooling Tower ${index + 1}`,
           value: `cooling-tower-${index}`,
-          className: 'bg-green-600 hover:bg-green-700 text-white',
           fields: [
             // Water Quality Data
             valueLogSheetFormFieldGenerator({
@@ -342,10 +341,7 @@ export default function LogSheetsForm({
       onInvalid={onInvalid}
       formFieldSelector={{
         type: 'accordion',
-        accordion: {
-          type: 'multiple',
-          data: accordionData,
-        },
+        accordions: accordionData,
       }}
       validationSchema={logSheetSchema({
         chillerTotalUnit: chillerCount,
