@@ -49,8 +49,11 @@ export default function ClientPicForm(props: IClientPicFormProps) {
         previewUrl: previewUrl || '',
         onChange: handleImagePreview,
       }}
-      formFields={createClientPICFormFields}
       validationSchema={clientPersonnelCreateSchema}
+      formFieldSelector={{
+        type: 'default',
+        formFields: createClientPICFormFields,
+      }}
     />
   );
 }

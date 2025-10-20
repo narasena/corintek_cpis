@@ -41,7 +41,10 @@ export function LoginForm() {
             form={authLoginForm}
             onSubmit={onSubmitLogin}
             onInvalid={onInvalid}
-            formFields={loginFormFields}
+            formFieldSelector={{
+              type: 'default',
+              formFields: loginFormFields,
+            }}
             validationSchema={authLoginSchema}
           />
         </CardContent>

@@ -1,5 +1,7 @@
+import { EmploymentStatus } from '@/features/api/generated/prisma';
 import { clientPersonnelRoles } from '../../users/components/user-columns';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
+import enumOptions from '@/utils/enumOptions';
 import { IconLockFilled } from '@tabler/icons-react';
 
 export const createClientPICFormFields: IFormFields[] = [
@@ -67,6 +69,7 @@ export const createClientPICFormFields: IFormFields[] = [
     label: 'Employment Status',
     placeHolder: 'Pilih Salah Satu',
     description: 'Masukkan status kerja PIC Klien',
+    enumOptions: enumOptions(EmploymentStatus),
   },
 ];
 

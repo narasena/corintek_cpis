@@ -210,7 +210,9 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
           </div>
         ),
         value: `chiller-${formIndex}`,
-        className: 'bg-green-50 hover:bg-green-200 hover:no-underline px-6',
+        className: {
+          title: 'bg-green-50 hover:bg-green-200 hover:no-underline px-6',
+        },
         fields: machineFormFields.map(field => ({
           ...field,
           name: `chillers.${formIndex}.${field.name}` as string,
@@ -243,7 +245,9 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
           </div>
         ),
         value: `cooling-tower-${formIndex}`,
-        className: 'bg-purple-50 hover:bg-purple-200 hover:no-underline px-6',
+        className: {
+          title: 'bg-purple-50 hover:bg-purple-200 hover:no-underline px-6',
+        },
         fields: machineFormFields.map(field => ({
           ...field,
           name: `coolingTowers.${formIndex}.${field.name}` as string,
@@ -295,10 +299,7 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
       isLoading={isLoading}
       formFieldSelector={{
         type: 'accordion',
-        accordion: {
-          type: 'single',
-          data: accordionData,
-        },
+        accordions: accordionData,
       }}
     />
   );
