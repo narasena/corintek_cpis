@@ -1,0 +1,97 @@
+{
+  // Place your 01_corintek_cpis workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
+  // description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope
+  // is left empty or omitted, the snippet gets applied to all languages. The prefix is what is
+  // used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+  // $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders.
+  // Placeholders with the same ids are connected.
+  // Example:
+  // "Print to console": {
+  // 	"scope": "javascript,typescript",
+  // 	"prefix": "log",
+  // 	"body": [
+  // 		"console.log('$1');",
+  // 		"$2"
+  // 	],
+  // 	"description": "Log output to console"
+  // }
+  "API Fetch All Route": {
+    "scope": "javascript,typescript",
+    "prefix": "apifar",
+    "body": [
+      "export async function GET() {",
+      "  return await fetchAll${1:Items}();",
+      "}",
+    ],
+  },
+  "API Create Route":{
+    "scope": "javascript,typescript",
+    "prefix": "apicr",
+    "body": [
+      "import { NextRequest } from 'next/server';",
+      "",
+      "export async function POST(req: NextRequest) {",
+      "  return await create${1:Item}(req);",
+      "}"
+    ]
+  },
+
+  "API Fetch All Controller": {
+    "scope": "javascript,typescript",
+    "prefix": "apifac",
+    "body": [
+      "import { createErrorResponse } from '@/lib/error-handler';",
+      "import { NextResponse } from 'next/server';",
+      "",
+      "export async function fetchAll${1:Items}() {",
+      "  try {",
+      "    const ${2:${1:/downcase}} = await fetchAll${1:Items}Service();",
+      "    return NextResponse.json({",
+      "      success: true,",
+      "      ${2:${1:/downcase}},",
+      "    });",
+      "  } catch (error) {",
+      "    return createErrorResponse(error);",
+      "  }",
+      "}",
+    ],
+    "description": "Next.js API route function with error handling using createErrorResponse",
+  },
+  "API Fetch All Service": {
+    "scope": "javascript,typescript",
+    "prefix": "apifas",
+    "body": [
+      "import { prisma } from '@/features/api/connection/prisma';",
+      "import { Prisma } from '@/features/api/generated/prisma';",
+      "import { serviceErrorResponse } from '@/lib/error-handler';",
+      "",
+      "export async function fetchAll${1:Item}sService() {",
+      "  try {",
+      "    const whereClause: Prisma.${1:Item}WhereInput = {",
+      "      deletedAt: null,",
+      "    };",
+      "",
+      "    const ${1/(.*)/${1:/downcase}/}s = await prisma.${1/(.*)/${1:/downcase}/}.findMany({",
+      "      where: whereClause,",
+      "    });",
+      "",
+      "    return ${1/(.*)/${1:/downcase}/}s;",
+      "  } catch (error) {",
+      "    serviceErrorResponse({",
+      "      error,",
+      "      customErrorMessage: 'Error fetching ${1/(.*)/${1:/downcase}/}s',",
+      "      status: 500,",
+      "    });",
+      "  }",
+      "}",
+      ""
+    ]
+  },
+  "API Create Item Controller":{
+    "scope": "javascript,typescript",
+    "prefix": "apicc",
+    "body":[
+      
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.preferences.maxTsServerMemory": 8192,
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "typescript.suggest.autoImports": true,
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/trace/**": true,
+    "**/worker/**": true,
+    "**/*.log": true,
+    "**/src/features/api/generated/**": true
+  },
+  "search.exclude": {
+    "**/src/features/api/generated/**": true
+  }
+}
