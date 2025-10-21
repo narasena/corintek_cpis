@@ -7,9 +7,9 @@ import {
   IconCamera,
   IconClock2,
   IconDashboard,
+  IconDroplets,
   IconFileAi,
   IconFileDescription,
-  IconFileWord,
   IconFlaskFilled,
   IconHelp,
   IconReport,
@@ -153,9 +153,9 @@ const data = {
       icon: IconReport,
     },
     {
-      name: 'Word Assistant',
-      url: '#',
-      icon: IconFileWord,
+      name: 'Chemicals',
+      url: '/chemicals',
+      icon: IconDroplets,
     },
   ],
 };

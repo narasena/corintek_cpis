@@ -100,6 +100,7 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
                     </TooltipContent>
                   </Tooltip>
                 )}
+                {formField.required && <span className="text-red-500">*</span>}
               </FormLabel>
             )}
             <FormControl>
@@ -194,6 +195,11 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
           <ImageFormField form={props.form} avatar={props.avatar} />
         )}
         <FormSelector />
+        <span className="text-xs font-medium !mb-5">
+          {`(`}
+          <span className="text-red-500">*</span>
+          {`) Wajib diisi`}
+        </span>
         <Button
           className={`w-full ${props.isLoading ? 'cursor-not-allowed bg-gray-700' : ''}`}
           type="submit"

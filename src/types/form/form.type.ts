@@ -25,6 +25,7 @@ export interface IFormFieldsBase {
   className?: string;
   label: string;
   placeHolder?: string;
+  required?: boolean;
   description?: string;
 }
 
