@@ -79,15 +79,9 @@ export default function FieldSelector<TFormAttributes extends FieldValues>({
     case EFieldType.SELECT:
       return (
         <Select
-          onValueChange={value => {
-            if (value === '' || value === undefined) {
-              renderProps.field.onChange(undefined);
-            } else {
-              // Convert string values to booleans for boolean fields
-              const booleanValue = value === 'true';
-              renderProps.field.onChange(booleanValue);
-            }
-          }}
+          onValueChange={value =>
+            renderProps.field.onChange(value === '' ? undefined : value)
+          }
           value={renderProps.field.value?.toString() || ''}
         >
           <SelectTrigger className="w-full">

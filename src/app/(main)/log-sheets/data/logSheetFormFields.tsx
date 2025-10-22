@@ -1,4 +1,5 @@
 import { ValueType } from '@/features/api/generated/prisma';
+import { IChemical } from '@/types/chemical.type';
 import {
   EFieldType,
   IFormFieldBasic,
@@ -79,3 +80,38 @@ export function valueLogSheetFormFieldGenerator<T extends ValueType>(
       throw new Error(`Unsupported valueType: ${_exhaustiveCheck}`);
   }
 }
+
+export const chemicalUsageFormFields = ({
+  chemicalsData,
+}: {
+  chemicalsData: IChemical[];
+}) => {
+  return [
+    {
+      name: 'chemicalUsageData.chemicalName',
+      type: EFieldType.SELECT,
+      label: 'Bahan Kimia',
+      className: 'col-span-2',
+      placeHolder: '',
+      description: 'Nama Bahan Kimia',
+      selectData: chemicalsData.map(chemicalData => ({
+        label: (
+          chemicalData.code +
+          ' - ' +
+          chemicalData.name +
+          ` [${chemicalData.type}]`
+        ).trim(),
+        value: chemicalData.id,
+      })),
+    },
+    {
+      name: 'chemicalUsageData.chemicalAmount',
+      icon: undefined,
+      type: EFieldType.NUMBER,
+      label: 'Jumlah',
+      className: 'col-span-2',
+      placeHolder: '0',
+      description: 'Jumlah Bahan Kimia',
+    },
+  ] as IFormFields[];
+};

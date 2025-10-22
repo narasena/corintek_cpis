@@ -10,10 +10,15 @@ import { IProject } from '@/types/project.type';
 import { IAccordionDataFormatted } from '@/components/features/forms/default-form';
 import { valueLogSheetFormFieldGenerator } from '../data/logSheetFormFields';
 import { ValueType } from '@/features/api/generated/prisma';
-import { EFieldType, IFormFieldBasic } from '@/types/form/form.type';
-import { chemicalFormFields } from '../../chemicals/data/chemicalFormFields';
+import {
+  EFieldType,
+  IFormFieldBasic,
+  IFormFields,
+} from '@/types/form/form.type';
 import { Button } from '@/components/ui/button';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
+import useAllChemicals from '@/hooks/chemicals/useAllChemicals';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 interface ILogSheetsFormProps {
   projectData: IProject | null;
@@ -24,10 +29,15 @@ export default function LogSheetsForm({
   projectData,
   refetch = () => {},
 }: ILogSheetsFormProps) {
+  const { allChemicals } = useAllChemicals();
   const chillerCount = projectData?.chillers?.length ?? 0;
   const coolingTowerCount = projectData?.coolingTowers?.length ?? 0;
   const [chemicalUsageForms, setChemicalUsageForms] = useState<number[]>([]);
   const [accordionValue, setAccordionValue] = useState<string[]>([]);
+  const [selectedChillers, setSelectedChillers] = useState<number[]>([]);
+  const [selectedCoolingTowers, setSelectedCoolingTowers] = useState<number[]>(
+    []
+  );
 
   const logSheetForm = useForm({
     resolver: zodResolver(
@@ -66,8 +76,10 @@ export default function LogSheetsForm({
   });
 
   const addChemicalForm = useCallback(() => {
-    setChemicalUsageForms(prev => [...prev, prev.length]);
-  }, []);
+    const nextId =
+      chemicalUsageForms.length === 0 ? 0 : Math.max(...chemicalUsageForms) + 1;
+    setChemicalUsageForms(prev => [...prev, nextId]);
+  }, [chemicalUsageForms]);
 
   const removeChemicalForm = useCallback(
     (formIndex: number) => {
@@ -83,6 +95,14 @@ export default function LogSheetsForm({
   );
 
   const chemicalAccordions = useMemo((): IAccordionDataFormatted[] => {
+    // Get already selected chemical IDs
+    const chemicalUsageData = logSheetForm.getValues('chemicalUsageData') || [];
+    const selectedChemicalIds = chemicalUsageData
+      .map(
+        (chemical: { id: UniqueIdentifier; quantity: number }) => chemical?.id
+      )
+      .filter(Boolean);
+
     return chemicalUsageForms.map((formIndex, displayIndex) => ({
       title: (
         <div className="flex items-center justify-between w-full">
@@ -106,13 +126,45 @@ export default function LogSheetsForm({
       ),
       value: `chemical-usage-data-${formIndex}`,
       description: 'Chemical usage data',
-      type: 'multiple',
-      fields: chemicalFormFields.map(field => ({
-        ...field,
-        name: `chemicalUsageData[${formIndex}].${field.name}`,
-      })),
+      fields: [
+        {
+          name: `chemicalUsageData.${displayIndex}.id`,
+          type: EFieldType.SELECT,
+          label: 'Bahan Kimia',
+          className: 'col-span-2',
+          placeHolder: '',
+          description: 'Nama Bahan Kimia',
+          selectData: (allChemicals || []).map(chemicalData => {
+            const currentSelection = chemicalUsageData[displayIndex]?.id;
+            const isSelected =
+              selectedChemicalIds.includes(chemicalData.id as string) &&
+              chemicalData.id !== currentSelection;
+
+            return {
+              label: (
+                chemicalData.code +
+                ' - ' +
+                chemicalData.name +
+                ` [${chemicalData.type}]` +
+                (isSelected ? ' (Already Selected)' : '')
+              ).trim(),
+              value: chemicalData.id,
+              disabled: isSelected,
+            };
+          }),
+        },
+        {
+          name: `chemicalUsageData.${displayIndex}.quantity`,
+          icon: undefined,
+          type: EFieldType.NUMBER,
+          label: 'Jumlah',
+          className: 'col-span-2',
+          placeHolder: '0',
+          description: 'Jumlah Bahan Kimia',
+        },
+      ] as IFormFields[],
     }));
-  }, [chemicalUsageForms, removeChemicalForm]);
+  }, [chemicalUsageForms, allChemicals, removeChemicalForm, logSheetForm]);
 
   const chemicalSection = useMemo(
     (): IAccordionDataFormatted => ({
@@ -157,11 +209,43 @@ export default function LogSheetsForm({
     // Chillers Section
     if (projectData.chillers.length > 0) {
       data.push({
-        title: 'Chillers',
-        value: 'chillers',
-        description: `Isi data untuk ${projectData.chillers.length} unit chiller`,
+        title: 'Unit Selection - Chillers',
+        value: 'chiller-selection',
+        description: (
+          <div className="space-y-2">
+            <p>Select which chiller units to include in this log sheet:</p>
+            <div className="grid grid-cols-3 gap-2">
+              {projectData.chillers.map((chiller, index) => (
+                <label
+                  key={index}
+                  className="flex items-center space-x-2 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedChillers.includes(index)}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setSelectedChillers(prev => [...prev, index]);
+                      } else {
+                        setSelectedChillers(prev =>
+                          prev.filter(i => i !== index)
+                        );
+                      }
+                    }}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm">Chiller Unit {index + 1}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ),
         fields: [],
-        children: projectData.chillers.map((chiller, index) => ({
+      });
+
+      // Add individual chiller forms directly
+      selectedChillers.forEach(index => {
+        data.push({
           title: `Chiller Unit ${index + 1}`,
           value: `chiller-${index}`,
           fields: [
@@ -236,19 +320,55 @@ export default function LogSheetsForm({
           ].filter(
             (field): field is NonNullable<typeof field> => field !== null
           ),
-        })),
+        });
       });
     }
 
     // Cooling Towers Section
     if (projectData.coolingTowers.length > 0) {
       data.push({
-        title: 'Cooling Towers',
-        value: 'cooling-towers',
-        description: `Configure data for ${projectData.coolingTowers.length} cooling tower unit(s)`,
+        title: 'Unit Selection - Cooling Towers',
+        value: 'cooling-tower-selection',
+        description: (
+          <div className="space-y-2">
+            <p>
+              Select which cooling tower units to include in this log sheet:
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {projectData.coolingTowers.map((tower, index) => (
+                <label
+                  key={index}
+                  className="flex items-center space-x-2 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCoolingTowers.includes(index)}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setSelectedCoolingTowers(prev => [...prev, index]);
+                      } else {
+                        setSelectedCoolingTowers(prev =>
+                          prev.filter(i => i !== index)
+                        );
+                      }
+                    }}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm">
+                    Cooling Tower Unit {index + 1}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ),
         fields: [],
-        children: projectData.coolingTowers.map((tower, index) => ({
-          title: `Cooling Tower ${index + 1}`,
+      });
+
+      // Add individual cooling tower forms directly
+      selectedCoolingTowers.forEach(index => {
+        data.push({
+          title: `Cooling Tower Unit ${index + 1}`,
           value: `cooling-tower-${index}`,
           fields: [
             {
@@ -367,7 +487,7 @@ export default function LogSheetsForm({
               },
             }),
           ].filter(Boolean) as any[],
-        })),
+        });
       });
     }
 
@@ -454,7 +574,7 @@ export default function LogSheetsForm({
     data.push(chemicalSection);
 
     return data;
-  }, [projectData, chemicalSection]);
+  }, [projectData, chemicalSection, selectedChillers, selectedCoolingTowers]);
 
   return (
     <DefaultForm
