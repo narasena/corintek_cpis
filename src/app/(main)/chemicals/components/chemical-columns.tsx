@@ -22,10 +22,16 @@ export const chemicalColumns = (): ColumnDef<IChemical>[] => {
     {
       accessorKey: 'unit',
       header: 'Satuan Bahan Kimia',
+      cell: ({ row }) => {
+        return row.original.unit ?? '-';
+      },
     },
     {
       accessorKey: 'description',
       header: 'Penjelasan',
+      cell: ({ row }) => {
+        return row.original.description ?? '-';
+      },
     },
     actions,
   ];

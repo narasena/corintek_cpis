@@ -27,6 +27,8 @@ export async function fetchAllChemicals() {
 export async function createChemical(req: NextRequest) {
   try {
     const body = await req.json();
+    console.log('Body: ', body);
+    console.log('null: ', null);
     const validatedResult = requestValidation<TChemicalAttributes>({
       validationSchema: chemicalSchema,
       data: body,

@@ -5,12 +5,15 @@ import { useForm } from 'react-hook-form';
 import { logSheetSchema } from '../schemas/logSheetSchema';
 import useFormHandleSubmit from '@/hooks/useFormHandleSubmit';
 import DefaultForm from '@/components/features/forms/default-form';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { IProject } from '@/types/project.type';
 import { IAccordionDataFormatted } from '@/components/features/forms/default-form';
 import { valueLogSheetFormFieldGenerator } from '../data/logSheetFormFields';
 import { ValueType } from '@/features/api/generated/prisma';
 import { EFieldType, IFormFieldBasic } from '@/types/form/form.type';
+import { chemicalFormFields } from '../../chemicals/data/chemicalFormFields';
+import { Button } from '@/components/ui/button';
+import { IconPlus, IconTrash } from '@tabler/icons-react';
 
 interface ILogSheetsFormProps {
   projectData: IProject | null;
@@ -23,6 +26,7 @@ export default function LogSheetsForm({
 }: ILogSheetsFormProps) {
   const chillerCount = projectData?.chillers?.length ?? 0;
   const coolingTowerCount = projectData?.coolingTowers?.length ?? 0;
+  const [chemicalUsageForms, setChemicalUsageForms] = useState<number[]>([]);
 
   const logSheetForm = useForm({
     resolver: zodResolver(
@@ -59,6 +63,19 @@ export default function LogSheetsForm({
     apiUrl: `/projects/${projectData?.id}/log-sheets`,
     refetch,
   });
+
+  const addChemicalForm = () => {
+    setChemicalUsageForms(prev => [...prev, prev.length]);
+  };
+
+  const removeChemicalForm = (index: number) => {
+    if (chemicalUsageForms.length > 1) {
+      setChemicalUsageForms(prev => prev.filter((_, i) => i !== index));
+    }
+    const currentChemical = logSheetForm.getValues('chemicalUsageData') || [];
+    currentChemical.splice(index, 1);
+    logSheetForm.setValue('chemicalUsageData', currentChemical);
+  };
 
   const accordionData = useMemo((): IAccordionDataFormatted[] => {
     const data: IAccordionDataFormatted[] = [];
@@ -371,8 +388,65 @@ export default function LogSheetsForm({
       ].filter(Boolean) as any[],
     });
 
+    const chemicalAccordions: IAccordionDataFormatted[] = [];
+
+    chemicalUsageForms.forEach((formIndex, displayIndex) => {
+      chemicalAccordions.push({
+        title: (
+          <div className="flex items-center justify-between w-full">
+            <span>Bahan Kimia / Chemical {displayIndex + 1}</span>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={e => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  removeChemicalForm(formIndex);
+                }}
+                className="h-6 w-6 p-0 text-red-600 hover:text-red-800 bg-white"
+              >
+                <IconTrash className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        ),
+        value: `chemical-usage-data-${displayIndex + 1}`,
+        description: 'Chemical usage data',
+        type: 'multiple',
+        fields: chemicalFormFields.map(field => ({
+          ...field,
+          name: `chemicalUsageData[${formIndex}].${field.name}`,
+        })),
+      });
+    });
+
+    data.push({
+      title: <span>Bahan Kimia/ Chemical ({chemicalAccordions.length})</span>,
+      type: 'multiple',
+      description: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={e => {
+            e.stopPropagation();
+            e.preventDefault();
+            addChemicalForm();
+          }}
+          className="flex items-center gap-2 mb-2"
+        >
+          <IconPlus className="h-4 w-4" />
+          <span>Tambah Chemical</span>
+        </Button>
+      ),
+      value: 'chemical-usage-data',
+      fields: [],
+      children: chemicalAccordions,
+    });
+
     return data;
-  }, [chillerCount, coolingTowerCount, projectData]);
+  }, [chillerCount, coolingTowerCount, chemicalUsageForms, projectData]);
 
   return (
     <DefaultForm

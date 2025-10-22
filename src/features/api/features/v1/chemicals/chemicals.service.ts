@@ -54,8 +54,8 @@ export async function createChemicalService(
         name: data.name,
         code: data.code,
         type: data.type,
-        description: String(data.description) || null,
-        unit: String(data.unit) || null,
+        description: data.description ? String(data.description) : null,
+        unit: data.description ? String(data.description) : null,
       },
     });
   } catch (error) {

@@ -33,6 +33,8 @@ interface IFormFieldTypeDefault {
 interface IFormFieldTypeAccordion {
   type: 'accordion';
   accordions: IAccordionDataFormatted[];
+  value?: string | string[];
+  onValueChange?: (value: string | string[]) => void;
 }
 
 type TFormFieldTypeSelector = IFormFieldTypeDefault | IFormFieldTypeAccordion;
