@@ -32,6 +32,7 @@ interface IFormFieldTypeDefault {
 
 interface IFormFieldTypeAccordion {
   type: 'accordion';
+  accordionType?: 'single' | 'multiple';
   accordions: IAccordionDataFormatted[];
   value?: string | string[];
   onValueChange?: (value: string | string[]) => void;
@@ -56,7 +57,6 @@ interface IDefaultFormProps<TFormAttributes extends FieldValues> {
 }
 
 export interface IAccordionDataFormatted {
-  type?: 'single' | 'multiple';
   title: string | React.ReactNode;
   value: string;
   description?: string | React.ReactNode;
@@ -136,47 +136,108 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
   }
 
   function AccordionForm({
+    accordionType,
     accordions,
+    value,
+    onValueChange,
   }: {
+    accordionType?: 'single' | 'multiple';
     accordions: IAccordionDataFormatted[];
+    value?: string | string[];
+    onValueChange?: (value: string | string[]) => void;
   }) {
-    return accordions.map((accordion, accordionIndex) => {
-      const { children } = accordion;
-      return (
-        <Accordion type={accordion.type || 'single'} collapsible>
-          <AccordionItem key={accordionIndex} value={accordion.value}>
-            <AccordionTrigger
-              className={cn(
-                'mb-3 bg-primary hover:bg-blue-800 text-white hover:no-underline px-6',
-                accordion.className?.title || ''
-              )}
-            >
-              {accordion.title}
-            </AccordionTrigger>
-            <AccordionContent className={cn('', accordion.className?.content)}>
-              {accordion.description &&
-              typeof accordion.description === 'string' ? (
-                <p>{accordion.description}</p>
-              ) : (
-                (accordion.description as React.ReactNode)
-              )}
-              {accordion.fields.length > 0 && (
-                <FormFieldsGenerator
-                  formFields={accordion.fields}
-                  className={accordion.className?.formFields}
-                />
-              )}
-              {children && <AccordionForm accordions={children} />}
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      );
-    });
+    const type = accordionType || 'multiple';
+
+    const accordionProps =
+      type === 'single'
+        ? {
+            type: 'single' as const,
+            collapsible: true,
+            value: value as string,
+            onValueChange: onValueChange as (value: string) => void,
+          }
+        : {
+            type: 'multiple' as const,
+            value: value as string[],
+            onValueChange: onValueChange as (value: string[]) => void,
+          };
+
+    return (
+      <Accordion {...accordionProps}>
+        {accordions.map(accordion => {
+          const { children } = accordion;
+          return (
+            <AccordionItem key={accordion.value} value={accordion.value}>
+              <AccordionTrigger
+                className={cn(
+                  'mb-3 bg-primary hover:bg-blue-800 text-white hover:no-underline px-6',
+                  accordion.className?.title || ''
+                )}
+              >
+                {accordion.title}
+              </AccordionTrigger>
+              <AccordionContent
+                className={cn('', accordion.className?.content)}
+              >
+                {accordion.description &&
+                typeof accordion.description === 'string' ? (
+                  <p>{accordion.description}</p>
+                ) : (
+                  (accordion.description as React.ReactNode)
+                )}
+                {accordion.fields.length > 0 && (
+                  <FormFieldsGenerator
+                    formFields={accordion.fields}
+                    className={accordion.className?.formFields}
+                  />
+                )}
+                {children &&
+                  children.map(child => (
+                    <AccordionItem key={child.value} value={child.value}>
+                      <AccordionTrigger
+                        className={cn(
+                          'mb-3 bg-primary hover:bg-blue-800 text-white hover:no-underline px-6',
+                          child.className?.title || ''
+                        )}
+                      >
+                        {child.title}
+                      </AccordionTrigger>
+                      <AccordionContent
+                        className={cn('', child.className?.content)}
+                      >
+                        {child.description &&
+                        typeof child.description === 'string' ? (
+                          <p>{child.description}</p>
+                        ) : (
+                          (child.description as React.ReactNode)
+                        )}
+                        {child.fields.length > 0 && (
+                          <FormFieldsGenerator
+                            formFields={child.fields}
+                            className={child.className?.formFields}
+                          />
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+    );
   }
 
   function FormSelector() {
     if (formFieldSelector.type === 'accordion') {
-      return <AccordionForm accordions={formFieldSelector.accordions} />;
+      return (
+        <AccordionForm
+          accordionType={formFieldSelector.accordionType}
+          accordions={formFieldSelector.accordions}
+          value={formFieldSelector.value}
+          onValueChange={formFieldSelector.onValueChange}
+        />
+      );
     } else if (formFieldSelector.type === 'default') {
       return (
         <FormFieldsGenerator

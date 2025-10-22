@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { TProjectCreationAttributes } from '@/types/project.type';
 import { projectCreationSchema } from '../schemas/projectSchema';
 import { useForm } from 'react-hook-form';
@@ -30,6 +30,7 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
   // State for dynamic machine forms
   const [chillerForms, setChillerForms] = useState([0]); // Start with one chiller form
   const [coolingTowerForms, setCoolingTowerForms] = useState([0]); // Start with one cooling tower form
+  const [accordionValue, setAccordionValue] = useState<string[]>([]);
 
   const projectCreationForm = useForm<TProjectCreationAttributes>({
     resolver: zodResolver(projectCreationSchema),
@@ -143,34 +144,40 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
   };
 
   // Functions to handle dynamic machine forms
-  const addChillerForm = () => {
+  const addChillerForm = useCallback(() => {
     setChillerForms(prev => [...prev, prev.length]);
-  };
+  }, []);
 
-  const removeChillerForm = (index: number) => {
-    if (chillerForms.length > 1) {
-      setChillerForms(prev => prev.filter((_, i) => i !== index));
-      // Remove the chiller data from form
-      const currentChillers = projectCreationForm.getValues('chillers') || [];
-      currentChillers.splice(index, 1);
-      projectCreationForm.setValue('chillers', currentChillers);
-    }
-  };
+  const removeChillerForm = useCallback(
+    (index: number) => {
+      if (chillerForms.length > 1) {
+        setChillerForms(prev => prev.filter((_, i) => i !== index));
+        // Remove the chiller data from form
+        const currentChillers = projectCreationForm.getValues('chillers') || [];
+        currentChillers.splice(index, 1);
+        projectCreationForm.setValue('chillers', currentChillers);
+      }
+    },
+    [chillerForms.length, projectCreationForm]
+  );
 
-  const addCoolingTowerForm = () => {
+  const addCoolingTowerForm = useCallback(() => {
     setCoolingTowerForms(prev => [...prev, prev.length]);
-  };
+  }, []);
 
-  const removeCoolingTowerForm = (index: number) => {
-    if (coolingTowerForms.length > 1) {
-      setCoolingTowerForms(prev => prev.filter((_, i) => i !== index));
-      // Remove the cooling tower data from form
-      const currentCoolingTowers =
-        projectCreationForm.getValues('coolingTowers') || [];
-      currentCoolingTowers.splice(index, 1);
-      projectCreationForm.setValue('coolingTowers', currentCoolingTowers);
-    }
-  };
+  const removeCoolingTowerForm = useCallback(
+    (index: number) => {
+      if (coolingTowerForms.length > 1) {
+        setCoolingTowerForms(prev => prev.filter((_, i) => i !== index));
+        // Remove the cooling tower data from form
+        const currentCoolingTowers =
+          projectCreationForm.getValues('coolingTowers') || [];
+        currentCoolingTowers.splice(index, 1);
+        projectCreationForm.setValue('coolingTowers', currentCoolingTowers);
+      }
+    },
+    [coolingTowerForms.length, projectCreationForm]
+  );
 
   // Create accordion data for DefaultForm
   const accordionData = useMemo(() => {
@@ -199,6 +206,7 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
                   size="sm"
                   onClick={e => {
                     e.stopPropagation();
+                    e.preventDefault();
                     removeChillerForm(formIndex);
                   }}
                   className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
@@ -210,9 +218,6 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
           </div>
         ),
         value: `chiller-${formIndex}`,
-        className: {
-          title: 'bg-green-50 hover:bg-green-200 hover:no-underline px-6',
-        },
         fields: machineFormFields.map(field => ({
           ...field,
           name: `chillers.${formIndex}.${field.name}` as string,
@@ -234,6 +239,7 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
                   size="sm"
                   onClick={e => {
                     e.stopPropagation();
+                    e.preventDefault();
                     removeCoolingTowerForm(formIndex);
                   }}
                   className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
@@ -245,9 +251,6 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
           </div>
         ),
         value: `cooling-tower-${formIndex}`,
-        className: {
-          title: 'bg-purple-50 hover:bg-purple-200 hover:no-underline px-6',
-        },
         fields: machineFormFields.map(field => ({
           ...field,
           name: `coolingTowers.${formIndex}.${field.name}` as string,
@@ -264,7 +267,11 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={addChillerForm}
+              onClick={e => {
+                e.stopPropagation();
+                e.preventDefault();
+                addChillerForm();
+              }}
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
@@ -273,7 +280,11 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={addCoolingTowerForm}
+              onClick={e => {
+                e.stopPropagation();
+                e.preventDefault();
+                addCoolingTowerForm();
+              }}
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
@@ -288,7 +299,15 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
     }
 
     return accordions;
-  }, [formFields, chillerForms, coolingTowerForms]);
+  }, [
+    formFields,
+    chillerForms,
+    coolingTowerForms,
+    addChillerForm,
+    removeChillerForm,
+    addCoolingTowerForm,
+    removeCoolingTowerForm,
+  ]);
 
   return (
     <DefaultForm<TProjectCreationAttributes>
@@ -300,6 +319,8 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
       formFieldSelector={{
         type: 'accordion',
         accordions: accordionData,
+        value: accordionValue,
+        onValueChange: value => setAccordionValue(value as string[]),
       }}
     />
   );
