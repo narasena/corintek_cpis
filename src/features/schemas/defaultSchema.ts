@@ -36,3 +36,11 @@ export const preprocessBlank = (schema: z.ZodTypeAny) => {
     return val;
   }, schema);
 };
+
+export const preprocessBoolean = (schema: z.ZodBoolean) => {
+  return z.preprocess(val => {
+    if (val === 'true') return true;
+    if (val === 'false') return false;
+    return val;
+  }, schema);
+};
