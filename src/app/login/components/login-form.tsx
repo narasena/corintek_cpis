@@ -23,7 +23,7 @@ export function LoginForm() {
     },
   });
 
-  const { onSubmitLogin, onInvalid } = useFormHandleSubmit({
+  const { onSubmitLogin, onInvalid, isLoading } = useFormHandleSubmit({
     form: authLoginForm,
   });
 
@@ -46,6 +46,7 @@ export function LoginForm() {
               formFields: loginFormFields,
             }}
             validationSchema={authLoginSchema}
+            isLoading={isLoading}
           />
         </CardContent>
       </Card>

@@ -332,6 +332,7 @@ export async function fetchProjectByIdService(projectId: string) {
             brand: true,
             model: true,
             serialNumber: true,
+            unitNumber: true,
           },
         },
       },

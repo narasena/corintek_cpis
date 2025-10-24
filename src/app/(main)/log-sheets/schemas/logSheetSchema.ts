@@ -1,4 +1,7 @@
-import { preprocessBlank } from '@/features/schemas/defaultSchema';
+import {
+  preprocessBlank,
+  preprocessBoolean,
+} from '@/features/schemas/defaultSchema';
 import z from 'zod';
 
 const evaporatorUnitSchema = z.object({
@@ -23,16 +26,16 @@ const coolingTowerWaterQualitySchema = z.object({
 });
 
 const coolingTowerGeneralConditionSchema = z.object({
-  runningStatus: z.boolean(),
-  algae: z.boolean(),
-  deposit: z.boolean(),
+  runningStatus: preprocessBoolean(z.boolean()),
+  algae: preprocessBoolean(z.boolean()),
+  deposit: preprocessBoolean(z.boolean()),
 });
 
 const coolingTowerJobSchema = z.object({
-  hotBasinCleaning: z.boolean(),
-  coldBasinCleaning: z.boolean(),
-  fillerCleaning: z.boolean(),
-  areaCleaning: z.boolean(),
+  hotBasinCleaning: preprocessBoolean(z.boolean()),
+  coldBasinCleaning: preprocessBoolean(z.boolean()),
+  fillerCleaning: preprocessBoolean(z.boolean()),
+  areaCleaning: preprocessBoolean(z.boolean()),
 });
 
 const waterMeterConsumptionSchema = z.object({
@@ -46,6 +49,20 @@ const chemicalUsageSchema = z.object({
   quantity: z.number(),
 });
 
+// Helper schema for unitNumber-indexed objects
+const createUnitNumberIndexedSchema = (
+  unitSchema: z.ZodSchema,
+  maxUnits?: number
+) => {
+  const baseSchema = z.record(z.string(), unitSchema);
+  return maxUnits
+    ? baseSchema.refine(
+        obj => Object.keys(obj).length <= maxUnits,
+        `Cannot have more than ${maxUnits} units`
+      )
+    : baseSchema;
+};
+
 export const logSheetSchema = ({
   chillerTotalUnit,
   coolingTowerTotalUnit,
@@ -54,23 +71,29 @@ export const logSheetSchema = ({
   coolingTowerTotalUnit: number;
 }) => {
   return z.object({
-    condenserData: z.array(condenserUnitSchema).min(1).max(chillerTotalUnit),
-    evaporatorData: z.array(evaporatorUnitSchema).min(1).max(chillerTotalUnit),
-    coolingTowerWaterQualityData: z
-      .array(coolingTowerWaterQualitySchema)
-      .min(1)
-      .max(coolingTowerTotalUnit),
+    condenserData: createUnitNumberIndexedSchema(
+      condenserUnitSchema,
+      chillerTotalUnit
+    ),
+    evaporatorData: createUnitNumberIndexedSchema(
+      evaporatorUnitSchema,
+      chillerTotalUnit
+    ),
+    coolingTowerWaterQualityData: createUnitNumberIndexedSchema(
+      coolingTowerWaterQualitySchema,
+      coolingTowerTotalUnit
+    ),
     rawWaterQualityData: coolingTowerWaterQualitySchema.extend({
       notes: preprocessBlank(z.string().nullable().optional()),
     }),
-    coolingTowerGeneralConditionData: z
-      .array(coolingTowerGeneralConditionSchema)
-      .min(1)
-      .max(coolingTowerTotalUnit),
-    coolingTowerJobData: z
-      .array(coolingTowerJobSchema)
-      .min(1)
-      .max(coolingTowerTotalUnit),
+    coolingTowerGeneralConditionData: createUnitNumberIndexedSchema(
+      coolingTowerGeneralConditionSchema,
+      coolingTowerTotalUnit
+    ),
+    coolingTowerJobData: createUnitNumberIndexedSchema(
+      coolingTowerJobSchema,
+      coolingTowerTotalUnit
+    ),
     waterMeterConsumptionData: waterMeterConsumptionSchema,
     chemicalUsageData: z.array(chemicalUsageSchema),
     notes: preprocessBlank(z.string().nullable().optional()),

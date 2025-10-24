@@ -9,6 +9,7 @@ export const machineSchema = z.object({
   brand: preprocessBlank(z.string().nullable().optional()),
   model: preprocessBlank(z.string().nullable().optional()),
   serialNumber: preprocessBlank(z.string().nullable().optional()),
+  unitNumber: z.number(),
 });
 
 export type TMachineAttributes = z.infer<typeof machineSchema>;

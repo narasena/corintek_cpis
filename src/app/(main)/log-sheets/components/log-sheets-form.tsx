@@ -34,10 +34,10 @@ export default function LogSheetsForm({
   const coolingTowerCount = projectData?.coolingTowers?.length ?? 0;
   const [chemicalUsageForms, setChemicalUsageForms] = useState<number[]>([]);
   const [accordionValue, setAccordionValue] = useState<string[]>([]);
-  const [selectedChillers, setSelectedChillers] = useState<number[]>([]);
+  const [selectedChillers, setSelectedChillers] = useState<number[]>([]); // Now stores unitNumbers
   const [selectedCoolingTowers, setSelectedCoolingTowers] = useState<number[]>(
     []
-  );
+  ); // Now stores unitNumbers
 
   const logSheetForm = useForm({
     resolver: zodResolver(
@@ -48,9 +48,9 @@ export default function LogSheetsForm({
     ),
     defaultValues: {
       notes: '',
-      condenserData: [],
-      evaporatorData: [],
-      coolingTowerWaterQualityData: [],
+      condenserData: {},
+      evaporatorData: {},
+      coolingTowerWaterQualityData: {},
       rawWaterQualityData: {
         pH: 0,
         TDS: 0,
@@ -58,8 +58,8 @@ export default function LogSheetsForm({
         cycle: 0,
         notes: '',
       },
-      coolingTowerGeneralConditionData: [],
-      coolingTowerJobData: [],
+      coolingTowerGeneralConditionData: {},
+      coolingTowerJobData: {},
       waterMeterConsumptionData: {
         before: 0,
         after: 0,
@@ -215,26 +215,31 @@ export default function LogSheetsForm({
           <div className="space-y-2">
             <p>Select which chiller units to include in this log sheet:</p>
             <div className="grid grid-cols-3 gap-2">
-              {projectData.chillers.map((chiller, index) => (
+              {projectData.chillers.map(chiller => (
                 <label
-                  key={index}
+                  key={chiller.unitNumber}
                   className="flex items-center space-x-2 cursor-pointer"
                 >
                   <input
                     type="checkbox"
-                    checked={selectedChillers.includes(index)}
+                    checked={selectedChillers.includes(chiller.unitNumber)}
                     onChange={e => {
                       if (e.target.checked) {
-                        setSelectedChillers(prev => [...prev, index]);
+                        setSelectedChillers(prev => [
+                          ...prev,
+                          chiller.unitNumber,
+                        ]);
                       } else {
                         setSelectedChillers(prev =>
-                          prev.filter(i => i !== index)
+                          prev.filter(i => i !== chiller.unitNumber)
                         );
                       }
                     }}
                     className="rounded border-gray-300"
                   />
-                  <span className="text-sm">Chiller Unit {index + 1}</span>
+                  <span className="text-sm">
+                    Chiller Unit {chiller.unitNumber}
+                  </span>
                 </label>
               ))}
             </div>
@@ -244,13 +249,13 @@ export default function LogSheetsForm({
       });
 
       // Add individual chiller forms directly
-      selectedChillers.forEach(index => {
+      selectedChillers.forEach(unitNumber => {
         data.push({
-          title: `Chiller Unit ${index + 1}`,
-          value: `chiller-${index}`,
+          title: `Chiller Unit ${unitNumber}`,
+          value: `chiller-${unitNumber}`,
           fields: [
             {
-              name: `separator-${index}`,
+              name: `separator-${unitNumber}`,
               label: 'Unit Condenser',
               type: EFieldType.SEPARATOR,
               className: 'col-span-2',
@@ -258,36 +263,36 @@ export default function LogSheetsForm({
             // Condenser Data
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `condenserData[${index}].tempIn`,
+              name: `condenserData[${unitNumber}].tempIn`,
               label: 'Temp In (°C)',
               description: 'Temperature input for condenser unit',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `condenserData[${index}].tempOut`,
+              name: `condenserData[${unitNumber}].tempOut`,
               label: 'Temp Out (°C)',
               description: 'Temperature output for condenser unit',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `condenserData[${index}].saturatedTemp`,
+              name: `condenserData[${unitNumber}].saturatedTemp`,
               label: 'Saturated Temp (°C)',
               description: 'Saturated temperature for condenser',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `condenserData[${index}].approachTemp`,
+              name: `condenserData[${unitNumber}].approachTemp`,
               label: 'Approach Temp (°C)',
               description: 'Approach temperature for condenser',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `condenserData[${index}].loadDemand`,
+              name: `condenserData[${unitNumber}].loadDemand`,
               label: 'Load Demand (%)',
               description: 'Load demand percentage (0-100)',
             }),
             {
-              name: `separator-${index}`,
+              name: `separator-${unitNumber}`,
               label: 'Unit Evaporator',
               type: EFieldType.SEPARATOR,
               className: 'col-span-2',
@@ -295,25 +300,25 @@ export default function LogSheetsForm({
             // Evaporator Data
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `evaporatorData[${index}].tempIn`,
+              name: `evaporatorData[${unitNumber}].tempIn`,
               label: 'Temp In (°C)',
               description: 'Temperature input for evaporator unit',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `evaporatorData[${index}].tempOut`,
+              name: `evaporatorData[${unitNumber}].tempOut`,
               label: 'Temp Out (°C)',
               description: 'Temperature output for evaporator unit',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `evaporatorData[${index}].saturatedTemp`,
+              name: `evaporatorData[${unitNumber}].saturatedTemp`,
               label: 'Saturated Temp (°C)',
               description: 'Saturated temperature for evaporator',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `evaporatorData[${index}].approachTemp`,
+              name: `evaporatorData[${unitNumber}].approachTemp`,
               label: 'Approach Temp (°C)',
               description: 'Approach temperature for evaporator',
             }),
@@ -335,27 +340,30 @@ export default function LogSheetsForm({
               Select which cooling tower units to include in this log sheet:
             </p>
             <div className="grid grid-cols-3 gap-2">
-              {projectData.coolingTowers.map((tower, index) => (
+              {projectData.coolingTowers.map(tower => (
                 <label
-                  key={index}
+                  key={tower.unitNumber}
                   className="flex items-center space-x-2 cursor-pointer"
                 >
                   <input
                     type="checkbox"
-                    checked={selectedCoolingTowers.includes(index)}
+                    checked={selectedCoolingTowers.includes(tower.unitNumber)}
                     onChange={e => {
                       if (e.target.checked) {
-                        setSelectedCoolingTowers(prev => [...prev, index]);
+                        setSelectedCoolingTowers(prev => [
+                          ...prev,
+                          tower.unitNumber,
+                        ]);
                       } else {
                         setSelectedCoolingTowers(prev =>
-                          prev.filter(i => i !== index)
+                          prev.filter(i => i !== tower.unitNumber)
                         );
                       }
                     }}
                     className="rounded border-gray-300"
                   />
                   <span className="text-sm">
-                    Cooling Tower Unit {index + 1}
+                    Cooling Tower Unit {tower.unitNumber}
                   </span>
                 </label>
               ))}
@@ -366,13 +374,13 @@ export default function LogSheetsForm({
       });
 
       // Add individual cooling tower forms directly
-      selectedCoolingTowers.forEach(index => {
+      selectedCoolingTowers.forEach(unitNumber => {
         data.push({
-          title: `Cooling Tower Unit ${index + 1}`,
-          value: `cooling-tower-${index}`,
+          title: `Cooling Tower Unit ${unitNumber}`,
+          value: `cooling-tower-${unitNumber}`,
           fields: [
             {
-              name: `separator-${index}`,
+              name: `separator-${unitNumber}`,
               label: 'Water Quality',
               type: EFieldType.SEPARATOR,
               className: 'col-span-2',
@@ -380,30 +388,30 @@ export default function LogSheetsForm({
             // Water Quality Data
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `coolingTowerWaterQualityData[${index}].pH`,
+              name: `coolingTowerWaterQualityData[${unitNumber}].pH`,
               label: 'pH Level',
               description: 'pH level measurement',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `coolingTowerWaterQualityData[${index}].TDS`,
+              name: `coolingTowerWaterQualityData[${unitNumber}].TDS`,
               label: 'TDS (ppm)',
               description: 'Total Dissolved Solids measurement',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `coolingTowerWaterQualityData[${index}].conductivity`,
+              name: `coolingTowerWaterQualityData[${unitNumber}].conductivity`,
               label: 'Conductivity (µS/cm)',
               description: 'Electrical conductivity measurement',
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.NUMBER,
-              name: `coolingTowerWaterQualityData[${index}].cycle`,
+              name: `coolingTowerWaterQualityData[${unitNumber}].cycle`,
               label: 'Cycle Count',
               description: 'Number of cycles completed',
             }),
             {
-              name: `separator-${index}`,
+              name: `separator-${unitNumber}`,
               label: 'General Condition',
               type: EFieldType.SEPARATOR,
               className: 'col-span-2',
@@ -411,7 +419,7 @@ export default function LogSheetsForm({
             // General Condition Data
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.BOOLEAN,
-              name: `coolingTowerGeneralConditionData[${index}].runningStatus`,
+              name: `coolingTowerGeneralConditionData[${unitNumber}].runningStatus`,
               label: 'Running Status',
               description: 'Current operational status',
               customBooleanSelect: {
@@ -421,7 +429,7 @@ export default function LogSheetsForm({
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.BOOLEAN,
-              name: `coolingTowerGeneralConditionData[${index}].algae`,
+              name: `coolingTowerGeneralConditionData[${unitNumber}].algae`,
               label: 'Algae Presence',
               description: 'Presence of algae',
               customBooleanSelect: {
@@ -431,7 +439,7 @@ export default function LogSheetsForm({
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.BOOLEAN,
-              name: `coolingTowerGeneralConditionData[${index}].deposit`,
+              name: `coolingTowerGeneralConditionData[${unitNumber}].deposit`,
               label: 'Deposit Presence',
               description: 'Presence of mineral deposits',
               customBooleanSelect: {
@@ -440,7 +448,7 @@ export default function LogSheetsForm({
               },
             }),
             {
-              name: `separator-${index}`,
+              name: `separator-${unitNumber}`,
               label: 'Jobs',
               type: EFieldType.SEPARATOR,
               className: 'col-span-2',
@@ -448,7 +456,7 @@ export default function LogSheetsForm({
             // Job Data
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.BOOLEAN,
-              name: `coolingTowerJobData[${index}].hotBasinCleaning`,
+              name: `coolingTowerJobData[${unitNumber}].hotBasinCleaning`,
               label: 'Hot Basin Cleaning',
               description: 'Hot basin cleaning performed',
               customBooleanSelect: {
@@ -458,7 +466,7 @@ export default function LogSheetsForm({
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.BOOLEAN,
-              name: `coolingTowerJobData[${index}].coldBasinCleaning`,
+              name: `coolingTowerJobData[${unitNumber}].coldBasinCleaning`,
               label: 'Cold Basin Cleaning',
               description: 'Cold basin cleaning performed',
               customBooleanSelect: {
@@ -468,7 +476,7 @@ export default function LogSheetsForm({
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.BOOLEAN,
-              name: `coolingTowerJobData[${index}].fillerCleaning`,
+              name: `coolingTowerJobData[${unitNumber}].fillerCleaning`,
               label: 'Filler Cleaning',
               description: 'Filler cleaning performed',
               customBooleanSelect: {
@@ -478,7 +486,7 @@ export default function LogSheetsForm({
             }),
             valueLogSheetFormFieldGenerator({
               valueType: ValueType.BOOLEAN,
-              name: `coolingTowerJobData[${index}].areaCleaning`,
+              name: `coolingTowerJobData[${unitNumber}].areaCleaning`,
               label: 'Area Cleaning',
               description: 'General area cleaning performed',
               customBooleanSelect: {

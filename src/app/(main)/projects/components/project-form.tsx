@@ -51,20 +51,20 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
       clientPersonnelIds: [],
       personnelIds: [],
       chillers: [] as Array<{
-        type: 'CHILLER';
         ownership: 'CORINTEK' | 'CLIENT';
         capacity?: number | null;
         brand?: string | null;
         model?: string | null;
         serialNumber?: string | null;
+        unitNumber: number;
       }>,
       coolingTowers: [] as Array<{
-        type: 'COOLING_TOWER';
         ownership: 'CORINTEK' | 'CLIENT';
         capacity?: number | null;
         brand?: string | null;
         model?: string | null;
         serialNumber?: string | null;
+        unitNumber: number;
       }>,
     },
   });
@@ -78,11 +78,35 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
     if (typeof currentValues.personnelIds === 'string') {
       projectCreationForm.setValue('personnelIds', []);
     }
-    if (typeof currentValues.chillers === 'string') {
-      projectCreationForm.setValue('chillers', []);
+    if (
+      typeof currentValues.chillers === 'string' ||
+      currentValues.chillers.length === 0
+    ) {
+      projectCreationForm.setValue('chillers', [
+        {
+          ownership: 'CORINTEK',
+          capacity: null,
+          brand: null,
+          model: null,
+          serialNumber: null,
+          unitNumber: 0,
+        },
+      ]);
     }
-    if (typeof currentValues.coolingTowers === 'string') {
-      projectCreationForm.setValue('coolingTowers', []);
+    if (
+      typeof currentValues.coolingTowers === 'string' ||
+      currentValues.coolingTowers.length === 0
+    ) {
+      projectCreationForm.setValue('coolingTowers', [
+        {
+          ownership: 'CORINTEK',
+          capacity: null,
+          brand: null,
+          model: null,
+          serialNumber: null,
+          unitNumber: 0,
+        },
+      ]);
     }
   }, []);
 
@@ -146,7 +170,18 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
   // Functions to handle dynamic machine forms
   const addChillerForm = useCallback(() => {
     setChillerForms(prev => [...prev, prev.length]);
-  }, []);
+    // Add a new chiller object to the form array
+    const currentChillers = projectCreationForm.getValues('chillers') || [];
+    currentChillers.push({
+      ownership: 'CORINTEK',
+      capacity: null,
+      brand: null,
+      model: null,
+      serialNumber: null,
+      unitNumber: currentChillers.length,
+    });
+    projectCreationForm.setValue('chillers', currentChillers);
+  }, [projectCreationForm]);
 
   const removeChillerForm = useCallback(
     (index: number) => {
