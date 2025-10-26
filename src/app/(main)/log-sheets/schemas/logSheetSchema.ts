@@ -100,4 +100,4 @@ export const logSheetSchema = ({
   });
 };
 
-export type TLogSheetAttributes = z.infer<typeof logSheetSchema>;
+export type TLogSheetAttributes = z.infer<ReturnType<typeof logSheetSchema>>;
