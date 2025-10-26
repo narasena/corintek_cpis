@@ -21,6 +21,9 @@ enum ParameterGroupType {
     ENVIRONMENTAL
     CHEMICAL
     OPERATIONAL
+    LOG_SHEET
+    WORK_REPORT
+    LAB_REPORT
 }
 
 model ParameterGroup {
