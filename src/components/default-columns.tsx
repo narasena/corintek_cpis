@@ -13,7 +13,7 @@ import {
 import { FieldValues } from 'react-hook-form';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import React from 'react';
-import CreateData from './features/data/create-data';
+import ActionsData from './features/data/actions-data';
 
 export function defaultColumns<T extends FieldValues & ITableHelper>() {
   function draggableColumn(): ColumnDef<T> {
@@ -92,6 +92,8 @@ export function defaultColumns<T extends FieldValues & ITableHelper>() {
           {
             label: 'Edit',
             icon: IconEdit,
+            className: 'text-primary',
+            iconClassName: 'text-primary',
             onClick: params?.handleEdit
               ? () => params.handleEdit?.(row.original.id)
               : () => {},
@@ -99,6 +101,8 @@ export function defaultColumns<T extends FieldValues & ITableHelper>() {
           {
             label: 'Hapus',
             icon: IconTrash,
+            className: 'text-red-600',
+            iconClassName: '!text-red-600',
             onClick: params?.handleDelete
               ? () => params.handleDelete?.(row.original.id)
               : () => {},
@@ -120,21 +124,28 @@ export function defaultColumns<T extends FieldValues & ITableHelper>() {
               align="end"
               className="w-32 flex flex-col justify-start items-start gap-2"
             >
-              {actionMenus.map(({ label, icon: Icon, onClick }, index) => (
-                <DropdownMenuItem
-                  asChild
-                  key={index}
-                  className="flex items-center"
-                  variant={label === 'Hapus' ? 'destructive' : 'default'}
-                >
-                  <CreateData
-                    icon={Icon}
-                    buttonText={label}
-                    modalTitle={`${label} Parameter Group`}
-                    content={onClick() as React.ReactNode}
-                  />
-                </DropdownMenuItem>
-              ))}
+              {actionMenus.map(
+                (
+                  { label, icon: Icon, onClick, className, iconClassName },
+                  index
+                ) => (
+                  <DropdownMenuItem
+                    asChild
+                    key={index}
+                    className="flex items-center"
+                    variant={label === 'Hapus' ? 'destructive' : 'default'}
+                  >
+                    <ActionsData
+                      icon={Icon}
+                      buttonText={label}
+                      className={className}
+                      iconClassName={iconClassName}
+                      modalTitle={`${label} Parameter Group`}
+                      content={onClick() as React.ReactNode}
+                    />
+                  </DropdownMenuItem>
+                )
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
