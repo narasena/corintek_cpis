@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { Prisma } from '@/features/api/generated/prisma';
+import { ParameterGroupType, Prisma } from '@/features/api/generated/prisma';
 import { prisma } from '@/features/api/connection/prisma';
 import { TParameterGroupAttributes } from '@/types/parameter.type';
 import { serviceErrorResponse } from '@/lib/error-handler';
@@ -94,4 +94,62 @@ export async function deleteParameterGroupService(
   return await tx.parameterGroup.delete({
     where: { id },
   });
+}
+
+export async function fetchParameterGroupsByTypeService(
+  type: ParameterGroupType
+) {
+  try {
+    const whereClause: Prisma.ParameterGroupWhereInput = {
+      deletedAt: null,
+    };
+    const parameterGroups = await prisma.parameterGroup.findMany({
+      where: { ...whereClause, type },
+      select: {
+        id: true,
+        name: true,
+        members: {
+          select: {
+            parameter: {
+              select: {
+                id: true,
+                name: true,
+                valueType: true,
+                unit: true,
+              },
+            },
+          },
+        },
+        limits: {
+          select: {
+            parameter: {
+              select: {
+                id: true,
+                name: true,
+                valueType: true,
+                unit: true,
+              },
+            },
+            valueType: true,
+            minValue: true,
+            maxValue: true,
+            booleanValue: true,
+            textValue: true,
+            method: {
+              select: {
+                methodName: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return parameterGroups;
+  } catch (error) {
+    serviceErrorResponse({
+      error,
+      customErrorMessage: 'Error fetching parameter groups by type',
+      status: 500,
+    });
+  }
 }

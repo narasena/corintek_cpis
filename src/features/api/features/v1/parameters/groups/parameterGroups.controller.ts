@@ -6,12 +6,14 @@ import {
   fetchParameterGroupByIdService,
   updateParameterGroupService,
   deleteParameterGroupService,
+  fetchParameterGroupsByTypeService,
 } from './parameterGroups.service';
 import requestValidation from '@/utils/api/v1/validation/requestValidation';
 import { prisma } from '@/features/api/connection/prisma';
-import { Prisma } from '@/features/api/generated/prisma';
+import { ParameterGroupType, Prisma } from '@/features/api/generated/prisma';
 import { TParameterGroupAttributes } from '@/types/parameter.type';
 import { parameterGroupSchema } from '@/app/(main)/parameters/schemas/parameterGroupSchema';
+import { AppError } from '@/lib/app-error';
 
 export async function createParameterGroup(req: NextRequest) {
   try {
@@ -123,6 +125,26 @@ export async function deleteParameterGroup(req: NextRequest, id: string) {
       success: true,
       status: 200,
       message: deleteParameterGroupMessage,
+    });
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+export async function fetchParameterGroupsByType(type: ParameterGroupType) {
+  try {
+    const isValidType = Object.values(ParameterGroupType).includes(type);
+    if (!isValidType) {
+      throw new AppError({
+        status: 400,
+        message: 'Invalid parameter group type',
+        isExpose: true,
+      });
+    }
+    const groupParameters = await fetchParameterGroupsByTypeService(type);
+    return NextResponse.json({
+      success: true,
+      groupParameters,
     });
   } catch (error) {
     return createErrorResponse(error);
