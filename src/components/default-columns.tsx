@@ -1,9 +1,21 @@
 import { ColumnDef } from '@tanstack/react-table';
 import DragHandleTable from './drag-handle-table';
-import { IUniqueIdentifierId } from '@/types/base.dto';
+import { ITableHelper } from '@/types/base.dto';
 import { Checkbox } from './ui/checkbox';
+import { Button } from './ui/button';
+import { IconDots, IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import { FieldValues } from 'react-hook-form';
+import { UniqueIdentifier } from '@dnd-kit/core';
+import React from 'react';
+import CreateData from './features/data/create-data';
 
-export function defaultColumns<T extends IUniqueIdentifierId>() {
+export function defaultColumns<T extends FieldValues & ITableHelper>() {
   function draggableColumn(): ColumnDef<T> {
     return {
       id: 'drag',
@@ -57,13 +69,76 @@ export function defaultColumns<T extends IUniqueIdentifierId>() {
     };
   }
 
-  function actionsColumn(): ColumnDef<T> {
+  interface IActionsColumnParams {
+    handlePreview?: (id: UniqueIdentifier) => void | React.ReactNode;
+    handleEdit?: (id: UniqueIdentifier) => void | React.ReactNode;
+    handleDelete?: (id: UniqueIdentifier) => void | React.ReactNode;
+  }
+
+  function actionsColumn(params?: IActionsColumnParams): ColumnDef<T> {
     return {
       id: 'actions',
       header: 'Actions',
-      cell: () => {
-        return (
-          <div className="flex items-center justify-start gap-2">Actions</div>
+
+      cell: ({ row }) => {
+        const actionMenus = [
+          {
+            label: 'Preview',
+            icon: IconEye,
+            onClick: params?.handlePreview
+              ? () => params.handlePreview?.(row.original.id)
+              : () => {},
+          },
+          {
+            label: 'Edit',
+            icon: IconEdit,
+            onClick: params?.handleEdit
+              ? () => params.handleEdit?.(row.original.id)
+              : () => {},
+          },
+          {
+            label: 'Hapus',
+            icon: IconTrash,
+            onClick: params?.handleDelete
+              ? () => params.handleDelete?.(row.original.id)
+              : () => {},
+          },
+        ];
+        return params ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+                size="icon"
+              >
+                <IconDots />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-32 flex flex-col justify-start items-start gap-2"
+            >
+              {actionMenus.map(({ label, icon: Icon, onClick }, index) => (
+                <DropdownMenuItem
+                  asChild
+                  key={index}
+                  className="flex items-center"
+                  variant={label === 'Hapus' ? 'destructive' : 'default'}
+                >
+                  <CreateData
+                    icon={Icon}
+                    buttonText={label}
+                    modalTitle={`${label} Parameter Group`}
+                    content={onClick() as React.ReactNode}
+                  />
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <span>Actions</span>
         );
       },
       enableHiding: false,
@@ -75,6 +150,6 @@ export function defaultColumns<T extends IUniqueIdentifierId>() {
     select: selectableColumn(),
     email: emailColumn(),
     phoneNumber: phoneNumberColumn(),
-    actions: actionsColumn(),
+    actions: actionsColumn,
   } as const;
 }
