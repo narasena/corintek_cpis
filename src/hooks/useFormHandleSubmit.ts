@@ -15,6 +15,7 @@ import { useState } from 'react';
 
 interface IUseFormHandleSubmit<T extends FieldValues> {
   form: UseFormReturn<T>;
+  update?: boolean;
   imageKey?: Path<T>;
   apiUrl?: string;
   refetch?: () => void;
@@ -161,7 +162,10 @@ export default function useFormHandleSubmit<
       // Transform string boolean values to actual booleans for log sheet forms
       const transformedData = transformBooleanStrings(data);
 
-      const response = await apiInstance.post(params.apiUrl!, transformedData);
+      const response = await apiInstance[params.update ? 'put' : 'post'](
+        params.apiUrl!,
+        transformedData
+      );
       if (!response.data.success) {
         throw new Error(response.data.message || 'Submission failed');
       }

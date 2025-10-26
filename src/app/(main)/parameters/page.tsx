@@ -63,7 +63,9 @@ export default function ParametersPage() {
       value: 'parameterGroup',
       label: 'Grup Parameter',
       data: allParameterGroups,
-      columns: parameterGroupColumns() as ColumnDef<TParameter>[],
+      columns: parameterGroupColumns({
+        refetch: refetchParameterGroups,
+      }) as ColumnDef<TParameter>[],
       addNewRow: (
         <CreateData
           buttonText="Tambah Grup"

@@ -75,5 +75,7 @@ export interface ISelectDataFormField {
 }
 
 export interface IDefaultFormComponentProps {
+  type?: 'create' | 'update';
+  id?: string;
   refetch?: () => void;
 }
