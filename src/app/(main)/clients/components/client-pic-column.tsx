@@ -55,6 +55,6 @@ export const clientPICColumns = (): ColumnDef<IClientPersonnel>[] => {
       },
       enableHiding: false,
     },
-    actions,
+    actions(),
   ];
 };

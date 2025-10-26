@@ -92,6 +92,6 @@ export const projectColumns = (): ColumnDef<IProject>[] => {
         return new Date(date).toLocaleDateString();
       },
     },
-    actions,
+    actions(),
   ];
 };

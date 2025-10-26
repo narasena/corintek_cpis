@@ -19,6 +19,6 @@ export const parameterColumns = (): ColumnDef<IParameter>[] => {
       accessorKey: 'unit',
       header: 'Satuan Parameter',
     },
-    actions,
+    actions(),
   ];
 };

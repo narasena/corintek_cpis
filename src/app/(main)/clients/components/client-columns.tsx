@@ -31,6 +31,6 @@ export const clientColumns = (): ColumnDef<IClient>[] => {
       accessorKey: 'websiteUrl',
       header: 'Website',
     },
-    actions,
+    actions(),
   ];
 };

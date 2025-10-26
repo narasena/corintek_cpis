@@ -33,6 +33,6 @@ export const chemicalColumns = (): ColumnDef<IChemical>[] => {
         return row.original.description ?? '-';
       },
     },
-    actions,
+    actions(),
   ];
 };

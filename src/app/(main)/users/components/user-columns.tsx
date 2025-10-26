@@ -132,6 +132,6 @@ export const userColumns = (): ColumnDef<IUser>[] => {
       },
       enableHiding: false,
     },
-    actions,
+    actions(),
   ];
 };
