@@ -1,6 +1,7 @@
 model Parameter {
     id          String          @id @default(uuid())
     name        String          @unique
+    variableName String         @unique
     valueType   ValueType
     unit        String?
     description String?
