@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/card';
 import useAuthDetail from '@/hooks/auth/useAuthDetail';
 import useAssignedProjects from '@/hooks/projects/useAssignedProjects';
-import { Icon360 } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
 export default function LogSheetsPage() {

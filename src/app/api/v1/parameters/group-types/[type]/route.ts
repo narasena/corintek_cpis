@@ -7,10 +7,10 @@ export async function GET(
   {
     params,
   }: {
-    params: Promise<{ type: ParameterGroupType }>;
+    params: Promise<{ type: string }>;
   }
 ) {
   const { type } = await params;
   console.log(type);
-  return await fetchParameterGroupsByType(type);
+  return await fetchParameterGroupsByType(type as ParameterGroupType);
 }

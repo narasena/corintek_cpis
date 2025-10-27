@@ -26,6 +26,7 @@ export async function createLogSheetService(
       status: 'DRAFT',
     },
   });
+  console.log(newLogSheetHistory);
 
   interface IMachineUnitId {
     unitNumber: number;

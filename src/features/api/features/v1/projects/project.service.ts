@@ -168,6 +168,7 @@ export async function createProjectService(
                 const machine = await tx.machine.create({
                   data: {
                     projectId: newProject.id as string,
+                    unitNumber: chiller.unitNumber,
                     type: MachineType.CHILLER,
                     ownership: chiller.ownership as MachineOwnership,
                     capacity: chiller.capacity
@@ -199,6 +200,7 @@ export async function createProjectService(
                 const machine = await tx.machine.create({
                   data: {
                     projectId: newProject.id as string,
+                    unitNumber: tower.unitNumber,
                     type: MachineType.COOLING_TOWER,
                     ownership: tower.ownership as MachineOwnership,
                     capacity: tower.capacity ? Number(tower.capacity) : null,
