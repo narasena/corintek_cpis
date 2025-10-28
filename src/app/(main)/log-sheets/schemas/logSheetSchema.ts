@@ -71,6 +71,7 @@ export const logSheetSchema = ({
   coolingTowerTotalUnit: number;
 }) => {
   return z.object({
+    date: z.date(),
     condenserData: createUnitNumberIndexedSchema(
       condenserUnitSchema,
       chillerTotalUnit
