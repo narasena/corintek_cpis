@@ -26,3 +26,15 @@ export type TStandardMethodAttributes = z.infer<typeof standardMethodSchema>;
 export interface IStandardMethod
   extends TStandardMethodAttributes,
     ITableHelper {}
+
+export interface IGroupParameterByType {
+  id: string;
+  name: string;
+  members: {
+    parameter: Partial<IParameter>;
+  }[];
+  limits: Partial<IParameterLimit> &
+    {
+      parameter: Partial<IParameter>;
+    }[];
+}
