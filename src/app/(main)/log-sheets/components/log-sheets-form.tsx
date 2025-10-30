@@ -1,73 +1,166 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { logSheetSchema } from '../schemas/logSheetSchema';
+import { createDynamicLogSheetSchema } from '../schemas/dynamicLogSheetSchema';
 import useFormHandleSubmit from '@/hooks/useFormHandleSubmit';
 import DefaultForm from '@/components/features/forms/default-form';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { IProject } from '@/types/project.type';
 import { IAccordionDataFormatted } from '@/components/features/forms/default-form';
-import { valueLogSheetFormFieldGenerator } from '../data/logSheetFormFields';
-import { ValueType } from '@/features/api/generated/prisma';
-import {
-  EFieldType,
-  IFormFieldBasic,
-  IFormFields,
-} from '@/types/form/form.type';
-import { Button } from '@/components/ui/button';
+import { EFieldType, IFormFields } from '@/types/form/form.type';
+import { buttonVariants } from '@/components/ui/button';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import useAllChemicals from '@/hooks/chemicals/useAllChemicals';
-import { UniqueIdentifier } from '@dnd-kit/core';
+import useLogSheetSchemaParameters from '../hooks/useLogSheetSchemaParameters';
+import { IGroupParameterByType } from '@/types/parameter.type';
+import { cn } from '@/lib/utils';
+import { ValueType } from '@/features/api/generated/prisma/index-browser';
+import { IChemicalUsageData, ParameterValue } from '@/types/log-sheet.type';
 
 interface ILogSheetsFormProps {
   projectData: IProject | null;
   refetch?: () => void;
 }
 
+const parameterToFormField = (
+  param: {
+    id: string;
+    name: string;
+    valueType: string;
+    unit?: string | null;
+    description?: string | null;
+  },
+  group: IGroupParameterByType
+): IFormFields | null => {
+  // Since API groups are already unit-specific, we don't need unit indexing
+  const name = `${group.id}.${param.id}`;
+
+  const baseField = {
+    name,
+    label: param.name + (param.unit ? ` (${param.unit})` : ''),
+    description: param.description || undefined,
+    className: 'col-span-2',
+  };
+
+  switch (param.valueType) {
+    case ValueType.NUMBER:
+      return {
+        ...baseField,
+        type: EFieldType.NUMBER,
+        placeHolder: '0',
+      };
+    case ValueType.BOOLEAN:
+      return {
+        ...baseField,
+        type: EFieldType.SELECT,
+        selectData: [
+          { label: 'Yes', value: 'true' },
+          { label: 'No', value: 'false' },
+        ],
+      };
+    case ValueType.TEXT:
+      return {
+        ...baseField,
+        type: EFieldType.TEXTAREA,
+        placeHolder: 'Enter notes...',
+      };
+    default:
+      return null;
+  }
+};
+
 export default function LogSheetsForm({
   projectData,
   refetch = () => {},
 }: ILogSheetsFormProps) {
+  const { logSheetSchemaParameters, isLoadingData } =
+    useLogSheetSchemaParameters();
   const { allChemicals } = useAllChemicals();
   const chillerCount = projectData?.chillers?.length ?? 0;
   const coolingTowerCount = projectData?.coolingTowers?.length ?? 0;
   const [chemicalUsageForms, setChemicalUsageForms] = useState<number[]>([]);
   const [accordionValue, setAccordionValue] = useState<string[]>([]);
-  const [selectedChillers, setSelectedChillers] = useState<number[]>([]); // Now stores unitNumbers
+  const [selectedChillers, setSelectedChillers] = useState<number[]>([]);
   const [selectedCoolingTowers, setSelectedCoolingTowers] = useState<number[]>(
     []
-  ); // Now stores unitNumbers
+  );
 
-  const logSheetForm = useForm({
-    resolver: zodResolver(
-      logSheetSchema({
+  // Create dynamic schema based on parameter groups
+  const dynamicSchema = useMemo(() => {
+    if (logSheetSchemaParameters.length === 0) {
+      return logSheetSchema({
         chillerTotalUnit: chillerCount,
         coolingTowerTotalUnit: coolingTowerCount,
-      })
-    ),
+      });
+    }
+    return createDynamicLogSheetSchema(logSheetSchemaParameters);
+  }, [logSheetSchemaParameters, chillerCount, coolingTowerCount]);
+
+  const logSheetForm = useForm({
+    resolver: zodResolver(dynamicSchema),
     defaultValues: {
       notes: '',
-      condenserData: {},
-      evaporatorData: {},
-      coolingTowerWaterQualityData: {},
-      rawWaterQualityData: {
-        pH: 0,
-        TDS: 0,
-        conductivity: 0,
-        cycle: 0,
-        notes: '',
-      },
-      coolingTowerGeneralConditionData: {},
-      coolingTowerJobData: {},
-      waterMeterConsumptionData: {
-        before: 0,
-        after: 0,
-        totalConsumption: 0,
-      },
       chemicalUsageData: [],
     },
   });
+
+  const chemicalUsageData = useWatch({
+    control: logSheetForm.control,
+    name: 'chemicalUsageData',
+  });
+
+  // Reset form when schema changes
+  useEffect(() => {
+    logSheetForm.reset({
+      notes: '',
+      chemicalUsageData: [],
+    });
+  }, [dynamicSchema, logSheetForm]);
+
+  // Initialize default values for parameter groups
+  useEffect(() => {
+    if (logSheetSchemaParameters.length > 0) {
+      const newDefaultValues: Record<string, unknown> = {
+        notes: '',
+        chemicalUsageData: [],
+      };
+
+      logSheetSchemaParameters.forEach(group => {
+        // For all groups, create flat structure since the API groups are already unit-specific
+        if (!newDefaultValues[group.id]) {
+          newDefaultValues[group.id] = {};
+        }
+
+        (group.members || []).forEach(member => {
+          const param = member.parameter;
+          const groupData = newDefaultValues[group.id] as Record<
+            string,
+            unknown
+          >;
+          if (groupData[param.id] === undefined) {
+            let defaultValue: ParameterValue;
+            switch (param.valueType) {
+              case ValueType.NUMBER:
+                defaultValue = 0;
+                break;
+              case ValueType.BOOLEAN:
+                defaultValue = false;
+                break;
+              case ValueType.TEXT:
+                defaultValue = '';
+                break;
+              default:
+                defaultValue = null;
+            }
+            groupData[param.id] = defaultValue;
+          }
+        });
+      });
+      logSheetForm.reset(newDefaultValues);
+    }
+  }, [logSheetSchemaParameters, logSheetForm]);
 
   const { onSubmit, onInvalid, isLoading } = useFormHandleSubmit({
     form: logSheetForm,
@@ -84,7 +177,9 @@ export default function LogSheetsForm({
   const removeChemicalForm = useCallback(
     (formIndex: number) => {
       setChemicalUsageForms(prev => prev.filter(id => id !== formIndex));
-      const currentChemical = logSheetForm.getValues('chemicalUsageData') || [];
+      const currentChemical =
+        (logSheetForm.getValues('chemicalUsageData') as IChemicalUsageData[]) ||
+        [];
       const arrayIndex = chemicalUsageForms.findIndex(id => id === formIndex);
       if (arrayIndex !== -1) {
         currentChemical.splice(arrayIndex, 1);
@@ -95,32 +190,30 @@ export default function LogSheetsForm({
   );
 
   const chemicalAccordions = useMemo((): IAccordionDataFormatted[] => {
-    // Get already selected chemical IDs
-    const chemicalUsageData = logSheetForm.getValues('chemicalUsageData') || [];
-    const selectedChemicalIds = chemicalUsageData
-      .map(
-        (chemical: { id: UniqueIdentifier; quantity: number }) => chemical?.id
-      )
+    const selectedChemicalIds = (
+      (chemicalUsageData as IChemicalUsageData[]) || []
+    )
+      .map((chemical: IChemicalUsageData) => chemical?.id)
       .filter(Boolean);
 
     return chemicalUsageForms.map((formIndex, displayIndex) => ({
       title: (
         <div className="flex items-center justify-between w-full">
           <span>Bahan Kimia / Chemical {displayIndex + 1}</span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={e => {
-                e.stopPropagation();
-                e.preventDefault();
-                removeChemicalForm(formIndex);
-              }}
-              className="h-6 w-6 p-0 text-red-600 hover:text-red-800 bg-white"
-            >
-              <IconTrash className="h-3 w-3" />
-            </Button>
+          <div
+            role="button"
+            aria-label="Remove chemical"
+            onClick={e => {
+              e.stopPropagation();
+              e.preventDefault();
+              removeChemicalForm(formIndex);
+            }}
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'h-6 w-6 p-0 text-red-600 hover:text-red-800 bg-white'
+            )}
+          >
+            <IconTrash className="h-3 w-3" />
           </div>
         </div>
       ),
@@ -134,21 +227,23 @@ export default function LogSheetsForm({
           className: 'col-span-2',
           placeHolder: '',
           description: 'Nama Bahan Kimia',
-          selectData: (allChemicals || []).map(chemicalData => {
-            const currentSelection = chemicalUsageData[displayIndex]?.id;
+          selectData: (allChemicals || []).map(chemical => {
+            const currentSelection =
+              ((chemicalUsageData as IChemicalUsageData[]) || [])[displayIndex]
+                ?.id;
             const isSelected =
-              selectedChemicalIds.includes(chemicalData.id as string) &&
-              chemicalData.id !== currentSelection;
+              selectedChemicalIds.includes(chemical.id as string) &&
+              chemical.id !== currentSelection;
 
             return {
               label: (
-                chemicalData.code +
+                chemical.code +
                 ' - ' +
-                chemicalData.name +
-                ` [${chemicalData.type}]` +
+                chemical.name +
+                ` [${chemical.type}]` +
                 (isSelected ? ' (Already Selected)' : '')
               ).trim(),
-              value: chemicalData.id,
+              value: chemical.id,
               disabled: isSelected,
             };
           }),
@@ -164,26 +259,29 @@ export default function LogSheetsForm({
         },
       ] as IFormFields[],
     }));
-  }, [chemicalUsageForms, allChemicals, removeChemicalForm, logSheetForm]);
+  }, [chemicalUsageForms, allChemicals, removeChemicalForm, chemicalUsageData]);
 
   const chemicalSection = useMemo(
     (): IAccordionDataFormatted => ({
       title: (
         <div className="flex items-center justify-between w-full">
           <span>Bahan Kimia/ Chemical ({chemicalUsageForms.length})</span>
-          <Button
-            variant="outline"
-            size="sm"
+          <div
+            role="button"
+            aria-label="Tambah Chemical"
             onClick={e => {
               e.stopPropagation();
               e.preventDefault();
               addChemicalForm();
             }}
-            className="flex items-center gap-2"
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'sm' }),
+              'flex items-center gap-2'
+            )}
           >
             <IconPlus className="h-4 w-4" />
             <span>Tambah Chemical</span>
-          </Button>
+          </div>
         </div>
       ),
       value: 'chemical-usage-data',
@@ -193,11 +291,107 @@ export default function LogSheetsForm({
     [chemicalUsageForms.length, chemicalAccordions, addChemicalForm]
   );
 
+  // Helper function to generate chiller form children
+  const getChillerFormChildren = useMemo((): IAccordionDataFormatted[] => {
+    if (selectedChillers.length === 0) return [];
+
+    // Determine chiller-specific groups
+    const chillerGroups: IGroupParameterByType[] = [];
+    logSheetSchemaParameters.forEach(group => {
+      const groupNameLower = group.name.toLowerCase();
+      if (
+        groupNameLower.includes('unit evaporator') ||
+        groupNameLower.includes('unit condensor') ||
+        groupNameLower.includes('unit condenser') ||
+        (groupNameLower.includes('chiller') &&
+          !groupNameLower.includes('cooling') &&
+          !groupNameLower.includes('tower'))
+      ) {
+        chillerGroups.push(group);
+      }
+    });
+
+    const chillerFields: IFormFields[] = [];
+
+    chillerGroups.forEach(group => {
+      // Add separator for each parameter group
+      chillerFields.push({
+        name: `separator-${group.id}`,
+        type: EFieldType.SEPARATOR,
+        label: group.name,
+        className: 'col-span-4 mt-4 mb-2',
+      });
+
+      // Add all fields for this parameter group
+      const groupFields = (group.members || [])
+        .map(member => parameterToFormField(member.parameter, group))
+        .filter((field): field is NonNullable<typeof field> => field !== null);
+
+      chillerFields.push(...groupFields);
+    });
+
+    return [
+      {
+        title: `Chiller Units (${selectedChillers.join(', ')})`,
+        value: `chiller-units`,
+        description: `Parameters for selected chiller units: ${selectedChillers.join(', ')}`,
+        fields: chillerFields,
+      },
+    ];
+  }, [selectedChillers, logSheetSchemaParameters]);
+
+  // Helper function to generate cooling tower form children
+  const getCoolingTowerFormChildren = useMemo((): IAccordionDataFormatted[] => {
+    if (selectedCoolingTowers.length === 0) return [];
+
+    // Determine cooling tower-specific groups
+    const coolingTowerGroups: IGroupParameterByType[] = [];
+    logSheetSchemaParameters.forEach(group => {
+      const groupNameLower = group.name.toLowerCase();
+      if (
+        groupNameLower.includes('cooling tower') ||
+        (groupNameLower.includes('tower') &&
+          !groupNameLower.includes('unit')) ||
+        groupNameLower.includes('general condition') ||
+        groupNameLower.includes('job description')
+      ) {
+        coolingTowerGroups.push(group);
+      }
+    });
+
+    const coolingTowerFields: IFormFields[] = [];
+
+    coolingTowerGroups.forEach(group => {
+      // Add separator for each parameter group
+      coolingTowerFields.push({
+        name: `separator-${group.id}`,
+        type: EFieldType.SEPARATOR,
+        label: group.name,
+        className: 'col-span-4 mt-4 mb-2',
+      });
+
+      // Add all fields for this parameter group
+      const groupFields = (group.members || [])
+        .map(member => parameterToFormField(member.parameter, group))
+        .filter((field): field is NonNullable<typeof field> => field !== null);
+
+      coolingTowerFields.push(...groupFields);
+    });
+
+    return [
+      {
+        title: `Cooling Tower Units (${selectedCoolingTowers.join(', ')})`,
+        value: `cooling-tower-units`,
+        description: `Parameters for selected cooling tower units: ${selectedCoolingTowers.join(', ')}`,
+        fields: coolingTowerFields,
+      },
+    ];
+  }, [selectedCoolingTowers, logSheetSchemaParameters]);
+
   const getAccordionData = useMemo((): IAccordionDataFormatted[] => {
     const data: IAccordionDataFormatted[] = [];
 
-    // If no project data, show a loading section
-    if (!projectData) {
+    if (!projectData || isLoadingData) {
       data.push({
         title: 'Loading Project Data...',
         value: 'loading',
@@ -206,10 +400,9 @@ export default function LogSheetsForm({
       return data;
     }
 
-    // Chillers Section
     if (projectData.chillers.length > 0) {
       data.push({
-        title: 'Unit Selection - Chillers',
+        title: `Unit Selection - Chillers${selectedChillers.length > 0 ? ` (${selectedChillers.length})` : ''}`,
         value: 'chiller-selection',
         description: (
           <div className="space-y-2">
@@ -246,93 +439,13 @@ export default function LogSheetsForm({
           </div>
         ),
         fields: [],
-      });
-
-      // Add individual chiller forms directly
-      selectedChillers.forEach(unitNumber => {
-        data.push({
-          title: `Chiller Unit ${unitNumber}`,
-          value: `chiller-${unitNumber}`,
-          fields: [
-            {
-              name: `separator-${unitNumber}`,
-              label: 'Unit Condenser',
-              type: EFieldType.SEPARATOR,
-              className: 'col-span-2',
-            } as IFormFieldBasic,
-            // Condenser Data
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `condenserData[${unitNumber}].tempIn`,
-              label: 'Temp In (°C)',
-              description: 'Temperature input for condenser unit',
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `condenserData[${unitNumber}].tempOut`,
-              label: 'Temp Out (°C)',
-              description: 'Temperature output for condenser unit',
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `condenserData[${unitNumber}].saturatedTemp`,
-              label: 'Saturated Temp (°C)',
-              description: 'Saturated temperature for condenser',
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `condenserData[${unitNumber}].approachTemp`,
-              label: 'Approach Temp (°C)',
-              description: 'Approach temperature for condenser',
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `condenserData[${unitNumber}].loadDemand`,
-              label: 'Load Demand (%)',
-              description: 'Load demand percentage (0-100)',
-            }),
-            {
-              name: `separator-${unitNumber}`,
-              label: 'Unit Evaporator',
-              type: EFieldType.SEPARATOR,
-              className: 'col-span-2',
-            } as IFormFieldBasic,
-            // Evaporator Data
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `evaporatorData[${unitNumber}].tempIn`,
-              label: 'Temp In (°C)',
-              description: 'Temperature input for evaporator unit',
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `evaporatorData[${unitNumber}].tempOut`,
-              label: 'Temp Out (°C)',
-              description: 'Temperature output for evaporator unit',
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `evaporatorData[${unitNumber}].saturatedTemp`,
-              label: 'Saturated Temp (°C)',
-              description: 'Saturated temperature for evaporator',
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `evaporatorData[${unitNumber}].approachTemp`,
-              label: 'Approach Temp (°C)',
-              description: 'Approach temperature for evaporator',
-            }),
-          ].filter(
-            (field): field is NonNullable<typeof field> => field !== null
-          ),
-        });
+        children: getChillerFormChildren,
       });
     }
 
-    // Cooling Towers Section
     if (projectData.coolingTowers.length > 0) {
       data.push({
-        title: 'Unit Selection - Cooling Towers',
+        title: `Unit Selection - Cooling Towers${selectedCoolingTowers.length > 0 ? ` (${selectedCoolingTowers.length})` : ''}`,
         value: 'cooling-tower-selection',
         description: (
           <div className="space-y-2">
@@ -371,218 +484,57 @@ export default function LogSheetsForm({
           </div>
         ),
         fields: [],
-      });
-
-      // Add individual cooling tower forms directly
-      selectedCoolingTowers.forEach(unitNumber => {
-        data.push({
-          title: `Cooling Tower Unit ${unitNumber}`,
-          value: `cooling-tower-${unitNumber}`,
-          fields: [
-            {
-              name: `separator-${unitNumber}`,
-              label: 'Water Quality',
-              type: EFieldType.SEPARATOR,
-              className: 'col-span-2',
-            } as IFormFieldBasic,
-            // Water Quality Data
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `coolingTowerWaterQualityData[${unitNumber}].pH`,
-              label: 'pH Level',
-              description: 'pH level measurement',
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `coolingTowerWaterQualityData[${unitNumber}].TDS`,
-              label: 'TDS (ppm)',
-              description: 'Total Dissolved Solids measurement',
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `coolingTowerWaterQualityData[${unitNumber}].conductivity`,
-              label: 'Conductivity (µS/cm)',
-              description: 'Electrical conductivity measurement',
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.NUMBER,
-              name: `coolingTowerWaterQualityData[${unitNumber}].cycle`,
-              label: 'Cycle Count',
-              description: 'Number of cycles completed',
-            }),
-            {
-              name: `separator-${unitNumber}`,
-              label: 'General Condition',
-              type: EFieldType.SEPARATOR,
-              className: 'col-span-2',
-            } as IFormFieldBasic,
-            // General Condition Data
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.BOOLEAN,
-              name: `coolingTowerGeneralConditionData[${unitNumber}].runningStatus`,
-              label: 'Running Status',
-              description: 'Current operational status',
-              customBooleanSelect: {
-                trueLabel: 'Running',
-                falseLabel: 'Stopped',
-              },
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.BOOLEAN,
-              name: `coolingTowerGeneralConditionData[${unitNumber}].algae`,
-              label: 'Algae Presence',
-              description: 'Presence of algae',
-              customBooleanSelect: {
-                trueLabel: 'Present',
-                falseLabel: 'Absent',
-              },
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.BOOLEAN,
-              name: `coolingTowerGeneralConditionData[${unitNumber}].deposit`,
-              label: 'Deposit Presence',
-              description: 'Presence of mineral deposits',
-              customBooleanSelect: {
-                trueLabel: 'Present',
-                falseLabel: 'Absent',
-              },
-            }),
-            {
-              name: `separator-${unitNumber}`,
-              label: 'Jobs',
-              type: EFieldType.SEPARATOR,
-              className: 'col-span-2',
-            } as IFormFieldBasic,
-            // Job Data
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.BOOLEAN,
-              name: `coolingTowerJobData[${unitNumber}].hotBasinCleaning`,
-              label: 'Hot Basin Cleaning',
-              description: 'Hot basin cleaning performed',
-              customBooleanSelect: {
-                trueLabel: 'Done',
-                falseLabel: 'Not Done',
-              },
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.BOOLEAN,
-              name: `coolingTowerJobData[${unitNumber}].coldBasinCleaning`,
-              label: 'Cold Basin Cleaning',
-              description: 'Cold basin cleaning performed',
-              customBooleanSelect: {
-                trueLabel: 'Done',
-                falseLabel: 'Not Done',
-              },
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.BOOLEAN,
-              name: `coolingTowerJobData[${unitNumber}].fillerCleaning`,
-              label: 'Filler Cleaning',
-              description: 'Filler cleaning performed',
-              customBooleanSelect: {
-                trueLabel: 'Done',
-                falseLabel: 'Not Done',
-              },
-            }),
-            valueLogSheetFormFieldGenerator({
-              valueType: ValueType.BOOLEAN,
-              name: `coolingTowerJobData[${unitNumber}].areaCleaning`,
-              label: 'Area Cleaning',
-              description: 'General area cleaning performed',
-              customBooleanSelect: {
-                trueLabel: 'Done',
-                falseLabel: 'Not Done',
-              },
-            }),
-          ].filter(Boolean) as any[],
-        });
+        children: getCoolingTowerFormChildren,
       });
     }
 
-    // Additional Data Section
-    data.push({
-      title: 'Additional Data',
-      value: 'additional-data',
-      description: 'Additional measurements and notes',
-      fields: [
-        {
-          name: `separator-additional-data`,
-          label: 'Raw Water Quality',
-          type: EFieldType.SEPARATOR,
-          className: 'col-span-2',
-        } as IFormFieldBasic,
-        // Raw Water Quality Data
-        valueLogSheetFormFieldGenerator({
-          valueType: ValueType.NUMBER,
-          name: 'rawWaterQualityData.pH',
-          label: 'Raw Water pH Level',
-          description: 'pH level measurement for raw water',
-        }),
-        valueLogSheetFormFieldGenerator({
-          valueType: ValueType.NUMBER,
-          name: 'rawWaterQualityData.TDS',
-          label: 'Raw Water TDS (ppm)',
-          description: 'Total Dissolved Solids for raw water',
-        }),
-        valueLogSheetFormFieldGenerator({
-          valueType: ValueType.NUMBER,
-          name: 'rawWaterQualityData.conductivity',
-          label: 'Raw Water Conductivity (µS/cm)',
-          description: 'Electrical conductivity for raw water',
-        }),
-        valueLogSheetFormFieldGenerator({
-          valueType: ValueType.NUMBER,
-          name: 'rawWaterQualityData.cycle',
-          label: 'Raw Water Cycle Count',
-          description: 'Number of cycles for raw water',
-        }),
-        {
-          name: `separator-additional-data`,
-          label: 'Water Meter',
-          type: EFieldType.SEPARATOR,
-          className: 'col-span-2',
-        } as IFormFieldBasic,
-        // Water Meter Consumption Data
-        valueLogSheetFormFieldGenerator({
-          valueType: ValueType.NUMBER,
-          name: 'waterMeterConsumptionData.before',
-          label: 'Water Meter Before (m³)',
-          description: 'Water meter reading before operations',
-        }),
-        valueLogSheetFormFieldGenerator({
-          valueType: ValueType.NUMBER,
-          name: 'waterMeterConsumptionData.after',
-          label: 'Water Meter After (m³)',
-          description: 'Water meter reading after operations',
-        }),
-        valueLogSheetFormFieldGenerator({
-          valueType: ValueType.NUMBER,
-          name: 'waterMeterConsumptionData.totalConsumption',
-          label: 'Total Consumption (m³)',
-          description: 'Calculated total water consumption',
-        }),
-        {
-          name: `separator-additional-data`,
-          label: 'Notes',
-          type: EFieldType.SEPARATOR,
-          className: 'col-span-2',
-        } as IFormFieldBasic,
-        // Notes
-        valueLogSheetFormFieldGenerator({
-          valueType: ValueType.TEXT,
-          textType: EFieldType.TEXTAREA,
-          className: 'col-span-2',
-          name: 'notes',
-          label: 'General Notes',
-          description: 'Additional general notes for this log sheet',
-        }),
-      ].filter(Boolean) as any[],
+    // Add general parameter groups (non-unit-specific)
+    const generalGroups: IGroupParameterByType[] = [];
+    logSheetSchemaParameters.forEach(group => {
+      const groupNameLower = group.name.toLowerCase();
+      // Only include groups that are not unit-specific
+      if (
+        !groupNameLower.includes('unit evaporator') &&
+        !groupNameLower.includes('unit condensor') &&
+        !groupNameLower.includes('unit condenser') &&
+        !groupNameLower.includes('cooling tower') &&
+        !groupNameLower.includes('general condition') &&
+        !groupNameLower.includes('job description') &&
+        !(
+          groupNameLower.includes('chiller') &&
+          !groupNameLower.includes('cooling') &&
+          !groupNameLower.includes('tower')
+        ) &&
+        !(groupNameLower.includes('tower') && !groupNameLower.includes('unit'))
+      ) {
+        generalGroups.push(group);
+      }
+    });
+
+    generalGroups.forEach(group => {
+      data.push({
+        title: group.name,
+        value: group.id,
+        description: group.description || undefined,
+        fields: (group.members || [])
+          .map(member => parameterToFormField(member.parameter, group))
+          .filter(
+            (field): field is NonNullable<typeof field> => field !== null
+          ),
+      });
     });
 
     data.push(chemicalSection);
 
     return data;
-  }, [projectData, chemicalSection, selectedChillers, selectedCoolingTowers]);
+  }, [
+    projectData,
+    isLoadingData,
+    logSheetSchemaParameters,
+    chemicalSection,
+    getChillerFormChildren,
+    getCoolingTowerFormChildren,
+  ]);
 
   return (
     <DefaultForm
@@ -595,10 +547,7 @@ export default function LogSheetsForm({
         value: accordionValue,
         onValueChange: value => setAccordionValue(value as string[]),
       }}
-      validationSchema={logSheetSchema({
-        chillerTotalUnit: chillerCount,
-        coolingTowerTotalUnit: coolingTowerCount,
-      })}
+      validationSchema={dynamicSchema}
       isLoading={isLoading}
     />
   );

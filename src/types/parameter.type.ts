@@ -30,11 +30,31 @@ export interface IStandardMethod
 export interface IGroupParameterByType {
   id: string;
   name: string;
+  description?: string | null;
   members: {
-    parameter: Partial<IParameter>;
+    parameter: {
+      id: string;
+      name: string;
+      valueType: string;
+      unit?: string | null;
+      description?: string | null;
+    };
   }[];
-  limits: Partial<IParameterLimit> &
-    {
-      parameter: Partial<IParameter>;
-    }[];
+  limits: {
+    parameter: {
+      id: string;
+      name: string;
+      valueType: string;
+      unit?: string | null;
+      description?: string | null;
+    };
+    valueType: string;
+    minValue?: number | null;
+    maxValue?: number | null;
+    booleanValue?: boolean | null;
+    textValue?: string | null;
+    method?: {
+      methodName: string;
+    } | null;
+  }[];
 }
