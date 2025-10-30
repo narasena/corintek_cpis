@@ -66,7 +66,7 @@ export async function createLogSheet(projectId: string, req: NextRequest) {
   }
 }
 
-export async function fetchAllLogSheets(projectId: string, req: NextRequest) {
+export async function fetchAllLogSheets(projectId: string) {
   try {
     const logSheets = await fetchAllLogSheetsService(projectId);
     return NextResponse.json({
