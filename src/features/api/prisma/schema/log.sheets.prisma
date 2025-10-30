@@ -47,7 +47,8 @@ model LogSheetDetail{
     machine     Machine?         @relation(fields: [machineId], references: [id])
     parameterId  String
     parameter   Parameter @relation(fields: [parameterId], references: [id])
-    detailType  LogSheetDetailType
+    groupId     String
+    group       ParameterGroup @relation(fields: [groupId], references: [id])
     checkTime   String?
     valueType    ValueType
     numericValue Float?
@@ -65,15 +66,4 @@ model LogSheetDetail{
     @@index([logSheetId, parameterId])
     @@index([machineId, parameterId])
     @@index([parameterId])
-}
-
-enum LogSheetDetailType {
-    CHILLER_CONDENSER
-    CHILLER_EVAPORATOR
-    COOLING_TOWER_WATER_QUALITY
-    COOLING_TOWER_CONDITION
-    COOLING_TOWER_CLEANING
-    COOLING_TOWER_CONSUMPTION
-    RAW_WATER_QUALITY
-    OTHER
 }

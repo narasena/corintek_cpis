@@ -34,6 +34,7 @@ model ParameterGroup {
     description String?
     members     ParameterGroupMember[]
     limits      ParameterLimit[]
+    logSheetDetails LogSheetDetail[]
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
     deletedAt  DateTime?
