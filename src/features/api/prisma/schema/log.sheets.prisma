@@ -2,6 +2,7 @@ model LogSheet {
   id        String  @id @default(uuid())
   projectId String
   project   Project @relation(fields: [projectId], references: [id])
+  date      DateTime
   notes     String?
 
   details           LogSheetDetail[]
