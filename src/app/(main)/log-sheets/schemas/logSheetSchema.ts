@@ -71,6 +71,18 @@ export const logSheetSchema = ({
   coolingTowerTotalUnit: number;
 }) => {
   return z.object({
+    date: z
+      .string()
+      .min(1, 'Date is required')
+      .refine(
+        date => {
+          const parsedDate = new Date(date);
+          return !isNaN(parsedDate.getTime());
+        },
+        {
+          message: 'Invalid date format',
+        }
+      ),
     condenserData: createUnitNumberIndexedSchema(
       condenserUnitSchema,
       chillerTotalUnit

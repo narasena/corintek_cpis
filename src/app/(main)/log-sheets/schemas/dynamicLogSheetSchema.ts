@@ -46,7 +46,19 @@ export const createDynamicLogSheetSchema = (
     schemaFields[group.id] = z.object(groupSchema);
   });
 
-  // Add chemical usage and notes
+  // Add date, chemical usage and notes
+  schemaFields.date = z
+    .string()
+    .min(1, 'Date is required')
+    .refine(
+      date => {
+        const parsedDate = new Date(date);
+        return !isNaN(parsedDate.getTime());
+      },
+      {
+        message: 'Invalid date format',
+      }
+    );
   schemaFields.chemicalUsageData = z.array(chemicalUsageSchema);
   schemaFields.notes = preprocessBlank(z.string().nullable().optional());
 

@@ -1,25 +1,47 @@
-import {
-  logSheetSchema,
-  TLogSheetAttributes,
-} from '@/app/(main)/log-sheets/schemas/logSheetSchema';
+import { createDynamicLogSheetSchema } from '@/app/(main)/log-sheets/schemas/dynamicLogSheetSchema';
 import { createErrorResponse } from '@/lib/error-handler';
 import requestValidation from '@/utils/api/v1/validation/requestValidation';
 import { NextRequest, NextResponse } from 'next/server';
-import { createLogSheetService } from './logSheets.service';
+import {
+  createLogSheetService,
+  fetchAllLogSheetsService,
+} from './logSheets.service';
 import { fetchProjectByIdService } from '@/features/api/features/v1/projects/project.service';
 import { Prisma } from '@/features/api/generated/prisma';
 import { prisma } from '@/features/api/connection/prisma';
+import { ILogSheetServiceData } from '@/types/log-sheet.type';
 
 export async function createLogSheet(projectId: string, req: NextRequest) {
   try {
     const project = await fetchProjectByIdService(projectId);
-    const chillerTotalUnit = project?.chillers?.length as number;
-    const coolingTowerTotalUnit = project?.coolingTowers?.length as number;
+    if (!project) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Project not found',
+        },
+        { status: 404 }
+      );
+    }
 
-    const schema = logSheetSchema({ chillerTotalUnit, coolingTowerTotalUnit });
+    // Fetch parameter groups for dynamic schema validation
+    const parameterGroups = await prisma.parameterGroup.findMany({
+      where: {
+        type: 'LOG_SHEET',
+      },
+      include: {
+        members: {
+          include: {
+            parameter: true,
+          },
+        },
+      },
+    });
+
+    const schema = createDynamicLogSheetSchema(parameterGroups);
 
     const body = await req.json();
-    const validatedInput = requestValidation<TLogSheetAttributes>({
+    const validatedInput = requestValidation<ILogSheetServiceData>({
       validationSchema: schema,
       data: body,
     });
@@ -29,7 +51,7 @@ export async function createLogSheet(projectId: string, req: NextRequest) {
     let newLogSheet;
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       newLogSheet = await createLogSheetService(
-        validatedInput as TLogSheetAttributes,
+        validatedInput as ILogSheetServiceData,
         tx,
         projectId
       );

@@ -101,6 +101,7 @@ export default function LogSheetsForm({
   const logSheetForm = useForm({
     resolver: zodResolver(dynamicSchema),
     defaultValues: {
+      date: new Date().toISOString().split('T')[0], // Default to today's date in YYYY-MM-DD format
       notes: '',
       chemicalUsageData: [],
     },
@@ -114,6 +115,7 @@ export default function LogSheetsForm({
   // Reset form when schema changes
   useEffect(() => {
     logSheetForm.reset({
+      date: new Date().toISOString().split('T')[0], // Default to today's date in YYYY-MM-DD format
       notes: '',
       chemicalUsageData: [],
     });
@@ -123,6 +125,7 @@ export default function LogSheetsForm({
   useEffect(() => {
     if (logSheetSchemaParameters.length > 0) {
       const newDefaultValues: Record<string, unknown> = {
+        date: new Date().toISOString().split('T')[0], // Default to today's date in YYYY-MM-DD format
         notes: '',
         chemicalUsageData: [],
       };
@@ -400,6 +403,31 @@ export default function LogSheetsForm({
       return data;
     }
 
+    // Add date field at the beginning
+    data.push({
+      title: 'Log Sheet Information',
+      value: 'log-sheet-info',
+      description: 'Basic information for the log sheet',
+      fields: [
+        {
+          name: 'date',
+          type: EFieldType.DATE,
+          label: 'Log Sheet Date',
+          className: 'col-span-2',
+          description:
+            'Select the date for this log sheet entry. You can backdate entries if needed.',
+        },
+        {
+          name: 'notes',
+          type: EFieldType.TEXTAREA,
+          label: 'Notes',
+          className: 'col-span-2',
+          placeHolder: 'Enter any additional notes...',
+          description: 'Optional notes for this log sheet',
+        },
+      ] as IFormFields[],
+    });
+
     if (projectData.chillers.length > 0) {
       data.push({
         title: `Unit Selection - Chillers${selectedChillers.length > 0 ? ` (${selectedChillers.length})` : ''}`,
@@ -534,6 +562,8 @@ export default function LogSheetsForm({
     chemicalSection,
     getChillerFormChildren,
     getCoolingTowerFormChildren,
+    selectedChillers,
+    selectedCoolingTowers,
   ]);
 
   return (

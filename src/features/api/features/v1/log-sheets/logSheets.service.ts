@@ -1,224 +1,238 @@
-import { TLogSheetAttributes } from '@/app/(main)/log-sheets/schemas/logSheetSchema';
-import {
-  LogSheetDetailType,
-  Prisma,
-  ValueType,
-} from '@/features/api/generated/prisma';
+import { prisma } from '@/features/api/connection/prisma';
+import { Prisma } from '@/features/api/generated/prisma';
 import { AppError } from '@/lib/app-error';
 import { serviceErrorResponse } from '@/lib/error-handler';
+import { ILogSheetServiceData } from '@/types/log-sheet.type';
 
 export async function createLogSheetService(
-  data: TLogSheetAttributes,
+  data: ILogSheetServiceData,
   tx?: Prisma.TransactionClient,
   projectId?: string
 ) {
+  // Parse and validate the date
+  let logSheetDate: Date;
+  if (data.date) {
+    if (typeof data.date === 'string') {
+      logSheetDate = new Date(data.date);
+    } else {
+      logSheetDate = data.date;
+    }
+    // Validate that the date is valid
+    if (isNaN(logSheetDate.getTime())) {
+      throw new AppError({
+        status: 400,
+        message: 'Invalid date provided.',
+        isExpose: true,
+      });
+    }
+  } else {
+    // Default to current date if no date is provided
+    logSheetDate = new Date();
+  }
+
+  // Create placeholder signatures if they don't exist
+  // This is a temporary solution until proper signature handling is implemented
+  const picSignatureId = `placeholder-pic-${projectId}`;
+  const clientSignatureId = `placeholder-client-${projectId}`;
+
+  // Get a default user for placeholder signatures (first admin user)
+  const defaultUser = await tx?.user.findFirst({
+    where: {
+      role: 'ADMIN',
+      isActive: true,
+    },
+  });
+
+  if (!defaultUser) {
+    throw new AppError({
+      status: 500,
+      message: 'No active admin user found for signature creation.',
+    });
+  }
+
+  // Create PIC signature if it doesn't exist
+  const existingPicSignature = await tx?.signature.findUnique({
+    where: { id: picSignatureId },
+  });
+
+  if (!existingPicSignature) {
+    await tx?.signature.create({
+      data: {
+        id: picSignatureId,
+        signerId: defaultUser.id,
+        imgUrl: 'https://via.placeholder.com/200x100?text=PIC+Signature',
+        publicId: `placeholder-pic-${projectId}`,
+      },
+    });
+  }
+
+  // Create client signature if it doesn't exist
+  const existingClientSignature = await tx?.signature.findUnique({
+    where: { id: clientSignatureId },
+  });
+
+  if (!existingClientSignature) {
+    await tx?.signature.create({
+      data: {
+        id: clientSignatureId,
+        signerId: defaultUser.id,
+        imgUrl: 'https://via.placeholder.com/200x100?text=Client+Signature',
+        publicId: `placeholder-client-${projectId}`,
+      },
+    });
+  }
+
   const newLogSheet = await tx?.logSheet.create({
     data: {
       projectId: projectId as string,
+      date: logSheetDate,
       notes: data.notes ? (data.notes as string) : null,
-      clientPICSignatureId: `test-signature-client-personnel-${projectId}`,
-      PICSignatureId: `test-signature-personnel-${projectId}`,
+      clientPICSignatureId: clientSignatureId,
+      PICSignatureId: picSignatureId,
     },
   });
-  const newLogSheetHistory = await tx?.logSheetHistory.create({
+
+  if (!newLogSheet) {
+    throw new AppError({
+      status: 500,
+      message: 'Failed to create log sheet.',
+    });
+  }
+
+  await tx?.logSheetHistory.create({
     data: {
-      logSheetId: newLogSheet?.id as string,
+      logSheetId: newLogSheet.id,
       status: 'DRAFT',
     },
   });
-  console.log(newLogSheetHistory);
 
-  interface IMachineUnitId {
-    unitNumber: number;
-    machineId: string;
-  }
   const allProjectMachines = await tx?.machine.findMany({
     where: {
       projectId,
       deletedAt: null,
     },
+    select: { id: true, unitNumber: true, type: true },
   });
 
-  const currentLogSheetMachines: {
-    chillers: IMachineUnitId[];
-    coolingTowers: IMachineUnitId[];
-  } = {
-    chillers: [],
-    coolingTowers: [],
-  };
+  const logSheetDetails: Prisma.LogSheetDetailCreateManyInput[] = [];
 
-  if (
-    Object.keys(data.condenserData).length === 0 &&
-    Object.keys(data.coolingTowerJobData).length === 0
-  ) {
+  const parameterGroups = await tx?.parameterGroup.findMany({
+    where: {
+      type: 'LOG_SHEET',
+    },
+    include: {
+      members: {
+        include: {
+          parameter: true,
+        },
+      },
+    },
+  });
+
+  if (!parameterGroups) {
     throw new AppError({
-      status: 400,
-      message: 'Data chiller dan cooling tower tidak boleh kosong',
-      isExpose: true,
+      status: 500,
+      message: 'Log sheet parameter groups not found.',
     });
   }
-  if (Object.keys(data.condenserData).length > 0) {
-    currentLogSheetMachines.chillers = Object.keys(data.condenserData).map(
-      (unitNumber: string) => {
-        const machineId = allProjectMachines?.find(
-          machine => machine.unitNumber === parseInt(unitNumber)
-        )?.id;
-        if (!machineId) {
-          throw new AppError({
-            status: 400,
-            message: `Unit number ${unitNumber} tidak ditemukan`,
-            isExpose: true,
+
+  for (const group of parameterGroups) {
+    const groupData = (data as Record<string, unknown>)[group.id] as
+      | Record<string, unknown>
+      | undefined;
+    if (!groupData) continue;
+
+    // Determine if this is a machine-specific group based on naming convention
+    const groupNameLower = group.name.toLowerCase();
+    const isChillerGroup =
+      groupNameLower.includes('unit evaporator') ||
+      groupNameLower.includes('unit condensor') ||
+      groupNameLower.includes('unit condenser') ||
+      (groupNameLower.includes('chiller') &&
+        !groupNameLower.includes('cooling') &&
+        !groupNameLower.includes('tower'));
+    const isCoolingTowerGroup =
+      groupNameLower.includes('cooling tower') ||
+      groupNameLower.includes('general condition') ||
+      groupNameLower.includes('job description') ||
+      (groupNameLower.includes('tower') && !groupNameLower.includes('unit'));
+    const isMachineGroup = isChillerGroup || isCoolingTowerGroup;
+
+    if (isMachineGroup) {
+      // Handle machine-specific parameters
+      // Since the API groups are already unit-specific, we need to determine which machines to associate
+      const machineType = isChillerGroup ? 'CHILLER' : 'COOLING_TOWER';
+      const relevantMachines =
+        allProjectMachines?.filter(m => m.type === machineType) || [];
+
+      if (relevantMachines.length === 0) {
+        throw new AppError({
+          status: 400,
+          message: `No ${machineType
+            .toLowerCase()
+            .replace('_', ' ')} machines found in this project.`,
+          isExpose: true,
+        });
+      }
+
+      // For each relevant machine, create log sheet details
+      for (const machine of relevantMachines) {
+        for (const member of group.members) {
+          const param = member.parameter;
+          const value = (groupData as Record<string, unknown>)[param.id];
+          if (value !== undefined && value !== null) {
+            logSheetDetails.push({
+              logSheetId: newLogSheet.id,
+              machineId: machine.id,
+              parameterId: param.id,
+              groupId: group.id,
+              valueType: param.valueType,
+              numericValue:
+                param.valueType === 'NUMBER' ? Number(value) : undefined,
+              boolValue:
+                param.valueType === 'BOOLEAN' ? Boolean(value) : undefined,
+              textValue: param.valueType === 'TEXT' ? String(value) : undefined,
+            });
+          }
+        }
+      }
+    } else {
+      // Handle general parameters (non-machine-specific)
+      for (const member of group.members) {
+        const param = member.parameter;
+        const value = (groupData as Record<string, unknown>)[param.id];
+        if (value !== undefined && value !== null) {
+          logSheetDetails.push({
+            logSheetId: newLogSheet.id,
+            parameterId: param.id,
+            groupId: group.id,
+            valueType: param.valueType,
+            numericValue:
+              param.valueType === 'NUMBER' ? Number(value) : undefined,
+            boolValue:
+              param.valueType === 'BOOLEAN' ? Boolean(value) : undefined,
+            textValue: param.valueType === 'TEXT' ? String(value) : undefined,
           });
         }
-        return {
-          unitNumber: parseInt(unitNumber),
-          machineId: machineId,
-        };
       }
+    }
+  }
+
+  // TODO: Implement chemical usage creation
+  // The ChemicalUsage model requires machineId and dosage fields
+  // This needs to be implemented based on business logic for which machine the chemical is used for
+  if (data.chemicalUsageData && data.chemicalUsageData.length > 0) {
+    // For now, we'll skip chemical usage creation until the business logic is clarified
+    console.log(
+      'Chemical usage data received but not processed:',
+      data.chemicalUsageData
     );
   }
-  if (Object.keys(data.coolingTowerJobData).length > 0) {
-    currentLogSheetMachines.coolingTowers = Object.keys(
-      data.coolingTowerJobData
-    ).map((unitNumber: string) => {
-      const machineId = allProjectMachines?.find(
-        machine => machine.unitNumber === parseInt(unitNumber)
-      )?.id;
-      if (!machineId) {
-        throw new AppError({
-          status: 400,
-          message: `Unit number ${unitNumber} tidak ditemukan`,
-          isExpose: true,
-        });
-      }
-      return {
-        unitNumber: parseInt(unitNumber),
-        machineId: machineId,
-      };
-    });
-  }
 
-  const logSheetDetails: Omit<
-    Prisma.LogSheetDetailUncheckedCreateInput,
-    'createdAt' | 'updatedAt' | 'deletedAt'
-  >[] = [];
-
-  // Condenser
-  for (const unitNumber in data.condenserData) {
-    for (const [paramName, paramValue] of Object.entries(
-      data.condenserData[unitNumber] as Record<string, number>
-    )) {
-      const machineId = currentLogSheetMachines.chillers.find(
-        machine => machine.unitNumber === parseInt(unitNumber)
-      )?.machineId;
-      if (!machineId) {
-        throw new AppError({
-          status: 400,
-          message: `Unit number ${unitNumber} tidak ditemukan`,
-          isExpose: true,
-        });
-      }
-      logSheetDetails.push({
-        logSheetId: newLogSheet?.id as string,
-        machineId: machineId,
-        parameterId: paramName,
-        detailType: LogSheetDetailType.CHILLER_CONDENSER,
-        valueType: ValueType.NUMBER,
-        numericValue: paramValue,
-      });
-    }
-  }
-
-  // Evaporator
-  for (const unitNumber in data.evaporatorData) {
-    for (const [paramName, paramValue] of Object.entries(
-      data.evaporatorData[unitNumber] as Record<string, number>
-    )) {
-      const machineId = currentLogSheetMachines.chillers.find(
-        machine => machine.unitNumber === parseInt(unitNumber)
-      )?.machineId;
-      if (!machineId) {
-        throw new AppError({
-          status: 400,
-          message: `Unit number ${unitNumber} tidak ditemukan`,
-          isExpose: true,
-        });
-      }
-      logSheetDetails.push({
-        logSheetId: newLogSheet?.id as string,
-        machineId: machineId,
-        parameterId: paramName,
-        detailType: LogSheetDetailType.CHILLER_EVAPORATOR,
-        valueType: ValueType.NUMBER,
-        numericValue: paramValue,
-      });
-    }
-  }
-
-  // Cooling tower
-  for (const unitNumber in data.coolingTowerJobData) {
-    for (const [paramName, paramValue] of Object.entries(
-      data.coolingTowerJobData[unitNumber] as Record<string, number>
-    )) {
-      const machineId = currentLogSheetMachines.coolingTowers.find(
-        machine => machine.unitNumber === parseInt(unitNumber)
-      )?.machineId;
-      if (!machineId) {
-        throw new AppError({
-          status: 400,
-          message: `Unit number ${unitNumber} tidak ditemukan`,
-          isExpose: true,
-        });
-      }
-      logSheetDetails.push({
-        logSheetId: newLogSheet?.id as string,
-        machineId: machineId,
-        parameterId: paramName,
-        detailType: LogSheetDetailType.COOLING_TOWER_WATER_QUALITY,
-        valueType: ValueType.BOOLEAN,
-        numericValue: paramValue,
-      });
-    }
-  }
-
-  // Raw Water Quality
-  for (const [paramName, paramValue] of Object.entries(
-    data.rawWaterQualityData as Record<string, number>
-  )) {
-    logSheetDetails.push({
-      logSheetId: newLogSheet?.id as string,
-      parameterId: paramName,
-      detailType: LogSheetDetailType.RAW_WATER_QUALITY,
-      valueType: ValueType.NUMBER,
-      numericValue: paramValue,
-    });
-  }
-
-  // Cooling Tower Condition
-  for (const unitNumber in data.coolingTowerGeneralConditionData) {
-    for (const [paramName, paramValue] of Object.entries(
-      data.coolingTowerGeneralConditionData[unitNumber] as Record<
-        string,
-        boolean
-      >
-    )) {
-      const machineId = currentLogSheetMachines.coolingTowers.find(
-        machine => machine.unitNumber === parseInt(unitNumber)
-      )?.machineId;
-      if (!machineId) {
-        throw new AppError({
-          status: 400,
-          message: `Unit number ${unitNumber} tidak ditemukan`,
-          isExpose: true,
-        });
-      }
-      logSheetDetails.push({
-        logSheetId: newLogSheet?.id as string,
-        machineId: machineId,
-        parameterId: paramName,
-        detailType: LogSheetDetailType.COOLING_TOWER_CONDITION,
-        valueType: ValueType.BOOLEAN,
-        boolValue: paramValue,
+  try {
+    if (logSheetDetails.length > 0) {
+      await tx?.logSheetDetail.createMany({
+        data: logSheetDetails,
       });
     }
   } catch (error) {
@@ -256,14 +270,12 @@ export async function fetchAllLogSheetsService(projectId: string) {
         },
       },
     });
-  }
-
-  try {
+    return logSheets;
   } catch (error) {
     serviceErrorResponse({
       error,
-      customErrorMessage: 'Gagal membuat log sheet',
-      status: 400,
+      customErrorMessage: 'Error fetching log sheets',
+      status: 500,
     });
   }
 }

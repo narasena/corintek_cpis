@@ -1,3 +1,6 @@
+import { LogSheetStatus } from '@/features/api/generated/prisma';
+import { ITableHelper } from './base.dto';
+
 // Chemical usage data type
 export interface IChemicalUsageData {
   id: string;
@@ -16,6 +19,7 @@ export interface IParameterGroupDefaultValues {
 
 // Log sheet form data structure
 export interface ILogSheetFormData {
+  date: string; // ISO date string
   notes: string;
   chemicalUsageData: IChemicalUsageData[];
   [groupId: string]: unknown; // Dynamic parameter groups
@@ -63,6 +67,7 @@ export interface IGeneralParameterData {
 
 // Complete log sheet data structure for service
 export interface ILogSheetServiceData {
+  date?: string | Date; // ISO date string or Date object
   notes?: string | null;
   chemicalUsageData?: IChemicalUsageData[];
   [groupId: string]: unknown; // Dynamic parameter groups
