@@ -67,3 +67,10 @@ export interface ILogSheetServiceData {
   chemicalUsageData?: IChemicalUsageData[];
   [groupId: string]: unknown; // Dynamic parameter groups
 }
+
+export interface ILogSheet extends ITableHelper {
+  date: string;
+  logSheetHistories: {
+    status: LogSheetStatus;
+  }[];
+}

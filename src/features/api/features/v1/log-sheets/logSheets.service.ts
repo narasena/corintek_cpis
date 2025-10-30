@@ -221,43 +221,40 @@ export async function createLogSheetService(
         boolValue: paramValue,
       });
     }
-  }
-  // Cooling Tower Cleaning
-  for (const unitNumber in data.coolingTowerJobData) {
-    for (const [paramName, paramValue] of Object.entries(
-      data.coolingTowerJobData[unitNumber] as Record<string, boolean>
-    )) {
-      const machineId = currentLogSheetMachines.coolingTowers.find(
-        machine => machine.unitNumber === parseInt(unitNumber)
-      )?.machineId;
-      if (!machineId) {
-        throw new AppError({
-          status: 400,
-          message: `Unit number ${unitNumber} tidak ditemukan`,
-          isExpose: true,
-        });
-      }
-      logSheetDetails.push({
-        logSheetId: newLogSheet?.id as string,
-        machineId: machineId,
-        parameterId: paramName,
-        detailType: LogSheetDetailType.COOLING_TOWER_CLEANING,
-        valueType: ValueType.BOOLEAN,
-        boolValue: paramValue,
-      });
-    }
+  } catch (error) {
+    return serviceErrorResponse({
+      error,
+      customErrorMessage: 'Failed to create log sheet details.',
+      status: 400,
+    });
   }
 
-  // Cooling Tower Consumption
-  for (const [paramName, paramValue] of Object.entries(
-    data.waterMeterConsumptionData as Record<string, number>
-  )) {
-    logSheetDetails.push({
-      logSheetId: newLogSheet?.id as string,
-      parameterId: paramName,
-      detailType: LogSheetDetailType.COOLING_TOWER_CONSUMPTION,
-      valueType: ValueType.NUMBER,
-      numericValue: paramValue,
+  return newLogSheet;
+}
+
+export async function fetchAllLogSheetsService(projectId: string) {
+  try {
+    const logSheets = await prisma.logSheet.findMany({
+      where: {
+        projectId,
+      },
+      select: {
+        id: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        date: true,
+        clientPICSignature: true,
+        PICSignature: true,
+        logSheetHistories: {
+          select: {
+            status: true,
+          },
+        },
+      },
     });
   }
 

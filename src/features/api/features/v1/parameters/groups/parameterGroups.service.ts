@@ -108,6 +108,7 @@ export async function fetchParameterGroupsByTypeService(
       select: {
         id: true,
         name: true,
+        description: true,
         members: {
           select: {
             parameter: {
@@ -116,6 +117,7 @@ export async function fetchParameterGroupsByTypeService(
                 name: true,
                 valueType: true,
                 unit: true,
+                description: true,
               },
             },
           },
@@ -128,6 +130,7 @@ export async function fetchParameterGroupsByTypeService(
                 name: true,
                 valueType: true,
                 unit: true,
+                description: true,
               },
             },
             valueType: true,

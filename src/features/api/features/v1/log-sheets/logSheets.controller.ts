@@ -43,3 +43,15 @@ export async function createLogSheet(projectId: string, req: NextRequest) {
     return createErrorResponse(error);
   }
 }
+
+export async function fetchAllLogSheets(projectId: string, req: NextRequest) {
+  try {
+    const logSheets = await fetchAllLogSheetsService(projectId);
+    return NextResponse.json({
+      success: true,
+      logSheets,
+    });
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}

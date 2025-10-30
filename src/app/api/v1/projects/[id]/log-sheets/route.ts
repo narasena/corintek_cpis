@@ -8,3 +8,11 @@ export async function POST(
   const { id } = await params;
   return createLogSheet(id, req);
 }
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  return fetchAllLogSheets(id, req);
+}
