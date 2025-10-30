@@ -1,45 +1,47 @@
 model LabReport {
-    id          String          @id @default(uuid())
-    projectId   String
-    project     Project         @relation(fields: [projectId], references: [id])
-    attention   String?
-    carbonCopy  String?
-    faxNumber   String?
-    labReportNumber String
-    remarks     Json
-    comments     Json?
-    recommendations Json?
+  id              String  @id @default(uuid())
+  projectId       String
+  project         Project @relation(fields: [projectId], references: [id])
+  attention       String?
+  carbonCopy      String?
+  faxNumber       String?
+  labReportNumber String
+  remarks         Json
+  comments        Json?
+  recommendations Json?
 
-    labReportDetails LabReportDetail[]
-    fileUrl     String?
-    filePublicId String?
+  labReportDetails LabReportDetail[]
+  fileUrl          String?
+  filePublicId     String?
 
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("lab_reports")
-    @@index([projectId])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([projectId])
+  @@map("lab_reports")
 }
 
 model LabReportDetail {
-    id          String          @id @default(uuid())
-    labReportId   String
-    labReport     LabReport         @relation(fields: [labReportId], references: [id])
-    machineId   String?
-    machine     Machine?         @relation(fields: [machineId], references: [id])
-    parameterId  String
-    parameter   Parameter @relation(fields: [parameterId], references: [id])
-    valueType    ValueType
-    numericValue Float?
-    boolValue   Boolean?
-    textValue String?
-    
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("lab_report_details")
-    @@index([labReportId, machineId, parameterId])
-    @@index([labReportId, parameterId])
-    @@index([machineId, parameterId])
-    @@index([parameterId])
+  id           String    @id @default(uuid())
+  labReportId  String
+  labReport    LabReport @relation(fields: [labReportId], references: [id])
+  machineId    String?
+  machine      Machine?  @relation(fields: [machineId], references: [id])
+  parameterId  String
+  parameter    Parameter @relation(fields: [parameterId], references: [id])
+  valueType    ValueType
+  numericValue Float?
+  boolValue    Boolean?
+  textValue    String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([labReportId, machineId, parameterId])
+  @@index([labReportId, parameterId])
+  @@index([machineId, parameterId])
+  @@index([parameterId])
+  @@map("lab_report_details")
 }

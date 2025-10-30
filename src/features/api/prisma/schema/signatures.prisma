@@ -1,19 +1,20 @@
 model Signature {
-    id          String          @id @default(uuid())
-    signerId    String
-    signer      User         @relation(fields: [signerId], references: [id])
-    imgUrl      String
-    publicId    String
-    workReportPICSignature      WorkReport?    @relation("WorkReportPIC", map: "work_report_pic_signature_id")
-    workReportClientSignature   WorkReport?    @relation("WorkReportClient", map: "work_report_client_signature_id")
-    logSheetPICSignature        LogSheet?      @relation("LogSheetPIC", map: "log_sheet_pic_signature_id")
-    logSheetClientSignature     LogSheet?     @relation("LogSheetClient", map: "log_sheet_client_signature_id")
-    chillerCleaningReportPICSignature   ChillerCleaningReport? @relation("ChillerCleaningReportPIC", map: "chiller_cleaning_report_pic_signature_id")
-    chillerCleaningReportClientSignature ChillerCleaningReport? @relation("ChillerCleaningReportClient", map: "chiller_cleaning_report_client_signature_id")
-    
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("signatures")
-    @@index([signerId])
+  id                                   String                 @id @default(uuid())
+  signerId                             String
+  signer                               User                   @relation(fields: [signerId], references: [id])
+  imgUrl                               String
+  publicId                             String
+  workReportPICSignature               WorkReport?            @relation("WorkReportPIC", map: "work_report_pic_signature_id")
+  workReportClientSignature            WorkReport?            @relation("WorkReportClient", map: "work_report_client_signature_id")
+  logSheetPICSignature                 LogSheet?              @relation("LogSheetPIC", map: "log_sheet_pic_signature_id")
+  logSheetClientSignature              LogSheet?              @relation("LogSheetClient", map: "log_sheet_client_signature_id")
+  chillerCleaningReportPICSignature    ChillerCleaningReport? @relation("ChillerCleaningReportPIC", map: "chiller_cleaning_report_pic_signature_id")
+  chillerCleaningReportClientSignature ChillerCleaningReport? @relation("ChillerCleaningReportClient", map: "chiller_cleaning_report_client_signature_id")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([signerId])
+  @@map("signatures")
 }

@@ -1,50 +1,53 @@
 model Machine {
-    id          String          @id @default(uuid())
-    projectId   String
-    project     Project         @relation(fields: [projectId], references: [id])
-    unitNumber  Int
-    type        MachineType
-    ownership   MachineOwnership    @default(CORINTEK)
-    capacity    Float?
-    brand       String?
-    model       String?
-    serialNumber String?
+  id           String           @id @default(uuid())
+  projectId    String
+  project      Project          @relation(fields: [projectId], references: [id])
+  unitNumber   Int
+  type         MachineType
+  ownership    MachineOwnership @default(CORINTEK)
+  capacity     Float?
+  brand        String?
+  model        String?
+  serialNumber String?
 
-    machineHistories MachineHistory[]
-    chemicalUsages  ChemicalUsage[]
-    labReportDetails LabReportDetail[]
-    logSheetDetails LogSheetDetail[]
+  machineHistories MachineHistory[]
+  chemicalUsages   ChemicalUsage[]
+  labReportDetails LabReportDetail[]
+  logSheetDetails  LogSheetDetail[]
 
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("machines")
-    @@index([projectId])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([projectId])
+  @@map("machines")
 }
+
 enum MachineType {
-    CHILLER
-    COOLING_TOWER
+  CHILLER
+  COOLING_TOWER
 }
 
 enum MachineOwnership {
-    CORINTEK
-    CLIENT
+  CORINTEK
+  CLIENT
 }
 
 model MachineHistory {
-    id          String          @id @default(uuid())
-    machineId   String
-    machine     Machine         @relation(fields: [machineId], references: [id])
-    status      MachineStatus
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("machine_histories")
-    @@index([machineId])
+  id        String        @id @default(uuid())
+  machineId String
+  machine   Machine       @relation(fields: [machineId], references: [id])
+  status    MachineStatus
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  deletedAt DateTime?
+
+  @@index([machineId])
+  @@map("machine_histories")
 }
 
 enum MachineStatus {
-    RUNNING
-    IDLE
-    MAINTENANCE
+  RUNNING
+  IDLE
+  MAINTENANCE
 }

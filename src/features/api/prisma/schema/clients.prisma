@@ -1,34 +1,36 @@
 model Client {
-    id          String          @id @default(uuid())
-    name        String          @unique
-    description String?
-    avatarUrl   String?
-    avatarPublicId String?
-    email       String?
-    phoneNumber String?
-    address     String?
-    websiteUrl  String?
+  id             String  @id @default(uuid())
+  name           String  @unique
+  description    String?
+  avatarUrl      String?
+  avatarPublicId String?
+  email          String?
+  phoneNumber    String?
+  address        String?
+  websiteUrl     String?
 
-    projects    Project[]
-    personnel  ClientPersonnel[]
+  projects  Project[]
+  personnel ClientPersonnel[]
 
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("clients")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("clients")
 }
 
 model ClientPersonnel {
-    id          String          @id @default(uuid())
-    clientId    String
-    client      Client          @relation(fields: [clientId], references: [id])
-    personnelId String
-    personnel   User            @relation(fields: [personnelId], references: [id])
+  id          String @id @default(uuid())
+  clientId    String
+  client      Client @relation(fields: [clientId], references: [id])
+  personnelId String
+  personnel   User   @relation(fields: [personnelId], references: [id])
 
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("client_personnel")
-    @@index([clientId])
-    @@index([personnelId])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([clientId])
+  @@index([personnelId])
+  @@map("client_personnel")
 }

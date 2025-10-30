@@ -1,93 +1,98 @@
 model Parameter {
-    id          String          @id @default(uuid())
-    name        String          @unique
-    variableName String         @unique
-    valueType   ValueType
-    unit        String?
-    description String?
-    groups      ParameterGroupMember[]
-    labReportDetails LabReportDetail[]
-    limits      ParameterLimit[]
-    settings    MasterSettingDetail[]
-    logSheetDetails LogSheetDetail[]
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("parameters")
+  id               String                 @id @default(uuid())
+  name             String                 @unique
+  variableName     String                 @unique
+  valueType        ValueType
+  unit             String?
+  description      String?
+  groups           ParameterGroupMember[]
+  labReportDetails LabReportDetail[]
+  limits           ParameterLimit[]
+  settings         MasterSettingDetail[]
+  logSheetDetails  LogSheetDetail[]
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  deletedAt        DateTime?
+
+  @@map("parameters")
 }
 
 enum ParameterGroupType {
-    MACHINE
-    WATER
-    ENVIRONMENTAL
-    CHEMICAL
-    OPERATIONAL
-    LOG_SHEET
-    WORK_REPORT
-    LAB_REPORT
+  MACHINE
+  WATER
+  ENVIRONMENTAL
+  CHEMICAL
+  OPERATIONAL
+  LOG_SHEET
+  WORK_REPORT
+  LAB_REPORT
 }
 
 model ParameterGroup {
-    id          String          @id @default(uuid())
-    name        String
-    type        ParameterGroupType
-    description String?
-    members     ParameterGroupMember[]
-    limits      ParameterLimit[]
-    logSheetDetails LogSheetDetail[]
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("parameter_groups")
+  id              String                 @id @default(uuid())
+  name            String
+  type            ParameterGroupType
+  description     String?
+  members         ParameterGroupMember[]
+  limits          ParameterLimit[]
+  logSheetDetails LogSheetDetail[]
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  deletedAt       DateTime?
+
+  @@map("parameter_groups")
 }
 
 model ParameterGroupMember {
-    id          String          @id @default(uuid())
-    parameterId  String
-    parameter   Parameter @relation(fields: [parameterId], references: [id])
+  id          String    @id @default(uuid())
+  parameterId String
+  parameter   Parameter @relation(fields: [parameterId], references: [id])
 
-    groupId     String
-    group       ParameterGroup @relation(fields: [groupId], references: [id])
+  groupId String
+  group   ParameterGroup @relation(fields: [groupId], references: [id])
 
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("parameter_group_members")
-    @@index([parameterId])
-    @@index([groupId])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([parameterId])
+  @@index([groupId])
+  @@map("parameter_group_members")
 }
 
 model StandardMethod {
-    id          String          @id @default(uuid())
-    methodName  String
-    year        Int
-    version     String
-    isActive    Boolean         @default(true)
-    description Json?
+  id          String  @id @default(uuid())
+  methodName  String
+  year        Int
+  version     String
+  isActive    Boolean @default(true)
+  description Json?
 
-    limitParameters  ParameterLimit[]
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("standard_methods")
+  limitParameters ParameterLimit[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+
+  @@map("standard_methods")
 }
 
 model ParameterLimit {
-    id          String          @id @default(uuid())
-    parameterId  String
-    parameter   Parameter @relation(fields: [parameterId], references: [id])
-    groupId     String?
-    group       ParameterGroup? @relation(fields: [groupId], references: [id])
-    methodId    String?
-    method      StandardMethod? @relation(fields: [methodId], references: [id])
-    valueType    ValueType
-    minValue        Float?
-    maxValue        Float?
-    booleanValue    Boolean?
-    textValue     String?
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("parameter_limits")
-    @@index([parameterId])
+  id           String          @id @default(uuid())
+  parameterId  String
+  parameter    Parameter       @relation(fields: [parameterId], references: [id])
+  groupId      String?
+  group        ParameterGroup? @relation(fields: [groupId], references: [id])
+  methodId     String?
+  method       StandardMethod? @relation(fields: [methodId], references: [id])
+  valueType    ValueType
+  minValue     Float?
+  maxValue     Float?
+  booleanValue Boolean?
+  textValue    String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  deletedAt    DateTime?
+
+  @@index([parameterId])
+  @@map("parameter_limits")
 }

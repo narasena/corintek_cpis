@@ -1,87 +1,90 @@
 model Project {
-    id          String          @id @default(uuid())
-    parentId    String?         @map("parent_project_id")
-    parent      Project?        @relation("ProjectAddendum", fields: [parentId], references: [id])
-    addenda     Project[]       @relation("ProjectAddendum")
-    clientId    String
-    client      Client          @relation(fields: [clientId], references: [id])
-    name        String
-    description String?
-    quoteNumber String
-    PONumber    String
-    startDate   DateTime
-    endDate     DateTime
-    type        ProjectType
-    contractType ContractType
-    workCategory WorkCategory
-    warranty    Int?
+  id           String       @id @default(uuid())
+  parentId     String?      @map("parent_project_id")
+  parent       Project?     @relation("ProjectAddendum", fields: [parentId], references: [id])
+  addenda      Project[]    @relation("ProjectAddendum")
+  clientId     String
+  client       Client       @relation(fields: [clientId], references: [id])
+  name         String
+  description  String?
+  quoteNumber  String
+  PONumber     String
+  startDate    DateTime
+  endDate      DateTime
+  type         ProjectType
+  contractType ContractType
+  workCategory WorkCategory
+  warranty     Int?
 
-    assignments   ProjectAssignment[]   @relation("Assignments")
-    machines    Machine[]
-    labReports  LabReport[]
-    logSheets    LogSheet[]
-    workReports WorkReport[]
-    masterSettings MasterSetting[]
-    cleaningReports ChillerCleaningReport[]
-    projectReports     ProjectReport[]
+  assignments     ProjectAssignment[]     @relation("Assignments")
+  machines        Machine[]
+  labReports      LabReport[]
+  logSheets       LogSheet[]
+  workReports     WorkReport[]
+  masterSettings  MasterSetting[]
+  cleaningReports ChillerCleaningReport[]
+  projectReports  ProjectReport[]
 
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("projects")
-    @@index([clientId, parentId])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([clientId, parentId])
+  @@map("projects")
 }
 
 enum ProjectType {
-    MAIN
-    ADDENDUM
+  MAIN
+  ADDENDUM
 }
 
 enum ContractType {
-    DIRECT
-    SUBCONTRACT
+  DIRECT
+  SUBCONTRACT
 }
 
 enum WorkCategory {
-    OPERATIONAL
-    CONSTRUCTION
-    AD_HOC
-    MAINTENANCE
+  OPERATIONAL
+  CONSTRUCTION
+  AD_HOC
+  MAINTENANCE
 }
 
 model ProjectHistory {
-    id          String          @id @default(uuid())
-    projectId   String
-    status      ProjectStatus
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("project_histories")
+  id        String        @id @default(uuid())
+  projectId String
+  status    ProjectStatus
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  deletedAt DateTime?
+
+  @@map("project_histories")
 }
 
 enum ProjectStatus {
-    PENDING
-    ONGOING
-    PAUSED
-    COMPLETED
-    CANCELLED
+  PENDING
+  ONGOING
+  PAUSED
+  COMPLETED
+  CANCELLED
 }
 
 model ProjectAssignment {
-    id          String          @id @default(uuid())
-    projectId   String
-    project     Project         @relation("Assignments", fields: [projectId], references: [id])
-    assigneeId      String
-    assignee        User            @relation("Assignees",fields: [assigneeId], references: [id])
-    role        ProjectAssignmentRole
+  id         String                @id @default(uuid())
+  projectId  String
+  project    Project               @relation("Assignments", fields: [projectId], references: [id])
+  assigneeId String
+  assignee   User                  @relation("Assignees", fields: [assigneeId], references: [id])
+  role       ProjectAssignmentRole
 
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("project_assignments")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("project_assignments")
 }
 
 enum ProjectAssignmentRole {
-    INTERNAL
-    CLIENT
+  INTERNAL
+  CLIENT
 }

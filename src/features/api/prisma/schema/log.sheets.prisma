@@ -1,69 +1,71 @@
 model LogSheet {
-    id         String          @id @default(uuid())
-    projectId  String
-    project    Project         @relation(fields: [projectId], references: [id])
-    notes      String?
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+  notes     String?
 
-    details     LogSheetDetail[]
-    logSheetHistories LogSheetHistory[]
-    notifications Notification[]
+  details           LogSheetDetail[]
+  chemicalUsages    ChemicalUsage[]
+  logSheetHistories LogSheetHistory[]
+  notifications     Notification[]
 
-    PICSignatureId String      @unique
-    PICSignature Signature @relation("LogSheetPIC", fields: [PICSignatureId], references: [id])
-    clientPICSignatureId String @unique
-    clientPICSignature Signature @relation("LogSheetClient",fields: [clientPICSignatureId], references: [id])
-    
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("log_sheets")
-    @@index([projectId])
+  PICSignatureId       String    @unique
+  PICSignature         Signature @relation("LogSheetPIC", fields: [PICSignatureId], references: [id])
+  clientPICSignatureId String    @unique
+  clientPICSignature   Signature @relation("LogSheetClient", fields: [clientPICSignatureId], references: [id])
 
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([projectId])
+  @@map("log_sheets")
 }
 
 model LogSheetHistory {
-    id          String          @id @default(uuid())
-    logSheetId   String
-    logSheet     LogSheet         @relation(fields: [logSheetId], references: [id])
-    status      LogSheetStatus
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("log_sheet_histories")
-    @@index([logSheetId])
+  id         String         @id @default(uuid())
+  logSheetId String
+  logSheet   LogSheet       @relation(fields: [logSheetId], references: [id])
+  status     LogSheetStatus
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  deletedAt  DateTime?
+
+  @@index([logSheetId])
+  @@map("log_sheet_histories")
 }
 
 enum LogSheetStatus {
-    DRAFT
-    SUBMITTED
-    APPROVED
+  DRAFT
+  SUBMITTED
+  APPROVED
 }
 
-model LogSheetDetail{
-    id          String          @id @default(uuid())
-    logSheetId   String
-    logSheet     LogSheet         @relation(fields: [logSheetId], references: [id])
-    machineId   String?
-    machine     Machine?         @relation(fields: [machineId], references: [id])
-    parameterId  String
-    parameter   Parameter @relation(fields: [parameterId], references: [id])
-    groupId     String
-    group       ParameterGroup @relation(fields: [groupId], references: [id])
-    checkTime   String?
-    valueType    ValueType
-    numericValue Float?
-    boolValue   Boolean?
-    textValue String?
-    imgUrl      String?
-    imgPublicId String?
-    chemicalUsages ChemicalUsage[]  @relation("LogSheetChemicals")
-    
-    createdAt   DateTime        @default(now())
-    updatedAt   DateTime        @updatedAt
-    deletedAt  DateTime?
-    @@map("log_sheet_details")
-    @@index([logSheetId, machineId, parameterId])
-    @@index([logSheetId, parameterId])
-    @@index([machineId, parameterId])
-    @@index([parameterId])
+model LogSheetDetail {
+  id           String         @id @default(uuid())
+  logSheetId   String
+  logSheet     LogSheet       @relation(fields: [logSheetId], references: [id])
+  machineId    String?
+  machine      Machine?       @relation(fields: [machineId], references: [id])
+  parameterId  String
+  parameter    Parameter      @relation(fields: [parameterId], references: [id])
+  groupId      String
+  group        ParameterGroup @relation(fields: [groupId], references: [id])
+  checkTime    String?
+  valueType    ValueType
+  numericValue Float?
+  boolValue    Boolean?
+  textValue    String?
+  imgUrl       String?
+  imgPublicId  String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([logSheetId, machineId, parameterId, groupId])
+  @@index([logSheetId, parameterId, groupId])
+  @@index([machineId, parameterId, groupId])
+  @@index([parameterId, groupId])
+  @@map("log_sheet_details")
 }
