@@ -9,7 +9,11 @@ import DefaultForm from '@/components/features/forms/default-form';
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import { IProject } from '@/types/project.type';
 import { IAccordionDataFormatted } from '@/components/features/forms/default-form';
-import { EFieldType, IFormFields } from '@/types/form/form.type';
+import {
+  EFieldType,
+  IFormFieldBasic,
+  IFormFields,
+} from '@/types/form/form.type';
 import { buttonVariants } from '@/components/ui/button';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import useAllChemicals from '@/hooks/chemicals/useAllChemicals';
