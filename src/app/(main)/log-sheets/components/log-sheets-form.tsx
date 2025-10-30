@@ -394,6 +394,21 @@ export default function LogSheetsForm({
   const getAccordionData = useMemo((): IAccordionDataFormatted[] => {
     const data: IAccordionDataFormatted[] = [];
 
+    // Date Selection Section - Always at the top
+    data.push({
+      title: 'Pilih tanggal log-sheet:',
+      value: 'date-selection',
+      fields: [
+        {
+          name: 'date',
+          type: EFieldType.DATE,
+          label: 'Tanggal',
+          className: 'col-span-2',
+          description: 'Pilih tanggal untuk log sheet ini',
+        } as IFormFieldBasic,
+      ],
+    });
+
     if (!projectData || isLoadingData) {
       data.push({
         title: 'Loading Project Data...',
