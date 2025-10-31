@@ -279,3 +279,69 @@ export async function fetchAllLogSheetsService(projectId: string) {
     });
   }
 }
+
+export async function fetchLogSheetByIdService(id: string) {
+  try {
+    const whereClause: Prisma.LogSheetWhereUniqueInput = {
+      id,
+      deletedAt: null,
+    };
+    const logSheet = await prisma.logSheet.findUnique({
+      where: whereClause,
+      select: {
+        project: {
+          select: {
+            name: true,
+          },
+        },
+        date: true,
+        notes: true,
+        logSheetHistories: {
+          select: {
+            status: true,
+            createdAt: true,
+          },
+        },
+        details: {
+          select: {
+            parameter: {
+              select: {
+                id: true,
+                name: true,
+                valueType: true,
+                unit: true,
+                description: true,
+              },
+            },
+            group: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            valueType: true,
+            numericValue: true,
+            boolValue: true,
+            textValue: true,
+          },
+        },
+      },
+    });
+
+    if (!logSheet) {
+      throw new AppError({
+        status: 404,
+        message: 'Log sheet not found.',
+        isExpose: true,
+      });
+    }
+
+    return logSheet;
+  } catch (error) {
+    serviceErrorResponse({
+      error,
+      customErrorMessage: 'Error fetching log sheet',
+      status: 500,
+    });
+  }
+}

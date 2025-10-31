@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   createLogSheetService,
   fetchAllLogSheetsService,
+  fetchLogSheetByIdService,
 } from './logSheets.service';
 import { fetchProjectByIdService } from '@/features/api/features/v1/projects/project.service';
 import { Prisma } from '@/features/api/generated/prisma';
@@ -72,6 +73,18 @@ export async function fetchAllLogSheets(projectId: string) {
     return NextResponse.json({
       success: true,
       logSheets,
+    });
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+export async function fetchLogSheetById(id: string) {
+  try {
+    const logSheetDetails = await fetchLogSheetByIdService(id);
+    return NextResponse.json({
+      success: true,
+      logSheetDetails,
     });
   } catch (error) {
     return createErrorResponse(error);
