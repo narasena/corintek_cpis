@@ -172,9 +172,10 @@ const LogSheetDocumentCreation = (props: ILogSheetDocumentProps) => (
   </PDFRenderer.Document>
 );
 
-export default function LogSheetDocument(props: ILogSheetDocumentProps) {
-  const { logSheetDetails, isLoading, refetchLogSheetDetails } =
-    useLogSheetDetails('3a9efcd1-c86a-4b26-b2a6-fadcbd5d0c89');
+export default function LogSheetDocument() {
+  const { logSheetDetails } = useLogSheetDetails(
+    '3a9efcd1-c86a-4b26-b2a6-fadcbd5d0c89'
+  );
   return (
     <PDFRenderer.PDFViewer width="100%" height="900px">
       <LogSheetDocumentCreation

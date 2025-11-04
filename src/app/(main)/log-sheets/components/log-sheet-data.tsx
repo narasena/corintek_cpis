@@ -14,7 +14,7 @@ export default function LogSheetData(props: ILogSheetDataProps) {
       modalTitle={`Log Sheet (${formattedDate})`}
       type="nameSlug"
       buttonText={formattedDate}
-      content={<LogSheetDocument {...props} />}
+      content={<LogSheetDocument />}
     />
   );
 }
