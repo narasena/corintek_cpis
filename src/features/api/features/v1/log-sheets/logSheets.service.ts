@@ -313,6 +313,13 @@ export async function fetchLogSheetByIdService(id: string) {
                 description: true,
               },
             },
+            machine: {
+              select: {
+                id: true,
+                unitNumber: true,
+                type: true,
+              },
+            },
             group: {
               select: {
                 id: true,
@@ -336,7 +343,65 @@ export async function fetchLogSheetByIdService(id: string) {
       });
     }
 
-    return logSheet;
+    const transformedDetails = logSheet.details.reduce((acc, detail) => {
+      const groupKey = detail.group.id;
+      const unitNumber = detail.machine?.unitNumber || 'general'; // 'general' for non-machine parameters
+
+      if (!acc.has(groupKey)) {
+        acc.set(groupKey, {
+          groupInfo: {
+            id: detail.group.id,
+            name: detail.group.name,
+          },
+          units: new Map(),
+        });
+      }
+
+      const group = acc.get(groupKey);
+
+      if (!group.units.has(unitNumber)) {
+        group.units.set(unitNumber, {
+          unitInfo: detail.machine
+            ? {
+                id: detail.machine.id,
+                unitNumber: detail.machine.unitNumber,
+                type: detail.machine.type,
+              }
+            : null,
+          parameters: [],
+        });
+      }
+
+      const unit = group.units.get(unitNumber);
+      unit.parameters.push({
+        id: detail.parameter.id,
+        name: detail.parameter.name,
+        valueType: detail.parameter.valueType,
+        unit: detail.parameter.unit,
+        description: detail.parameter.description,
+        value:
+          detail.valueType === 'NUMBER'
+            ? detail.numericValue
+            : detail.valueType === 'BOOLEAN'
+              ? detail.boolValue
+              : detail.textValue,
+      });
+
+      return acc;
+    }, new Map());
+
+    // Convert nested Maps to arrays for JSON serialization
+    const groupedDetails = Array.from(transformedDetails.values()).map(
+      group => ({
+        groupInfo: group.groupInfo,
+        units: Array.from(group.units.values()),
+      })
+    );
+
+    return {
+      ...logSheet,
+      details: groupedDetails,
+    };
   } catch (error) {
     serviceErrorResponse({
       error,

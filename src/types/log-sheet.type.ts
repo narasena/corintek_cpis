@@ -74,8 +74,31 @@ export interface ILogSheetServiceData {
 }
 
 export interface ILogSheet extends ITableHelper {
+  project: {
+    name: string;
+  };
   date: string;
   logSheetHistories: {
     status: LogSheetStatus;
+  }[];
+  details: {
+    groupInfo: {
+      id: string;
+      name: string;
+    };
+    units: {
+      unitInfo: {
+        id: string;
+        unitNumber: number;
+      } | null;
+      parameters: {
+        id: string;
+        name: string;
+        valueType: string;
+        unit?: string | null;
+        description?: string | null;
+        value: string | number | boolean | null;
+      }[];
+    }[];
   }[];
 }
