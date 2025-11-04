@@ -1,6 +1,7 @@
 import { defaultColumns } from '@/components/default-columns';
 import { ILogSheet } from '@/types/log-sheet.type';
 import { ColumnDef } from '@tanstack/react-table';
+import LogSheetData from './log-sheet-data';
 
 export const logSheetsColumns = (): ColumnDef<ILogSheet>[] => {
   const { select, actions } = defaultColumns<ILogSheet>();
@@ -9,12 +10,18 @@ export const logSheetsColumns = (): ColumnDef<ILogSheet>[] => {
     {
       id: 'date',
       header: 'Tanggal',
-      cell: ({ row }) =>
-        new Date(row.original.date).toLocaleDateString('id-ID', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }),
+      cell: ({ row }) => {
+        const date = row.original.date as string;
+        return (
+          <LogSheetData
+            date={date}
+            projectName={row.original.project.name}
+            clientName="Test"
+            approverName="Test"
+            data={row.original.details}
+          />
+        );
+      },
       enableHiding: false,
     },
     {
