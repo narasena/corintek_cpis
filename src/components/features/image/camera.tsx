@@ -23,6 +23,14 @@ export default function WebcamCapture() {
     // Check if camera is available
     const checkCamera = async () => {
       try {
+        // First request camera access
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+        // Immediately stop the stream since we just want permission
+        stream.getTracks().forEach(track => track.stop());
+
+        // Now enumerate the devices
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(
           device => device.kind === 'videoinput'
@@ -39,8 +47,14 @@ export default function WebcamCapture() {
           // Set first device as default
           setDeviceId(videoDevices[0]?.deviceId || '');
         }
-      } catch (error) {
-        console.error('Error checking camera:', error);
+      } catch (error: unknown) {
+        console.error('Camera access error:', error);
+        setHasCamera(false);
+        setCameraError(
+          typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message: string }).message
+            : 'Camera access denied. Please enable camera permissions in your browser settings.'
+        );
       }
     };
 
