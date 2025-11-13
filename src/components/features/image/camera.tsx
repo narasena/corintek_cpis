@@ -1,18 +1,23 @@
 import { Button } from '@/components/ui/button';
 import { useCallback, useRef, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
-
-const videoConstraints = {
-  width: { ideal: 1280 },
-  height: { ideal: 720 },
-  facingMode: { ideal: 'environment' },
-};
+import { SwitchCamera } from 'lucide-react';
 
 export default function WebcamCapture() {
   const webcamRef = useRef<Webcam | null>(null);
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [hasCamera, setHasCamera] = useState<boolean>(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [deviceId, setDeviceId] = useState<string>('');
+
+  const videoConstraints = {
+    width: { ideal: 1280 },
+    height: { ideal: 720 },
+    ...(deviceId
+      ? { deviceId: { exact: deviceId } }
+      : { facingMode: { ideal: 'environment' } }),
+  };
 
   useEffect(() => {
     // Check if camera is available
@@ -23,11 +28,16 @@ export default function WebcamCapture() {
           device => device.kind === 'videoinput'
         );
 
+        setDevices(videoDevices);
+
         if (videoDevices.length === 0) {
           setHasCamera(false);
           setCameraError(
             'No camera found. Please connect a camera and try again.'
           );
+        } else {
+          // Set first device as default
+          setDeviceId(videoDevices[0]?.deviceId || '');
         }
       } catch (error) {
         console.error('Error checking camera:', error);
@@ -181,6 +191,23 @@ export default function WebcamCapture() {
 
             {/* Bottom overlay */}
             <div className="absolute bottom-0 left-0 right-0 bg-black/60 flex items-center justify-center p-8">
+              <div className="flex items-center gap-4 absolute left-4">
+                {devices.length > 1 && (
+                  <Button
+                    onClick={() => {
+                      const currentIndex = devices.findIndex(
+                        d => d.deviceId === deviceId
+                      );
+                      const nextIndex = (currentIndex + 1) % devices.length;
+                      setDeviceId(devices[nextIndex].deviceId);
+                    }}
+                    variant="ghost"
+                    className="text-white"
+                  >
+                    <SwitchCamera className="w-6 h-6" />
+                  </Button>
+                )}
+              </div>
               <Button
                 onClick={capture}
                 className="w-20 h-20 rounded-full bg-white text-black hover:bg-gray-200 border-4 border-gray-300"
