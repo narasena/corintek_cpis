@@ -30,7 +30,7 @@ export default function WebcamCapture() {
         // Immediately stop the stream since we just want permission
         stream.getTracks().forEach(track => track.stop());
 
-        // Now enumerate the devices
+        // Keep the stream active while enumerating devices
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(
           device => device.kind === 'videoinput'
@@ -39,14 +39,30 @@ export default function WebcamCapture() {
         setDevices(videoDevices);
 
         if (videoDevices.length === 0) {
-          setHasCamera(false);
-          setCameraError(
-            'No camera found. Please connect a camera and try again.'
+          // Give another try after devices might have been initialized
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const refreshedDevices =
+            await navigator.mediaDevices.enumerateDevices();
+          const refreshedVideoDevices = refreshedDevices.filter(
+            device => device.kind === 'videoinput'
           );
+
+          if (refreshedVideoDevices.length === 0) {
+            setHasCamera(false);
+            setCameraError(
+              'Camera access denied or no camera detected. Please check your device permissions.'
+            );
+          } else {
+            setDevices(refreshedVideoDevices);
+            setDeviceId(refreshedVideoDevices[0]?.deviceId || '');
+          }
         } else {
           // Set first device as default
           setDeviceId(videoDevices[0]?.deviceId || '');
         }
+
+        // Now safely stop the stream after we have our devices
+        stream.getTracks().forEach(track => track.stop());
       } catch (error: unknown) {
         console.error('Camera access error:', error);
         setHasCamera(false);
