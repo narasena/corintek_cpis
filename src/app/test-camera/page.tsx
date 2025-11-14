@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import Image from 'next/image';
 
 export default function TestCameraPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -19,6 +20,7 @@ export default function TestCameraPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -28,7 +30,11 @@ export default function TestCameraPage() {
     }
   };
 
-  const handleButtonClick = () => {
+  const handleCameraClick = () => {
+    cameraInputRef.current?.click();
+  };
+
+  const handleGalleryClick = () => {
     fileInputRef.current?.click();
   };
 
@@ -65,13 +71,15 @@ export default function TestCameraPage() {
 
   if (croppedImage) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-        <img
-          src={croppedImage}
-          alt="Cropped"
-          className="max-w-lg max-h-[512px] object-contain rounded-lg mb-4"
-        />
-        <div className="flex gap-4">
+      <div className="min-h-screen bg-gray-100 p-4 pt-8 flex flex-col">
+        <div className="flex-1 flex items-center justify-center mb-4">
+          <img
+            src={croppedImage}
+            alt="Cropped"
+            className="max-w-full max-h-[calc(100vh-200px)] object-contain rounded-lg"
+          />
+        </div>
+        <div className="flex gap-4 justify-center pb-4">
           <Button onClick={() => setCroppedImage(null)} variant="outline">
             Edit Again
           </Button>
@@ -83,38 +91,51 @@ export default function TestCameraPage() {
 
   if (selectedImage) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-        <div className="mb-4">
+      <div className="h-screen bg-gray-400 flex flex-col">
+        <div className="flex-1 h-[85%] self-center overflow-auto">
           <ReactCrop
             crop={crop}
             onChange={c => setCrop(c)}
             onComplete={c => setCompletedCrop(c)}
             aspect={1}
           >
-            <img
+            <Image
               ref={imageRef}
               src={selectedImage}
+              width={0}
+              height={0}
+              sizes="100vw"
+              style={{ width: 'auto', height: 'auto' }}
               alt="Selected"
-              className="max-w-md max-h-96"
+              className="max-w-full"
               onLoad={() => {
-                // Force initial crop to be applied
                 if (imageRef.current) {
                   const rect = imageRef.current.getBoundingClientRect();
-                  const pixelCrop = {
-                    x: (crop.x / 100) * rect.width,
-                    y: (crop.y / 100) * rect.height,
-                    width: (crop.width / 100) * rect.width,
-                    height: (crop.height / 100) * rect.height,
-                    unit: 'px' as const,
+                  const size = Math.min(rect.width, rect.height) * 0.5;
+                  const x = (rect.width - size) / 2;
+                  const y = (rect.height - size) / 2;
+                  const initialCrop: Crop = {
+                    unit: 'px',
+                    x,
+                    y,
+                    width: size,
+                    height: size,
                   };
-                  setCompletedCrop(pixelCrop);
+                  setCrop(initialCrop);
+                  setCompletedCrop({
+                    x,
+                    y,
+                    width: size,
+                    height: size,
+                    unit: 'px',
+                  });
                 }
               }}
             />
           </ReactCrop>
         </div>
         <canvas ref={canvasRef} className="hidden" />
-        <div className="flex gap-4">
+        <div className="h-[10%] flex gap-4 justify-center items-center px-4">
           <Button onClick={() => setSelectedImage(null)} variant="outline">
             Choose Different Photo
           </Button>
@@ -138,15 +159,27 @@ export default function TestCameraPage() {
           style={{ display: 'none' }}
           type="file"
           accept="image/*"
+          onChange={handleImageChange}
+        />
+        <input
+          ref={cameraInputRef}
+          style={{ display: 'none' }}
+          type="file"
+          accept="image/*"
           capture="environment"
           onChange={handleImageChange}
         />
-        <Button
-          onClick={handleButtonClick}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          Open Camera / Choose Photo
-        </Button>
+        <div className="flex gap-4">
+          <Button
+            onClick={handleCameraClick}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            📷 Camera
+          </Button>
+          <Button onClick={handleGalleryClick} variant="outline">
+            🖼️ Gallery
+          </Button>
+        </div>
       </div>
     </div>
   );
