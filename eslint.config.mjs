@@ -24,6 +24,7 @@ const eslintConfig = [
       'src/features/api/generated/**',
       'prisma/generated/**',
       '**/*.generated.{js,ts}',
+      'prisma.config.ts'
     ],
   },
   // Core Next.js, TypeScript, and React rules
