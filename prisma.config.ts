@@ -1,16 +1,14 @@
-import path from 'node:path';
-import type { PrismaConfig } from 'prisma';
+import 'dotenv/config';
+import { defineConfig, env } from 'prisma/config';
 
 export default {
-  schema: path.join(__dirname, 'src', 'features', 'api', 'prisma', 'schema'),
+  schema: 'src/features/api/prisma/schema/schema.prisma',
   migrations: {
-    path: path.join(
-      __dirname,
-      'src',
-      'features',
-      'api',
-      'prisma',
-      'migrations'
-    ),
+    path: 'src/features/api/prisma/migrations',
   },
-} satisfies PrismaConfig;
+  datasource: {
+    provider: 'postgresql',
+    url: env('DATABASE_URL'),
+    directUrl: env('DIRECT_URL'),
+  },
+};
