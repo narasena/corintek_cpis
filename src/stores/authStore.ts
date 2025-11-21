@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import apiInstance from '@/utils/apiInstance';
 
-interface User {
+interface IUserStore {
   id: string;
   role: string;
   name?: string;
@@ -9,8 +9,8 @@ interface User {
 }
 
 interface IAuthStore {
-  user: User | null;
-  setUser: (user: User | null) => void;
+  user: IUserStore | null;
+  setUser: (user: IUserStore | null) => void;
   logout: () => Promise<void>;
 }
 
