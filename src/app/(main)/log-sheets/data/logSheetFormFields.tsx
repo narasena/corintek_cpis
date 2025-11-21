@@ -1,4 +1,4 @@
-import { ValueType } from '@/features/api/generated/prisma';
+import { ValueType } from '@/features/api/generated/prisma/enums';
 import { IChemical } from '@/types/chemical.type';
 import {
   EFieldType,

@@ -15,7 +15,7 @@ import useClientPersonnel from '@/hooks/clients/useClientPersonnel';
 import useProjectsByClient from '@/hooks/projects/useProjectsByClient';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
-import { MachineType } from '@/features/api/generated/prisma';
+import { MachineType } from '@/features/api/generated/prisma/enums';
 import { IDefaultFormComponentProps } from '@/types/form/form.type';
 
 interface IProjectFormProps extends IDefaultFormComponentProps {}

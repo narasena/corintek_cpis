@@ -2,7 +2,7 @@ import {
   ContractType,
   ProjectType,
   WorkCategory,
-} from '@/features/api/generated/prisma';
+} from '@/features/api/generated/prisma/enums';
 import { preprocessBlank } from '@/features/schemas/defaultSchema';
 import z from 'zod';
 import { machineSchema } from './machineSchema';

@@ -1,4 +1,4 @@
-import { EmploymentStatus } from '@/features/api/generated/prisma';
+import { EmploymentStatus } from '@/features/api/generated/prisma/enums';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
 import enumOptions from '@/utils/enumOptions';
 import { IconLockFilled } from '@tabler/icons-react';

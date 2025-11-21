@@ -8,7 +8,7 @@ import { TParameterLimitAttributes } from '@/types/parameter.type';
 import requestValidation from '@/utils/api/v1/validation/requestValidation';
 import { parameterLimitSchema } from '@/app/(main)/parameters/schemas/parameterLimitSchema';
 import { prisma } from '@/features/api/connection/prisma';
-import { Prisma } from '@/features/api/generated/prisma';
+import { Prisma } from '@/features/api/generated/prisma/client';
 
 export async function fetchAllParameterLimits() {
   try {

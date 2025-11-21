@@ -22,7 +22,7 @@ import { EFileFolders } from '@/utils/api/v1/form-data/formDataNameFormatter';
 import { imageUpload } from '../upload/upload.service';
 import { clientPersonnelCreateSchema } from '@/app/(main)/clients/schemas/clientPICSchema';
 import { prisma } from '@/features/api/connection/prisma';
-import { Prisma } from '@/features/api/generated/prisma';
+import { Prisma } from '@/features/api/generated/prisma/client';
 
 export async function createClient(req: NextRequest) {
   try {

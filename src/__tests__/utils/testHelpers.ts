@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import { ILogSheetServiceData } from '@/types/log-sheet.type';
 import { IParameterGroupForSchema } from '@/types/log-sheet.type';
-import { ValueType } from '@/features/api/generated/prisma/index-browser';
+import { ValueType } from '@/features/api/generated/prisma/enums';
 
 /**
  * Test helper utilities for log sheet tests

@@ -14,7 +14,10 @@ import {
 } from '@tabler/icons-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { defaultColumns } from '@/components/default-columns';
-import { EmploymentStatus, UserRole } from '@/features/api/generated/prisma';
+import {
+  EmploymentStatus,
+  UserRole,
+} from '@/features/api/generated/prisma/enums';
 
 // Local enums to avoid importing from massive Prisma generated fil
 export const userRoles = [

@@ -10,7 +10,7 @@ import {
 } from '@/app/(main)/chemicals/schemas/chemicalSchema';
 import requestValidation from '@/utils/api/v1/validation/requestValidation';
 import { prisma } from '@/features/api/connection/prisma';
-import { Prisma } from '@/features/api/generated/prisma';
+import { Prisma } from '@/features/api/generated/prisma/client';
 
 export async function fetchAllChemicals() {
   try {

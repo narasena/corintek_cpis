@@ -1,4 +1,4 @@
-import { ParameterGroupType } from '@/features/api/generated/prisma/index-browser';
+import { ParameterGroupType } from '@/features/api/generated/prisma/enums';
 import { IGroupParameterByType } from '@/types/parameter.type';
 import errorMessageResponse from '@/utils/api/v1/errorMessageResponse';
 import apiInstance from '@/utils/apiInstance';

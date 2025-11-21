@@ -1,4 +1,4 @@
-import { EmploymentStatus } from '@/features/api/generated/prisma';
+import { EmploymentStatus } from '@/features/api/generated/prisma/enums';
 import { clientPersonnelRoles } from '../../users/components/user-columns';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
 import enumOptions from '@/utils/enumOptions';

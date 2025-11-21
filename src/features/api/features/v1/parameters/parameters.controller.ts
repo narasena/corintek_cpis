@@ -8,7 +8,7 @@ import requestValidation from '@/utils/api/v1/validation/requestValidation';
 import { TParameterAttributes } from '@/types/parameter.type';
 import { parameterSchema } from '@/app/(main)/parameters/schemas/parameterSchema';
 import { prisma } from '@/features/api/connection/prisma';
-import { Prisma } from '@/features/api/generated/prisma';
+import { Prisma } from '@/features/api/generated/prisma/client';
 
 export async function fetchAllParameters() {
   try {

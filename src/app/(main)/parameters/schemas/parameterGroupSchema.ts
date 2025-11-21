@@ -1,4 +1,4 @@
-import { ParameterGroupType } from '@/features/api/generated/prisma';
+import { ParameterGroupType } from '@/features/api/generated/prisma/enums';
 import {
   defaultSchemaMessage,
   preprocessBlank,

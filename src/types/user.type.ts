@@ -1,5 +1,5 @@
 import { IIMage, ITableHelper } from './base.dto';
-import { UserRole } from '@/features/api/generated/prisma';
+import { UserRole } from '@/features/api/generated/prisma/enums';
 import z from 'zod';
 import { userCreationSchema } from '../app/(main)/users/schemas/userSchema';
 

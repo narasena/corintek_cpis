@@ -1,6 +1,6 @@
 import { prisma } from '@/features/api/connection/prisma';
 import { TUserCreationAttributes } from '@/types/user.type';
-import { Prisma, User } from '@/features/api/generated/prisma';
+import { Prisma, User } from '@/features/api/generated/prisma/client';
 import { hashPassword } from '@/utils/api/v1/passwordHash';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { AppError } from '@/lib/app-error';

@@ -24,7 +24,7 @@
       "}",
     ],
   },
-  "API Create Route":{
+  "API Create Route": {
     "scope": "javascript,typescript",
     "prefix": "apicr",
     "body": [
@@ -32,8 +32,8 @@
       "",
       "export async function POST(req: NextRequest) {",
       "  return await create${1:Item}(req);",
-      "}"
-    ]
+      "}",
+    ],
   },
 
   "API Fetch All Controller": {
@@ -62,7 +62,7 @@
     "prefix": "apifas",
     "body": [
       "import { prisma } from '@/features/api/connection/prisma';",
-      "import { Prisma } from '@/features/api/generated/prisma';",
+      "import { Prisma } from '@/features/api/generated/prisma/client';",
       "import { serviceErrorResponse } from '@/lib/error-handler';",
       "",
       "export async function fetchAll${1:Item}sService() {",
@@ -84,14 +84,12 @@
       "    });",
       "  }",
       "}",
-      ""
-    ]
+      "",
+    ],
   },
-  "API Create Item Controller":{
+  "API Create Item Controller": {
     "scope": "javascript,typescript",
     "prefix": "apicc",
-    "body":[
-      
-    ]
-  }
+    "body": [],
+  },
 }

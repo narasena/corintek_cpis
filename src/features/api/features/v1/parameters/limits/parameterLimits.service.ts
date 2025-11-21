@@ -1,5 +1,5 @@
 import { prisma } from '@/features/api/connection/prisma';
-import { Prisma } from '@/features/api/generated/prisma';
+import { Prisma } from '@/features/api/generated/prisma/client';
 import { AppError } from '@/lib/app-error';
 import { serviceErrorResponse } from '@/lib/error-handler';
 import { TParameterLimitAttributes } from '@/types/parameter.type';

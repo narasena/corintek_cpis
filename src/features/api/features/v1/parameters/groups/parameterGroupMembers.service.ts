@@ -1,5 +1,5 @@
 import { prisma } from '@/features/api/connection/prisma';
-import { Prisma } from '@/features/api/generated/prisma';
+import { Prisma } from '@/features/api/generated/prisma/client';
 import { serviceErrorResponse } from '@/lib/error-handler';
 
 export async function fetchParameterGroupMembersService(groupId: string) {

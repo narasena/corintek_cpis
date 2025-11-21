@@ -1,4 +1,4 @@
-import { ParameterGroupType } from '@/features/api/generated/prisma';
+import { ParameterGroupType } from '@/features/api/generated/prisma/enums';
 import { EFieldType, IFormFields } from '@/types/form/form.type';
 import enumOptions from '@/utils/enumOptions';
 

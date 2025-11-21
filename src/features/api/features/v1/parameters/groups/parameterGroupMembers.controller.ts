@@ -1,7 +1,7 @@
 import { createErrorResponse } from '@/lib/error-handler';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/features/api/connection/prisma';
-import { Prisma } from '@/features/api/generated/prisma';
+import { Prisma } from '@/features/api/generated/prisma/client';
 import {
   fetchParameterGroupMembersService,
   addParameterGroupMembersService,

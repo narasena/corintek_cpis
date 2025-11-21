@@ -8,7 +8,7 @@ import { UniqueIdentifier } from '@dnd-kit/core';
 
 import { NextRequest } from 'next/server';
 import { hashPassword } from '@/utils/api/v1/passwordHash';
-import { Client, Prisma, User } from '@/features/api/generated/prisma';
+import { Client, Prisma, User } from '@/features/api/generated/prisma/client';
 import { prisma } from '@/features/api/connection/prisma';
 import { serviceErrorResponse } from '@/lib/error-handler';
 

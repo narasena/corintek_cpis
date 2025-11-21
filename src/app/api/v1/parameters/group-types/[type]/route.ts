@@ -1,5 +1,5 @@
 import { fetchParameterGroupsByType } from '@/features/api/features/v1/parameters/groups/parameterGroups.controller';
-import { ParameterGroupType } from '@/features/api/generated/prisma';
+import { ParameterGroupType } from '@/features/api/generated/prisma/enums';
 import { NextRequest } from 'next/server';
 
 export async function GET(

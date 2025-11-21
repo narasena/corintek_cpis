@@ -11,7 +11,7 @@ import uploadFormDataFormatter from '@/utils/api/v1/form-data/uploadFormDataForm
 import { EFileFolders } from '@/utils/api/v1/form-data/formDataNameFormatter';
 import { imageUpload } from '../upload/upload.service';
 import { createErrorResponse } from '@/lib/error-handler';
-import { Prisma } from '@/features/api/generated/prisma';
+import { Prisma } from '@/features/api/generated/prisma/client';
 
 export async function createUser(req: NextRequest) {
   const formData = await formDataLogs(req);

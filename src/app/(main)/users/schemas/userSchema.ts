@@ -1,4 +1,7 @@
-import { EmploymentStatus, UserRole } from '@/features/api/generated/prisma';
+import {
+  EmploymentStatus,
+  UserRole,
+} from '@/features/api/generated/prisma/enums';
 import { defaultSchemaMessage } from '@/features/schemas/defaultSchema';
 import z from 'zod';
 

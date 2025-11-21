@@ -1,4 +1,4 @@
-import { ChemicalType } from '@/features/api/generated/prisma';
+import { ChemicalType } from '@/features/api/generated/prisma/enums';
 import { preprocessBlank } from '@/features/schemas/defaultSchema';
 import z from 'zod';
 

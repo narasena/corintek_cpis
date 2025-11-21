@@ -8,7 +8,7 @@ import {
   fetchLogSheetByIdService,
 } from './logSheets.service';
 import { fetchProjectByIdService } from '@/features/api/features/v1/projects/project.service';
-import { Prisma } from '@/features/api/generated/prisma';
+import { Prisma } from '@/features/api/generated/prisma/client';
 import { prisma } from '@/features/api/connection/prisma';
 import { ILogSheetServiceData } from '@/types/log-sheet.type';
 

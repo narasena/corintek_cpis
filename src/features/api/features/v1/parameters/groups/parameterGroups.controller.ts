@@ -10,10 +10,11 @@ import {
 } from './parameterGroups.service';
 import requestValidation from '@/utils/api/v1/validation/requestValidation';
 import { prisma } from '@/features/api/connection/prisma';
-import { ParameterGroupType, Prisma } from '@/features/api/generated/prisma';
+import { ParameterGroupType } from '@/features/api/generated/prisma/enums';
 import { TParameterGroupAttributes } from '@/types/parameter.type';
 import { parameterGroupSchema } from '@/app/(main)/parameters/schemas/parameterGroupSchema';
 import { AppError } from '@/lib/app-error';
+import { Prisma } from '@/features/api/generated/prisma/client';
 
 export async function createParameterGroup(req: NextRequest) {
   try {

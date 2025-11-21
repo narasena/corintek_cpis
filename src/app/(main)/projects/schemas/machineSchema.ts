@@ -1,4 +1,7 @@
-import { MachineOwnership, MachineType } from '@/features/api/generated/prisma';
+import {
+  MachineOwnership,
+  MachineType,
+} from '@/features/api/generated/prisma/enums';
 import { preprocessBlank } from '@/features/schemas/defaultSchema';
 import z from 'zod';
 

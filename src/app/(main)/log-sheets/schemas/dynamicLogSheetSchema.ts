@@ -1,8 +1,9 @@
+import { ValueType } from '@/features/api/generated/prisma/enums';
 import {
   preprocessBlank,
   preprocessBoolean,
 } from '@/features/schemas/defaultSchema';
-import { ValueType } from '@/features/api/generated/prisma/index-browser';
+
 import { IParameterGroupForSchema } from '@/types/log-sheet.type';
 import z from 'zod';
 

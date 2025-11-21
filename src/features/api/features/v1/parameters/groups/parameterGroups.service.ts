@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
-import { ParameterGroupType, Prisma } from '@/features/api/generated/prisma';
+import { ParameterGroupType } from '@/features/api/generated/prisma/enums';
 import { prisma } from '@/features/api/connection/prisma';
 import { TParameterGroupAttributes } from '@/types/parameter.type';
 import { serviceErrorResponse } from '@/lib/error-handler';
 import { AppError } from '@/lib/app-error';
+import { Prisma } from '@/features/api/generated/prisma/client';
 
 export async function fetchAllParameterGroupsService() {
   try {

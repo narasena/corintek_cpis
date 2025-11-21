@@ -20,7 +20,7 @@ import useAllChemicals from '@/hooks/chemicals/useAllChemicals';
 import useLogSheetSchemaParameters from '../hooks/useLogSheetSchemaParameters';
 import { IGroupParameterByType } from '@/types/parameter.type';
 import { cn } from '@/lib/utils';
-import { ValueType } from '@/features/api/generated/prisma/index-browser';
+import { ValueType } from '@/features/api/generated/prisma/enums';
 import { IChemicalUsageData, ParameterValue } from '@/types/log-sheet.type';
 
 interface ILogSheetsFormProps {

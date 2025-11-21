@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createDynamicLogSheetSchema } from '@/app/(main)/log-sheets/schemas/dynamicLogSheetSchema';
 import { IParameterGroupForSchema } from '@/types/log-sheet.type';
-import { ValueType } from '@/features/api/generated/prisma/index-browser';
+import { ValueType } from '@/features/api/generated/prisma/enums';
 
 describe('Dynamic Log Sheet Schema', () => {
   const mockParameterGroups: IParameterGroupForSchema[] = [

@@ -12,7 +12,7 @@ import {
   MachineType,
   Prisma,
   UserRole,
-} from '@/features/api/generated/prisma';
+} from '@/features/api/generated/prisma/client';
 import { prisma } from '@/features/api/connection/prisma';
 import { serviceErrorResponse } from '@/lib/error-handler';
 

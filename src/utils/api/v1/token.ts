@@ -1,4 +1,4 @@
-import { UserRole } from '@/features/api/generated/prisma';
+import { UserRole } from '@/features/api/generated/prisma/enums';
 import jwt from 'jsonwebtoken';
 
 interface IToken {

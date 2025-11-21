@@ -1,4 +1,4 @@
-import { LogSheetStatus } from '@/features/api/generated/prisma';
+import { LogSheetStatus } from '@/features/api/generated/prisma/enums';
 import { ITableHelper } from './base.dto';
 
 // Chemical usage data type
