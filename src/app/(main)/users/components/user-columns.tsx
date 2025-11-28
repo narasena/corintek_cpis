@@ -18,6 +18,7 @@ import {
   EmploymentStatus,
   UserRole,
 } from '@/features/api/generated/prisma/enums';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 // Local enums to avoid importing from massive Prisma generated fil
 export const userRoles = [
@@ -65,7 +66,11 @@ const employeeStatus = [
   { status: EmploymentStatus.CONTRACT, style: 'bg-pink-700' },
 ];
 
-export const userColumns = (): ColumnDef<IUser>[] => {
+interface IUserColumnsParams {
+  handleDelete: (id: UniqueIdentifier) => void;
+}
+
+export const userColumns = (params: IUserColumnsParams): ColumnDef<IUser>[] => {
   const { drag, select, email, phoneNumber, actions } = defaultColumns<IUser>();
   return [
     drag,
@@ -135,6 +140,12 @@ export const userColumns = (): ColumnDef<IUser>[] => {
       },
       enableHiding: false,
     },
-    actions(),
+    actions({
+      handleDelete: params.handleDelete,
+      context: 'user',
+      getDataName: (row: IUser) => {
+        return `${row.firstName} ${row.lastName}`;
+      },
+    }),
   ];
 };

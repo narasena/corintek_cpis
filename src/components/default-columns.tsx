@@ -14,6 +14,7 @@ import { FieldValues } from 'react-hook-form';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import React from 'react';
 import ActionsData from './features/data/actions-data';
+import DeleteData, { TDataContext } from './features/data/delete-data';
 
 export function defaultColumns<T extends FieldValues & ITableHelper>() {
   function draggableColumn(): ColumnDef<T> {
@@ -72,7 +73,11 @@ export function defaultColumns<T extends FieldValues & ITableHelper>() {
   interface IActionsColumnParams {
     handlePreview?: (id: UniqueIdentifier) => void | React.ReactNode;
     handleEdit?: (id: UniqueIdentifier) => void | React.ReactNode;
-    handleDelete?: (id: UniqueIdentifier) => void | React.ReactNode;
+    handleDelete?: (
+      id: UniqueIdentifier
+    ) => void | Promise<void> | React.ReactNode;
+    context?: TDataContext;
+    getDataName?: (row: T) => string;
   }
 
   function actionsColumn(params?: IActionsColumnParams): ColumnDef<T> {
@@ -128,23 +133,30 @@ export function defaultColumns<T extends FieldValues & ITableHelper>() {
                 (
                   { label, icon: Icon, onClick, className, iconClassName },
                   index
-                ) => (
-                  <DropdownMenuItem
-                    asChild
-                    key={index}
-                    className="flex items-center"
-                    variant={label === 'Hapus' ? 'destructive' : 'default'}
-                  >
-                    <ActionsData
-                      icon={Icon}
-                      buttonText={label}
-                      className={className}
-                      iconClassName={iconClassName}
-                      modalTitle={`${label} Parameter Group`}
-                      content={onClick() as React.ReactNode}
+                ) =>
+                  label !== 'Hapus' ? (
+                    <DropdownMenuItem
+                      asChild
+                      key={index}
+                      className="flex items-center"
+                      variant={label === 'Hapus' ? 'destructive' : 'default'}
+                    >
+                      <ActionsData
+                        icon={Icon}
+                        buttonText={label}
+                        className={className}
+                        iconClassName={iconClassName}
+                        modalTitle={`${label} Parameter Group`}
+                        content={onClick() as React.ReactNode}
+                      />
+                    </DropdownMenuItem>
+                  ) : (
+                    <DeleteData
+                      context="user"
+                      dataName={params?.getDataName?.(row.original)}
+                      onDelete={onClick() as unknown as () => void}
                     />
-                  </DropdownMenuItem>
-                )
+                  )
               )}
             </DropdownMenuContent>
           </DropdownMenu>
