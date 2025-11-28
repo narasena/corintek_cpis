@@ -127,11 +127,46 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
     className?: string;
   }) {
     return (
-      <div className={cn('grid grid-cols-2 gap-4 mb-4', className)}>
+      <div className={cn('grid grid-cols-2 gap-4 mb-4 relative z-[90] isolate overflow-visible', className)}>
         {formFields.map((formField, index) => (
           <RenderFormField key={index} formField={formField} />
         ))}
       </div>
+    );
+  }
+
+  function RenderNestedAccordions(children: IAccordionDataFormatted[]) {
+    return (
+      <Accordion type="multiple" className="mt-4 relative z-[70]">
+        {children.map(child => (
+          <AccordionItem key={child.value} value={child.value}>
+            <AccordionTrigger
+              className={cn(
+                'mb-3 bg-primary hover:bg-blue-800 text-white hover:no-underline px-6 z-20',
+                child.className?.title || ''
+              )}
+            >
+              {child.title}
+            </AccordionTrigger>
+            <AccordionContent
+              className={cn('relative z-[80] isolate [&[data-state=open]]:overflow-visible', child.className?.content)}
+            >
+              {child.description &&
+              typeof child.description === 'string' ? (
+                <p>{child.description}</p>
+              ) : (
+                (child.description as React.ReactNode)
+              )}
+              {child.fields.length > 0 && (
+                <FormFieldsGenerator
+                  formFields={child.fields}
+                  className={child.className?.formFields}
+                />
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
     );
   }
 
@@ -170,14 +205,14 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
             <AccordionItem key={accordion.value} value={accordion.value}>
               <AccordionTrigger
                 className={cn(
-                  'mb-3 bg-primary hover:bg-blue-800 text-white hover:no-underline px-6',
+                  'mb-3 bg-primary hover:bg-blue-800 text-white hover:no-underline px-6 z-20',
                   accordion.className?.title || ''
                 )}
               >
                 {accordion.title}
               </AccordionTrigger>
               <AccordionContent
-                className={cn('', accordion.className?.content)}
+                className={cn('relative z-[60] isolate [&[data-state=open]]:overflow-visible', accordion.className?.content)}
               >
                 {accordion.description &&
                 typeof accordion.description === 'string' ? (
@@ -191,35 +226,7 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
                     className={accordion.className?.formFields}
                   />
                 )}
-                {children &&
-                  children.map(child => (
-                    <AccordionItem key={child.value} value={child.value}>
-                      <AccordionTrigger
-                        className={cn(
-                          'mb-3 bg-primary hover:bg-blue-800 text-white hover:no-underline px-6',
-                          child.className?.title || ''
-                        )}
-                      >
-                        {child.title}
-                      </AccordionTrigger>
-                      <AccordionContent
-                        className={cn('', child.className?.content)}
-                      >
-                        {child.description &&
-                        typeof child.description === 'string' ? (
-                          <p>{child.description}</p>
-                        ) : (
-                          (child.description as React.ReactNode)
-                        )}
-                        {child.fields.length > 0 && (
-                          <FormFieldsGenerator
-                            formFields={child.fields}
-                            className={child.className?.formFields}
-                          />
-                        )}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
+                {children && children.length > 0 && RenderNestedAccordions(children)}
               </AccordionContent>
             </AccordionItem>
           );

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { IProject } from '@/types/project.type';
 import apiInstance from '@/utils/apiInstance';
+import errorMessageResponse from '@/utils/api/v1/errorMessageResponse';
 
 export default function useProjects() {
   const [projects, setProjects] = useState<IProject[]>([]);
@@ -16,8 +17,7 @@ export default function useProjects() {
 
       setProjects(response.data.projects);
     } catch (err) {
-      setError('Error fetching projects');
-      console.error('Error fetching projects:', err);
+      errorMessageResponse(err, 'Error fetching projects');
     } finally {
       setLoading(false);
     }

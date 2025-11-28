@@ -2,8 +2,17 @@ import { defaultColumns } from '@/components/default-columns';
 import { IProject } from '@/types/project.type';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
+import SlugData from '@/components/features/data/slug-data';
+import ProjectData from './project-data';
+import ProjectForm from './project-form';
+import { IDefaultFormComponentProps } from '@/types/form/form.type';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
-export const projectColumns = (): ColumnDef<IProject>[] => {
+interface IProjectColumnsParams extends IDefaultFormComponentProps {}
+
+export const projectColumns = (
+  params: IProjectColumnsParams
+): ColumnDef<IProject>[] => {
   const { drag, select, actions } = defaultColumns<IProject>();
   return [
     drag,
@@ -11,9 +20,15 @@ export const projectColumns = (): ColumnDef<IProject>[] => {
     {
       accessorKey: 'name',
       header: 'Project Name',
-      cell: ({ getValue }) => {
-        const name = getValue() as string;
-        return <div className="font-medium">{name}</div>;
+      cell: ({ row }) => {
+        return (
+          <SlugData
+            type="nameSlug"
+            buttonText={row.original.name}
+            modalTitle={row.original.name}
+            content={<ProjectData projectId={row.original.id as string} />}
+          />
+        );
       },
     },
     {
@@ -92,6 +107,19 @@ export const projectColumns = (): ColumnDef<IProject>[] => {
         return new Date(date).toLocaleDateString();
       },
     },
-    actions(),
+    actions({
+      handleEdit: (id: UniqueIdentifier) => {
+        return (
+          <div className="space-y-4">
+            <p>Apakah Anda yakin ingin mengedit project ini?</p>
+            <ProjectForm
+              id={id as string}
+              type="update"
+              refetch={params.refetch}
+            />
+          </div>
+        );
+      },
+    }),
   ];
 };

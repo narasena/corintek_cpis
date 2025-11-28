@@ -20,6 +20,10 @@ export interface IProject
   client: IClient;
   clientPersonnel: IPersonnelGroup[];
   personnel: IPersonnelGroup[]; // Add assignments if needed
+  parent: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 export interface IPersonnelDetail {

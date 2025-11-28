@@ -31,7 +31,9 @@ export default function ProjectsPage() {
       value: 'default',
       label: 'Default',
       data: projects,
-      columns: projectColumns(),
+      columns: projectColumns({
+        refetch: refetchProjects,
+      }),
       addNewRow: (
         <CreateData
           buttonText="Tambah Proyek"

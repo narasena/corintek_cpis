@@ -17,15 +17,18 @@ import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 import { MachineType } from '@/features/api/generated/prisma/enums';
 import { IDefaultFormComponentProps } from '@/types/form/form.type';
+import useProjectById from '@/hooks/projects/useProjectById';
 
 interface IProjectFormProps extends IDefaultFormComponentProps {}
 
-export default function ProjectForm({ refetch }: IProjectFormProps) {
+export default function ProjectForm({ refetch, type, id }: IProjectFormProps) {
   const { internalPersonnel } = useAllPersonnel();
   const { allClients } = useAllClients();
   const clients = allClients.map(client => {
     return { label: client.name, value: client.id };
   });
+  const { project } = useProjectById(id as string);
+  const isUpdate = type ? type?.toLocaleLowerCase() === 'update' : false;
 
   // State for dynamic machine forms
   const [chillerForms, setChillerForms] = useState([0]); // Start with one chiller form
@@ -68,6 +71,24 @@ export default function ProjectForm({ refetch }: IProjectFormProps) {
       }>,
     },
   });
+
+  React.useEffect(() => {
+    if (isUpdate && project) {
+      projectCreationForm.setValue('clientId', project.clientId);
+      projectCreationForm.setValue('name', project.name);
+      projectCreationForm.setValue('description', project.description);
+      projectCreationForm.setValue('quoteNumber', project.quoteNumber);
+      projectCreationForm.setValue('PONumber', project.PONumber);
+      projectCreationForm.setValue('startDate', project.startDate);
+      projectCreationForm.setValue('endDate', project.endDate);
+      projectCreationForm.setValue('type', project.type);
+      projectCreationForm.setValue('contractType', project.contractType);
+      projectCreationForm.setValue('workCategory', project.workCategory);
+      projectCreationForm.setValue('warranty', project.warranty);
+      projectCreationForm.setValue('chillers', project.chillers);
+      projectCreationForm.setValue('coolingTowers', project.coolingTowers);
+    }
+  }, [isUpdate, project]);
 
   // Ensure array fields are properly initialized
   React.useEffect(() => {

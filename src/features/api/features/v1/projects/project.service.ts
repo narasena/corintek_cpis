@@ -307,6 +307,7 @@ export async function fetchProjectByIdService(projectId: string) {
         deletedAt: null,
       },
       include: {
+        parent: { select: { id: true, name: true } },
         client: {
           select: {
             id: true,
