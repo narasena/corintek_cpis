@@ -76,8 +76,10 @@ export function defaultColumns<T extends FieldValues & ITableHelper>() {
     handleDelete?: (
       id: UniqueIdentifier
     ) => void | Promise<void> | React.ReactNode;
+    apiUrl: string;
     context?: TDataContext;
     getDataName?: (row: T) => string;
+    refreshData?: () => void;
   }
 
   function actionsColumn(params?: IActionsColumnParams): ColumnDef<T> {
@@ -152,9 +154,12 @@ export function defaultColumns<T extends FieldValues & ITableHelper>() {
                     </DropdownMenuItem>
                   ) : (
                     <DeleteData
+                      key={index}
                       context="user"
                       dataName={params?.getDataName?.(row.original)}
-                      onDelete={onClick() as unknown as () => void}
+                      id={row.original.id}
+                      apiUrl={params?.apiUrl}
+                      refreshData={params?.refreshData}
                     />
                   )
               )}

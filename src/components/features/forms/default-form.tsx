@@ -127,7 +127,12 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
     className?: string;
   }) {
     return (
-      <div className={cn('grid grid-cols-2 gap-4 mb-4 relative z-[90] isolate overflow-visible', className)}>
+      <div
+        className={cn(
+          'grid grid-cols-2 gap-4 mb-4 relative z-[90] isolate overflow-visible',
+          className
+        )}
+      >
         {formFields.map((formField, index) => (
           <RenderFormField key={index} formField={formField} />
         ))}
@@ -149,10 +154,12 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
               {child.title}
             </AccordionTrigger>
             <AccordionContent
-              className={cn('relative z-[80] isolate [&[data-state=open]]:overflow-visible', child.className?.content)}
+              className={cn(
+                'relative z-[80] isolate [&[data-state=open]]:overflow-visible',
+                child.className?.content
+              )}
             >
-              {child.description &&
-              typeof child.description === 'string' ? (
+              {child.description && typeof child.description === 'string' ? (
                 <p>{child.description}</p>
               ) : (
                 (child.description as React.ReactNode)
@@ -212,7 +219,10 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
                 {accordion.title}
               </AccordionTrigger>
               <AccordionContent
-                className={cn('relative z-[60] isolate [&[data-state=open]]:overflow-visible', accordion.className?.content)}
+                className={cn(
+                  'relative z-[60] isolate [&[data-state=open]]:overflow-visible',
+                  accordion.className?.content
+                )}
               >
                 {accordion.description &&
                 typeof accordion.description === 'string' ? (
@@ -226,7 +236,9 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
                     className={accordion.className?.formFields}
                   />
                 )}
-                {children && children.length > 0 && RenderNestedAccordions(children)}
+                {children &&
+                  children.length > 0 &&
+                  RenderNestedAccordions(children)}
               </AccordionContent>
             </AccordionItem>
           );

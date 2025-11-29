@@ -7,16 +7,9 @@ import UserForm from './components/user-form';
 import { IUser } from '@/types/user.type';
 import useAllUsers from '@/hooks/users/useAllUsers';
 import { Spinner } from '@/components/ui/spinner';
-import { useCallback } from 'react';
-import { UniqueIdentifier } from '@dnd-kit/core';
-import deleteData from '@/utils/deleteData';
 
 export default function UsersPage() {
-  const { allUsers, loading, error } = useAllUsers();
-
-  const handleDelete = useCallback(async (id: UniqueIdentifier) => {
-    await deleteData(id, '/api/users');
-  }, []);
+  const { allUsers, loading, error, refetch } = useAllUsers();
 
   if (loading) {
     return (
@@ -37,7 +30,9 @@ export default function UsersPage() {
       value: 'default',
       label: 'Default',
       data: allUsers,
-      columns: userColumns({ handleDelete }),
+      columns: userColumns({
+        refetch,
+      }),
       addNewRow: (
         <CreateData
           buttonText="Tambah User"

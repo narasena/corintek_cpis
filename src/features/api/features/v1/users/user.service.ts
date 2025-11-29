@@ -4,6 +4,7 @@ import { Prisma, User } from '@/features/api/generated/prisma/client';
 import { hashPassword } from '@/utils/api/v1/passwordHash';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { AppError } from '@/lib/app-error';
+import { serviceErrorResponse } from '@/lib/error-handler';
 
 export async function createUserWithoutAvatar(
   payload: Omit<TUserCreationAttributes, 'avatarImg'>,
@@ -101,6 +102,34 @@ export async function fetchAllUsersService() {
       status: 500,
       message: 'Error fetching users',
       isExpose: true,
+    });
+  }
+}
+
+export async function deleteUserService(id: string) {
+  try {
+    const deletedUser = await prisma.user.update({
+      where: {
+        deletedAt: null,
+        id,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+    if (!deletedUser) {
+      throw new AppError({
+        status: 404,
+        message: 'User not found',
+        isExpose: true,
+      });
+    }
+    return deletedUser;
+  } catch (error) {
+    serviceErrorResponse({
+      error,
+      customErrorMessage: 'Error deleting user',
+      status: 500,
     });
   }
 }

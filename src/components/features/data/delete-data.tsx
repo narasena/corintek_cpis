@@ -10,25 +10,35 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import useDeleteData from '@/hooks/useDeleteData';
+import { UniqueIdentifier } from '@dnd-kit/core';
 import { IconTrashX } from '@tabler/icons-react';
 
 interface IDeleteDataProps {
   confirmDeleteButtonColor?: string;
   context: TDataContext;
   dataName?: string;
-  onDelete: () => void;
+  apiUrl: string;
+  id: UniqueIdentifier;
+  refreshData?: () => void;
 }
 
 export type TDataContext = 'user' | 'client' | 'project' | 'document';
 
 export default function DeleteData(props: IDeleteDataProps) {
+  const { isLoading, handleDeleteData } = useDeleteData(
+    props.id,
+    props.apiUrl,
+    props.refreshData
+  );
   return (
     <AlertDialog>
-      <AlertDialogTrigger>
+      <AlertDialogTrigger asChild>
         <Button
           variant="destructive"
           size="sm"
-          className="flex items-center justify-center"
+          className="flex items-center justify-center hover:bg-red-700"
         >
           <IconTrashX className="mr-1" />
           Delete
@@ -53,16 +63,17 @@ export default function DeleteData(props: IDeleteDataProps) {
         </AlertDialogHeader>
 
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             className={`${
               props.confirmDeleteButtonColor
                 ? props.confirmDeleteButtonColor
                 : 'bg-red-700 hover:bg-red-600'
             }`}
-            onClick={props.onDelete}
+            onClick={handleDeleteData}
+            disabled={isLoading}
           >
-            Continue
+            {isLoading ? <Spinner /> : 'Continue'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

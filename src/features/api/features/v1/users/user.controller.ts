@@ -1,4 +1,4 @@
-import { fetchAllUsersService } from './user.service';
+import { deleteUserService, fetchAllUsersService } from './user.service';
 import { TUserCreationAttributes } from '@/types/user.type';
 import { NextRequest, NextResponse } from 'next/server';
 import { createUserWithoutAvatar, updateUserAvatar } from './user.service';
@@ -91,6 +91,20 @@ export async function fetchAllUsers() {
       success: true,
       status: 200,
       users,
+    });
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+export async function deleteUser(req: NextRequest, id: string) {
+  try {
+    const deletedUser = await deleteUserService(id);
+    return NextResponse.json({
+      success: true,
+      status: 200,
+      message: 'User deleted successfully',
+      deletedUser,
     });
   } catch (error) {
     return createErrorResponse(error);
