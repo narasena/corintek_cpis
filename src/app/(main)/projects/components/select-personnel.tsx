@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
@@ -16,18 +15,25 @@ function SelectPersonnelContent({
   dataGroup,
   selectedValues,
   togglePersonnel,
-  onClose,
 }: {
   dataGroup: IPersonnelGroup[];
   selectedValues: string[];
   togglePersonnel: (id: string) => void;
-  onClose: () => void;
 }) {
+  // Add error handling for empty or invalid data
+  if (!dataGroup || dataGroup.length === 0) {
+    return (
+      <div className="w-full bg-background border border-border rounded-md shadow-xl ring-1 ring-ring/10 p-4 text-center text-sm text-muted-foreground">
+        No personnel available
+      </div>
+    );
+  }
+
   return (
     <div className="w-full bg-background border border-border rounded-md shadow-xl ring-1 ring-ring/10 max-h-60 overflow-y-auto">
       {dataGroup.map((group, groupIndex) => (
         <div key={groupIndex}>
-          <div className="px-2 py-1 bg-accent text-sm font-medium text-foreground/80 sticky top-0 z-10 backdrop-blur-sm">
+          <div className="px-2 py-1 text-sm font-medium text-gray-500 sticky top-0 z-10 backdrop-blur-sm">
             {group.role}
           </div>
           {group.personnel.map(personnel => {
@@ -35,10 +41,12 @@ function SelectPersonnelContent({
             return (
               <div
                 key={personnel.id}
-                className={`flex items-center justify-between p-2 cursor-pointer hover:bg-accent/50 ${
+                className={`flex items-center justify-between p-2 cursor-pointer hover:bg-accent ${
                   isSelected ? 'bg-accent' : ''
                 }`}
-                onClick={() => {
+                onClick={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   togglePersonnel(personnel.id);
                 }}
               >
@@ -66,7 +74,6 @@ export function SelectPersonnel<TFormAttributes extends FieldValues>(
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedValues = (props.field.value as string[]) || [];
-  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
 
   // Close on outside click
   useEffect(() => {
@@ -82,32 +89,10 @@ export function SelectPersonnel<TFormAttributes extends FieldValues>(
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [isOpen]);
-
-  // Position dropdown
-  const updatePosition = useCallback(() => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setDropdownStyle({
-        position: 'fixed',
-        left: `${rect.left}px`,
-        top: `${rect.bottom + 4}px`,
-        width: `${rect.width}px`,
-        zIndex: 999999,
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      updatePosition();
-      window.addEventListener('resize', updatePosition);
-      return () => window.removeEventListener('resize', updatePosition);
-    }
-  }, [isOpen, updatePosition]);
 
   const togglePersonnel = (personnelId: string) => {
     const newValues = selectedValues.includes(personnelId)
@@ -132,12 +117,25 @@ export function SelectPersonnel<TFormAttributes extends FieldValues>(
     setIsOpen(!isOpen);
   };
 
-  const handleClose = () => {
-    setIsOpen(false);
-  };
+  // Add error handling for data
+  if (!props.dataGroup || props.dataGroup.length === 0) {
+    return (
+      <div className="w-full">
+        <Button
+          ref={buttonRef}
+          type="button"
+          variant="outline"
+          className="w-full justify-between"
+          disabled
+        >
+          No personnel available
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
       {/* Selected personnel display */}
       {selectedValues.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
@@ -153,7 +151,10 @@ export function SelectPersonnel<TFormAttributes extends FieldValues>(
                 variant="ghost"
                 size="sm"
                 className="h-auto p-0 ml-1 hover:bg-transparent"
-                onClick={() => removePersonnel(selectedValues[index])}
+                onClick={e => {
+                  e.stopPropagation();
+                  removePersonnel(selectedValues[index]);
+                }}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -163,35 +164,34 @@ export function SelectPersonnel<TFormAttributes extends FieldValues>(
       )}
 
       {/* Button */}
-      <Button
-        ref={buttonRef}
-        type="button"
-        variant="outline"
-        className="w-full justify-between"
-        onClick={handleToggle}
-      >
-        {selectedValues.length > 0
-          ? `${selectedValues.length} PIC Corintek dipilih`
-          : 'Pilih PIC Corintek'}
-      </Button>
+      <div className="relative">
+        <Button
+          ref={buttonRef}
+          type="button"
+          variant="outline"
+          className="w-full justify-between"
+          onClick={handleToggle}
+        >
+          {selectedValues.length > 0
+            ? `${selectedValues.length} PIC Corintek dipilih`
+            : 'Pilih PIC Corintek'}
+        </Button>
 
-      {/* Portalled Dropdown */}
-      {isOpen &&
-        createPortal(
+        {/* Inline Dropdown */}
+        {isOpen && (
           <div
             ref={dropdownRef}
-            style={dropdownStyle}
-            className="outline-none"
+            className="bg-background border border-border rounded-md shadow-xl ring-1 ring-ring/10 max-h-60 overflow-y-auto mt-1"
+            onClick={e => e.stopPropagation()}
           >
             <SelectPersonnelContent
               dataGroup={props.dataGroup}
               selectedValues={selectedValues}
               togglePersonnel={togglePersonnel}
-              onClose={handleClose}
             />
-          </div>,
-          document.body
+          </div>
         )}
+      </div>
     </div>
   );
 }

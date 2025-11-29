@@ -63,17 +63,16 @@ export default function FieldSelector<TFormAttributes extends FieldValues>({
 }: FormSelectorProps<TFormAttributes>) {
   const { field } = renderProps;
   const Icon = formField.icon as JSX.ElementType;
-  const CustomComponent =
-    formField.type === EFieldType.CUSTOM
-      ? (formField.customComponent as JSX.ElementType)
-      : null;
 
   // Helper function to generate display value from item properties
 
   switch (formField.type) {
     case EFieldType.CUSTOM:
-      if (CustomComponent) {
-        return <CustomComponent />;
+      if (formField.customComponent) {
+        const customComponent = formField.customComponent as (
+          field: any
+        ) => React.ReactElement;
+        return customComponent(renderProps.field);
       }
       return null;
     case EFieldType.SELECT:

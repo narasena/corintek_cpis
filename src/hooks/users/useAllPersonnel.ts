@@ -9,7 +9,7 @@ export default function useAllPersonnel() {
 
   const fetchPersonnel = async () => {
     try {
-      const response = await apiInstance.get('/projects/personnel/internals');
+      const response = await apiInstance.get('/projects/personnel');
       setInternalPersonnel(response.data.personnel);
     } catch (error) {
       console.error('❌ Error fetching personnel:', error);

@@ -11,15 +11,13 @@ import {
 import { IPersonnelGroup, IProject } from '@/types/project.type';
 import { SelectPersonnel } from '../components/select-personnel';
 import React from 'react';
-import { SelectClientPersonnel } from '../components/select-client-personnel';
 import { ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
-import { IClientPersonnel } from '@/types/client.type';
 import enumOptions from '@/utils/enumOptions';
 
 interface IProjectCreationFormFields {
   clients: ISelectDataFormField[];
   personnel: IPersonnelGroup[];
-  clientPersonnel: IClientPersonnel[];
+  clientPersonnel: IPersonnelGroup[];
   projects: IProject[];
 }
 export const projectCreationFormFields = (
@@ -116,12 +114,13 @@ export const projectCreationFormFields = (
       type: EFieldType.CUSTOM,
       placeHolder: '',
       description: '',
+      className: 'max-sm:col-span-2',
       customComponent: (
         field: ControllerRenderProps<FieldValues, Path<FieldValues>>
       ) =>
-        React.createElement(SelectClientPersonnel, {
+        React.createElement(SelectPersonnel, {
           field,
-          data: selectData.clientPersonnel,
+          dataGroup: selectData.clientPersonnel,
         }),
     },
     {
@@ -130,6 +129,7 @@ export const projectCreationFormFields = (
       type: EFieldType.CUSTOM,
       placeHolder: '',
       description: '',
+      className: 'max-sm:col-span-2',
       customComponent: (
         field: ControllerRenderProps<FieldValues, Path<FieldValues>>
       ) =>
