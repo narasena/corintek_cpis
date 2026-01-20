@@ -5,6 +5,7 @@ export default {
       2,
       'always',
       [
+        'build',
         'feat',
         'fix',
         'docs',
