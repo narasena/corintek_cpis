@@ -1,5 +1,4 @@
 import { deleteUserService, fetchAllUsersService } from './user.service';
-import { deleteUserService, fetchAllUsersService } from './user.service';
 import { TUserCreationAttributes } from '@/types/user.type';
 import { NextRequest, NextResponse } from 'next/server';
 import { createUserWithoutAvatar, updateUserAvatar } from './user.service';
