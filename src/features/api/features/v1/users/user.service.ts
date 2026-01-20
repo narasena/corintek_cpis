@@ -106,30 +106,36 @@ export async function fetchAllUsersService() {
   }
 }
 
-export async function deleteUserService(id: string) {
+export async function deleteUserService(userId: string) {
   try {
-    const deletedUser = await prisma.user.update({
+    const user = prisma.user.findUnique({
       where: {
-        deletedAt: null,
-        id,
-      },
-      data: {
-        deletedAt: new Date(),
+        id: userId,
       },
     });
-    if (!deletedUser) {
+
+    if (!user) {
       throw new AppError({
         status: 404,
         message: 'User not found',
         isExpose: true,
       });
     }
-    return deletedUser;
+
+    await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
   } catch (error) {
-    serviceErrorResponse({
-      error,
-      customErrorMessage: 'Error deleting user',
+    console.error('Error deleting user:', error);
+    throw new AppError({
       status: 500,
+      message: 'Error deleting user',
+      isExpose: true,
     });
   }
 }
