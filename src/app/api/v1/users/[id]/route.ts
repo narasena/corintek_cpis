@@ -6,5 +6,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  return deleteUser(req, id);
+  // console.log('Delete user with id: ', id);
+  return await deleteUser(req, id);
 }

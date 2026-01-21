@@ -72,7 +72,6 @@ export async function createUser(req: NextRequest) {
         );
       }
     });
-    console.log('New user created:', newUser);
     return NextResponse.json({
       success: true,
       status: 201,

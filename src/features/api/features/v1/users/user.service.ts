@@ -93,6 +93,9 @@ export async function fetchAllUsersService() {
       omit: {
         password: true,
       },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
 
     return allUsers;
@@ -108,7 +111,7 @@ export async function fetchAllUsersService() {
 
 export async function deleteUserService(userId: string) {
   try {
-    const user = prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         id: userId,
       },

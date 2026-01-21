@@ -18,6 +18,7 @@ import {
   EmploymentStatus,
   UserRole,
 } from '@/features/api/generated/prisma/enums';
+import { UniqueIdentifier } from '@dnd-kit/core';
 import { IDefaultFormComponentProps } from '@/types/form/form.type';
 
 // Local enums to avoid importing from massive Prisma generated fil
@@ -66,7 +67,10 @@ const employeeStatus = [
   { status: EmploymentStatus.CONTRACT, style: 'bg-pink-700' },
 ];
 
-interface IUserColumnsParams extends IDefaultFormComponentProps {}
+interface IUserColumnsParams extends IDefaultFormComponentProps {
+  handleDelete: (id: UniqueIdentifier) => void;
+  loading?: boolean;
+}
 
 export const userColumns = (params: IUserColumnsParams): ColumnDef<IUser>[] => {
   const { drag, select, email, phoneNumber, actions } = defaultColumns<IUser>();
@@ -144,7 +148,7 @@ export const userColumns = (params: IUserColumnsParams): ColumnDef<IUser>[] => {
       getDataName: (row: IUser) => {
         return `${row.firstName} ${row.lastName}`;
       },
-      refreshData: params.refetch,
+      loading: params.loading,
     }),
   ];
 };

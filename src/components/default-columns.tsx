@@ -73,13 +73,10 @@ export function defaultColumns<T extends FieldValues & ITableHelper>() {
   interface IActionsColumnParams {
     handlePreview?: (id: UniqueIdentifier) => void | React.ReactNode;
     handleEdit?: (id: UniqueIdentifier) => void | React.ReactNode;
-    handleDelete?: (
-      id: UniqueIdentifier
-    ) => void | Promise<void> | React.ReactNode;
-    apiUrl: string;
+    handleDelete?: (id: UniqueIdentifier) => void | Promise<void>;
     context?: TDataContext;
     getDataName?: (row: T) => string;
-    refreshData?: () => void;
+    loading?: boolean;
   }
 
   function actionsColumn(params?: IActionsColumnParams): ColumnDef<T> {
@@ -155,11 +152,19 @@ export function defaultColumns<T extends FieldValues & ITableHelper>() {
                   ) : (
                     <DeleteData
                       key={index}
-                      context="user"
+                      context={params?.context || 'user'}
                       dataName={params?.getDataName?.(row.original)}
-                      id={row.original.id}
-                      apiUrl={params?.apiUrl}
-                      refreshData={params?.refreshData}
+                      onDelete={onClick as () => void | Promise<void>}
+                      loading={params?.loading}
+                      trigger={
+                        <DropdownMenuItem
+                          className={`flex items-center cursor-pointer ${className}`}
+                          onSelect={e => e.preventDefault()}
+                        >
+                          <Icon className={`mr-2 h-4 w-4 ${iconClassName}`} />
+                          <span>{label}</span>
+                        </DropdownMenuItem>
+                      }
                     />
                   )
               )}

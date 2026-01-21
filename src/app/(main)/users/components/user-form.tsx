@@ -27,7 +27,7 @@ export default function UserForm() {
     },
   });
 
-  const { onSubmitWithImage, onInvalid } = useFormHandleSubmit({
+  const { onSubmitWithImage, onInvalid, isLoading } = useFormHandleSubmit({
     form: createUserForm,
     imageKey: 'avatarImg',
     apiUrl: '/users',
@@ -43,6 +43,7 @@ export default function UserForm() {
         previewUrl: previewUrl || '',
         onChange: handleImagePreview,
       }}
+      isLoading={isLoading}
       formFieldSelector={{
         type: 'default',
         formFields: createUserFormFields,

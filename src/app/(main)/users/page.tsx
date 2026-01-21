@@ -7,9 +7,12 @@ import UserForm from './components/user-form';
 import { IUser } from '@/types/user.type';
 import useAllUsers from '@/hooks/users/useAllUsers';
 import { Spinner } from '@/components/ui/spinner';
+import useDeleteData from '@/hooks/useDeleteData';
 
 export default function UsersPage() {
   const { allUsers, loading, error, refetch } = useAllUsers();
+
+  const { deleteDataHandler, isLoading: deleteLoading } = useDeleteData();
 
   if (loading) {
     return (
@@ -31,7 +34,9 @@ export default function UsersPage() {
       label: 'Default',
       data: allUsers,
       columns: userColumns({
-        refetch,
+        handleDelete: id => deleteDataHandler(id, '/users'),
+        loading: deleteLoading,
+        refetch
       }),
       addNewRow: (
         <CreateData
