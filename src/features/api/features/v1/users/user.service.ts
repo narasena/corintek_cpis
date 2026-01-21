@@ -111,7 +111,7 @@ export async function fetchAllUsersService() {
 
 export async function deleteUserService(userId: string) {
   try {
-    const user = prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         id: userId,
       },
