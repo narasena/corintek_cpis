@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import apiInstance from '@/utils/apiInstance';
-import { IClientPersonnel } from '@/types/client.type';
+import { IPersonnelGroup } from '@/types/project.type';
 
 export default function useClientPersonnel(clientId: string | null) {
-  const [clientPersonnel, setClientPersonnel] = useState<IClientPersonnel[]>(
-    []
-  );
+  const [clientPersonnel, setClientPersonnel] = useState<IPersonnelGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

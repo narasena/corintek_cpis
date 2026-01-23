@@ -8,9 +8,15 @@ import { UniqueIdentifier } from '@dnd-kit/core';
 
 import { NextRequest } from 'next/server';
 import { hashPassword } from '@/utils/api/v1/passwordHash';
-import { Client, Prisma, User } from '@/features/api/generated/prisma/client';
+import {
+  Client,
+  Prisma,
+  User,
+  UserRole,
+} from '@/features/api/generated/prisma/client';
 import { prisma } from '@/features/api/connection/prisma';
 import { serviceErrorResponse } from '@/lib/error-handler';
+import { IPersonnelDetail, IPersonnelGroup } from '@/types/project.type';
 
 export async function createClientWithoutAvatar(
   payload: Omit<TClientCreationAttributes, 'avatarImg'>,
@@ -298,10 +304,45 @@ export async function fetchClientPersonnelService(
         clientId,
         ...whereClause,
       },
-      include: { personnel: { omit: { password: true } } },
+      include: {
+        personnel: {
+          select: { id: true, firstName: true, lastName: true, role: true },
+        },
+      },
     });
 
-    return clientPersonnel;
+    const modifiedClientPersonnel = clientPersonnel.map(personnel => {
+      return personnel.personnel;
+    });
+
+    const groupedPersonnel = modifiedClientPersonnel.reduce(
+      (acc, personnel) => {
+        const { role, ...personnelDetails } = personnel;
+        let group = acc.find(item => item.role === role);
+        if (!group) {
+          group = {
+            role,
+            personnel: [],
+          };
+          acc.push(group);
+        }
+        group.personnel.push(personnelDetails as IPersonnelDetail);
+        return acc;
+      },
+      [] as IPersonnelGroup[]
+    );
+
+    groupedPersonnel.sort((a, b) => {
+      if (a.role === UserRole.CLIENT_SUPERVISOR) {
+        return -1;
+      }
+      if (b.role === UserRole.CLIENT_SUPERVISOR) {
+        return 1;
+      }
+      return 0;
+    });
+
+    return groupedPersonnel;
   } catch (error) {
     const errMessage = 'Error ketika mencari client personnel';
     console.error(`${errMessage}:`, error);

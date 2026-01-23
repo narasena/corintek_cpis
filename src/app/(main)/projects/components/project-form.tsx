@@ -21,13 +21,17 @@ import useProjectById from '@/hooks/projects/useProjectById';
 
 interface IProjectFormProps extends IDefaultFormComponentProps {}
 
-export default function ProjectForm({ refetch, type, id }: IProjectFormProps) {
+export default function ProjectForm({
+  refetch,
+  type,
+  id: projectId,
+}: IProjectFormProps) {
   const { internalPersonnel } = useAllPersonnel();
   const { allClients } = useAllClients();
   const clients = allClients.map(client => {
     return { label: client.name, value: client.id };
   });
-  const { project } = useProjectById(id as string);
+  const { project } = useProjectById(projectId as string);
   const isUpdate = type ? type?.toLocaleLowerCase() === 'update' : false;
 
   // State for dynamic machine forms
@@ -85,6 +89,16 @@ export default function ProjectForm({ refetch, type, id }: IProjectFormProps) {
       projectCreationForm.setValue('contractType', project.contractType);
       projectCreationForm.setValue('workCategory', project.workCategory);
       projectCreationForm.setValue('warranty', project.warranty);
+      projectCreationForm.setValue(
+        'personnelIds',
+        project.personnel.flatMap(group => group.personnel.map(p => p.id))
+      );
+      projectCreationForm.setValue(
+        'clientPersonnelIds',
+        (project.clientPersonnel as any).flatMap((group: any) =>
+          group.personnel.map((p: any) => p.personnelId || p.id)
+        )
+      );
       projectCreationForm.setValue('chillers', project.chillers);
       projectCreationForm.setValue('coolingTowers', project.coolingTowers);
     }
@@ -163,7 +177,7 @@ export default function ProjectForm({ refetch, type, id }: IProjectFormProps) {
     isLoading,
   } = useFormHandleSubmit<TProjectCreationAttributes>({
     form: projectCreationForm,
-    apiUrl: '/projects',
+    apiUrl: `/projects${isUpdate ? `/${projectId}` : ''}`,
     refetch,
   });
 
@@ -242,6 +256,9 @@ export default function ProjectForm({ refetch, type, id }: IProjectFormProps) {
         title: 'Data Proyek',
         value: 'general-info',
         fields: formFields,
+        className: {
+          content: 'z-9999',
+        },
       },
     ];
 

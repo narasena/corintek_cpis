@@ -129,7 +129,7 @@ export default function DefaultForm<TFormAttributes extends FieldValues>(
     return (
       <div
         className={cn(
-          'grid grid-cols-2 gap-4 mb-4 relative z-[90] isolate overflow-visible',
+          'grid grid-cols-2 gap-4 mb-4 relative z-[90] overflow-visible',
           className
         )}
       >
