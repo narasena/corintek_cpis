@@ -81,6 +81,8 @@ export interface ILogSheet extends ITableHelper {
   logSheetHistories: {
     status: LogSheetStatus;
   }[];
+  chillerCount: number;
+  coolingTowerCount: number;
   details: {
     groupInfo: {
       id: string;

@@ -51,12 +51,6 @@ export default function LogSheetPrintPage() {
     );
   }
 
-  // Get machine counts - assuming we need to fetch project data or get from log sheet
-  // For now, let's assume we have access to project data with chillers and coolingTowers
-  // Since logSheetDetails.project only has name, we'll need to make this dynamic
-  const chillerCount = 6; // Default to 6 as mentioned
-  const coolingTowerCount = 6; // Default to 6 as mentioned
-
   return (
     <div className={`print-container ${pageSize}`}>
       {/* Print Controls - Hidden in print */}
@@ -105,7 +99,10 @@ export default function LogSheetPrintPage() {
           {/* Header Section */}
           <thead>
             <tr>
-              <th colSpan={chillerCount + 1} className="header-cell">
+              <th
+                colSpan={logSheetDetails.chillerCount + 1}
+                className="header-cell"
+              >
                 <div className="header-content">
                   <h1 className="text-2xl font-bold">LOG SHEET</h1>
                   <p className="text-sm text-gray-600">
@@ -117,13 +114,13 @@ export default function LogSheetPrintPage() {
             </tr>
             <tr>
               <th
-                colSpan={Math.ceil((chillerCount + 1) / 3)}
+                colSpan={Math.ceil((logSheetDetails.chillerCount + 1) / 3)}
                 className="info-cell"
               >
                 <strong>Customer:</strong> {logSheetDetails.project.name}
               </th>
               <th
-                colSpan={Math.ceil((chillerCount + 1) / 3)}
+                colSpan={Math.ceil((logSheetDetails.chillerCount + 1) / 3)}
                 className="info-cell"
               >
                 <strong>Date:</strong>{' '}
@@ -135,7 +132,7 @@ export default function LogSheetPrintPage() {
                 })}
               </th>
               <th
-                colSpan={Math.ceil((chillerCount + 1) / 3)}
+                colSpan={Math.ceil((logSheetDetails.chillerCount + 1) / 3)}
                 className="info-cell"
               >
                 <strong>Log Sheet ID:</strong> {logSheetDetails.id}
@@ -153,8 +150,8 @@ export default function LogSheetPrintPage() {
                 detail.groupInfo.name.toLowerCase().includes('condensor') ||
                 detail.groupInfo.name.toLowerCase().includes('evaporator');
               const unitCount = isChillerSection
-                ? chillerCount
-                : coolingTowerCount;
+                ? logSheetDetails.chillerCount
+                : logSheetDetails.coolingTowerCount;
 
               // Group parameters by unit for table display
               const unitMap = new Map();
@@ -250,13 +247,16 @@ export default function LogSheetPrintPage() {
 
             {/* Chemical Consumption Section */}
             <tr>
-              <td colSpan={chillerCount + 1} className="section-header">
+              <td
+                colSpan={logSheetDetails.chillerCount + 1}
+                className="section-header"
+              >
                 <strong>Chemical Consumption</strong>
               </td>
             </tr>
             <tr>
               <td className="parameter-cell">Chemical Name</td>
-              {Array.from({ length: chillerCount }, (_, i) => (
+              {Array.from({ length: logSheetDetails.chillerCount }, (_, i) => (
                 <td key={`chemical-${i + 1}`} className="value-cell">
                   {/* Chemical data would go here */}-
                 </td>
@@ -265,13 +265,16 @@ export default function LogSheetPrintPage() {
 
             {/* Water Consumption Section */}
             <tr>
-              <td colSpan={chillerCount + 1} className="section-header">
+              <td
+                colSpan={logSheetDetails.chillerCount + 1}
+                className="section-header"
+              >
                 <strong>Water Consumption</strong>
               </td>
             </tr>
             <tr>
               <td className="parameter-cell">Meter Reading</td>
-              {Array.from({ length: chillerCount }, (_, i) => (
+              {Array.from({ length: logSheetDetails.chillerCount }, (_, i) => (
                 <td key={`water-${i + 1}`} className="value-cell">
                   {/* Water consumption data would go here */}-
                 </td>
@@ -280,7 +283,10 @@ export default function LogSheetPrintPage() {
 
             {/* Footer */}
             <tr>
-              <td colSpan={chillerCount + 1} className="footer-cell">
+              <td
+                colSpan={logSheetDetails.chillerCount + 1}
+                className="footer-cell"
+              >
                 <div className="footer-content">
                   <div className="signature-section">
                     <div>PIC (Corintek):</div>
