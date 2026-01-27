@@ -7,6 +7,7 @@ export default function useLogSheetDetails(logSheetId: string) {
   const [logSheetDetails, setLogSheetDetails] = useState<ILogSheet | null>(
     null
   );
+
   const [isLoading, setIsLoading] = useState(true);
   const fetchLogSheetDetails = async () => {
     try {

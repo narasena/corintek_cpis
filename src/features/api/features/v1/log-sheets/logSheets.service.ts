@@ -291,6 +291,7 @@ export async function fetchLogSheetByIdService(id: string) {
       select: {
         project: {
           select: {
+            id: true,
             name: true,
           },
         },
@@ -342,6 +343,16 @@ export async function fetchLogSheetByIdService(id: string) {
         isExpose: true,
       });
     }
+
+    const machines = await prisma.machine.findMany({
+      where: {
+        deletedAt: null,
+        projectId: logSheet.project.id,
+      },
+      select: {
+        type: true,
+      },
+    });
 
     const transformedDetails = logSheet.details.reduce((acc, detail) => {
       const groupKey = detail.group.id;
@@ -400,6 +411,9 @@ export async function fetchLogSheetByIdService(id: string) {
 
     return {
       ...logSheet,
+      chillerCount: machines.filter(m => m.type === 'CHILLER').length,
+      coolingTowerCount: machines.filter(m => m.type === 'COOLING_TOWER')
+        .length,
       details: groupedDetails,
     };
   } catch (error) {
