@@ -49,9 +49,6 @@ next-env.d.ts
 .prettierignore
 coverage
 
-# QODO Agents
-AGENTS.md
-agent.*
 
 # Aider
 .aider*
