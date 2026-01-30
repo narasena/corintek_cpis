@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { authenticateUser } from './service';
 import { generateToken } from '@/lib/jwt';
 import { getAuthCookieName } from '@/lib/auth-helpers';
@@ -32,7 +33,7 @@ export async function loginAction(
     );
 
     // Generate JWT token
-    const token = generateToken({
+    const token = await generateToken({
       id: user.id,
       email: user.email,
       role: user.role as TUserRole,

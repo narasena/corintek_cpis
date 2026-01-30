@@ -8,7 +8,7 @@ const PUBLIC_ROUTES = ['/login'];
 // Routes that should redirect to dashboard if already authenticated
 const AUTH_ROUTES = ['/login'];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Get token from cookies
@@ -18,7 +18,7 @@ export function middleware(request: NextRequest) {
   let isAuthenticated = false;
   if (token) {
     try {
-      verifyToken(token);
+      await verifyToken(token);
       isAuthenticated = true;
     } catch {
       // Token is invalid or expired
