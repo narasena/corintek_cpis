@@ -30,10 +30,11 @@ We are moving away from REST APIs for internal features.
 ## 4. Testing Protocol
 
 ## 4. Testing Protocol (Emergency Mode)
+
 - **NO TDD:** Do not write tests before code.
 - **NO UI Testing:** Do not test components or pages.
 - **Logic Only:** Only write Unit Tests for `service.ts` files containing complex math or business rules.
-- **AI-Generated:** Use AI to generate these tests *after* implementation to verify logic.
+- **AI-Generated:** Use AI to generate these tests _after_ implementation to verify logic.
 - If a test fails 3 times, **STOP** and ask the human for help.
 
 ---
@@ -87,6 +88,9 @@ npm run prisma:seed        # seed DB
 - Services: Named [verb][Noun] (e.g., updateUser).
 - Files: kebab-case (user-profile.tsx, actions.ts).
 - Function/variable naming: camelCase; PascalCase for React components
+- Naming Convention (TS):
+  - Interfaces must start with "I" (e.g., IUser, IProject).
+  - Types must start with "T" (e.g., TUserRole, TCreateInput).
 - Formatting: Prettier enforced.
 - Linting/Formatting: ESLint (eslint.config.mjs) with Prettier enforced via eslint-plugin-prettier; lint-staged runs "eslint --fix" and "prettier --write" on JS/TS/TSX files
 
@@ -240,7 +244,6 @@ From schema.prisma and common Next.js patterns:
 - DATABASE_URL — PostgreSQL connection string
 - DIRECT_URL — Direct connection for migrations
 - Other envs may exist in .env.development / .env.production (not listed here for secrets)
-
 
 ## 📈 Performance & Scale
 

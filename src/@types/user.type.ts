@@ -13,7 +13,7 @@ export const UserRole = {
   CLIENT_SUPERVISOR: 'CLIENT_SUPERVISOR',
 } as const;
 
-export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+export type TUserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export const EmploymentStatus = {
   PERMANENT: 'PERMANENT',
@@ -21,7 +21,7 @@ export const EmploymentStatus = {
   FREELANCE: 'FREELANCE',
 } as const;
 
-export type EmploymentStatus =
+export type TEmploymentStatus =
   (typeof EmploymentStatus)[keyof typeof EmploymentStatus];
 
 // =============================================================================
@@ -121,23 +121,23 @@ export const userListParamsSchema = z.object({
 // =============================================================================
 
 /** Input type for creating a user */
-export type UserCreateInput = z.infer<typeof userCreateSchema>;
+export type TUserCreateInput = z.infer<typeof userCreateSchema>;
 
 /** Input type for updating a user */
-export type UserUpdateInput = z.infer<typeof userUpdateSchema>;
+export type TUserUpdateInput = z.infer<typeof userUpdateSchema>;
 
 /** User response type (safe to expose, no password) */
-export type UserResponse = z.infer<typeof userResponseSchema>;
+export type TUserResponse = z.infer<typeof userResponseSchema>;
 
 /** Login credentials */
-export type UserLoginInput = z.infer<typeof userLoginSchema>;
+export type TUserLoginInput = z.infer<typeof userLoginSchema>;
 
 /** User list query parameters */
-export type UserListParams = z.infer<typeof userListParamsSchema>;
+export type TUserListParams = z.infer<typeof userListParamsSchema>;
 
 /** Paginated user list response */
-export interface UserListResponse {
-  data: UserResponse[];
+export interface IUserListResponse {
+  data: TUserResponse[];
   meta: {
     total: number;
     page: number;
