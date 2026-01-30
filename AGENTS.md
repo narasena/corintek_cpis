@@ -29,7 +29,11 @@ We are moving away from REST APIs for internal features.
 
 ## 4. Testing Protocol
 
-- Write tests _before_ implementation (TDD).
+## 4. Testing Protocol (Emergency Mode)
+- **NO TDD:** Do not write tests before code.
+- **NO UI Testing:** Do not test components or pages.
+- **Logic Only:** Only write Unit Tests for `service.ts` files containing complex math or business rules.
+- **AI-Generated:** Use AI to generate these tests *after* implementation to verify logic.
 - If a test fails 3 times, **STOP** and ask the human for help.
 
 ---

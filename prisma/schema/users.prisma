@@ -1,0 +1,45 @@
+// =============================================================================
+// User Domain - MVP Schema
+// =============================================================================
+
+model User {
+  id          String @id @default(uuid())
+  firstName   String
+  lastName    String?
+  idNumber    String?
+  email       String @unique
+  phoneNumber String @unique
+  password    String
+  avatarUrl   String?
+
+  role             UserRole
+  employmentStatus EmploymentStatus
+
+  isActive  Boolean @default(true)
+  isBlocked Boolean @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("users")
+}
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+enum UserRole {
+  ADMIN
+  SUPERVISOR
+  TECHNICIAN
+  DIRECTOR
+  CLIENT_TECHNICIAN
+  CLIENT_SUPERVISOR
+}
+
+enum EmploymentStatus {
+  PERMANENT
+  CONTRACT
+  FREELANCE
+}
