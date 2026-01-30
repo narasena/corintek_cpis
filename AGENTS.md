@@ -8,9 +8,9 @@
 
 ### 1. The "No New Toys" Rule
 
-- **FORBIDDEN:** You may NOT install new npm packages without explicit permission. Use what is in `package.json`.
+- **FORBIDDEN:** You may NOT install new npm packages without explicit permission unless you have a valid reason why I need to install a particular package. Use what is in `package.json`.
 - **FORBIDDEN:** Do not introduce new architectural patterns (e.g., don't add a "Repository Pattern" layer; use Services).
-- **FORBIDDEN:** Do not change the styling system. We use Tailwind 4 + Shadcn. Do not write custom CSS in `.css` files.
+- **FORBIDDEN:** Do not change the styling system. We use Tailwind 4 + shadCn. Do not write custom CSS in `.css` files.
 
 ### 2. The "Strict Architecture" Flow (Server Actions)
 
@@ -95,7 +95,7 @@ npm run prisma:seed        # seed DB
 
 ## Commit & Pull Request Guidelines
 
-- Commit format: Conventional Commits via commitlint.config.js
+- Commit format: Conventional Commits via commitlint.config.js always check this file before commit.
   - Types allowed: feat, fix, docs, build, style, refactor, test, chore, perf, ci, revert
   - Examples:
     - feat(log-sheet): create log sheet ver 1
@@ -205,13 +205,13 @@ Core Technologies
 - Language: TypeScript (5.9.x)
 - Framework: Next.js 15 (App Router, edge-ready) with React 19
 - ORM/DB: Prisma 7 with PostgreSQL (DATABASE_URL, DIRECT_URL)
+- UI: shadcn-like UI patterns for components
 - Styling: Tailwind CSS 4
 - State: Zustand
 
 Key Libraries
 
-- zod + @hookform/resolvers + react-hook-form for forms/validation
-- Radix UI + shadcn-like UI patterns for components
+- zod v4 + @hookform/resolvers + react-hook-form for forms/validation
 - axios for HTTP client
 - jsonwebtoken/bcrypt for auth utilities
 
