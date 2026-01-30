@@ -1,0 +1,7 @@
+node_modules
+.next
+out
+dist
+src/features/api/generated/**
+prisma/generated/**
+**/*.generated.{js,ts}
