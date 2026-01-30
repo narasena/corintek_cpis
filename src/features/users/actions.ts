@@ -14,6 +14,7 @@ import {
   deleteUser,
 } from './service';
 import { revalidatePath } from 'next/cache';
+import { TUserResponse } from '@/@types/user.type';
 
 type TActionResponse<T = unknown> = {
   success: boolean;
@@ -26,7 +27,7 @@ type TActionResponse<T = unknown> = {
  */
 export async function createUserAction(
   input: TUserCreateInput
-): Promise<TActionResponse> {
+): Promise<TActionResponse<TUserResponse>> {
   try {
     // Validate input
     const validatedData = userCreateSchema.parse(input);
@@ -57,7 +58,9 @@ export async function createUserAction(
 /**
  * Server Action: Get all users
  */
-export async function getAllUsersAction(): Promise<TActionResponse> {
+export async function getAllUsersAction(): Promise<
+  TActionResponse<TUserResponse[]>
+> {
   try {
     const users = await getAllUsers();
 
@@ -76,7 +79,9 @@ export async function getAllUsersAction(): Promise<TActionResponse> {
 /**
  * Server Action: Get user by ID
  */
-export async function getUserByIdAction(id: string): Promise<TActionResponse> {
+export async function getUserByIdAction(
+  id: string
+): Promise<TActionResponse<TUserResponse>> {
   try {
     if (!id || typeof id !== 'string') {
       throw new Error('Invalid user ID');
@@ -102,7 +107,7 @@ export async function getUserByIdAction(id: string): Promise<TActionResponse> {
 export async function updateUserAction(
   id: string,
   input: TUserUpdateInput
-): Promise<TActionResponse> {
+): Promise<TActionResponse<TUserResponse>> {
   try {
     if (!id || typeof id !== 'string') {
       throw new Error('Invalid user ID');
