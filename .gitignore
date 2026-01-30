@@ -46,10 +46,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.prettierignore
-coverage
-
-
 # Aider
 .aider*
 
