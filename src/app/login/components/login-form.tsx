@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginAction } from '@/features/auth/actions';
@@ -27,7 +27,6 @@ import { Button } from '@/components/ui/button';
 
 export function LoginForm() {
   const router = useRouter();
-  const [genericError, setGenericError] = useState('');
 
   const form = useForm<z.infer<typeof authLoginSchema>>({
     resolver: zodResolver(authLoginSchema),
@@ -40,8 +39,6 @@ export function LoginForm() {
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (values: z.infer<typeof authLoginSchema>) => {
-    setGenericError('');
-
     const formData = new FormData();
     formData.append('email', values.email);
     formData.append('password', values.password);
@@ -50,13 +47,19 @@ export function LoginForm() {
       const result = await loginAction(null, formData);
 
       if (result.success) {
+        toast.success('Login berhasil', {
+          description: 'Mengalihkan ke dashboard...',
+        });
         router.push('/users');
-        // router.refresh(); // Optional depending on next.js version/setup
       } else {
-        setGenericError(result.message);
+        toast.error('Login gagal', {
+          description: result.message,
+        });
       }
-    } catch (error) {
-      setGenericError('An unexpected error occurred. Please try again.');
+    } catch {
+      toast.error('Terjadi kesalahan', {
+        description: 'Terjadi kesalahan tak terduga. Silakan coba lagi.',
+      });
     }
   };
 
@@ -97,12 +100,6 @@ export function LoginForm() {
                 </FormItem>
               )}
             />
-
-            {genericError && (
-              <div className="text-sm font-medium text-destructive">
-                {genericError}
-              </div>
-            )}
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Logging in...' : 'Sign in'}

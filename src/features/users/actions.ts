@@ -50,7 +50,7 @@ export async function createUserAction(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to create user',
+      error: error instanceof Error ? error.message : 'Gagal membuat pengguna',
     };
   }
 }
@@ -71,7 +71,10 @@ export async function getAllUsersAction(): Promise<
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch users',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal mengambil data pengguna',
     };
   }
 }
@@ -84,7 +87,7 @@ export async function getUserByIdAction(
 ): Promise<TActionResponse<TUserResponse>> {
   try {
     if (!id || typeof id !== 'string') {
-      throw new Error('Invalid user ID');
+      throw new Error('ID pengguna tidak valid');
     }
 
     const user = await getUserById(id);
@@ -96,7 +99,10 @@ export async function getUserByIdAction(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch user',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal mengambil data pengguna',
     };
   }
 }
@@ -110,7 +116,7 @@ export async function updateUserAction(
 ): Promise<TActionResponse<TUserResponse>> {
   try {
     if (!id || typeof id !== 'string') {
-      throw new Error('Invalid user ID');
+      throw new Error('ID pengguna tidak valid');
     }
 
     // Validate input
@@ -131,7 +137,8 @@ export async function updateUserAction(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to update user',
+      error:
+        error instanceof Error ? error.message : 'Gagal memperbarui pengguna',
     };
   }
 }
@@ -142,7 +149,7 @@ export async function updateUserAction(
 export async function deleteUserAction(id: string): Promise<TActionResponse> {
   try {
     if (!id || typeof id !== 'string') {
-      throw new Error('Invalid user ID');
+      throw new Error('ID pengguna tidak valid');
     }
 
     await deleteUser(id);
@@ -158,7 +165,8 @@ export async function deleteUserAction(id: string): Promise<TActionResponse> {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete user',
+      error:
+        error instanceof Error ? error.message : 'Gagal menghapus pengguna',
     };
   }
 }

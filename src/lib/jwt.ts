@@ -33,7 +33,7 @@ export async function verifyToken(token: string): Promise<IJwtPayload> {
     const { payload } = await jwtVerify(token, SECRET_KEY);
     return payload as unknown as IJwtPayload;
   } catch {
-    throw new Error('Invalid or expired token');
+    throw new Error('Token tidak valid atau kedaluwarsa');
   }
 }
 

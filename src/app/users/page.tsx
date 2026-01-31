@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { UserForm } from './components/user-form';
+import { toast } from 'sonner';
 import { getAllUsersAction, deleteUserAction } from '@/features/users/actions';
 import { TUserResponse } from '@/@types/user.type';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,6 @@ import { Button } from '@/components/ui/button';
 export default function UsersPage() {
   const [users, setUsers] = useState<TUserResponse[]>([]);
   const [selectedUser, setSelectedUser] = useState<TUserResponse | null>(null);
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Fetch all users on mount
@@ -22,9 +22,10 @@ export default function UsersPage() {
     const result = await getAllUsersAction();
     if (result.success && Array.isArray(result.data)) {
       setUsers(result.data as TUserResponse[]);
-      setMessage(`✅ Fetched ${result.data.length || 0} users`);
     } else {
-      setMessage(`❌ Error: ${result.error}`);
+      toast.error('Gagal mengambil data pengguna', {
+        description: result.error,
+      });
     }
     setLoading(false);
   };
@@ -35,16 +36,17 @@ export default function UsersPage() {
     setLoading(true);
     const result = await deleteUserAction(id);
     if (result.success) {
-      setMessage(`✅ User deleted`);
+      toast.success('Pengguna berhasil dihapus');
       fetchUsers();
     } else {
-      setMessage(`❌ Error: ${result.error}`);
+      toast.error('Gagal menghapus pengguna', {
+        description: result.error,
+      });
     }
     setLoading(false);
   };
 
   const handleSuccess = () => {
-    setMessage(`✅ User ${selectedUser ? 'updated' : 'created'} successfully`);
     setSelectedUser(null);
     fetchUsers();
   };
@@ -52,13 +54,6 @@ export default function UsersPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold mb-8">User Management</h1>
-
-      {/* Message Display */}
-      {message && (
-        <div className="mb-6 p-4 bg-muted rounded-lg border">
-          <p className="font-mono text-sm">{message}</p>
-        </div>
-      )}
 
       {loading && <p className="mb-4 text-blue-600">⏳ Loading...</p>}
 

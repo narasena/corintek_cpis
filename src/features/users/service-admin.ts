@@ -12,11 +12,11 @@ export async function restoreUser(id: string) {
   });
 
   if (!user) {
-    throw new Error('User not found');
+    throw new Error('Pengguna tidak ditemukan');
   }
 
   if (!user.deletedAt) {
-    throw new Error('User is not deleted');
+    throw new Error('Pengguna tidak sedang dihapus');
   }
 
   const restoredUser = await prisma.user.update({
@@ -55,7 +55,7 @@ export async function permanentlyDeleteUser(id: string) {
   });
 
   if (!user) {
-    throw new Error('User not found');
+    throw new Error('Pengguna tidak ditemukan');
   }
 
   await prisma.user.delete({

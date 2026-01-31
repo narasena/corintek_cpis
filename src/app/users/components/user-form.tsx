@@ -2,6 +2,7 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { useTransition } from 'react';
 import {
   userCreateSchema,
@@ -82,7 +83,9 @@ export function UserForm({
         result = await createUserAction(data as TUserCreateInput);
       } else {
         if (!defaultValues?.id) {
-          console.error('User ID is required for update');
+          toast.error('Kesalahan Implementasi', {
+            description: 'ID Pengguna diperlukan untuk pembaruan',
+          });
           return;
         }
         result = await updateUserAction(
@@ -92,9 +95,22 @@ export function UserForm({
       }
 
       if (result.success) {
+        toast.success(
+          mode === 'create'
+            ? 'Pengguna berhasil dibuat'
+            : 'Pengguna berhasil diperbarui'
+        );
         form.reset();
         onSuccess?.();
       } else {
+        toast.error(
+          mode === 'create'
+            ? 'Gagal membuat pengguna'
+            : 'Gagal memperbarui pengguna',
+          {
+            description: result.error || 'Terjadi kesalahan',
+          }
+        );
         // Set form error
         form.setError('root', {
           type: 'manual',
@@ -107,13 +123,6 @@ export function UserForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* Display root errors */}
-        {form.formState.errors.root && (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-            {form.formState.errors.root.message}
-          </div>
-        )}
-
         {/* First Name */}
         <FormField
           control={form.control}

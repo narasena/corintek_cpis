@@ -20,23 +20,23 @@ export async function authenticateUser(
 
   // Check if user exists
   if (!user) {
-    throw new Error('Invalid email or password');
+    throw new Error('Email atau kata sandi tidak valid');
   }
 
   // Check if user is blocked
   if (user.isBlocked) {
-    throw new Error('Account is blocked. Please contact administrator.');
+    throw new Error('Akun diblokir. Silakan hubungi administrator.');
   }
 
   // Check if user is active
   if (!user.isActive) {
-    throw new Error('Account is inactive. Please contact administrator.');
+    throw new Error('Akun tidak aktif. Silakan hubungi administrator.');
   }
 
   // Verify password
   const isPasswordValid = await comparePassword(password, user.password);
   if (!isPasswordValid) {
-    throw new Error('Invalid email or password');
+    throw new Error('Email atau kata sandi tidak valid');
   }
 
   // Return user data without password

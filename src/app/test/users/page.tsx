@@ -9,11 +9,11 @@ import {
   deleteUserAction,
 } from '@/features/users/actions';
 import { UserRole, EmploymentStatus, TUserResponse } from '@/@types/user.type';
+import { toast } from 'sonner';
 
 export default function UserTestPage() {
   const [users, setUsers] = useState<TUserResponse[]>([]);
   const [selectedUser, setSelectedUser] = useState<TUserResponse | null>(null);
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Fetch all users on mount
@@ -26,9 +26,10 @@ export default function UserTestPage() {
     const result = await getAllUsersAction();
     if (result.success && Array.isArray(result.data)) {
       setUsers(result.data as TUserResponse[]);
-      setMessage(`✅ Fetched ${result.data.length || 0} users`);
     } else {
-      setMessage(`❌ Error: ${result.error}`);
+      toast.error('Gagal mengambil data pengguna', {
+        description: result.error,
+      });
     }
     setLoading(false);
   };
@@ -56,11 +57,15 @@ export default function UserTestPage() {
 
     const result = await createUserAction(userData);
     if (result.success) {
-      setMessage(`✅ User created: ${result.data?.email}`);
+      toast.success('Pengguna dibuat', {
+        description: `Berhasil membuat pengguna ${result.data?.email}`,
+      });
       form.reset(); // Use stored reference instead of e.currentTarget
       fetchUsers();
     } else {
-      setMessage(`❌ Error: ${result.error}`);
+      toast.error('Gagal membuat pengguna', {
+        description: result.error,
+      });
     }
     setLoading(false);
   };
@@ -70,9 +75,10 @@ export default function UserTestPage() {
     const result = await getUserByIdAction(id);
     if (result.success) {
       setSelectedUser(result.data as TUserResponse);
-      setMessage(`✅ Fetched user: ${(result.data as TUserResponse)?.email}`);
     } else {
-      setMessage(`❌ Error: ${result.error}`);
+      toast.error('Gagal mengambil data pengguna', {
+        description: result.error,
+      });
     }
     setLoading(false);
   };
@@ -95,11 +101,15 @@ export default function UserTestPage() {
 
     const result = await updateUserAction(selectedUser.id, updateData);
     if (result.success) {
-      setMessage(`✅ User updated: ${result.data?.email}`);
+      toast.success('Pengguna diperbarui', {
+        description: `Berhasil memperbarui pengguna ${result.data?.email}`,
+      });
       setSelectedUser(null);
       fetchUsers();
     } else {
-      setMessage(`❌ Error: ${result.error}`);
+      toast.error('Gagal memperbarui pengguna', {
+        description: result.error,
+      });
     }
     setLoading(false);
   };
@@ -110,10 +120,12 @@ export default function UserTestPage() {
     setLoading(true);
     const result = await deleteUserAction(id);
     if (result.success) {
-      setMessage(`✅ User deleted`);
+      toast.success('Pengguna berhasil dihapus');
       fetchUsers();
     } else {
-      setMessage(`❌ Error: ${result.error}`);
+      toast.error('Gagal menghapus pengguna', {
+        description: result.error,
+      });
     }
     setLoading(false);
   };
@@ -121,13 +133,6 @@ export default function UserTestPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold mb-8">User CRUD Test Page</h1>
-
-      {/* Message Display */}
-      {message && (
-        <div className="mb-6 p-4 bg-gray-100 rounded-lg border">
-          <p className="font-mono text-sm">{message}</p>
-        </div>
-      )}
 
       {loading && <p className="mb-4 text-blue-600">⏳ Loading...</p>}
 

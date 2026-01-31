@@ -21,11 +21,11 @@ export async function createUser(
     // If user was soft-deleted, provide specific error message
     if (existingUser.deletedAt) {
       throw new Error(
-        `A deleted user with this email or phone exists. Please use a different email/phone, or contact admin to restore the account.`
+        `Pengguna yang dihapus dengan email atau telepon ini sudah ada. Silakan gunakan email/telepon lain, atau hubungi admin untuk memulihkan akun.`
       );
     }
     // Active user with same credentials
-    throw new Error('User with this email or phone number already exists');
+    throw new Error('Pengguna dengan email atau nomor telepon ini sudah ada');
   }
 
   // Hash password
@@ -124,11 +124,11 @@ export async function getUserById(id: string) {
   });
 
   if (!user) {
-    throw new Error('User not found');
+    throw new Error('Pengguna tidak ditemukan');
   }
 
   if (user.deletedAt) {
-    throw new Error('User has been deleted');
+    throw new Error('Pengguna telah dihapus');
   }
 
   return user;
@@ -144,11 +144,11 @@ export async function updateUser(id: string, data: TUserUpdateInput) {
   });
 
   if (!existingUser) {
-    throw new Error('User not found');
+    throw new Error('Pengguna tidak ditemukan');
   }
 
   if (existingUser.deletedAt) {
-    throw new Error('Cannot update deleted user');
+    throw new Error('Tidak dapat memperbarui pengguna yang telah dihapus');
   }
 
   // Check email/phone uniqueness if being updated
@@ -167,7 +167,7 @@ export async function updateUser(id: string, data: TUserUpdateInput) {
     });
 
     if (duplicateUser) {
-      throw new Error('Email or phone number already in use');
+      throw new Error('Email atau nomor telepon sudah digunakan');
     }
   }
 
@@ -211,11 +211,11 @@ export async function deleteUser(id: string) {
   });
 
   if (!existingUser) {
-    throw new Error('User not found');
+    throw new Error('Pengguna tidak ditemukan');
   }
 
   if (existingUser.deletedAt) {
-    throw new Error('User already deleted');
+    throw new Error('Pengguna sudah dihapus');
   }
 
   await prisma.user.update({

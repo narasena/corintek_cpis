@@ -56,7 +56,7 @@ export async function loginAction(
     // Return success - client will handle redirect
     return {
       success: true,
-      message: 'Login successful',
+      message: 'Login berhasil',
       user: {
         id: user.id,
         email: user.email,
@@ -68,7 +68,7 @@ export async function loginAction(
   } catch (error) {
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Login failed',
+      message: error instanceof Error ? error.message : 'Login gagal',
     };
   }
 }
