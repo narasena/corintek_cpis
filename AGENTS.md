@@ -256,6 +256,16 @@ Security Considerations
 
 - Do not commit .env.\* files with secrets; .env.development and .env.production exist
 
+## 🚨 Feedback & Notifications
+
+### 1. The "Toast" Protocol (Sonner)
+
+- **MANDATORY:** All user-facing actions (Create, Update, Delete, Login, etc.) MUST provide immediate feedback via `sonner` toasts.
+- **Success:** Use `toast.success("Done!", { description: "Brief details..." })`.
+- **Error:** Use `toast.error("Failed!", { description: "Error message..." })`.
+- **Consistency:** Use clear, concise language in toasts.
+- **Placement:** `<Toaster />` is defined in the root layout. No need to re-add.
+
 ---
 
 # 🚨 SPECIAL IMPLEMENTATION RULES
