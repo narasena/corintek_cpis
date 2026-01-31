@@ -2,7 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { loginAction } from '@/features/auth/actions';
+import { authLoginSchema } from '@/@types/auth.type';
 import {
   Card,
   CardContent,
@@ -10,83 +14,101 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 
 export function LoginForm() {
   const router = useRouter();
-  const [isPending, setIsPending] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [genericError, setGenericError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setErrorMessage('');
-    setIsPending(true);
+  const form = useForm<z.infer<typeof authLoginSchema>>({
+    resolver: zodResolver(authLoginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-    const formData = new FormData(e.currentTarget);
+  const { isSubmitting } = form.formState;
+
+  const onSubmit = async (values: z.infer<typeof authLoginSchema>) => {
+    setGenericError('');
+
+    const formData = new FormData();
+    formData.append('email', values.email);
+    formData.append('password', values.password);
 
     try {
       const result = await loginAction(null, formData);
 
       if (result.success) {
-        // Redirect on success
         router.push('/users');
-        // router.refresh();
+        // router.refresh(); // Optional depending on next.js version/setup
       } else {
-        setErrorMessage(result.message);
+        setGenericError(result.message);
       }
     } catch (error) {
-      setErrorMessage('An unexpected error occurred');
-    } finally {
-      setIsPending(false);
+      setGenericError('An unexpected error occurred. Please try again.');
     }
   };
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Login to CPIS Corintek</CardTitle>
+        <CardTitle className="text-2xl">Login</CardTitle>
         <CardDescription>
-          Enter your email and password to access your account
+          Enter your email below to login to your account.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
+      <CardContent className="grid gap-4">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
               name="email"
-              type="email"
-              placeholder="your.email@example.com"
-              required
-              disabled={isPending}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="m@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
+            <FormField
+              control={form.control}
               name="password"
-              type="password"
-              placeholder="Enter your password"
-              required
-              disabled={isPending}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="********" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {errorMessage && (
-            <div className="text-sm text-red-500 bg-red-50 p-3 rounded-md">
-              {errorMessage}
-            </div>
-          )}
+            {genericError && (
+              <div className="text-sm font-medium text-destructive">
+                {genericError}
+              </div>
+            )}
 
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? 'Logging in...' : 'Login'}
-          </Button>
-        </form>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Logging in...' : 'Sign in'}
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );
