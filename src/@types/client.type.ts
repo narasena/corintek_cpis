@@ -9,9 +9,14 @@ import { z } from 'zod';
  */
 export const clientCreateSchema = z.object({
   name: z.string().min(1, 'Client name is required').max(150),
-  email: z.email('Invalid email address').optional().nullable(),
-  phoneNumber: z.string().max(20).optional().nullable(),
-  address: z.string().max(500).optional().nullable(),
+  email: z
+    .string()
+    .email('Invalid email address')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
+  phoneNumber: z.string().max(20).optional().nullable().or(z.literal('')),
+  address: z.string().max(500).optional().nullable().or(z.literal('')),
 });
 
 /**
@@ -19,9 +24,14 @@ export const clientCreateSchema = z.object({
  */
 export const clientUpdateSchema = z.object({
   name: z.string().min(1).max(150).optional(),
-  email: z.email().optional().nullable(),
-  phoneNumber: z.string().max(20).optional().nullable(),
-  address: z.string().max(500).optional().nullable(),
+  email: z
+    .string()
+    .email('Invalid email address')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
+  phoneNumber: z.string().max(20).optional().nullable().or(z.literal('')),
+  address: z.string().max(500).optional().nullable().or(z.literal('')),
 });
 
 /**
