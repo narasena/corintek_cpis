@@ -1,158 +1,73 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ClientForm } from './components/client-form';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
-import {
-  getAllClientsAction,
-  deleteClientAction,
-} from '@/features/clients/actions';
+import { Plus } from 'lucide-react';
+
+import { getAllClientsAction } from '@/features/clients/actions';
 import { TClientResponse } from '@/@types/client.type';
 import { Button } from '@/components/ui/button';
+import { ClientDataTable } from './components/client-data-table';
+import { getColumns } from './components/client-columns';
+import { ClientDialog } from './components/client-dialog';
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<TClientResponse[]>([]);
-  const [selectedClient, setSelectedClient] = useState<TClientResponse | null>(
-    null
-  );
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch all clients on mount
-  useEffect(() => {
-    fetchClients();
-  }, []);
-
-  const fetchClients = async () => {
-    setLoading(true);
+  const fetchClients = useCallback(async () => {
+    // Only show loading on initial fetch or full refresh if needed
+    // But for better UX, maybe we don't clear the table, just update it.
+    // Ideally we'd use React Query or SWR, but adhering to "No New Toys".
+    // We'll keep loading state usage simple.
     const result = await getAllClientsAction();
     if (result.success && Array.isArray(result.data)) {
       setClients(result.data as TClientResponse[]);
-      if (result.data.length === 0) {
-        toast.info('Belum ada data klien');
-      }
     } else {
       toast.error('Gagal mengambil data klien', {
         description: result.error,
       });
     }
     setLoading(false);
-  };
+  }, []);
 
-  const handleDeleteClient = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus klien ini?')) return;
-
-    setLoading(true);
-    const result = await deleteClientAction(id);
-    if (result.success) {
-      toast.success('Klien berhasil dihapus');
-      fetchClients();
-    } else {
-      toast.error('Gagal menghapus klien', {
-        description: result.error,
-      });
-    }
-    setLoading(false);
-  };
-
-  const handleSuccess = () => {
-    setSelectedClient(null);
+  // Fetch all clients on mount
+  useEffect(() => {
     fetchClients();
-  };
+  }, [fetchClients]);
+
+  const columns = useMemo(() => getColumns(fetchClients), [fetchClients]);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Manajemen Klien</h1>
-
-      {loading && <p className="mb-4 text-blue-600">⏳ Loading...</p>}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* CREATE CLIENT FORM */}
-        <div className="border rounded-lg p-6">
-          <h2 className="text-xl font-bold mb-4">Tambah Klien</h2>
-          <ClientForm mode="create" onSuccess={handleSuccess} />
+    <div className="p-8 max-w-7xl mx-auto space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Manajemen Klien</h1>
+          <p className="text-muted-foreground mt-2">
+            Kelola data klien, kontak, dan informasi perusahaan.
+          </p>
         </div>
-
-        {/* UPDATE CLIENT FORM */}
-        <div className="border rounded-lg p-6">
-          <h2 className="text-xl font-bold mb-4">Edit Klien</h2>
-          {selectedClient ? (
-            <ClientForm
-              mode="edit"
-              defaultValues={selectedClient}
-              onSuccess={handleSuccess}
-              onCancel={() => setSelectedClient(null)}
-            />
-          ) : (
-            <p className="text-muted-foreground italic">
-              Pilih klien dari daftar di bawah untuk mengedit
-            </p>
-          )}
-        </div>
+        <ClientDialog
+          mode="create"
+          onSuccess={fetchClients}
+          trigger={
+            <Button>
+              <Plus className="mr-2 h-4 w-4" /> Tambah Klien
+            </Button>
+          }
+        />
       </div>
 
-      {/* CLIENT LIST */}
-      <div className="mt-8 border rounded-lg p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Daftar Klien ({clients.length})</h2>
-          <Button onClick={fetchClients} disabled={loading} variant="outline">
-            Refresh
-          </Button>
+      {loading && clients.length === 0 ? (
+        <div className="flex items-center justify-center p-8 border rounded-lg h-64 bg-muted/20">
+          <div className="flex flex-col items-center gap-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground">Memuat data...</p>
+          </div>
         </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-muted">
-                <th className="border p-2 text-left">Nama</th>
-                <th className="border p-2 text-left">Email</th>
-                <th className="border p-2 text-left">Telepon</th>
-                <th className="border p-2 text-left">Alamat</th>
-                <th className="border p-2 text-left">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map(client => (
-                <tr key={client.id} className="hover:bg-muted/50">
-                  <td className="border p-2">{client.name}</td>
-                  <td className="border p-2">{client.email || '-'}</td>
-                  <td className="border p-2">{client.phoneNumber || '-'}</td>
-                  <td className="border p-2 max-w-xs truncate">
-                    {client.address || '-'}
-                  </td>
-                  <td className="border p-2">
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => setSelectedClient(client)}
-                        size="sm"
-                        variant="outline"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        onClick={() => handleDeleteClient(client.id)}
-                        size="sm"
-                        variant="destructive"
-                      >
-                        Hapus
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {clients.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="border p-8 text-center text-muted-foreground"
-                  >
-                    Belum ada data klien.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      ) : (
+        <ClientDataTable columns={columns} data={clients} />
+      )}
     </div>
   );
 }
