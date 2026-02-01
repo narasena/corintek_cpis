@@ -1,27 +1,28 @@
 'use client';
 
 import { CrudDialog } from '@/components/crud-dialog';
-import { ClientForm } from './client-form';
-import { TClientResponse } from '@/@types/client.type';
+import { UserForm } from './user-form';
+import { TUserResponse } from '@/@types/user.type';
 
-interface IClientDialogProps {
+interface IUserDialogProps {
   mode: 'create' | 'edit';
-  client?: TClientResponse;
+  user?: TUserResponse;
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSuccess?: () => void;
 }
 
-export function ClientDialog({
+export function UserDialog({
   mode,
-  client,
+  user,
   trigger,
   open,
   onOpenChange,
   onSuccess,
-}: IClientDialogProps) {
-  const title = mode === 'create' ? 'Tambah Klien Baru' : 'Ubah Data Klien';
+}: IUserDialogProps) {
+  const title =
+    mode === 'create' ? 'Tambah Pengguna Baru' : 'Ubah Data Pengguna';
 
   return (
     <CrudDialog
@@ -33,9 +34,9 @@ export function ClientDialog({
       onSuccess={onSuccess}
     >
       {({ onSuccess: handleSuccess, onCancel }) => (
-        <ClientForm
+        <UserForm
           mode={mode}
-          defaultValues={client}
+          defaultValues={user}
           onSuccess={handleSuccess}
           onCancel={onCancel}
         />

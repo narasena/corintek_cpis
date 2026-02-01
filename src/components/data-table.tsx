@@ -18,15 +18,17 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 
-interface DataTableProps<TData, TValue> {
+interface IDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  emptyMessage?: string;
 }
 
-export function ClientDataTable<TData, TValue>({
+export function DataTable<TData, TValue>({
   columns,
   data,
-}: DataTableProps<TData, TValue>) {
+  emptyMessage = 'Belum ada data.',
+}: IDataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
@@ -36,7 +38,7 @@ export function ClientDataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map(headerGroup => (
@@ -85,7 +87,7 @@ export function ClientDataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Belum ada data klien.
+                  {emptyMessage}
                 </TableCell>
               </TableRow>
             )}
@@ -100,7 +102,7 @@ export function ClientDataTable<TData, TValue>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Previous
+          Sebelumnya
         </Button>
         <Button
           variant="outline"
@@ -108,7 +110,7 @@ export function ClientDataTable<TData, TValue>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Next
+          Selanjutnya
         </Button>
       </div>
     </div>

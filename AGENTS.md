@@ -266,6 +266,25 @@ Security Considerations
 - **Consistency:** Use clear, concise language in toasts.
 - **Placement:** `<Toaster />` is defined in the root layout. No need to re-add.
 
+### 2. The "CRUD Management Table" Standard
+
+- **MANDATORY:** All domain CRUD management pages (users, clients, projects, etc.) MUST use the standard reusable components from `src/components/`.
+- **Components:**
+  - `DataTable` - Generic data table with Tanstack Table & pagination
+  - `CrudDialog` - Generic dialog wrapper for create/edit forms
+  - `ActionCell` - Generic action cell with edit/delete dropdown
+- **Localization:** Use Indonesian text consistently:
+  - "Ubah" for Edit
+  - "Hapus" for Delete
+  - "Tambah" for Create/Add
+- **DO NOT:** Create custom table implementations unless explicitly requested by the user.
+- **DO NOT:** Add features like drag-drop, row selection, tabs, or column visibility unless explicitly requested.
+- **Pattern:** Follow the standard layout:
+  - Page header with title and "Tambah [Entity]" button
+  - DataTable with domain-specific columns
+  - Action cell with "Ubah" and "Hapus" options
+  - CrudDialog for create/edit operations
+
 ---
 
 # 🚨 SPECIAL IMPLEMENTATION RULES

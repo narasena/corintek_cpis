@@ -7,19 +7,19 @@ import { Plus } from 'lucide-react';
 import { getAllClientsAction } from '@/features/clients/actions';
 import { TClientResponse } from '@/@types/client.type';
 import { Button } from '@/components/ui/button';
-import { ClientDataTable } from './components/client-data-table';
-import { getColumns } from './components/client-columns';
+import { DataTable } from '@/components/data-table';
+import { getClientColumns } from './components/client-columns';
 import { ClientDialog } from './components/client-dialog';
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<TClientResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedClient, setSelectedClient] = useState<TClientResponse | null>(
+    null
+  );
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const fetchClients = useCallback(async () => {
-    // Only show loading on initial fetch or full refresh if needed
-    // But for better UX, maybe we don't clear the table, just update it.
-    // Ideally we'd use React Query or SWR, but adhering to "No New Toys".
-    // We'll keep loading state usage simple.
     const result = await getAllClientsAction();
     if (result.success && Array.isArray(result.data)) {
       setClients(result.data as TClientResponse[]);
@@ -31,12 +31,25 @@ export default function ClientsPage() {
     setLoading(false);
   }, []);
 
-  // Fetch all clients on mount
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
 
-  const columns = useMemo(() => getColumns(fetchClients), [fetchClients]);
+  const handleEdit = (client: TClientResponse) => {
+    setSelectedClient(client);
+    setShowEditDialog(true);
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditDialog(false);
+    setSelectedClient(null);
+    fetchClients();
+  };
+
+  const columns = useMemo(
+    () => getClientColumns({ onEdit: handleEdit, onRefresh: fetchClients }),
+    [fetchClients]
+  );
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -66,8 +79,21 @@ export default function ClientsPage() {
           </div>
         </div>
       ) : (
-        <ClientDataTable columns={columns} data={clients} />
+        <DataTable
+          columns={columns}
+          data={clients}
+          emptyMessage="Belum ada data klien."
+        />
       )}
+
+      {/* Edit Dialog */}
+      <ClientDialog
+        mode="edit"
+        client={selectedClient || undefined}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 }
