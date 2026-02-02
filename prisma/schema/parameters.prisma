@@ -21,8 +21,8 @@ enum ParameterCategory {
 
 model Parameter {
   id           String            @id @default(uuid())
-  name         String            @unique // e.g., "Temp (C°) In"
-  variableName String            @unique // e.g., "temp_c_in"
+  name         String // e.g., "Temp (C°) In" - NOT unique to allow reuse across categories
+  variableName String            @unique // e.g., "temp_c_in_cond" - unique identifier
   category     ParameterCategory
   valueType    ValueType
   unit         String? // e.g., "°C", "ppm", "µS"
