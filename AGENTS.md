@@ -46,7 +46,7 @@ We are moving away from REST APIs for internal features.
 - **prisma/** — Root level Prisma schema (Single Source of Truth).
 - **src/**
   - **app/** — Next.js App Router.
-    - `(main)/` — Application pages.
+    - `\(main\)/` — Application pages.
     - `api/` — **EXTERNAL WEBHOOKS ONLY**. Do not use for internal features.
   - **components/** — Reusable UI (Shadcn).
   - **features/** — **Vertical Slices (The Core)**.
@@ -170,7 +170,7 @@ Prisma Client → PostgreSQL
 ├── public/
 ├── src/
 │   ├── app/                <-- Routes & Pages only.
-│   │   ├── (auth)/         <-- Route Group for auth pages
+│   │   ├── \(auth\)/         <-- Route Group for auth pages
 │   │   ├── api/            <-- Route Handlers (webhooks, external APIs)
 │   │   ├── dashboard/      <-- Protected routes
 │   │   ├── layout.tsx
