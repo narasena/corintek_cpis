@@ -42,6 +42,18 @@ export const getProjectColumns = ({
       },
     },
     {
+      id: 'machineCount',
+      header: 'Mesin',
+      cell: ({ row }) => {
+        const machines = row.original.machines || [];
+        return (
+          <Badge variant="outline" className="font-mono">
+            {machines.length} Unit
+          </Badge>
+        );
+      },
+    },
+    {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => {

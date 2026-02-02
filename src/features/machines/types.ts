@@ -22,10 +22,14 @@ export const CreateMachineSchema = z.object({
   type: MachineTypeEnum,
   ownership: MachineOwnershipEnum.default('CORINTEK'),
   status: MachineStatusEnum.default('IDLE'),
-  capacity: z.number().positive('Kapasitas harus positif').optional(),
-  brand: z.string().optional(),
-  model: z.string().optional(),
-  serialNumber: z.string().optional(),
+  capacity: z
+    .number()
+    .positive('Kapasitas harus positif')
+    .nullable()
+    .optional(),
+  brand: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
+  serialNumber: z.string().nullable().optional(),
 });
 
 export const UpdateMachineSchema = CreateMachineSchema.partial().extend({

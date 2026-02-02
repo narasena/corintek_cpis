@@ -74,7 +74,7 @@ export function ProjectForm({
       endDate: defaultValues?.endDate
         ? new Date(defaultValues.endDate)
         : undefined,
-      machines: [], // Machines will be loaded separately if editing
+      machines: defaultValues?.machines || [],
     },
   });
 

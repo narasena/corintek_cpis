@@ -30,6 +30,10 @@ export async function getProjects(): Promise<IProject[]> {
           type: true,
           ownership: true,
           status: true,
+          capacity: true,
+          brand: true,
+          model: true,
+          serialNumber: true,
         },
         orderBy: [{ type: 'asc' }, { unitNumber: 'asc' }],
       },
@@ -57,6 +61,23 @@ export async function getProjectById(id: string): Promise<IProject | null> {
           id: true,
           name: true,
         },
+      },
+      machines: {
+        where: {
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+          unitNumber: true,
+          type: true,
+          ownership: true,
+          status: true,
+          capacity: true,
+          brand: true,
+          model: true,
+          serialNumber: true,
+        },
+        orderBy: [{ type: 'asc' }, { unitNumber: 'asc' }],
       },
     },
   });
@@ -123,33 +144,94 @@ export async function createProject(data: TCreateProject): Promise<IProject> {
  * Update an existing project
  */
 export async function updateProject(data: TUpdateProject): Promise<IProject> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, machines, ...updateData } = data;
 
-  const project = await prisma.project.update({
-    where: { id },
-    data: updateData,
-    include: {
-      client: {
-        select: {
-          id: true,
-          name: true,
+  // Use transaction to ensure atomicity
+  const project = await prisma.$transaction(async tx => {
+    // 1. Update project details
+    const updatedProject = await tx.project.update({
+      where: { id },
+      data: updateData,
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
-      machines: {
-        where: {
-          deletedAt: null,
-        },
-        select: {
-          id: true,
-          unitNumber: true,
-          type: true,
-          ownership: true,
-          status: true,
-        },
-        orderBy: [{ type: 'asc' }, { unitNumber: 'asc' }],
-      },
-    },
+    });
+
+    // 2. Handle machines synchronization if machines array is provided
+    if (machines) {
+      // Get existing machines from DB
+      const existingMachines = await tx.machine.findMany({
+        where: { projectId: id, deletedAt: null },
+        select: { id: true },
+      });
+
+      const existingMachineIds = existingMachines.map(m => m.id);
+
+      // Identify machines to delete (in DB but not in input)
+      const inputMachineIds = machines
+        .filter(m => m.id)
+        .map(m => m.id as string);
+
+      const machinesToDelete = existingMachineIds.filter(
+        dbId => !inputMachineIds.includes(dbId)
+      );
+
+      // Identify machines to create (no ID) and update (has ID)
+      const machinesToCreate = machines.filter(m => !m.id);
+      const machinesToUpdate = machines.filter(m => m.id);
+
+      // Execute Delete
+      if (machinesToDelete.length > 0) {
+        await tx.machine.updateMany({
+          where: { id: { in: machinesToDelete } },
+          data: { deletedAt: new Date() },
+        });
+      }
+
+      // Execute Create
+      if (machinesToCreate.length > 0) {
+        await tx.machine.createMany({
+          data: machinesToCreate.map(machine => ({
+            projectId: id,
+            unitNumber: machine.unitNumber,
+            type: machine.type,
+            ownership: machine.ownership,
+            status: machine.status,
+            capacity: machine.capacity ?? null,
+            brand: machine.brand ?? null,
+            model: machine.model ?? null,
+            serialNumber: machine.serialNumber ?? null,
+          })),
+        });
+      }
+
+      // Execute Update
+      // We iterate because we need to update each specific machine by ID
+      for (const machine of machinesToUpdate) {
+        if (!machine.id) continue;
+
+        await tx.machine.update({
+          where: { id: machine.id },
+          data: {
+            unitNumber: machine.unitNumber,
+            type: machine.type,
+            ownership: machine.ownership,
+            status: machine.status,
+            capacity: machine.capacity ?? null,
+            brand: machine.brand ?? null,
+            model: machine.model ?? null,
+            serialNumber: machine.serialNumber ?? null,
+          },
+        });
+      }
+    }
+
+    return updatedProject;
   });
 
   return project as unknown as IProject;

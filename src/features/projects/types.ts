@@ -31,7 +31,9 @@ export const CreateProjectSchema = z.object({
   // Machines are optional at project creation
   machines: z
     .array(
-      CreateMachineSchema.omit({ projectId: true }) // projectId will be set automatically
+      CreateMachineSchema.omit({ projectId: true }).extend({
+        id: z.string().optional(),
+      })
     )
     .optional(),
 });
