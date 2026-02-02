@@ -143,25 +143,33 @@ export function DataTable<TData, TValue>({
                   {/* If we moved the first cell to title, we might want to also show its label? 
                         Usually titles don't need labels. 
                         Let's render remaining cells. */}
-                  {otherCells.map(cell => (
-                    <div
-                      key={cell.id}
-                      className="flex justify-between items-center py-1 border-b last:border-0 border-border/50"
-                    >
-                      <span className="font-medium text-muted-foreground text-sm">
-                        {flexRender(
-                          cell.column.columnDef.header,
-                          cell.getContext()
-                        )}
-                      </span>
-                      <div className="text-sm text-right pl-4">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                  {otherCells.map(cell => {
+                    const header = table
+                      .getFlatHeaders()
+                      .find(h => h.column.id === cell.column.id);
+
+                    return (
+                      <div
+                        key={cell.id}
+                        className="flex justify-between items-center py-1 border-b last:border-0 border-border/50"
+                      >
+                        <span className="font-medium text-muted-foreground text-sm">
+                          {header
+                            ? flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )
+                            : null}
+                        </span>
+                        <div className="text-sm text-right pl-4">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </CardContent>
               </Card>
             );

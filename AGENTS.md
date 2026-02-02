@@ -8,7 +8,7 @@
 
 ### 1. The "No New Toys" Rule
 
-- **FORBIDDEN:** You may NOT install new npm packages without explicit permission unless you have a valid reason why I need to install a particular package. Use what is in `package.json`.
+- **FORBIDDEN:** You may NOT install new npm packages without explicit permission. **EXCEPTION:** You may request to install a package if you provide a valid reason (e.g., improved code, better tooling, cool aesthetics, or required UI components). Explain WHY before asking.
 - **FORBIDDEN:** Do not introduce new architectural patterns (e.g., don't add a "Repository Pattern" layer; use Services).
 - **FORBIDDEN:** Do not change the styling system. We use Tailwind 4 + shadCn. Do not write custom CSS in `.css` files.
 

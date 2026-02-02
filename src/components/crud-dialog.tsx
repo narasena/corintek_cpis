@@ -16,7 +16,12 @@ interface ICrudDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSuccess?: () => void;
-  children: React.ReactNode;
+  children:
+    | React.ReactNode
+    | ((props: {
+        onSuccess: () => void;
+        onCancel: () => void;
+      }) => React.ReactNode);
 }
 
 export function CrudDialog({
