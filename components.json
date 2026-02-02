@@ -19,7 +19,9 @@
     "hooks": "@/hooks"
   },
   "registries": {
+    "@acme": "https://acme.com/r/{name}.json",
     "@abui": "https://abui.io/r/{name}.json",
-    "@blocks": "https://blocks.so/r/{name}.json"
+    "@blocks": "https://blocks.so/r/{name}.json",
+    "@shadcn-studio": "https://shadcnstudio.com/r/{name}.json"
   }
 }

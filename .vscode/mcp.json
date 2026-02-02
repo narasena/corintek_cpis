@@ -2,10 +2,17 @@
   "servers": {
     "shadcn": {
       "command": "npx",
-      "args": [
-        "shadcn@latest",
-        "mcp"
-      ]
+            "args": [
+              "shadcn@latest",
+              "mcp"
+            ]
+    },
+    "shadcn-ui": {
+      "command": "npx",
+      "args": ["@jpisnice/shadcn-ui-mcp-server"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+      }
     }
   }
 }
