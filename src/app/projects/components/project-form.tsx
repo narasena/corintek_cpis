@@ -35,6 +35,7 @@ import {
   ProjectStatusEnum,
 } from '@/features/projects/types';
 import { TClientResponse } from '@/@types/client.type';
+import { MachineFormSection } from '@/components/machine-form-section';
 
 interface ProjectFormProps {
   mode: 'create' | 'edit';
@@ -73,6 +74,7 @@ export function ProjectForm({
       endDate: defaultValues?.endDate
         ? new Date(defaultValues.endDate)
         : undefined,
+      machines: [], // Machines will be loaded separately if editing
     },
   });
 
@@ -92,9 +94,12 @@ export function ProjectForm({
         }
 
         if (result && result.success) {
+          const machineCount = data.machines?.length || 0;
+          const machineText =
+            machineCount > 0 ? ` dengan ${machineCount} mesin` : '';
           toast.success(
             mode === 'create'
-              ? 'Proyek berhasil dibuat'
+              ? `Proyek berhasil dibuat${machineText}`
               : 'Proyek berhasil diperbarui'
           );
           onSuccess();
@@ -272,6 +277,11 @@ export function ProjectForm({
             </FormItem>
           )}
         />
+
+        {/* Machine Form Section */}
+        <div className="pt-6 border-t">
+          <MachineFormSection control={form.control as any} />
+        </div>
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>

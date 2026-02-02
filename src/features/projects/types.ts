@@ -1,4 +1,5 @@
 import { z } from 'zod/v4';
+import { CreateMachineSchema } from '@/features/machines/types';
 
 // =============================================================================
 // Project Enums
@@ -27,6 +28,12 @@ export const CreateProjectSchema = z.object({
   startDate: z.coerce.date(),
   endDate: z.coerce.date().optional(),
   status: ProjectStatusEnum.default('PENDING'),
+  // Machines are optional at project creation
+  machines: z
+    .array(
+      CreateMachineSchema.omit({ projectId: true }) // projectId will be set automatically
+    )
+    .optional(),
 });
 
 export const UpdateProjectSchema = CreateProjectSchema.partial().extend({
@@ -54,4 +61,11 @@ export interface IProject {
   updatedAt: Date;
   deletedAt: Date | null;
   client?: { id: string; name: string };
+  machines?: Array<{
+    id: string;
+    unitNumber: number;
+    type: string;
+    ownership: string;
+    status: string;
+  }>;
 }

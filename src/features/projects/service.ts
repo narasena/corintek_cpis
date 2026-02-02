@@ -20,6 +20,19 @@ export async function getProjects(): Promise<IProject[]> {
           name: true,
         },
       },
+      machines: {
+        where: {
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+          unitNumber: true,
+          type: true,
+          ownership: true,
+          status: true,
+        },
+        orderBy: [{ type: 'asc' }, { unitNumber: 'asc' }],
+      },
     },
     orderBy: {
       createdAt: 'desc',
@@ -54,28 +67,53 @@ export async function getProjectById(id: string): Promise<IProject | null> {
 }
 
 /**
- * Create a new project
+ * Create a new project with optional machines
  */
 export async function createProject(data: TCreateProject): Promise<IProject> {
-  const project = await prisma.project.create({
-    data: {
-      name: data.name,
-      description: data.description,
-      quoteNumber: data.quoteNumber,
-      poNumber: data.poNumber,
-      startDate: data.startDate,
-      endDate: data.endDate,
-      status: data.status,
-      clientId: data.clientId,
-    },
-    include: {
-      client: {
-        select: {
-          id: true,
-          name: true,
+  const { machines, ...projectData } = data;
+
+  // Use transaction to ensure atomicity
+  const project = await prisma.$transaction(async tx => {
+    // Create the project first
+    const newProject = await tx.project.create({
+      data: {
+        name: projectData.name,
+        description: projectData.description,
+        quoteNumber: projectData.quoteNumber,
+        poNumber: projectData.poNumber,
+        startDate: projectData.startDate,
+        endDate: projectData.endDate,
+        status: projectData.status,
+        clientId: projectData.clientId,
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
-    },
+    });
+
+    // Create machines if provided
+    if (machines && machines.length > 0) {
+      await tx.machine.createMany({
+        data: machines.map(machine => ({
+          projectId: newProject.id,
+          unitNumber: machine.unitNumber,
+          type: machine.type,
+          ownership: machine.ownership,
+          status: machine.status,
+          capacity: machine.capacity ?? null,
+          brand: machine.brand ?? null,
+          model: machine.model ?? null,
+          serialNumber: machine.serialNumber ?? null,
+        })),
+      });
+    }
+
+    return newProject;
   });
 
   return project as unknown as IProject;
@@ -85,7 +123,8 @@ export async function createProject(data: TCreateProject): Promise<IProject> {
  * Update an existing project
  */
 export async function updateProject(data: TUpdateProject): Promise<IProject> {
-  const { id, ...updateData } = data;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id, machines, ...updateData } = data;
 
   const project = await prisma.project.update({
     where: { id },
@@ -96,6 +135,19 @@ export async function updateProject(data: TUpdateProject): Promise<IProject> {
           id: true,
           name: true,
         },
+      },
+      machines: {
+        where: {
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+          unitNumber: true,
+          type: true,
+          ownership: true,
+          status: true,
+        },
+        orderBy: [{ type: 'asc' }, { unitNumber: 'asc' }],
       },
     },
   });
