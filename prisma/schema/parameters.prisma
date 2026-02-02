@@ -1,0 +1,43 @@
+// =============================================================================
+// Parameters Domain - MVP Schema
+// =============================================================================
+
+// ValueType enum - determines how parameter value is stored/displayed
+enum ValueType {
+  NUMBER  // Float values (temperature, pH, etc.)
+  BOOLEAN // Yes/No, Running/Stop
+  TEXT    // Free text values
+}
+
+// ParameterCategory - grouping for UI sections
+enum ParameterCategory {
+  UNIT_CONDENSOR
+  UNIT_EVAPORATOR
+  COOLING_WATER_QUALITY
+  GENERAL_CONDITION
+  JOB_DESCRIPTION
+  CONSUMPTION
+}
+
+model Parameter {
+  id           String            @id @default(uuid())
+  name         String            @unique // e.g., "Temp (C°) In"
+  variableName String            @unique // e.g., "temp_c_in"
+  category     ParameterCategory
+  valueType    ValueType
+  unit         String? // e.g., "°C", "ppm", "µS"
+
+  // Optional limit range for NUMBER type
+  minValue Float?
+  maxValue Float?
+
+  // Display metadata
+  displayOrder Int     @default(0)
+  isActive     Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("parameters")
+}
