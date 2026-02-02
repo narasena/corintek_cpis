@@ -9,6 +9,8 @@ model Client {
   phoneNumber String?
   address     String?
 
+  projects    Project[]
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
