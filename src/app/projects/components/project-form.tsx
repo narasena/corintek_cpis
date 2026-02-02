@@ -117,7 +117,7 @@ export function ProjectForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Project Information */}
-          <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-0 lg:h-fit">
             <h3 className="font-semibold text-lg border-b pb-2">
               Informasi Proyek
             </h3>

@@ -78,29 +78,31 @@ export function MachineFormSection({ control }: MachineFormSectionProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">
-          Mesin ({machineFields.length || 0})
-        </h3>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addChiller}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Chiller
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addCoolingTower}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Cooling Tower
-          </Button>
+      <div className="sticky top-0 bg-background/95 backdrop-blur z-10 py-2 border-b mb-4 -mx-1 px-1">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">
+            Mesin ({machineFields.length || 0})
+          </h3>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addChiller}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Chiller
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addCoolingTower}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Cooling Tower
+            </Button>
+          </div>
         </div>
       </div>
 
