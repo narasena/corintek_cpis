@@ -17,6 +17,8 @@ model Project {
   
   status      ProjectStatus @default(PENDING)
   
+  machines    Machine[]
+  
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?

@@ -1,0 +1,43 @@
+// =============================================================================
+// Machine Domain - MVP Schema
+// =============================================================================
+
+enum MachineType {
+  CHILLER
+  COOLING_TOWER
+}
+
+enum MachineOwnership {
+  CORINTEK
+  CLIENT
+}
+
+enum MachineStatus {
+  RUNNING
+  IDLE
+  MAINTENANCE
+}
+
+model Machine {
+  id           String           @id @default(uuid())
+  projectId    String
+  project      Project          @relation(fields: [projectId], references: [id])
+  
+  unitNumber   Int
+  type         MachineType
+  ownership    MachineOwnership @default(CORINTEK)
+  status       MachineStatus    @default(IDLE)
+  
+  // Specs (optional)
+  capacity     Float?
+  brand        String?
+  model        String?
+  serialNumber String?
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  
+  @@index([projectId])
+  @@map("machines")
+}
