@@ -23,7 +23,9 @@
     "prisma:validate": "dotenv -e .env.development -- npx prisma validate",
     "prisma:format": "dotenv -e .env.development -- npx prisma format",
     "prisma:push": "dotenv -e .env.development -- npx prisma db push",
-    "prisma:seed": "dotenv -e .env.development -- npx prisma db seed"
+    "prisma:seed": "dotenv -e .env.development -- npx prisma db seed",
+    "seed:export": "dotenv -e .env.development -- npx tsx prisma/seed-export.ts",
+    "seed:import": "dotenv -e .env.development -- npx tsx prisma/seed-data.ts"
   },
   "prisma": {
     "schema": "prisma/schema"
