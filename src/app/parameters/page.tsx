@@ -33,7 +33,7 @@ export default function ParametersPage() {
       } else {
         toast.error('Gagal mengambil data parameter');
       }
-    } catch (error) {
+    } catch {
       toast.error('Terjadi kesalahan saat memuat data');
     } finally {
       setLoading(false);

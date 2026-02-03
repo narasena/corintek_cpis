@@ -40,7 +40,8 @@ export async function authenticateUser(
   }
 
   // Return user data without password
-  const { password: _, ...userWithoutPassword } = user;
+  const { password: storedPassword, ...userWithoutPassword } = user;
+  void storedPassword;
   return userWithoutPassword as TUserResponse;
 }
 
@@ -60,6 +61,7 @@ export async function getUserById(
     return null;
   }
 
-  const { password: _, ...userWithoutPassword } = user;
+  const { password: storedPassword, ...userWithoutPassword } = user;
+  void storedPassword;
   return userWithoutPassword as TUserResponse;
 }
