@@ -34,6 +34,7 @@ model Parameter {
   // Display metadata
   displayOrder Int     @default(0)
   isActive     Boolean @default(true)
+  logSheetEntries LogSheetEntry[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

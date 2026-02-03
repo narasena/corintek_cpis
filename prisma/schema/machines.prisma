@@ -33,6 +33,7 @@ model Machine {
   brand        String?
   model        String?
   serialNumber String?
+  logSheetEntries LogSheetEntry[]
   
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt

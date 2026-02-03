@@ -18,6 +18,7 @@ model Project {
   status      ProjectStatus @default(PENDING)
   
   machines    Machine[]
+  logSheets   LogSheet[]
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

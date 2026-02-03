@@ -1,0 +1,52 @@
+enum LogSheetStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+}
+
+model LogSheet {
+  id        String         @id @default(uuid())
+  projectId String
+  project   Project        @relation(fields: [projectId], references: [id])
+
+  date   DateTime
+  notes  String?
+  status LogSheetStatus @default(DRAFT)
+
+  entries LogSheetEntry[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([projectId, date])
+  @@map("log_sheets")
+}
+
+model LogSheetEntry {
+  id         String   @id @default(uuid())
+  logSheetId String
+  logSheet   LogSheet @relation(fields: [logSheetId], references: [id])
+
+  parameterId String
+  parameter   Parameter @relation(fields: [parameterId], references: [id])
+
+  machineId String?
+  machine   Machine? @relation(fields: [machineId], references: [id])
+
+  valueType    ValueType
+  numericValue Float?
+  boolValue    Boolean?
+  textValue    String?
+
+  checkedAt DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([logSheetId])
+  @@index([parameterId])
+  @@index([machineId])
+  @@map("log_sheet_entries")
+}

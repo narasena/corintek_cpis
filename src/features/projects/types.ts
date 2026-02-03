@@ -1,5 +1,10 @@
 import { z } from 'zod/v4';
-import { CreateMachineSchema } from '@/features/machines/types';
+import {
+  CreateMachineSchema,
+  type TMachineOwnership,
+  type TMachineStatus,
+  type TMachineType,
+} from '@/features/machines/types';
 
 // =============================================================================
 // Project Enums
@@ -66,8 +71,8 @@ export interface IProject {
   machines?: Array<{
     id: string;
     unitNumber: number;
-    type: string;
-    ownership: string;
-    status: string;
+    type: TMachineType;
+    ownership: TMachineOwnership;
+    status: TMachineStatus;
   }>;
 }
