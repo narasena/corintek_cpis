@@ -47,6 +47,7 @@ type TMachine = {
   unitNumber: number;
   type: 'CHILLER' | 'COOLING_TOWER';
 };
+type TEntryRole = 'VALUE' | 'RAW_WATER' | 'NOTE';
 type TParameter = {
   id: string;
   name: string;
@@ -61,6 +62,8 @@ type TParameter = {
   unit: string | null;
   minValue: number | null;
   maxValue: number | null;
+  rawWaterMinValue?: number | null;
+  rawWaterMaxValue?: number | null;
   displayOrder: number;
 };
 
@@ -78,6 +81,7 @@ type TDetail = {
   entries: Array<{
     parameterId: string;
     machineId: string | null;
+    role: TEntryRole;
     valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
     numericValue: number | null;
     boolValue: boolean | null;
@@ -92,8 +96,12 @@ type TEntryState = {
   textValue?: string | null;
 };
 
-function makeEntryKey(parameterId: string, machineId: string | null) {
-  return `${parameterId}:${machineId ?? 'null'}`;
+function makeEntryKey(
+  parameterId: string,
+  machineId: string | null,
+  role: TEntryRole
+) {
+  return `${parameterId}:${machineId ?? 'null'}:${role}`;
 }
 
 function formatDate(value: string | Date) {
@@ -112,6 +120,28 @@ function formatLimit(
   const unit = parameter.unit ? ` ${parameter.unit}` : '';
   const min = parameter.minValue;
   const max = parameter.maxValue;
+
+  if (min !== null && min !== undefined && max !== null && max !== undefined) {
+    return `${min}${unit} ~ ${max}${unit}`;
+  }
+
+  if (max !== null && max !== undefined) {
+    return `≤ ${max}${unit}`;
+  }
+
+  if (min !== null && min !== undefined) {
+    return `≥ ${min}${unit}`;
+  }
+
+  return '-';
+}
+
+function formatRawWaterLimit(
+  parameter: Pick<TParameter, 'rawWaterMinValue' | 'rawWaterMaxValue' | 'unit'>
+) {
+  const unit = parameter.unit ? ` ${parameter.unit}` : '';
+  const min = parameter.rawWaterMinValue;
+  const max = parameter.rawWaterMaxValue;
 
   if (min !== null && min !== undefined && max !== null && max !== undefined) {
     return `${min}${unit} ~ ${max}${unit}`;
@@ -160,12 +190,13 @@ export default function LogSheetDetailPage() {
 
       const initial: Record<string, TEntryState> = {};
       for (const entry of d.entries) {
-        initial[makeEntryKey(entry.parameterId, entry.machineId)] = {
-          valueType: entry.valueType,
-          numericValue: entry.numericValue,
-          boolValue: entry.boolValue,
-          textValue: entry.textValue,
-        };
+        initial[makeEntryKey(entry.parameterId, entry.machineId, entry.role)] =
+          {
+            valueType: entry.valueType,
+            numericValue: entry.numericValue,
+            boolValue: entry.boolValue,
+            textValue: entry.textValue,
+          };
       }
       setEntryState(initial);
     } catch {
@@ -183,9 +214,7 @@ export default function LogSheetDetailPage() {
     if (!detail) return [];
     const unique = Array.from(new Set(detail.parameters.map(p => p.category)));
     return unique.sort((a, b) => {
-      return (
-        CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b)
-      );
+      return CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b);
     });
   }, [detail]);
 
@@ -211,7 +240,11 @@ export default function LogSheetDetailPage() {
       if (category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR') {
         return { machines: detail.machines.chillers, label: 'Chiller' };
       }
-      if (category === 'GENERAL_CONDITION' || category === 'JOB_DESCRIPTION') {
+      if (
+        category === 'COOLING_WATER_QUALITY' ||
+        category === 'GENERAL_CONDITION' ||
+        category === 'JOB_DESCRIPTION'
+      ) {
         return {
           machines: detail.machines.coolingTowers,
           label: 'Cooling Tower',
@@ -241,6 +274,7 @@ export default function LogSheetDetailPage() {
       const entriesPayload: Array<{
         parameterId: string;
         machineId: string | null;
+        role: TEntryRole;
         valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
         numericValue?: number | null;
         boolValue?: boolean | null;
@@ -249,22 +283,105 @@ export default function LogSheetDetailPage() {
 
       for (const category of categories) {
         const params = parametersByCategory.get(category) ?? [];
-        const { machines } = machinesForCategory(
-          category as TParameter['category']
-        );
+        const cat = category as TParameter['category'];
 
         for (const param of params) {
+          if (cat === 'COOLING_WATER_QUALITY') {
+            for (const ct of detail.machines.coolingTowers) {
+              const key = makeEntryKey(param.id, ct.id, 'VALUE');
+              const state = entryState[key];
+              entriesPayload.push({
+                parameterId: param.id,
+                machineId: ct.id,
+                role: 'VALUE',
+                valueType: param.valueType,
+                numericValue:
+                  param.valueType === 'NUMBER'
+                    ? (state?.numericValue ?? null)
+                    : null,
+                boolValue:
+                  param.valueType === 'BOOLEAN'
+                    ? (state?.boolValue ?? null)
+                    : null,
+                textValue:
+                  param.valueType === 'TEXT'
+                    ? (state?.textValue ?? null)
+                    : null,
+              });
+            }
+
+            const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
+            const rawState = entryState[rawKey];
+            entriesPayload.push({
+              parameterId: param.id,
+              machineId: null,
+              role: 'RAW_WATER',
+              valueType: param.valueType,
+              numericValue:
+                param.valueType === 'NUMBER'
+                  ? (rawState?.numericValue ?? null)
+                  : null,
+              boolValue:
+                param.valueType === 'BOOLEAN'
+                  ? (rawState?.boolValue ?? null)
+                  : null,
+              textValue:
+                param.valueType === 'TEXT'
+                  ? (rawState?.textValue ?? null)
+                  : null,
+            });
+            continue;
+          }
+
+          if (cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION') {
+            for (const ct of detail.machines.coolingTowers) {
+              const key = makeEntryKey(param.id, ct.id, 'VALUE');
+              const state = entryState[key];
+              entriesPayload.push({
+                parameterId: param.id,
+                machineId: ct.id,
+                role: 'VALUE',
+                valueType: param.valueType,
+                numericValue:
+                  param.valueType === 'NUMBER'
+                    ? (state?.numericValue ?? null)
+                    : null,
+                boolValue:
+                  param.valueType === 'BOOLEAN'
+                    ? (state?.boolValue ?? null)
+                    : null,
+                textValue:
+                  param.valueType === 'TEXT'
+                    ? (state?.textValue ?? null)
+                    : null,
+              });
+            }
+
+            const noteKey = makeEntryKey(param.id, null, 'NOTE');
+            const noteState = entryState[noteKey];
+            entriesPayload.push({
+              parameterId: param.id,
+              machineId: null,
+              role: 'NOTE',
+              valueType: 'TEXT',
+              textValue: noteState?.textValue ?? null,
+            });
+            continue;
+          }
+
+          const { machines } = machinesForCategory(cat);
           const targets =
             machines.length > 0
               ? machines
               : [{ id: 'null', unitNumber: 0, type: 'CHILLER' as const }];
           for (const m of targets) {
             const machineIdValue = machines.length > 0 ? m.id : null;
-            const key = makeEntryKey(param.id, machineIdValue);
+            const key = makeEntryKey(param.id, machineIdValue, 'VALUE');
             const state = entryState[key];
             entriesPayload.push({
               parameterId: param.id,
               machineId: machineIdValue,
+              role: 'VALUE',
               valueType: param.valueType,
               numericValue:
                 param.valueType === 'NUMBER'
@@ -393,11 +510,274 @@ export default function LogSheetDetailPage() {
 
           {categories.map(category => {
             const params = parametersByCategory.get(category) ?? [];
-            const { machines } = machinesForCategory(
-              category as TParameter['category']
-            );
+            const cat = category as TParameter['category'];
+            const { machines } = machinesForCategory(cat);
             if (params.length === 0) return null;
 
+            if (cat === 'COOLING_WATER_QUALITY') {
+              const ctMachines = detail.machines.coolingTowers;
+              return (
+                <div key={category} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold">{category}</h2>
+                  </div>
+
+                  <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/40">
+                          <TableHead className="min-w-[220px]">
+                            Parameter
+                          </TableHead>
+                          <TableHead className="min-w-[160px]">
+                            Target
+                          </TableHead>
+                          {ctMachines.map(m => (
+                            <TableHead
+                              key={m.id}
+                              className="min-w-[140px] text-center"
+                            >
+                              {`CT #${m.unitNumber}`}
+                            </TableHead>
+                          ))}
+                          <TableHead className="min-w-[200px] text-center">
+                            Raw Water
+                          </TableHead>
+                          <TableHead className="min-w-[160px] text-center">
+                            Target (Raw Water)
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {params.map(param => {
+                          return (
+                            <TableRow key={param.id}>
+                              <TableCell>
+                                <div className="font-medium">
+                                  {param.name}
+                                  {param.unit ? ` (${param.unit})` : ''}
+                                </div>
+                              </TableCell>
+                              <TableCell>{formatLimit(param)}</TableCell>
+                              {ctMachines.map(m => {
+                                const key = makeEntryKey(
+                                  param.id,
+                                  m.id,
+                                  'VALUE'
+                                );
+                                const state = entryState[key];
+
+                                if (param.valueType === 'BOOLEAN') {
+                                  const checked = state?.boolValue ?? false;
+                                  const isIndeterminate =
+                                    state?.boolValue === null ||
+                                    state?.boolValue === undefined;
+                                  return (
+                                    <TableCell
+                                      key={key}
+                                      className="text-center"
+                                    >
+                                      <div className="flex items-center justify-center gap-2">
+                                        <Checkbox
+                                          checked={
+                                            isIndeterminate ? false : checked
+                                          }
+                                          onCheckedChange={value => {
+                                            const next = value === true;
+                                            setEntryState(prev => ({
+                                              ...prev,
+                                              [key]: {
+                                                valueType: 'BOOLEAN',
+                                                boolValue: next,
+                                              },
+                                            }));
+                                          }}
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() =>
+                                            setEntryState(prev => ({
+                                              ...prev,
+                                              [key]: {
+                                                valueType: 'BOOLEAN',
+                                                boolValue: null,
+                                              },
+                                            }))
+                                          }
+                                        >
+                                          Kosongkan
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  );
+                                }
+
+                                if (param.valueType === 'NUMBER') {
+                                  return (
+                                    <TableCell key={key}>
+                                      <Input
+                                        type="number"
+                                        inputMode="decimal"
+                                        value={
+                                          state?.numericValue === null ||
+                                          state?.numericValue === undefined
+                                            ? ''
+                                            : String(state.numericValue)
+                                        }
+                                        onChange={e => {
+                                          const raw = e.target.value;
+                                          setEntryState(prev => ({
+                                            ...prev,
+                                            [key]: {
+                                              valueType: 'NUMBER',
+                                              numericValue:
+                                                raw === '' ? null : Number(raw),
+                                            },
+                                          }));
+                                        }}
+                                      />
+                                    </TableCell>
+                                  );
+                                }
+
+                                return (
+                                  <TableCell key={key}>
+                                    <Input
+                                      value={state?.textValue ?? ''}
+                                      onChange={e => {
+                                        const raw = e.target.value;
+                                        setEntryState(prev => ({
+                                          ...prev,
+                                          [key]: {
+                                            valueType: 'TEXT',
+                                            textValue: raw,
+                                          },
+                                        }));
+                                      }}
+                                    />
+                                  </TableCell>
+                                );
+                              })}
+
+                              {(() => {
+                                const rawKey = makeEntryKey(
+                                  param.id,
+                                  null,
+                                  'RAW_WATER'
+                                );
+                                const rawState = entryState[rawKey];
+
+                                if (param.valueType === 'BOOLEAN') {
+                                  const checked = rawState?.boolValue ?? false;
+                                  const isIndeterminate =
+                                    rawState?.boolValue === null ||
+                                    rawState?.boolValue === undefined;
+                                  return (
+                                    <TableCell
+                                      key={rawKey}
+                                      className="text-center"
+                                    >
+                                      <div className="flex items-center justify-center gap-2">
+                                        <Checkbox
+                                          checked={
+                                            isIndeterminate ? false : checked
+                                          }
+                                          onCheckedChange={value => {
+                                            const next = value === true;
+                                            setEntryState(prev => ({
+                                              ...prev,
+                                              [rawKey]: {
+                                                valueType: 'BOOLEAN',
+                                                boolValue: next,
+                                              },
+                                            }));
+                                          }}
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() =>
+                                            setEntryState(prev => ({
+                                              ...prev,
+                                              [rawKey]: {
+                                                valueType: 'BOOLEAN',
+                                                boolValue: null,
+                                              },
+                                            }))
+                                          }
+                                        >
+                                          Kosongkan
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  );
+                                }
+
+                                if (param.valueType === 'NUMBER') {
+                                  return (
+                                    <TableCell key={rawKey}>
+                                      <Input
+                                        type="number"
+                                        inputMode="decimal"
+                                        value={
+                                          rawState?.numericValue === null ||
+                                          rawState?.numericValue === undefined
+                                            ? ''
+                                            : String(rawState.numericValue)
+                                        }
+                                        onChange={e => {
+                                          const raw = e.target.value;
+                                          setEntryState(prev => ({
+                                            ...prev,
+                                            [rawKey]: {
+                                              valueType: 'NUMBER',
+                                              numericValue:
+                                                raw === '' ? null : Number(raw),
+                                            },
+                                          }));
+                                        }}
+                                      />
+                                    </TableCell>
+                                  );
+                                }
+
+                                return (
+                                  <TableCell key={rawKey}>
+                                    <Input
+                                      value={rawState?.textValue ?? ''}
+                                      onChange={e => {
+                                        const raw = e.target.value;
+                                        setEntryState(prev => ({
+                                          ...prev,
+                                          [rawKey]: {
+                                            valueType: 'TEXT',
+                                            textValue: raw,
+                                          },
+                                        }));
+                                      }}
+                                    />
+                                  </TableCell>
+                                );
+                              })()}
+
+                              <TableCell className="text-center">
+                                {formatRawWaterLimit(param)}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              );
+            }
+
+            const hasNotes =
+              cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION';
             return (
               <div key={category} className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -428,6 +808,11 @@ export default function LogSheetDetailPage() {
                             Nilai
                           </TableHead>
                         )}
+                        {hasNotes && (
+                          <TableHead className="min-w-[260px] text-center">
+                            Catatan
+                          </TableHead>
+                        )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -456,7 +841,8 @@ export default function LogSheetDetailPage() {
                                 machines.length > 0 ? m.id : null;
                               const key = makeEntryKey(
                                 param.id,
-                                machineIdValue
+                                machineIdValue,
+                                'VALUE'
                               );
                               const state = entryState[key];
 
@@ -550,6 +936,33 @@ export default function LogSheetDetailPage() {
                                 </TableCell>
                               );
                             })}
+                            {hasNotes && (
+                              <TableCell>
+                                {(() => {
+                                  const key = makeEntryKey(
+                                    param.id,
+                                    null,
+                                    'NOTE'
+                                  );
+                                  const state = entryState[key];
+                                  return (
+                                    <Input
+                                      value={state?.textValue ?? ''}
+                                      onChange={e => {
+                                        const raw = e.target.value;
+                                        setEntryState(prev => ({
+                                          ...prev,
+                                          [key]: {
+                                            valueType: 'TEXT',
+                                            textValue: raw,
+                                          },
+                                        }));
+                                      }}
+                                    />
+                                  );
+                                })()}
+                              </TableCell>
+                            )}
                           </TableRow>
                         );
                       })}

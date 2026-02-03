@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 type TLogSheetStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED';
 
 type TMachine = {
@@ -7,6 +9,8 @@ type TMachine = {
   unitNumber: number;
   type: 'CHILLER' | 'COOLING_TOWER';
 };
+
+type TEntryRole = 'VALUE' | 'RAW_WATER' | 'NOTE';
 
 type TParameter = {
   id: string;
@@ -22,6 +26,8 @@ type TParameter = {
   unit: string | null;
   minValue: number | null;
   maxValue: number | null;
+  rawWaterMinValue?: number | null;
+  rawWaterMaxValue?: number | null;
   displayOrder: number;
 };
 
@@ -32,8 +38,12 @@ type TEntryState = {
   textValue?: string | null;
 };
 
-function makeEntryKey(parameterId: string, machineId: string | null) {
-  return `${parameterId}:${machineId ?? 'null'}`;
+function makeEntryKey(
+  parameterId: string,
+  machineId: string | null,
+  role: TEntryRole
+) {
+  return `${parameterId}:${machineId ?? 'null'}:${role}`;
 }
 
 function formatDate(value: string | Date) {
@@ -68,15 +78,37 @@ function formatLimit(
   return '';
 }
 
-function formatValue(valueType: TParameter['valueType'], state?: TEntryState) {
+function formatRawWaterLimit(
+  parameter: Pick<TParameter, 'rawWaterMinValue' | 'rawWaterMaxValue' | 'unit'>
+) {
+  const unit = parameter.unit ? ` ${parameter.unit}` : '';
+  const min = parameter.rawWaterMinValue;
+  const max = parameter.rawWaterMaxValue;
+
+  if (min !== null && min !== undefined && max !== null && max !== undefined) {
+    return `${min}${unit} ~ ${max}${unit}`;
+  }
+
+  if (max !== null && max !== undefined) {
+    return `≤ ${max}${unit}`;
+  }
+
+  if (min !== null && min !== undefined) {
+    return `≥ ${min}${unit}`;
+  }
+
+  return '';
+}
+
+function formatValue(state?: TEntryState) {
   if (!state) return '';
 
-  if (valueType === 'BOOLEAN') {
+  if (state.valueType === 'BOOLEAN') {
     if (state.boolValue === null || state.boolValue === undefined) return '';
     return state.boolValue ? 'Yes' : 'No';
   }
 
-  if (valueType === 'NUMBER') {
+  if (state.valueType === 'NUMBER') {
     if (state.numericValue === null || state.numericValue === undefined)
       return '';
     return String(state.numericValue);
@@ -111,7 +143,11 @@ function machinesForCategory(
   if (category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR') {
     return machines.chillers;
   }
-  if (category === 'GENERAL_CONDITION' || category === 'JOB_DESCRIPTION') {
+  if (
+    category === 'COOLING_WATER_QUALITY' ||
+    category === 'GENERAL_CONDITION' ||
+    category === 'JOB_DESCRIPTION'
+  ) {
     return machines.coolingTowers;
   }
   return [];
@@ -136,14 +172,25 @@ export function LogSheetPreview({
   parameters: TParameter[];
   valuesByKey: Record<string, TEntryState | undefined>;
 }) {
-  const categories = Array.from(
-    new Set(parameters.map(p => p.category))
-  ).sort((a, b) => {
-    return CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b);
-  });
-  const unitColumnCount = Math.max(
-    machines.chillers.length,
-    machines.coolingTowers.length,
+  const categories = Array.from(new Set(parameters.map(p => p.category))).sort(
+    (a, b) => {
+      return CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b);
+    }
+  );
+  const maxDataColumnCount = Math.max(
+    ...categories.map(category => {
+      const cat = category as TParameter['category'];
+      if (cat === 'COOLING_WATER_QUALITY') {
+        return machines.coolingTowers.length + 2;
+      }
+
+      if (cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION') {
+        return Math.max(machines.coolingTowers.length, 1) + 1;
+      }
+
+      const sectionMachines = machinesForCategory(cat, machines);
+      return Math.max(sectionMachines.length, 1);
+    }),
     1
   );
 
@@ -187,31 +234,10 @@ export function LogSheetPreview({
                 paramsByCategory.get(category as TParameter['category']) ?? [];
               if (params.length === 0) return [];
 
-              const sectionMachines = machinesForCategory(
-                category as TParameter['category'],
-                machines
-              );
-              const hasMachines = sectionMachines.length > 0;
-
-              const headerCells = Array.from(
-                { length: unitColumnCount },
-                (_, idx) => {
-                  const m = hasMachines ? sectionMachines[idx] : undefined;
-                  const label = m
-                    ? m.type === 'CHILLER'
-                      ? `Chiller #${m.unitNumber}`
-                      : `CT #${m.unitNumber}`
-                    : '';
-                  return (
-                    <th
-                      key={`${category}-h-${idx}`}
-                      className="border border-black p-1 text-center font-bold"
-                    >
-                      {label}
-                    </th>
-                  );
-                }
-              );
+              const cat = category as TParameter['category'];
+              const sectionMachines = machinesForCategory(cat, machines);
+              const hasNotes =
+                cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION';
 
               const headerRow = (
                 <tr
@@ -224,20 +250,50 @@ export function LogSheetPreview({
                   <th className="border border-black p-1 text-center font-bold">
                     Parameter
                   </th>
-                  {hasMachines ? (
-                    headerCells
+                  {cat === 'COOLING_WATER_QUALITY' ? (
+                    <>
+                      {sectionMachines.map(m => (
+                        <th
+                          key={`${category}-m-${m.id}`}
+                          className="border border-black p-1 text-center font-bold"
+                        >
+                          {`CT #${m.unitNumber}`}
+                        </th>
+                      ))}
+                      <th className="border border-black p-1 text-center font-bold">
+                        Raw Water
+                      </th>
+                      <th className="border border-black p-1 text-center font-bold">
+                        Limit
+                      </th>
+                    </>
+                  ) : sectionMachines.length > 0 ? (
+                    <>
+                      {sectionMachines.map(m => (
+                        <th
+                          key={`${category}-m-${m.id}`}
+                          className="border border-black p-1 text-center font-bold"
+                        >
+                          {m.type === 'CHILLER'
+                            ? `Chiller #${m.unitNumber}`
+                            : `CT #${m.unitNumber}`}
+                        </th>
+                      ))}
+                      {hasNotes && (
+                        <th className="border border-black p-1 text-center font-bold">
+                          Catatan
+                        </th>
+                      )}
+                    </>
                   ) : (
                     <>
                       <th className="border border-black p-1 text-center font-bold">
                         Value
                       </th>
-                      {Array.from({ length: unitColumnCount - 1 }).map(
-                        (_, i) => (
-                          <th
-                            key={`${category}-blank-${i}`}
-                            className="border border-black p-1 text-center font-bold"
-                          />
-                        )
+                      {hasNotes && (
+                        <th className="border border-black p-1 text-center font-bold">
+                          Catatan
+                        </th>
                       )}
                     </>
                   )}
@@ -246,32 +302,75 @@ export function LogSheetPreview({
 
               const rows = params.map(param => {
                 const limit = formatLimit(param);
-                const targets = hasMachines
-                  ? sectionMachines
-                  : ([
-                      { id: 'null', unitNumber: 0, type: 'CHILLER' as const },
-                    ] as TMachine[]);
+                const valueCells: ReactNode[] = [];
 
-                const valueCells = Array.from(
-                  { length: unitColumnCount },
-                  (_, idx) => {
-                    const m = targets[idx];
-                    const machineId = hasMachines ? (m?.id ?? null) : null;
-                    const key = makeEntryKey(param.id, machineId);
-                    const value = formatValue(
-                      param.valueType,
-                      valuesByKey[key]
-                    );
-                    return (
+                if (cat === 'COOLING_WATER_QUALITY') {
+                  for (const m of sectionMachines) {
+                    const key = makeEntryKey(param.id, m.id, 'VALUE');
+                    valueCells.push(
                       <td
-                        key={`${param.id}-v-${idx}`}
+                        key={`${param.id}-v-${m.id}`}
                         className="border border-black p-1 text-center"
                       >
-                        {value || ''}
+                        {formatValue(valuesByKey[key]) || ''}
                       </td>
                     );
                   }
-                );
+
+                  const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
+                  valueCells.push(
+                    <td
+                      key={`${param.id}-raw`}
+                      className="border border-black p-1 text-center"
+                    >
+                      {formatValue(valuesByKey[rawKey]) || ''}
+                    </td>
+                  );
+                  valueCells.push(
+                    <td
+                      key={`${param.id}-raw-limit`}
+                      className="border border-black p-1 text-center"
+                    >
+                      {formatRawWaterLimit(param) || ''}
+                    </td>
+                  );
+                } else {
+                  if (sectionMachines.length > 0) {
+                    for (const m of sectionMachines) {
+                      const key = makeEntryKey(param.id, m.id, 'VALUE');
+                      valueCells.push(
+                        <td
+                          key={`${param.id}-v-${m.id}`}
+                          className="border border-black p-1 text-center"
+                        >
+                          {formatValue(valuesByKey[key]) || ''}
+                        </td>
+                      );
+                    }
+                  } else {
+                    const key = makeEntryKey(param.id, null, 'VALUE');
+                    valueCells.push(
+                      <td
+                        key={`${param.id}-v-null`}
+                        className="border border-black p-1 text-center"
+                      >
+                        {formatValue(valuesByKey[key]) || ''}
+                      </td>
+                    );
+                  }
+
+                  if (hasNotes) {
+                    const noteKey = makeEntryKey(param.id, null, 'NOTE');
+                    valueCells.push(
+                      <td
+                        key={`${param.id}-note`}
+                        className="border border-black p-1 text-center"
+                      >
+                        {formatValue(valuesByKey[noteKey]) || ''}
+                      </td>
+                    );
+                  }
+                }
 
                 return (
                   <tr key={param.id}>
@@ -294,7 +393,7 @@ export function LogSheetPreview({
               <td className="border border-black p-2 font-semibold">Note</td>
               <td
                 className="border border-black p-2"
-                colSpan={unitColumnCount + 1}
+                colSpan={maxDataColumnCount + 1}
               >
                 {notes ?? ''}
               </td>
@@ -304,7 +403,7 @@ export function LogSheetPreview({
               <td className="border border-black p-2 font-semibold">Status</td>
               <td
                 className="border border-black p-2"
-                colSpan={unitColumnCount + 1}
+                colSpan={maxDataColumnCount + 1}
               >
                 {status}
               </td>
