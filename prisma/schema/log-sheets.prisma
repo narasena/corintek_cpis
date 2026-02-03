@@ -4,6 +4,12 @@ enum LogSheetStatus {
   APPROVED
 }
 
+enum LogSheetEntryRole {
+  VALUE
+  RAW_WATER
+  NOTE
+}
+
 model LogSheet {
   id        String         @id @default(uuid())
   projectId String
@@ -34,6 +40,8 @@ model LogSheetEntry {
   machineId String?
   machine   Machine? @relation(fields: [machineId], references: [id])
 
+  role LogSheetEntryRole @default(VALUE)
+
   valueType    ValueType
   numericValue Float?
   boolValue    Boolean?
@@ -48,5 +56,6 @@ model LogSheetEntry {
   @@index([logSheetId])
   @@index([parameterId])
   @@index([machineId])
+  @@index([role])
   @@map("log_sheet_entries")
 }

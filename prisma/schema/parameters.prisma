@@ -31,6 +31,10 @@ model Parameter {
   minValue Float?
   maxValue Float?
 
+  // Optional raw-water limit range (used by COOLING_WATER_QUALITY)
+  rawWaterMinValue Float?
+  rawWaterMaxValue Float?
+
   // Display metadata
   displayOrder Int     @default(0)
   isActive     Boolean @default(true)
