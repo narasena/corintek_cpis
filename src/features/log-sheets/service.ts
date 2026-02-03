@@ -9,8 +9,12 @@ import type {
   TUpdateLogSheet,
 } from './types';
 
-function makeEntryKey(parameterId: string, machineId: string | null) {
-  return `${parameterId}:${machineId ?? 'null'}`;
+function makeEntryKey(
+  parameterId: string,
+  machineId: string | null,
+  role: ILogSheetEntry['role']
+) {
+  return `${parameterId}:${machineId ?? 'null'}:${role}`;
 }
 
 function isEntryEmpty(entry: {
@@ -65,6 +69,8 @@ export interface ILogSheetDetailView {
     | 'unit'
     | 'minValue'
     | 'maxValue'
+    | 'rawWaterMinValue'
+    | 'rawWaterMaxValue'
     | 'displayOrder'
   >[];
   entries: ILogSheetEntry[];
@@ -189,6 +195,8 @@ export async function getLogSheetDetail(
       unit: true,
       minValue: true,
       maxValue: true,
+      rawWaterMinValue: true,
+      rawWaterMaxValue: true,
       displayOrder: true,
     },
     orderBy: [
@@ -228,6 +236,7 @@ export async function getLogSheetDetail(
       logSheetId: e.logSheetId,
       parameterId: e.parameterId,
       machineId: e.machineId,
+      role: e.role as unknown as ILogSheetEntry['role'],
       valueType: e.valueType as unknown as ILogSheetEntry['valueType'],
       numericValue: e.numericValue,
       boolValue: e.boolValue,
@@ -254,19 +263,32 @@ export async function upsertLogSheetEntries(
       id: true,
       parameterId: true,
       machineId: true,
+      role: true,
       deletedAt: true,
     },
   });
 
   const existingByKey = new Map(
-    existing.map(e => [makeEntryKey(e.parameterId, e.machineId), e])
+    existing.map(e => [
+      makeEntryKey(
+        e.parameterId,
+        e.machineId,
+        e.role as unknown as ILogSheetEntry['role']
+      ),
+      e,
+    ])
   );
 
   await prisma.$transaction(async tx => {
     const now = new Date();
 
     for (const entry of entries) {
-      const key = makeEntryKey(entry.parameterId, entry.machineId ?? null);
+      const role = (entry.role ?? 'VALUE') as ILogSheetEntry['role'];
+      const key = makeEntryKey(
+        entry.parameterId,
+        entry.machineId ?? null,
+        role
+      );
       const existingEntry = existingByKey.get(key);
       const empty = isEntryEmpty(entry);
 
@@ -284,6 +306,7 @@ export async function upsertLogSheetEntries(
         logSheetId,
         parameterId: entry.parameterId,
         machineId: entry.machineId ?? null,
+        role,
         valueType: entry.valueType,
         numericValue:
           entry.valueType === 'NUMBER' ? (entry.numericValue ?? null) : null,

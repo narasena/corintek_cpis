@@ -6,6 +6,7 @@ import * as logSheetService from './service';
 import {
   CreateLogSheetEntrySchema,
   CreateLogSheetSchema,
+  LogSheetEntryRoleEnum,
   LogSheetStatusEnum,
   UpdateLogSheetSchema,
 } from './types';
@@ -21,6 +22,7 @@ const SaveLogSheetEntriesSchema = z.object({
         .uuid('Machine ID tidak valid')
         .nullable()
         .optional(),
+      role: LogSheetEntryRoleEnum.default('VALUE'),
       valueType: ValueTypeEnum,
       numericValue: z.number().nullable().optional(),
       boolValue: z.boolean().nullable().optional(),

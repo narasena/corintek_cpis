@@ -4,6 +4,9 @@ import { ValueTypeEnum, type TValueType } from '@/features/parameters/types';
 export const LogSheetStatusEnum = z.enum(['DRAFT', 'SUBMITTED', 'APPROVED']);
 export type TLogSheetStatus = z.infer<typeof LogSheetStatusEnum>;
 
+export const LogSheetEntryRoleEnum = z.enum(['VALUE', 'RAW_WATER', 'NOTE']);
+export type TLogSheetEntryRole = z.infer<typeof LogSheetEntryRoleEnum>;
+
 export const CreateLogSheetSchema = z.object({
   projectId: z.string().uuid('Project ID tidak valid'),
   date: z.coerce.date(),
@@ -23,6 +26,7 @@ export const CreateLogSheetEntrySchema = z
     logSheetId: z.string().uuid('Log sheet ID tidak valid'),
     parameterId: z.string().uuid('Parameter ID tidak valid'),
     machineId: z.string().uuid('Machine ID tidak valid').nullable().optional(),
+    role: LogSheetEntryRoleEnum.default('VALUE'),
     valueType: ValueTypeEnum,
     numericValue: z.number().nullable().optional(),
     boolValue: z.boolean().nullable().optional(),
@@ -86,6 +90,7 @@ export interface ILogSheetEntry {
   logSheetId: string;
   parameterId: string;
   machineId: string | null;
+  role: TLogSheetEntryRole;
   valueType: TValueType;
   numericValue: number | null;
   boolValue: boolean | null;
