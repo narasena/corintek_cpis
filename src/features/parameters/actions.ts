@@ -68,8 +68,14 @@ export async function createParameterAction(data: TCreateParameter) {
  * Update parameter action
  */
 export async function updateParameterAction(data: TUpdateParameter) {
+  // DEBUG: Log incoming data
+  console.log('[DEBUG] updateParameterAction received data:', data);
+  console.log('[DEBUG] updateParameterAction data.id:', data.id);
+  console.log('[DEBUG] updateParameterAction id type:', typeof data.id);
+  
   try {
     const validatedData = UpdateParameterSchema.parse(data);
+    console.log('[DEBUG] Validation passed, validatedData:', validatedData);
     const parameter = await parameterService.updateParameter(validatedData);
 
     revalidatePath('/parameters');
