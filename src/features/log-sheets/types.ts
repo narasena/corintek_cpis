@@ -67,14 +67,7 @@ export const CreateLogSheetEntrySchema = z
     }
   });
 
-export const UpdateLogSheetEntrySchema = CreateLogSheetEntrySchema.partial().extend(
-  {
-    id: z.string().uuid(),
-  }
-);
-
 export type TCreateLogSheetEntry = z.infer<typeof CreateLogSheetEntrySchema>;
-export type TUpdateLogSheetEntry = z.infer<typeof UpdateLogSheetEntrySchema>;
 
 export interface ILogSheet {
   id: string;
