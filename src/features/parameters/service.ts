@@ -50,6 +50,8 @@ export async function createParameter(
       unit: data.unit,
       minValue: data.minValue,
       maxValue: data.maxValue,
+      rawWaterMinValue: data.rawWaterMinValue,
+      rawWaterMaxValue: data.rawWaterMaxValue,
       displayOrder: data.displayOrder ?? 0,
       isActive: data.isActive ?? true,
     },

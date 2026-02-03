@@ -35,6 +35,8 @@ export const CreateParameterSchema = z.object({
   unit: z.string().optional(),
   minValue: z.number().optional(),
   maxValue: z.number().optional(),
+  rawWaterMinValue: z.number().optional(),
+  rawWaterMaxValue: z.number().optional(),
   displayOrder: z.number().int().default(0),
   isActive: z.boolean().default(true),
 });
@@ -59,6 +61,8 @@ export interface IParameter {
   unit: string | null;
   minValue: number | null;
   maxValue: number | null;
+  rawWaterMinValue: number | null;
+  rawWaterMaxValue: number | null;
   displayOrder: number;
   isActive: boolean;
   createdAt: Date;

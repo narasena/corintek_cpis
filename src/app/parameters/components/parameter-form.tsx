@@ -78,12 +78,15 @@ export function ParameterForm({
       unit: defaultValues?.unit || '',
       minValue: defaultValues?.minValue || undefined,
       maxValue: defaultValues?.maxValue || undefined,
+      rawWaterMinValue: defaultValues?.rawWaterMinValue || undefined,
+      rawWaterMaxValue: defaultValues?.rawWaterMaxValue || undefined,
       displayOrder: defaultValues?.displayOrder || 0,
       isActive: defaultValues?.isActive ?? true,
     },
   });
 
   const selectedValueType = form.watch('valueType');
+  const selectedCategory = form.watch('category');
 
   const onSubmit = (data: TCreateParameter) => {
     startTransition(async () => {
@@ -94,9 +97,12 @@ export function ParameterForm({
         } else {
           // DEBUG: Log the defaultValues and id
           console.log('[DEBUG] Edit mode - defaultValues:', defaultValues);
-          console.log('[DEBUG] Edit mode - defaultValues.id:', defaultValues?.id);
+          console.log(
+            '[DEBUG] Edit mode - defaultValues.id:',
+            defaultValues?.id
+          );
           console.log('[DEBUG] Edit mode - id type:', typeof defaultValues?.id);
-          
+
           if (!defaultValues?.id) {
             toast.error('ID parameter tidak ditemukan');
             return;
@@ -235,60 +241,120 @@ export function ParameterForm({
         />
 
         {selectedValueType === 'NUMBER' && (
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="minValue"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nilai Minimum (Opsional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="any"
-                      placeholder="0"
-                      {...field}
-                      value={field.value ?? ''}
-                      onChange={e =>
-                        field.onChange(
-                          e.target.value
-                            ? parseFloat(e.target.value)
-                            : undefined
-                        )
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="minValue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nilai Minimum (Opsional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="0"
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={e =>
+                          field.onChange(
+                            e.target.value
+                              ? parseFloat(e.target.value)
+                              : undefined
+                          )
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="maxValue"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nilai Maksimum (Opsional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="any"
-                      placeholder="100"
-                      {...field}
-                      value={field.value ?? ''}
-                      onChange={e =>
-                        field.onChange(
-                          e.target.value
-                            ? parseFloat(e.target.value)
-                            : undefined
-                        )
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="maxValue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nilai Maksimum (Opsional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="100"
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={e =>
+                          field.onChange(
+                            e.target.value
+                              ? parseFloat(e.target.value)
+                              : undefined
+                          )
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {selectedCategory === 'COOLING_WATER_QUALITY' && (
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="rawWaterMinValue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Min Raw Water (Opsional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="any"
+                          placeholder="0"
+                          {...field}
+                          value={field.value ?? ''}
+                          onChange={e =>
+                            field.onChange(
+                              e.target.value
+                                ? parseFloat(e.target.value)
+                                : undefined
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="rawWaterMaxValue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Max Raw Water (Opsional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="any"
+                          placeholder="100"
+                          {...field}
+                          value={field.value ?? ''}
+                          onChange={e =>
+                            field.onChange(
+                              e.target.value
+                                ? parseFloat(e.target.value)
+                                : undefined
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
           </div>
         )}
 
