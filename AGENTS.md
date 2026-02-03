@@ -71,6 +71,7 @@ npm start
 npm run lint
 
 # Prisma (development DB)
+# ALWAYS apply "npm run prisma:migrate" over any "prisma db push" to maintain migration history.
 npm run prisma:migrate     # migrate dev
 npm run prisma:status      # migration status
 npm run prisma:studio      # open Prisma Studio
