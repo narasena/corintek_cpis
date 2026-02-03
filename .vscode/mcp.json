@@ -6,13 +6,6 @@
               "shadcn@latest",
               "mcp"
             ]
-    },
-    "shadcn-ui": {
-      "command": "npx",
-      "args": ["@jpisnice/shadcn-ui-mcp-server"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN"
-      }
     }
   }
 }
