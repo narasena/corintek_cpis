@@ -30,7 +30,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { LogSheetPreview } from './components/log-sheet-preview';
+import {
+  CATEGORY_ORDER,
+  LogSheetPreview,
+} from './components/log-sheet-preview';
 
 import {
   getLogSheetDetailAction,
@@ -179,7 +182,11 @@ export default function LogSheetDetailPage() {
   const categories = useMemo(() => {
     if (!detail) return [];
     const unique = Array.from(new Set(detail.parameters.map(p => p.category)));
-    return unique.sort();
+    return unique.sort((a, b) => {
+      return (
+        CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b)
+      );
+    });
   }, [detail]);
 
   const parametersByCategory = useMemo(() => {

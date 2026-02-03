@@ -95,6 +95,15 @@ const sectionTitle: Record<TParameter['category'], string> = {
   CONSUMPTION: 'Consumption',
 };
 
+export const CATEGORY_ORDER: TParameter['category'][] = [
+  'UNIT_CONDENSOR',
+  'UNIT_EVAPORATOR',
+  'COOLING_WATER_QUALITY',
+  'GENERAL_CONDITION',
+  'JOB_DESCRIPTION',
+  'CONSUMPTION',
+];
+
 function machinesForCategory(
   category: TParameter['category'],
   machines: { chillers: TMachine[]; coolingTowers: TMachine[] }
@@ -129,7 +138,9 @@ export function LogSheetPreview({
 }) {
   const categories = Array.from(
     new Set(parameters.map(p => p.category))
-  ).sort();
+  ).sort((a, b) => {
+    return CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b);
+  });
   const unitColumnCount = Math.max(
     machines.chillers.length,
     machines.coolingTowers.length,
