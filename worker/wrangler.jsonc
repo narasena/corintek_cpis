@@ -9,30 +9,31 @@
 	"compatibility_date": "2024-12-30",
 	"compatibility_flags": ["nodejs_compat"],
 	"observability": {
-		"enabled": true
+		"enabled": true,
 	},
 	"r2_buckets": [
 		{
 			"binding": "MY_BUCKET",
-			"bucket_name": "corintek-cpis-dev-assets"
-		}
+			"bucket_name": "corintek-cpis-dev-assets",
+			"preview_bucket_name": "corintek-cpis-preview-assets",
+		},
 	],
 	"env": {
 		"staging": {
 			"r2_buckets": [
 				{
 					"binding": "MY_BUCKET",
-					"bucket_name": "corintek-cpis-staging-assets"
-				}
-			]
+					"bucket_name": "corintek-cpis-staging-assets",
+				},
+			],
 		},
 		"production": {
 			"r2_buckets": [
 				{
 					"binding": "MY_BUCKET",
-					"bucket_name": "corintek-cpis-prod-assets"
-				}
-			]
-		}
-	}
+					"bucket_name": "corintek-cpis-prod-assets",
+				},
+			],
+		},
+	},
 }
