@@ -109,6 +109,7 @@ npm run prisma:seed        # seed DB
   - Examples:
     - feat(log-sheet): create log sheet ver 1
     - fix(project): npm run build
+- **Scope Separation:** If there are multiple changes covering different scopes, you MUST separate them into individual commits. Do not combine unrelated changes.
 - PR process: Not documented. Recommend linking issues and passing CI, lint.
 - Branch naming: Not specified. A branch named feat exists in refs; follow feature branch naming (e.g., feat/<topic>)
 
