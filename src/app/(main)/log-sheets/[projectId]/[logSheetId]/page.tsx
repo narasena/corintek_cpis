@@ -51,6 +51,7 @@ type TEntryRole = 'VALUE' | 'RAW_WATER' | 'NOTE';
 type TParameter = {
   id: string;
   name: string;
+  variableName: string;
   category:
     | 'UNIT_CONDENSOR'
     | 'UNIT_EVAPORATOR'

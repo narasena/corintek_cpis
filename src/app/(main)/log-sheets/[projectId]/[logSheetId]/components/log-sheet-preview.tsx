@@ -15,6 +15,7 @@ type TEntryRole = 'VALUE' | 'RAW_WATER' | 'NOTE';
 type TParameter = {
   id: string;
   name: string;
+  variableName: string;
   category:
     | 'UNIT_CONDENSOR'
     | 'UNIT_EVAPORATOR'
@@ -47,22 +48,39 @@ function makeEntryKey(
 }
 
 function formatLimit(
-  parameter: Pick<TParameter, 'minValue' | 'maxValue' | 'unit'>
+  parameter: Pick<
+    TParameter,
+    'minValue' | 'maxValue' | 'unit' | 'valueType' | 'category' | 'variableName'
+  >
 ) {
   const unit = parameter.unit ? ` ${parameter.unit}` : '';
   const min = parameter.minValue;
   const max = parameter.maxValue;
 
   if (min !== null && min !== undefined && max !== null && max !== undefined) {
-    return `${min}${unit} ~ ${max}${unit}`;
+    return `${min}-${max}`;
   }
 
   if (max !== null && max !== undefined) {
-    return `≤ ${max}${unit}`;
+    return `≤ ${max}`;
   }
 
   if (min !== null && min !== undefined) {
-    return `≥ ${min}${unit}`;
+    return `≥ ${min}`;
+  }
+
+  if (parameter.valueType === 'BOOLEAN') {
+    if (parameter.category === 'JOB_DESCRIPTION') return 'Progress/No';
+    if (parameter.category === 'GENERAL_CONDITION') {
+      if (parameter.variableName.includes('running_')) {
+        return 'Running/Stop';
+      }
+      if (parameter.variableName.includes('deposit')) {
+        return 'Normal';
+      }
+      return 'Yes/No';
+    }
+    return 'Normal';
   }
 
   return '';
@@ -162,26 +180,52 @@ export function LogSheetPreview({
   parameters: TParameter[];
   valuesByKey: Record<string, TEntryState | undefined>;
 }) {
-  const categories = Array.from(new Set(parameters.map(p => p.category))).sort(
-    (a, b) => {
-      return CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b);
+  // Override category for Deposit parameter to ensure it appears in General Condition
+  const displayParameters = parameters.map(p => {
+    if (p.variableName.includes('deposit')) {
+      return { ...p, category: 'GENERAL_CONDITION' as const };
     }
-  );
+    return p;
+  });
+
+  const categories = Array.from(
+    new Set(displayParameters.map(p => p.category))
+  ).sort((a, b) => {
+    return CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b);
+  });
 
   const paramsByCategory = new Map<TParameter['category'], TParameter[]>();
-  for (const p of parameters) {
+  for (const p of displayParameters) {
     if (!paramsByCategory.has(p.category)) paramsByCategory.set(p.category, []);
     paramsByCategory.get(p.category)!.push(p);
   }
   for (const [key, list] of paramsByCategory.entries()) {
-    paramsByCategory.set(
-      key,
-      [...list].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
-    );
+    if (key === 'GENERAL_CONDITION') {
+      const order = ['running', 'algae', 'deposit'];
+      const getOrder = (p: TParameter) => {
+        const idx = order.findIndex(k =>
+          p.variableName.toLowerCase().includes(k)
+        );
+        return idx === -1 ? 999 : idx;
+      };
+      paramsByCategory.set(
+        key,
+        [...list].sort((a, b) => {
+          const diff = getOrder(a) - getOrder(b);
+          if (diff !== 0) return diff;
+          return (a.displayOrder ?? 0) - (b.displayOrder ?? 0);
+        })
+      );
+    } else {
+      paramsByCategory.set(
+        key,
+        [...list].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+      );
+    }
   }
 
   return (
-    <div className="bg-white text-black text-[10px] leading-tight w-[210mm] min-h-[297mm] mx-auto shadow-xl print:shadow-none print:w-full print:min-h-0 print:mx-0 print:text-[10px]">
+    <div className="bg-white text-black text-[11px] leading-tight w-[210mm] min-h-[297mm] mx-auto shadow-xl print:shadow-none print:w-full print:min-h-0 print:mx-0 print:text-[11px]">
       <div className="print:hidden mb-2 text-xs text-muted-foreground p-2 text-center">
         Mode cetak: gunakan tombol Print pada halaman ini.
       </div>
@@ -204,11 +248,7 @@ export function LogSheetPreview({
           const sectionMachines = machinesForCategory(cat, machines);
           const hasNotes =
             cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION';
-          const showLimit = ![
-            'GENERAL_CONDITION',
-            'JOB_DESCRIPTION',
-            'CONSUMPTION',
-          ].includes(cat);
+          const showLimit = !['CONSUMPTION'].includes(cat);
 
           // Render Logic for Consumption + Chemical
           if (cat === 'CONSUMPTION') {
@@ -217,7 +257,8 @@ export function LogSheetPreview({
                 <div className="w-1/2 border-r border-black">
                   <table className="w-full table-fixed border-collapse">
                     <colgroup>
-                      <col className="w-[180px]" />
+                      <col className="w-[100px]" />
+                      <col className="w-[60px]" />
                     </colgroup>
                     <thead>
                       <tr className="bg-blue-200 print:bg-blue-200">
@@ -311,8 +352,8 @@ export function LogSheetPreview({
             >
               <table className="w-full table-fixed border-collapse">
                 <colgroup>
-                  <col className="w-[180px]" />
-                  {showLimit && <col className="w-[100px]" />}
+                  <col className="w-[140px]" />
+                  {showLimit && <col className="w-[80px]" />}
                 </colgroup>
                 <thead>
                   <tr className="bg-blue-200 print:bg-blue-200">
@@ -321,7 +362,9 @@ export function LogSheetPreview({
                     </th>
                     {showLimit && (
                       <th className="border-b border-r border-black p-[2px] text-center font-bold">
-                        Limit
+                        {['GENERAL_CONDITION', 'JOB_DESCRIPTION'].includes(cat)
+                          ? ''
+                          : 'Limit'}
                       </th>
                     )}
                     {cat === 'COOLING_WATER_QUALITY' ? (
@@ -334,11 +377,8 @@ export function LogSheetPreview({
                             {`#${m.unitNumber}`}
                           </th>
                         ))}
-                        <th className="border-b border-r border-black p-[2px] text-center font-bold">
-                          Raw Water
-                        </th>
                         <th className="border-b border-black p-[2px] text-center font-bold">
-                          Limit
+                          Raw Water
                         </th>
                       </>
                     ) : sectionMachines.length > 0 ? (
@@ -401,17 +441,9 @@ export function LogSheetPreview({
                       valueCells.push(
                         <td
                           key={`${param.id}-raw`}
-                          className={`${cellBorder} border-r border-black p-[2px] text-center`}
-                        >
-                          {formatValue(valuesByKey[rawKey]) || ''}
-                        </td>
-                      );
-                      valueCells.push(
-                        <td
-                          key={`${param.id}-raw-limit`}
                           className={`${cellBorder} border-black p-[2px] text-center`}
                         >
-                          {formatRawWaterLimit(param) || ''}
+                          {formatValue(valuesByKey[rawKey]) || ''}
                         </td>
                       );
                     } else {
