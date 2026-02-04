@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { LogSheetHeader } from './log-sheet-header';
 
 type TLogSheetStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED';
 
@@ -44,16 +44,6 @@ function makeEntryKey(
   role: TEntryRole
 ) {
   return `${parameterId}:${machineId ?? 'null'}:${role}`;
-}
-
-function formatDate(value: string | Date) {
-  const date = typeof value === 'string' ? new Date(value) : value;
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 }
 
 function formatLimit(
@@ -157,7 +147,7 @@ export function LogSheetPreview({
   customerName,
   date,
   byName,
-  status,
+  status: _status,
   notes,
   machines,
   parameters,
@@ -191,27 +181,21 @@ export function LogSheetPreview({
   }
 
   return (
-    <div className="bg-white text-black print:text-black print:bg-white">
-      <div className="print:hidden mb-3 text-sm text-muted-foreground">
+    <div className="bg-white text-black text-[10px] leading-tight w-[210mm] min-h-[297mm] mx-auto shadow-xl print:shadow-none print:w-full print:min-h-0 print:mx-0 print:text-[10px]">
+      <div className="print:hidden mb-2 text-xs text-muted-foreground p-2 text-center">
         Mode cetak: gunakan tombol Print pada halaman ini.
       </div>
 
-      <div className="border border-black">
-        <div className="grid grid-cols-3">
-          <div className="border-r border-black p-2 text-xs font-semibold">
-            Customer : <span className="font-bold">{customerName}</span>
-          </div>
-          <div className="border-r border-black p-2 text-center text-xs font-semibold">
-            Date <span className="font-bold">{formatDate(date)}</span>
-          </div>
-          <div className="p-2 text-right text-xs font-semibold">
-            By <span className="font-bold">{byName}</span>
-          </div>
-        </div>
+      <div className="border border-black border-b-0 p-1">
+        <LogSheetHeader
+          customerName={customerName}
+          date={date}
+          byName={byName}
+        />
       </div>
 
-      <div className="mt-3 flex flex-col gap-4">
-        {categories.map(category => {
+      <div className="flex flex-col border border-black border-t-0">
+        {categories.map((category, index) => {
           const params =
             paramsByCategory.get(category as TParameter['category']) ?? [];
           if (params.length === 0) return null;
@@ -220,62 +204,172 @@ export function LogSheetPreview({
           const sectionMachines = machinesForCategory(cat, machines);
           const hasNotes =
             cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION';
+          const showLimit = ![
+            'GENERAL_CONDITION',
+            'JOB_DESCRIPTION',
+            'CONSUMPTION',
+          ].includes(cat);
+
+          // Render Logic for Consumption + Chemical
+          if (cat === 'CONSUMPTION') {
+            return (
+              <div key={category} className="flex border-t border-black">
+                <div className="w-1/2 border-r border-black">
+                  <table className="w-full table-fixed border-collapse">
+                    <colgroup>
+                      <col className="w-[180px]" />
+                    </colgroup>
+                    <thead>
+                      <tr className="bg-blue-200 print:bg-blue-200">
+                        <th className="border-b border-black p-[2px] text-left font-bold">
+                          {sectionTitle[cat]} Water Meter
+                        </th>
+                        <th className="border-b border-l border-black p-[2px] text-center font-bold">
+                          Value
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {params.map(param => {
+                        const key = makeEntryKey(param.id, null, 'VALUE');
+                        return (
+                          <tr key={param.id}>
+                            <td className="border-b border-black p-[2px] font-semibold break-words">
+                              {param.name}
+                              {param.unit ? ` (${param.unit})` : ''}
+                            </td>
+                            <td className="border-b border-l border-black p-[2px] text-center">
+                              {formatValue(valuesByKey[key]) || ''}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="w-1/2">
+                  {/* Static Chemical Table based on image */}
+                  <table className="w-full table-fixed border-collapse h-full">
+                    <thead>
+                      <tr className="bg-blue-200 print:bg-blue-200">
+                        <th className="border-b border-black p-[2px] text-center font-bold">
+                          Fill Up Chemical
+                        </th>
+                        <th className="border-b border-l border-black p-[2px] text-center font-bold">
+                          C - 8196
+                        </th>
+                        <th className="border-b border-l border-black p-[2px] text-center font-bold">
+                          C - 8707
+                        </th>
+                        <th className="border-b border-l border-black p-[2px] text-center font-bold">
+                          C - 8606 P
+                        </th>
+                        <th className="border-b border-l border-black p-[2px] text-center font-bold">
+                          C - 8011
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border-b border-black p-[2px] text-center font-semibold">
+                          Quantity
+                        </td>
+                        <td className="border-b border-l border-black p-[2px] text-center">
+                          24.6 Lt
+                        </td>
+                        <td className="border-b border-l border-black p-[2px] text-center">
+                          7.20 Lt
+                        </td>
+                        <td className="border-b border-l border-black p-[2px] text-center">
+                          14 Lt
+                        </td>
+                        <td className="border-b border-l border-black p-[2px] text-center">
+                          20 Lt
+                        </td>
+                      </tr>
+                      {/* Empty rows to match height if needed, or leave as is */}
+                      {[1, 2].map(i => (
+                        <tr key={i}>
+                          <td className="border-b border-black p-[2px] text-center h-3"></td>
+                          <td className="border-b border-l border-black p-[2px] text-center"></td>
+                          <td className="border-b border-l border-black p-[2px] text-center"></td>
+                          <td className="border-b border-l border-black p-[2px] text-center"></td>
+                          <td className="border-b border-l border-black p-[2px] text-center"></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          }
 
           return (
-            <div key={category} className="overflow-x-auto">
-              <table className="w-full table-fixed border-collapse text-[11px] leading-tight print:text-[10pt]">
+            <div
+              key={category}
+              className={`overflow-x-auto ${index > 0 ? 'border-t border-black' : ''}`}
+            >
+              <table className="w-full table-fixed border-collapse">
                 <colgroup>
                   <col className="w-[180px]" />
-                  <col className="w-[100px]" />
+                  {showLimit && <col className="w-[100px]" />}
                 </colgroup>
                 <thead>
-                  <tr className="bg-slate-200 print:bg-slate-200">
-                    <th className="border border-black p-1 text-left font-bold">
+                  <tr className="bg-blue-200 print:bg-blue-200">
+                    <th className="border-b border-r border-black p-[2px] text-left font-bold">
                       {sectionTitle[cat]}
                     </th>
-                    <th className="border border-black p-1 text-center font-bold">
-                      Limit
-                    </th>
+                    {showLimit && (
+                      <th className="border-b border-r border-black p-[2px] text-center font-bold">
+                        Limit
+                      </th>
+                    )}
                     {cat === 'COOLING_WATER_QUALITY' ? (
                       <>
                         {sectionMachines.map(m => (
                           <th
                             key={`${category}-m-${m.id}`}
-                            className="border border-black p-1 text-center font-bold"
+                            className="border-b border-r border-black p-[2px] text-center font-bold"
                           >
                             {`#${m.unitNumber}`}
                           </th>
                         ))}
-                        <th className="border border-black p-1 text-center font-bold">
+                        <th className="border-b border-r border-black p-[2px] text-center font-bold">
                           Raw Water
                         </th>
-                        <th className="border border-black p-1 text-center font-bold">
+                        <th className="border-b border-black p-[2px] text-center font-bold">
                           Limit
                         </th>
                       </>
                     ) : sectionMachines.length > 0 ? (
                       <>
-                        {sectionMachines.map(m => (
+                        {sectionMachines.map((m, idx) => (
                           <th
                             key={`${category}-m-${m.id}`}
-                            className="border border-black p-1 text-center font-bold"
+                            className={`border-b border-black p-[2px] text-center font-bold ${
+                              idx < sectionMachines.length - 1 || hasNotes
+                                ? 'border-r'
+                                : ''
+                            }`}
                           >
                             {`#${m.unitNumber}`}
                           </th>
                         ))}
                         {hasNotes && (
-                          <th className="border border-black p-1 text-center font-bold">
+                          <th className="border-b border-black p-[2px] text-center font-bold">
                             Catatan
                           </th>
                         )}
                       </>
                     ) : (
                       <>
-                        <th className="border border-black p-1 text-center font-bold">
+                        <th
+                          className={`border-b border-black p-[2px] text-center font-bold ${hasNotes ? 'border-r' : ''}`}
+                        >
                           Value
                         </th>
                         {hasNotes && (
-                          <th className="border border-black p-1 text-center font-bold">
+                          <th className="border-b border-black p-[2px] text-center font-bold">
                             Catatan
                           </th>
                         )}
@@ -284,9 +378,11 @@ export function LogSheetPreview({
                   </tr>
                 </thead>
                 <tbody>
-                  {params.map(param => {
+                  {params.map((param, pIdx) => {
                     const limit = formatLimit(param);
                     const valueCells: ReactNode[] = [];
+                    const isLastRow = pIdx === params.length - 1;
+                    const cellBorder = isLastRow ? '' : 'border-b';
 
                     if (cat === 'COOLING_WATER_QUALITY') {
                       for (const m of sectionMachines) {
@@ -294,7 +390,7 @@ export function LogSheetPreview({
                         valueCells.push(
                           <td
                             key={`${param.id}-v-${m.id}`}
-                            className="border border-black p-1 text-center"
+                            className={`${cellBorder} border-r border-black p-[2px] text-center`}
                           >
                             {formatValue(valuesByKey[key]) || ''}
                           </td>
@@ -305,7 +401,7 @@ export function LogSheetPreview({
                       valueCells.push(
                         <td
                           key={`${param.id}-raw`}
-                          className="border border-black p-1 text-center"
+                          className={`${cellBorder} border-r border-black p-[2px] text-center`}
                         >
                           {formatValue(valuesByKey[rawKey]) || ''}
                         </td>
@@ -313,19 +409,23 @@ export function LogSheetPreview({
                       valueCells.push(
                         <td
                           key={`${param.id}-raw-limit`}
-                          className="border border-black p-1 text-center"
+                          className={`${cellBorder} border-black p-[2px] text-center`}
                         >
                           {formatRawWaterLimit(param) || ''}
                         </td>
                       );
                     } else {
                       if (sectionMachines.length > 0) {
-                        for (const m of sectionMachines) {
+                        for (const [idx, m] of sectionMachines.entries()) {
                           const key = makeEntryKey(param.id, m.id, 'VALUE');
                           valueCells.push(
                             <td
                               key={`${param.id}-v-${m.id}`}
-                              className="border border-black p-1 text-center"
+                              className={`${cellBorder} border-black p-[2px] text-center ${
+                                idx < sectionMachines.length - 1 || hasNotes
+                                  ? 'border-r'
+                                  : ''
+                              }`}
                             >
                               {formatValue(valuesByKey[key]) || ''}
                             </td>
@@ -336,7 +436,7 @@ export function LogSheetPreview({
                         valueCells.push(
                           <td
                             key={`${param.id}-v-null`}
-                            className="border border-black p-1 text-center"
+                            className={`${cellBorder} border-black p-[2px] text-center ${hasNotes ? 'border-r' : ''}`}
                           >
                             {formatValue(valuesByKey[key]) || ''}
                           </td>
@@ -348,7 +448,7 @@ export function LogSheetPreview({
                         valueCells.push(
                           <td
                             key={`${param.id}-note`}
-                            className="border border-black p-1 text-center"
+                            className={`${cellBorder} border-black p-[2px] text-center`}
                           >
                             {formatValue(valuesByKey[noteKey]) || ''}
                           </td>
@@ -358,13 +458,19 @@ export function LogSheetPreview({
 
                     return (
                       <tr key={param.id}>
-                        <td className="border border-black p-1 font-semibold break-words">
+                        <td
+                          className={`${cellBorder} border-r border-black p-[2px] font-semibold break-words`}
+                        >
                           {param.name}
                           {param.unit ? ` (${param.unit})` : ''}
                         </td>
-                        <td className="border border-black p-1 text-center">
-                          {limit || ''}
-                        </td>
+                        {showLimit && (
+                          <td
+                            className={`${cellBorder} border-r border-black p-[2px] text-center`}
+                          >
+                            {limit || ''}
+                          </td>
+                        )}
                         {valueCells}
                       </tr>
                     );
@@ -375,24 +481,47 @@ export function LogSheetPreview({
           );
         })}
 
-        <div className="overflow-x-auto">
-          <table className="w-full table-fixed border-collapse text-[11px] leading-tight print:text-[10pt]">
+        {/* Note Section */}
+        <div className="border-t border-black">
+          <table className="w-full table-fixed border-collapse">
             <colgroup>
               <col className="w-[180px]" />
             </colgroup>
             <tbody>
               <tr>
-                <td className="border border-black p-2 font-semibold">Note</td>
-                <td className="border border-black p-2">{notes ?? ''}</td>
-              </tr>
-              <tr>
-                <td className="border border-black p-2 font-semibold">
-                  Status
+                <td className="border-r border-black bg-blue-200 print:bg-blue-200 p-[2px] font-semibold text-center align-middle">
+                  Note
                 </td>
-                <td className="border border-black p-2">{status}</td>
+                <td className="p-1 whitespace-pre-wrap">{notes ?? ''}</td>
               </tr>
             </tbody>
           </table>
+        </div>
+
+        {/* Signatures */}
+        <div className="border-t border-black flex">
+          <div className="w-1/2 border-r border-black flex flex-col">
+            <div className="text-center font-bold p-[2px] border-b border-black">
+              PT Corintek Inti Sejahtera
+            </div>
+            <div className="text-center font-bold p-[2px] border-b border-black">
+              PIC ( Corintek )
+            </div>
+            <div className="h-16 flex items-center justify-center">
+              {/* Placeholder for Signature */}
+            </div>
+          </div>
+          <div className="w-1/2 flex flex-col">
+            <div className="text-center font-bold p-[2px] border-b border-black">
+              {customerName}
+            </div>
+            <div className="text-center font-bold p-[2px] border-b border-black">
+              Check By ( Client )
+            </div>
+            <div className="h-16 flex items-center justify-center">
+              {/* Placeholder for Signature */}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -400,11 +529,13 @@ export function LogSheetPreview({
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
-            @page { size: A4 portrait; margin: 10mm; }
+            @page { size: A4 portrait; margin: 5mm; }
             html, body { background: #fff; }
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; page-break-after: auto; }
             .break-words { word-break: break-word; }
+            /* Force background colors in print */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           }
         `,
         }}

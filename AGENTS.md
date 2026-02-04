@@ -306,6 +306,8 @@ Security Considerations
 
   - User workflow: Click "Print" button -> Browser Print Dialog -> Save as PDF.
 
+  - **Constraint:** Log sheets MUST fit on a single A4 page in print mode.
+
 ## B. Internal vs. External API
 
 - Internal App: Uses Server Actions ONLY. No src/app/api routes.
