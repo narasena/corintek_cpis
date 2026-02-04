@@ -2,19 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Briefcase } from 'lucide-react';
+import { Building2, Clock, FileSpreadsheet, Home, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSidebar } from '@/components/ui/sidebar';
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { toggleSidebar, isMobile } = useSidebar();
 
   const links = [
-    {
-      href: '/users',
-      label: 'Pengguna',
-      icon: Users,
-      active: pathname.startsWith('/users'),
-    },
     {
       href: '/',
       label: 'Home',
@@ -22,29 +18,49 @@ export function MobileNav() {
       active: pathname === '/',
     },
     {
-      href: '/clients',
-      label: 'Klien',
-      icon: Briefcase,
-      active: pathname.startsWith('/clients'),
+      href: '/projects',
+      label: 'Projects',
+      icon: Building2,
+      active: pathname.startsWith('/projects'),
+    },
+    {
+      href: '/log-sheets',
+      label: 'Log Sheets',
+      icon: FileSpreadsheet,
+      active: pathname.startsWith('/log-sheets'),
+    },
+    {
+      href: '/absence',
+      label: 'Absence',
+      icon: Clock,
+      active: pathname.startsWith('/absence'),
     },
   ];
 
-  // Only show on mobile
+  if (!isMobile) return null;
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t bg-background px-4 pb-safe shadow-[0_-1px_3px_rgba(0,0,0,0.1)] md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t bg-background/80 px-4 pb-safe backdrop-blur-md md:hidden supports-[backdrop-filter]:bg-background/60">
       {links.map(link => (
         <Link
           key={link.href}
           href={link.href}
           className={cn(
-            'flex flex-col items-center justify-center space-y-1 text-xs font-medium transition-colors hover:text-primary',
+            'flex flex-col items-center justify-center space-y-1 text-[10px] font-medium transition-colors hover:text-primary',
             link.active ? 'text-primary' : 'text-muted-foreground'
           )}
         >
-          <link.icon className="h-5 w-5" />
+          <link.icon className={cn('h-5 w-5', link.active && 'fill-current')} />
           <span>{link.label}</span>
         </Link>
       ))}
+      <button
+        onClick={toggleSidebar}
+        className="flex flex-col items-center justify-center space-y-1 text-[10px] font-medium text-muted-foreground transition-colors hover:text-primary"
+      >
+        <Menu className="h-5 w-5" />
+        <span>Menu</span>
+      </button>
     </div>
   );
 }
