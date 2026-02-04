@@ -5,12 +5,12 @@ import {
   BookUser,
   Building2,
   Clock,
-  Command,
   FileSpreadsheet,
   LayoutDashboard,
   SlidersHorizontal,
   Users,
 } from 'lucide-react';
+import Image from 'next/image';
 
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -72,19 +72,24 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <a href="/">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Corintek</span>
-                  <span className="truncate text-xs">CPIS</span>
-                </div>
+            <SidebarMenuButton
+              asChild
+              size="lg"
+              className="data-[slot=sidebar-menu-button]:p-1.5! hover:bg-transparent"
+            >
+              <a href="/" className="flex items-center justify-center">
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  width={130}
+                  height={15}
+                  className="object-contain"
+                  priority
+                />
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
