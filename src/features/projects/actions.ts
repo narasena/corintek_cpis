@@ -74,6 +74,7 @@ export async function getProjectsAction() {
     const projects = await projectService.getProjects();
     return { success: true, data: projects };
   } catch (error: any) {
+    console.error('[getProjectsAction] Error:', error);
     return {
       success: false,
       error: error.message || 'Gagal mengambil data proyek',

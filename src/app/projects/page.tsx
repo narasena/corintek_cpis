@@ -37,13 +37,13 @@ export default function ProjectsPage() {
       if (projectsRes.success && projectsRes.data) {
         setProjects(projectsRes.data as IProject[]);
       } else {
-        toast.error('Gagal mengambil data proyek');
+        toast.error(projectsRes.error || 'Gagal mengambil data proyek');
       }
 
       if (clientsRes.success && clientsRes.data) {
         setClients(clientsRes.data as TClientResponse[]);
       } else {
-        toast.error('Gagal mengambil data klien');
+        toast.error(clientsRes.error || 'Gagal mengambil data klien');
       }
     } catch {
       toast.error('Terjadi kesalahan saat memuat data');
