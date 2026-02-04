@@ -2,8 +2,6 @@
 
 import { LogSheetHeader } from './log-sheet-header';
 
-type TLogSheetStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED';
-
 type TMachine = {
   id: string;
   unitNumber: number;
@@ -53,7 +51,6 @@ function formatLimit(
     'minValue' | 'maxValue' | 'unit' | 'valueType' | 'category' | 'variableName'
   >
 ) {
-  const unit = parameter.unit ? ` ${parameter.unit}` : '';
   const min = parameter.minValue;
   const max = parameter.maxValue;
 
@@ -165,7 +162,6 @@ export function LogSheetPreview({
   customerName,
   date,
   byName,
-  status: _status,
   notes,
   machines,
   parameters,
@@ -174,7 +170,6 @@ export function LogSheetPreview({
   customerName: string;
   date: string | Date;
   byName: string;
-  status: TLogSheetStatus;
   notes: string | null;
   machines: { chillers: TMachine[]; coolingTowers: TMachine[] };
   parameters: TParameter[];
@@ -252,13 +247,21 @@ export function LogSheetPreview({
 
           // Render Logic for Consumption + Chemical
           if (cat === 'CONSUMPTION') {
+            const waterKeywords = ['before', 'after', 'total', 'consumption'];
+            const waterParams = params.filter(p =>
+              waterKeywords.some(k => p.name.toLowerCase().includes(k))
+            );
+            const chemicalParams = params.filter(
+              p => !waterKeywords.some(k => p.name.toLowerCase().includes(k))
+            );
+
             return (
               <div key={category} className="flex border-t border-black">
-                <div className="w-1/2 border-r border-black">
-                  <table className="w-full table-fixed border-collapse">
+                <div className="w-max border-r border-black">
+                  <table className="w-max table-fixed border-collapse">
                     <colgroup>
-                      <col className="w-[100px]" />
-                      <col className="w-[60px]" />
+                      <col className="w-max" />
+                      <col className="min-w-20" />
                     </colgroup>
                     <thead>
                       <tr className="bg-blue-200 print:bg-blue-200">
@@ -271,7 +274,7 @@ export function LogSheetPreview({
                       </tr>
                     </thead>
                     <tbody>
-                      {params.map(param => {
+                      {waterParams.map(param => {
                         const key = makeEntryKey(param.id, null, 'VALUE');
                         return (
                           <tr key={param.id}>
@@ -288,8 +291,7 @@ export function LogSheetPreview({
                     </tbody>
                   </table>
                 </div>
-                <div className="w-1/2">
-                  {/* Static Chemical Table based on image */}
+                <div className="w-full">
                   <table className="w-full table-fixed border-collapse h-full">
                     <thead>
                       <tr className="bg-blue-200 print:bg-blue-200">
@@ -298,7 +300,7 @@ export function LogSheetPreview({
                         </th>
                         <th className="border-b border-l border-black p-[2px] text-center font-bold">
                           C - 8196
-                        </th>
+                          </th>
                         <th className="border-b border-l border-black p-[2px] text-center font-bold">
                           C - 8707
                         </th>
@@ -317,7 +319,7 @@ export function LogSheetPreview({
                         </td>
                         <td className="border-b border-l border-black p-[2px] text-center">
                           24.6 Lt
-                        </td>
+                            </td>
                         <td className="border-b border-l border-black p-[2px] text-center">
                           7.20 Lt
                         </td>
@@ -328,16 +330,6 @@ export function LogSheetPreview({
                           20 Lt
                         </td>
                       </tr>
-                      {/* Empty rows to match height if needed, or leave as is */}
-                      {[1, 2].map(i => (
-                        <tr key={i}>
-                          <td className="border-b border-black p-[2px] text-center h-3"></td>
-                          <td className="border-b border-l border-black p-[2px] text-center"></td>
-                          <td className="border-b border-l border-black p-[2px] text-center"></td>
-                          <td className="border-b border-l border-black p-[2px] text-center"></td>
-                          <td className="border-b border-l border-black p-[2px] text-center"></td>
-                        </tr>
-                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -379,6 +371,9 @@ export function LogSheetPreview({
                         ))}
                         <th className="border-b border-black p-[2px] text-center font-bold">
                           Raw Water
+                        </th>
+                        <th className="border-b border-l border-black p-[2px] text-center font-bold">
+                          Raw Limit
                         </th>
                       </>
                     ) : sectionMachines.length > 0 ? (
@@ -444,6 +439,15 @@ export function LogSheetPreview({
                           className={`${cellBorder} border-black p-[2px] text-center`}
                         >
                           {formatValue(valuesByKey[rawKey]) || ''}
+                        </td>
+                      );
+                      const rawLimit = formatRawWaterLimit(param);
+                      valueCells.push(
+                        <td
+                          key={`${param.id}-raw-limit`}
+                          className={`${cellBorder} border-l border-black p-[2px] text-center`}
+                        >
+                          {rawLimit || ''}
                         </td>
                       );
                     } else {
@@ -519,12 +523,18 @@ export function LogSheetPreview({
             <colgroup>
               <col className="w-[180px]" />
             </colgroup>
+            <thead>
+              <tr>
+                <th className="border-r border-black bg-blue-200 print:bg-blue-200 p-[2px] font-semibold text-center align-middle">
+                  Note
+                </th>
+              </tr>
+            </thead>
             <tbody>
               <tr>
-                <td className="border-r border-black bg-blue-200 print:bg-blue-200 p-[2px] font-semibold text-center align-middle">
-                  Note
+                <td className="p-1 whitespace-pre-wrap h-[120px] align-top">
+                  {notes ?? ''}
                 </td>
-                <td className="p-1 whitespace-pre-wrap">{notes ?? ''}</td>
               </tr>
             </tbody>
           </table>
@@ -539,7 +549,7 @@ export function LogSheetPreview({
             <div className="text-center font-bold p-[2px] border-b border-black">
               PIC ( Corintek )
             </div>
-            <div className="h-16 flex items-center justify-center">
+            <div className="h-28 flex items-center justify-center">
               {/* Placeholder for Signature */}
             </div>
           </div>
@@ -550,7 +560,7 @@ export function LogSheetPreview({
             <div className="text-center font-bold p-[2px] border-b border-black">
               Check By ( Client )
             </div>
-            <div className="h-16 flex items-center justify-center">
+            <div className="h-28 flex items-center justify-center">
               {/* Placeholder for Signature */}
             </div>
           </div>
