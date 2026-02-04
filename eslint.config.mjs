@@ -31,6 +31,8 @@ const eslintConfig = [
       'worker/**',
       '.wrangler/**',
       '_archives/**',
+      'prisma/seed-data.ts',
+      'prisma/seed-export.ts',
     ],
   },
   // Core Next.js, TypeScript, and React rules
