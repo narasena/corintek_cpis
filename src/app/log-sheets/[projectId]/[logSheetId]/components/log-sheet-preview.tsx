@@ -177,22 +177,6 @@ export function LogSheetPreview({
       return CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b);
     }
   );
-  const maxDataColumnCount = Math.max(
-    ...categories.map(category => {
-      const cat = category as TParameter['category'];
-      if (cat === 'COOLING_WATER_QUALITY') {
-        return machines.coolingTowers.length + 2;
-      }
-
-      if (cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION') {
-        return Math.max(machines.coolingTowers.length, 1) + 1;
-      }
-
-      const sectionMachines = machinesForCategory(cat, machines);
-      return Math.max(sectionMachines.length, 1);
-    }),
-    1
-  );
 
   const paramsByCategory = new Map<TParameter['category'], TParameter[]>();
   for (const p of parameters) {
@@ -226,200 +210,201 @@ export function LogSheetPreview({
         </div>
       </div>
 
-      <div className="overflow-x-auto mt-3">
-        <table className="w-full border-collapse text-[11px] leading-tight print:text-[10pt]">
-          <tbody>
-            {categories.flatMap(category => {
-              const params =
-                paramsByCategory.get(category as TParameter['category']) ?? [];
-              if (params.length === 0) return [];
+      <div className="mt-3 flex flex-col gap-4">
+        {categories.map(category => {
+          const params =
+            paramsByCategory.get(category as TParameter['category']) ?? [];
+          if (params.length === 0) return null;
 
-              const cat = category as TParameter['category'];
-              const sectionMachines = machinesForCategory(cat, machines);
-              const hasNotes =
-                cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION';
+          const cat = category as TParameter['category'];
+          const sectionMachines = machinesForCategory(cat, machines);
+          const hasNotes =
+            cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION';
 
-              const headerRow = (
-                <tr
-                  key={`${category}-header`}
-                  className="bg-slate-200 print:bg-slate-200"
-                >
-                  <th className="border border-black p-1 text-left font-bold">
-                    {sectionTitle[category as TParameter['category']]}
-                  </th>
-                  <th className="border border-black p-1 text-center font-bold">
-                    Parameter
-                  </th>
-                  {cat === 'COOLING_WATER_QUALITY' ? (
-                    <>
-                      {sectionMachines.map(m => (
-                        <th
-                          key={`${category}-m-${m.id}`}
-                          className="border border-black p-1 text-center font-bold"
-                        >
-                          {`CT #${m.unitNumber}`}
-                        </th>
-                      ))}
-                      <th className="border border-black p-1 text-center font-bold">
-                        Raw Water
-                      </th>
-                      <th className="border border-black p-1 text-center font-bold">
-                        Limit
-                      </th>
-                    </>
-                  ) : sectionMachines.length > 0 ? (
-                    <>
-                      {sectionMachines.map(m => (
-                        <th
-                          key={`${category}-m-${m.id}`}
-                          className="border border-black p-1 text-center font-bold"
-                        >
-                          {m.type === 'CHILLER'
-                            ? `Chiller #${m.unitNumber}`
-                            : `CT #${m.unitNumber}`}
-                        </th>
-                      ))}
-                      {hasNotes && (
+          return (
+            <div key={category} className="overflow-x-auto">
+              <table className="w-full table-fixed border-collapse text-[11px] leading-tight print:text-[10pt]">
+                <colgroup>
+                  <col className="w-[180px]" />
+                  <col className="w-[100px]" />
+                </colgroup>
+                <thead>
+                  <tr className="bg-slate-200 print:bg-slate-200">
+                    <th className="border border-black p-1 text-left font-bold">
+                      {sectionTitle[cat]}
+                    </th>
+                    <th className="border border-black p-1 text-center font-bold">
+                      Limit
+                    </th>
+                    {cat === 'COOLING_WATER_QUALITY' ? (
+                      <>
+                        {sectionMachines.map(m => (
+                          <th
+                            key={`${category}-m-${m.id}`}
+                            className="border border-black p-1 text-center font-bold"
+                          >
+                            {`#${m.unitNumber}`}
+                          </th>
+                        ))}
                         <th className="border border-black p-1 text-center font-bold">
-                          Catatan
+                          Raw Water
                         </th>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <th className="border border-black p-1 text-center font-bold">
-                        Value
-                      </th>
-                      {hasNotes && (
                         <th className="border border-black p-1 text-center font-bold">
-                          Catatan
+                          Limit
                         </th>
-                      )}
-                    </>
-                  )}
-                </tr>
-              );
+                      </>
+                    ) : sectionMachines.length > 0 ? (
+                      <>
+                        {sectionMachines.map(m => (
+                          <th
+                            key={`${category}-m-${m.id}`}
+                            className="border border-black p-1 text-center font-bold"
+                          >
+                            {`#${m.unitNumber}`}
+                          </th>
+                        ))}
+                        {hasNotes && (
+                          <th className="border border-black p-1 text-center font-bold">
+                            Catatan
+                          </th>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <th className="border border-black p-1 text-center font-bold">
+                          Value
+                        </th>
+                        {hasNotes && (
+                          <th className="border border-black p-1 text-center font-bold">
+                            Catatan
+                          </th>
+                        )}
+                      </>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {params.map(param => {
+                    const limit = formatLimit(param);
+                    const valueCells: ReactNode[] = [];
 
-              const rows = params.map(param => {
-                const limit = formatLimit(param);
-                const valueCells: ReactNode[] = [];
+                    if (cat === 'COOLING_WATER_QUALITY') {
+                      for (const m of sectionMachines) {
+                        const key = makeEntryKey(param.id, m.id, 'VALUE');
+                        valueCells.push(
+                          <td
+                            key={`${param.id}-v-${m.id}`}
+                            className="border border-black p-1 text-center"
+                          >
+                            {formatValue(valuesByKey[key]) || ''}
+                          </td>
+                        );
+                      }
 
-                if (cat === 'COOLING_WATER_QUALITY') {
-                  for (const m of sectionMachines) {
-                    const key = makeEntryKey(param.id, m.id, 'VALUE');
-                    valueCells.push(
-                      <td
-                        key={`${param.id}-v-${m.id}`}
-                        className="border border-black p-1 text-center"
-                      >
-                        {formatValue(valuesByKey[key]) || ''}
-                      </td>
-                    );
-                  }
-
-                  const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
-                  valueCells.push(
-                    <td
-                      key={`${param.id}-raw`}
-                      className="border border-black p-1 text-center"
-                    >
-                      {formatValue(valuesByKey[rawKey]) || ''}
-                    </td>
-                  );
-                  valueCells.push(
-                    <td
-                      key={`${param.id}-raw-limit`}
-                      className="border border-black p-1 text-center"
-                    >
-                      {formatRawWaterLimit(param) || ''}
-                    </td>
-                  );
-                } else {
-                  if (sectionMachines.length > 0) {
-                    for (const m of sectionMachines) {
-                      const key = makeEntryKey(param.id, m.id, 'VALUE');
+                      const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
                       valueCells.push(
                         <td
-                          key={`${param.id}-v-${m.id}`}
+                          key={`${param.id}-raw`}
                           className="border border-black p-1 text-center"
                         >
-                          {formatValue(valuesByKey[key]) || ''}
+                          {formatValue(valuesByKey[rawKey]) || ''}
                         </td>
                       );
+                      valueCells.push(
+                        <td
+                          key={`${param.id}-raw-limit`}
+                          className="border border-black p-1 text-center"
+                        >
+                          {formatRawWaterLimit(param) || ''}
+                        </td>
+                      );
+                    } else {
+                      if (sectionMachines.length > 0) {
+                        for (const m of sectionMachines) {
+                          const key = makeEntryKey(param.id, m.id, 'VALUE');
+                          valueCells.push(
+                            <td
+                              key={`${param.id}-v-${m.id}`}
+                              className="border border-black p-1 text-center"
+                            >
+                              {formatValue(valuesByKey[key]) || ''}
+                            </td>
+                          );
+                        }
+                      } else {
+                        const key = makeEntryKey(param.id, null, 'VALUE');
+                        valueCells.push(
+                          <td
+                            key={`${param.id}-v-null`}
+                            className="border border-black p-1 text-center"
+                          >
+                            {formatValue(valuesByKey[key]) || ''}
+                          </td>
+                        );
+                      }
+
+                      if (hasNotes) {
+                        const noteKey = makeEntryKey(param.id, null, 'NOTE');
+                        valueCells.push(
+                          <td
+                            key={`${param.id}-note`}
+                            className="border border-black p-1 text-center"
+                          >
+                            {formatValue(valuesByKey[noteKey]) || ''}
+                          </td>
+                        );
+                      }
                     }
-                  } else {
-                    const key = makeEntryKey(param.id, null, 'VALUE');
-                    valueCells.push(
-                      <td
-                        key={`${param.id}-v-null`}
-                        className="border border-black p-1 text-center"
-                      >
-                        {formatValue(valuesByKey[key]) || ''}
-                      </td>
+
+                    return (
+                      <tr key={param.id}>
+                        <td className="border border-black p-1 font-semibold break-words">
+                          {param.name}
+                          {param.unit ? ` (${param.unit})` : ''}
+                        </td>
+                        <td className="border border-black p-1 text-center">
+                          {limit || ''}
+                        </td>
+                        {valueCells}
+                      </tr>
                     );
-                  }
+                  })}
+                </tbody>
+              </table>
+            </div>
+          );
+        })}
 
-                  if (hasNotes) {
-                    const noteKey = makeEntryKey(param.id, null, 'NOTE');
-                    valueCells.push(
-                      <td
-                        key={`${param.id}-note`}
-                        className="border border-black p-1 text-center"
-                      >
-                        {formatValue(valuesByKey[noteKey]) || ''}
-                      </td>
-                    );
-                  }
-                }
-
-                return (
-                  <tr key={param.id}>
-                    <td className="border border-black p-1 font-semibold">
-                      {param.name}
-                      {param.unit ? ` (${param.unit})` : ''}
-                    </td>
-                    <td className="border border-black p-1 text-center">
-                      {limit || ''}
-                    </td>
-                    {valueCells}
-                  </tr>
-                );
-              });
-
-              return [headerRow, ...rows];
-            })}
-
-            <tr>
-              <td className="border border-black p-2 font-semibold">Note</td>
-              <td
-                className="border border-black p-2"
-                colSpan={maxDataColumnCount + 1}
-              >
-                {notes ?? ''}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black p-2 font-semibold">Status</td>
-              <td
-                className="border border-black p-2"
-                colSpan={maxDataColumnCount + 1}
-              >
-                {status}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="w-full table-fixed border-collapse text-[11px] leading-tight print:text-[10pt]">
+            <colgroup>
+              <col className="w-[180px]" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td className="border border-black p-2 font-semibold">Note</td>
+                <td className="border border-black p-2">{notes ?? ''}</td>
+              </tr>
+              <tr>
+                <td className="border border-black p-2 font-semibold">
+                  Status
+                </td>
+                <td className="border border-black p-2">{status}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <style
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
-            @page { size: A4 landscape; margin: 10mm; }
+            @page { size: A4 portrait; margin: 10mm; }
             html, body { background: #fff; }
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; page-break-after: auto; }
+            .break-words { word-break: break-word; }
           }
         `,
         }}
