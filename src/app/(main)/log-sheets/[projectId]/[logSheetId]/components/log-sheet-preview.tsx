@@ -584,41 +584,38 @@ export function LogSheetPreview({
       </div>
 
       {photoEntries.length > 0 && (
-        <>
-          <div className="print:block break-before-page hidden h-8" />
-          <div className="break-before-page flex flex-col min-h-[297mm] border border-black p-1 mt-8 print:mt-0 print:border-t">
-            <LogSheetHeader
-              customerName={customerName}
-              date={date}
-              byName={byName}
-            />
-            <div className="flex-1 border border-black border-t-0 p-4">
-              <h2 className="text-lg font-bold mb-8 text-center underline">
-                DOCUMENTATION
-              </h2>
-              <div className="grid grid-cols-2 gap-8">
-                {photoEntries.map(entry => (
-                  <div
-                    key={entry.param.id}
-                    className="flex flex-col items-center gap-2"
-                  >
-                    <div className="font-bold border border-black px-4 py-1 bg-blue-200 w-full text-center">
-                      {entry.param.name}
-                    </div>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <div className="aspect-square w-full relative border border-black">
-                      <img
-                        src={entry.url}
-                        alt={entry.param.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+        <div className="break-before-page flex flex-col min-h-[297mm] border border-black p-1 mt-8 print:mt-0 print:border-t print:min-h-0">
+          <LogSheetHeader
+            customerName={customerName}
+            date={date}
+            byName={byName}
+          />
+          <div className="flex-1 border border-black border-t-0 p-4">
+            <h2 className="text-lg font-bold mb-8 text-center underline">
+              DOCUMENTATION
+            </h2>
+            <div className="grid grid-cols-2 gap-8">
+              {photoEntries.map(entry => (
+                <div
+                  key={entry.param.id}
+                  className="flex flex-col items-center gap-2"
+                >
+                  <div className="font-bold border border-black px-4 py-1 bg-blue-200 w-full text-center">
+                    {entry.param.name}
                   </div>
-                ))}
-              </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <div className="aspect-square w-full relative border border-black">
+                    <img
+                      src={entry.url}
+                      alt={entry.param.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </>
+        </div>
       )}
 
       <style
