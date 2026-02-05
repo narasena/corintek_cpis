@@ -1,41 +1,35 @@
-# Project "Rescue Mission" - AI Engineering Guidelines
+# CPIS - Project Guidelines
 
-> **SYSTEM ALERT: PROJECT IS IN CRITICAL RECOVERY MODE.**
-> Current Status: 2 Months Behind Schedule.
-> Priority: Speed > Perfection. Functionality > Abstraction.
+> **RESCUE MODE:** 2 Months Behind Schedule | Speed > Perfection | Functionality > Abstraction
 
-## 🤖 Agent Behavioral Directives (THE LAW)
+## 🎯 Project-Specific Rules
 
-### 1. The "No New Toys" Rule
+### 1. Architecture: Server Actions Only
 
-- **FORBIDDEN:** You may NOT install new npm packages without explicit permission. **EXCEPTION:** You may request to install a package if you provide a valid reason (e.g., improved code, better tooling, cool aesthetics, or required UI components). Explain WHY before asking.
-- **FORBIDDEN:** Do not introduce new architectural patterns (e.g., don't add a "Repository Pattern" layer; use Services).
-- **FORBIDDEN:** Do not change the styling system. We use Tailwind 4 + shadCn. Do not write custom CSS in `.css` files.
+We eliminated the REST API layer. **The flow is:**
 
-### 2. The "Strict Architecture" Flow (Server Actions)
+1. **UI Component** → Calls Server Action directly (no `fetch`/`axios` for internal data)
+2. **Action** (`src/features/.../actions.ts`) → Validates input → Calls Service → Revalidates path
+3. **Service** (`src/features/.../service.ts`) → Pure business logic & Prisma calls
+4. **DB** → Prisma Client
 
-We are moving away from REST APIs for internal features.
+### 2. Constraints
 
-1.  **UI Component:** Calls Server Action directly (no `fetch`, no `axios` for internal data).
-2.  **Action Wrapper:** `src/features/.../actions.ts` (Validates Input -> Calls Service -> Revalidates Path).
-3.  **Service Layer:** `src/features/.../service.ts` (Pure Business Logic & Prisma calls).
-4.  **DB:** Prisma Client.
+- ❌ **NO new npm packages** without explicit permission (request with valid reason)
+- ❌ **NO new architectural patterns** (stick to Actions → Service pattern)
+- ❌ **NO custom CSS** files (Tailwind 4 + shadcn only)
 
-### 3. The "Anti-Hallucination" Protocol
+### 3. Pre-Coding Checklist
 
-- **Before Coding:** You must check `src/types` and `prisma/schema.prisma`.
-- **Imports:** Do not assume imports. Check aliases in `tsconfig.json` (Use `@/lib`, `@/features`, etc.).
-- **If Stuck:** If you cannot solve a bug in 2 attempts, STOP and generate a "Plan B" artifact explaining the blocker.
+- ✅ Check `src/types` and `prisma/schema.prisma` before coding
+- ✅ Verify imports against `tsconfig.json` aliases (`@/lib`, `@/features`)
+- ✅ If stuck after 2 attempts → STOP and document blocker
 
-## 4. Testing Protocol
+### 4. Testing (Emergency Mode)
 
-## 4. Testing Protocol (Emergency Mode)
-
-- **NO TDD:** Do not write tests before code.
-- **NO UI Testing:** Do not test components or pages.
-- **Logic Only:** Only write Unit Tests for `service.ts` files containing complex math or business rules.
-- **AI-Generated:** Use AI to generate these tests _after_ implementation to verify logic.
-- If a test fails 3 times, **STOP** and ask the human for help.
+- **Logic-only tests** for `service.ts` with complex business rules
+- NO TDD, NO component tests
+- Generate tests _after_ implementation; stop after 3 failures
 
 ---
 
@@ -88,36 +82,25 @@ npm run prisma:push        # push schema
 npm run prisma:seed        # seed DB
 ```
 
-## Coding Style & Naming Conventions
+## Coding Style & Naming
 
-- Indentation: 2 spaces
-- Server Actions: Named [verb][Noun]Action (e.g., updateUserAction).
-- Services: Named [verb][Noun] (e.g., updateUser).
-- Files: kebab-case (user-profile.tsx, actions.ts).
-- Function/variable naming: camelCase; PascalCase for React components
-- Naming Convention (TS):
-  - Interfaces must start with "I" (e.g., IUser, IProject).
-  - Types must start with "T" (e.g., TUserRole, TCreateInput).
-- Formatting: Prettier enforced.
-- Linting/Formatting: ESLint (eslint.config.mjs) with Prettier enforced via eslint-plugin-prettier; lint-staged runs "eslint --fix" and "prettier --write" on JS/TS/TSX files
+- **Server Actions:** `[verb][Noun]Action` (e.g., `updateUserAction`)
+- **Services:** `[verb][Noun]` (e.g., `updateUser`)
+- **Interfaces:** Prefix with `I` (e.g., `IUser`, `IProject`)
+- **Types:** Prefix with `T` (e.g., `TUserRole`, `TCreateInput`)
+- Files: kebab-case | Functions: camelCase | Components: PascalCase
 
-## Testing Guidelines
+## Testing
 
 - Framework: Not specified in main app. Worker subproject uses Vitest (see worker/vitest.config.mts)
 - Test files: Not present in main app; worker/ has test directory
 - Running tests: In worker: cd worker && npm test (if configured) or npm run test per worker/package.json
 - Coverage: Not specified
 
-## Commit & Pull Request Guidelines
+## Commit Guidelines
 
-- Commit format: Conventional Commits via commitlint.config.js always check this file before commit.
-  - Types allowed: feat, fix, docs, build, style, refactor, test, chore, perf, ci, revert
-  - Examples:
-    - feat(log-sheet): create log sheet ver 1
-    - fix(project): npm run build
-- **Scope Separation:** If there are multiple changes covering different scopes, you MUST separate them into individual commits. Do not combine unrelated changes.
-- PR process: Not documented. Recommend linking issues and passing CI, lint.
-- Branch naming: Not specified. A branch named feat exists in refs; follow feature branch naming (e.g., feat/<topic>)
+- Format: Conventional Commits (see `commitlint.config.js` for types: feat, fix, docs, build, style, refactor, test, chore, perf, ci, revert)
+- **Scope Separation:** Separate commits for different scopes (don't bundle unrelated changes)
 
 ---
 
