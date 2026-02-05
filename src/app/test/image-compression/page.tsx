@@ -15,8 +15,8 @@ import {
   FileIcon,
   CheckCircle2,
 } from 'lucide-react';
-import { formatBytes } from '@/lib/utils/image-compression';
-import { compressImageV2 } from '@/lib/utils/image-compression-v2';
+import { formatBytes } from '@/lib/utils';
+import { compressImageV2 } from '@/lib/utils/image-compression';
 import { toast } from 'sonner';
 
 interface ImageMetadata {

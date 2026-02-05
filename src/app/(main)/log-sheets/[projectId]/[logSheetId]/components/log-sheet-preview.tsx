@@ -1,5 +1,7 @@
 'use client';
 
+import React, { ReactNode } from 'react';
+
 import { LogSheetHeader } from './log-sheet-header';
 
 type TMachine = {
@@ -251,9 +253,6 @@ export function LogSheetPreview({
             const waterParams = params.filter(p =>
               waterKeywords.some(k => p.name.toLowerCase().includes(k))
             );
-            const chemicalParams = params.filter(
-              p => !waterKeywords.some(k => p.name.toLowerCase().includes(k))
-            );
 
             return (
               <div key={category} className="flex border-t border-black">
@@ -300,7 +299,7 @@ export function LogSheetPreview({
                         </th>
                         <th className="border-b border-l border-black p-[2px] text-center font-bold">
                           C - 8196
-                          </th>
+                        </th>
                         <th className="border-b border-l border-black p-[2px] text-center font-bold">
                           C - 8707
                         </th>
@@ -319,7 +318,7 @@ export function LogSheetPreview({
                         </td>
                         <td className="border-b border-l border-black p-[2px] text-center">
                           24.6 Lt
-                            </td>
+                        </td>
                         <td className="border-b border-l border-black p-[2px] text-center">
                           7.20 Lt
                         </td>
