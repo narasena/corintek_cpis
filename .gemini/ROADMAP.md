@@ -61,12 +61,12 @@
 
 ### 🔶 Log Sheets - Remaining Tasks
 
-| Feature                          | Status | FSD Reference                                                      |
-| -------------------------------- | ------ | ------------------------------------------------------------------ |
-| Photo Attachments (Before/After) | 🔶     | Partial: upload + preview exist; missing dedicated before/after UI |
-| Chemical Fill-up Section         | ❌     | FSD: "Fill Up Chemical" linked to log sheet                        |
-| Technician Replacement           | ❌     | FSD: "laporan teknisi yang tidak bisa masuk dan dapat digantikan"  |
-| Video Attachments (Optional)     | ❌     | FSD: "Mengunggah lampiran video (opsional)"                        |
+| Feature                          | Status | FSD Reference                                                     |
+| -------------------------------- | ------ | ----------------------------------------------------------------- |
+| Photo Attachments (Before/After) | ✅     | Complete: max 8 photos, before/after sections, preview support    |
+| Chemical Fill-up Section         | ❌     | FSD: "Fill Up Chemical" linked to log sheet                       |
+| Technician Replacement           | ❌     | FSD: "laporan teknisi yang tidak bisa masuk dan dapat digantikan" |
+| Video Attachments (Optional)     | ❌     | FSD: "Mengunggah lampiran video (opsional)"                       |
 
 ---
 
@@ -95,12 +95,12 @@
 
 **Tasks:**
 
-- [ ] Create `LogSheetPhoto` schema + `PhotoType` enum (BEFORE/AFTER)
-- [ ] Reuse existing upload pipeline (Worker R2 + server action)
-- [ ] Reuse existing camera/gallery UX (CameraInput + compression)
-- [ ] Add dedicated photo section in log sheet UI (before/after + optional caption)
-- [ ] Enforce max 8 photos per log sheet (prevent submit; allow draft with warning)
-- [ ] Render photos in preview/print (extend existing photo rendering)
+- [x] Create `LogSheetPhoto` schema + `PhotoType` enum (BEFORE/AFTER)
+- [x] Reuse existing upload pipeline (Worker R2 + server action)
+- [x] Reuse existing camera/gallery UX (CameraInput + compression)
+- [x] Add dedicated photo section in log sheet UI (before/after + optional caption)
+- [x] Enforce max 8 photos per log sheet (prevent submit; allow draft with warning)
+- [x] Render photos in preview/print (extend existing photo rendering)
 
 **Dependencies:** Worker R2 ✅
 
