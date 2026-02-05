@@ -31,6 +31,7 @@ export const CreateLogSheetEntrySchema = z
     numericValue: z.number().nullable().optional(),
     boolValue: z.boolean().nullable().optional(),
     textValue: z.string().nullable().optional(),
+    fileUrl: z.string().nullable().optional(),
     checkedAt: z.coerce.date().nullable().optional(),
   })
   .superRefine((value, ctx) => {
@@ -95,6 +96,7 @@ export interface ILogSheetEntry {
   numericValue: number | null;
   boolValue: boolean | null;
   textValue: string | null;
+  fileUrl: string | null;
   checkedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;

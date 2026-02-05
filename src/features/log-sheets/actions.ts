@@ -27,6 +27,7 @@ const SaveLogSheetEntriesSchema = z.object({
       numericValue: z.number().nullable().optional(),
       boolValue: z.boolean().nullable().optional(),
       textValue: z.string().nullable().optional(),
+      fileUrl: z.string().nullable().optional(),
       checkedAt: z.coerce.date().nullable().optional(),
     })
   ),
@@ -37,7 +38,10 @@ function isEmptyEntry(entry: {
   numericValue?: number | null;
   boolValue?: boolean | null;
   textValue?: string | null;
+  fileUrl?: string | null;
 }) {
+  if (entry.fileUrl) return false;
+
   if (entry.valueType === 'NUMBER') {
     return entry.numericValue === null || entry.numericValue === undefined;
   }
@@ -180,5 +184,47 @@ export async function saveLogSheetEntriesAction(data: unknown) {
       success: false,
       error: error.message || 'Gagal menyimpan log sheet',
     };
+  }
+}
+
+export async function uploadLogSheetImageAction(formData: FormData) {
+  try {
+    const file = formData.get('file') as File;
+    if (!file) throw new Error('No file uploaded');
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const workerUrl = process.env.R2_WORKER_URL;
+    const authSecret = process.env.R2_AUTH_SECRET;
+
+    if (!workerUrl || !authSecret) {
+      // Fallback for development if envs are missing but we want to simulate success (or fail gracefully)
+      // But strictly we should fail.
+      throw new Error('Server configuration error: Missing R2 credentials');
+    }
+
+    // Clean up filename
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const key = `log-sheets/${Date.now()}-${sanitizedName}`;
+    
+    const response = await fetch(`${workerUrl}/${key}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${authSecret}`,
+        'Content-Type': file.type,
+      },
+      body: buffer,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`);
+    }
+
+    // The worker returns the object on GET, so the URL is the worker URL + key
+    const url = `${workerUrl}/${key}`;
+    
+    return { success: true, url };
+  } catch (error: any) {
+    console.error('Upload error:', error);
+    return { success: false, error: error.message };
   }
 }

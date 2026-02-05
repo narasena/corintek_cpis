@@ -46,6 +46,7 @@ model LogSheetEntry {
   numericValue Float?
   boolValue    Boolean?
   textValue    String?
+  fileUrl      String?
 
   checkedAt DateTime?
 

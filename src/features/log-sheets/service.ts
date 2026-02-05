@@ -22,7 +22,10 @@ function isEntryEmpty(entry: {
   numericValue?: number | null;
   boolValue?: boolean | null;
   textValue?: string | null;
+  fileUrl?: string | null;
 }) {
+  if (entry.fileUrl) return false;
+
   if (entry.valueType === 'NUMBER') {
     return entry.numericValue === null || entry.numericValue === undefined;
   }
@@ -241,6 +244,7 @@ export async function getLogSheetDetail(
       numericValue: e.numericValue,
       boolValue: e.boolValue,
       textValue: e.textValue,
+      fileUrl: e.fileUrl,
       checkedAt: e.checkedAt,
       createdAt: e.createdAt,
       updatedAt: e.updatedAt,
@@ -255,6 +259,7 @@ export async function upsertLogSheetEntries(
     numericValue?: number | null;
     boolValue?: boolean | null;
     textValue?: string | null;
+    fileUrl?: string | null;
   })[]
 ) {
   const existing = await prisma.logSheetEntry.findMany({
@@ -314,6 +319,7 @@ export async function upsertLogSheetEntries(
           entry.valueType === 'BOOLEAN' ? (entry.boolValue ?? null) : null,
         textValue:
           entry.valueType === 'TEXT' ? (entry.textValue ?? null) : null,
+        fileUrl: entry.fileUrl ?? null,
         checkedAt: entry.checkedAt ?? null,
       };
 
