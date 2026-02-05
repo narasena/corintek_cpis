@@ -1,5 +1,7 @@
 'use client';
 
+import React, { ReactNode } from 'react';
+
 import { LogSheetHeader } from './log-sheet-header';
 
 type TMachine = {
@@ -266,9 +268,6 @@ export function LogSheetPreview({
             const waterKeywords = ['before', 'after', 'total', 'consumption'];
             const waterParams = params.filter(p =>
               waterKeywords.some(k => p.name.toLowerCase().includes(k))
-            );
-            const chemicalParams = params.filter(
-              p => !waterKeywords.some(k => p.name.toLowerCase().includes(k))
             );
 
             return (

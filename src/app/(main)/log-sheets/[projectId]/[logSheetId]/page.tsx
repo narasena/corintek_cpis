@@ -1057,7 +1057,6 @@ export default function LogSheetDetailPage() {
           customerName={detail.project.name}
           date={detail.logSheet.date}
           byName="-"
-          status={status}
           notes={notes.trim() ? notes.trim() : null}
           machines={detail.machines}
           parameters={detail.parameters}

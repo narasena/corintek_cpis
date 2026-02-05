@@ -41,6 +41,12 @@ We are moving away from REST APIs for internal features.
 
 # Repository Guidelines
 
+## Project Roadmap
+
+Roadmap for this project can be found in [ROADMAP](.gemini/ROADMAP.md)
+
+While the project's FSD is in [FSD](fsd_cpis/FSD_CPIS.md)
+
 ## Project Structure & Module Organization
 
 - **prisma/** — Root level Prisma schema (Single Source of Truth).
