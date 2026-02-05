@@ -34,6 +34,7 @@ import {
   CATEGORY_ORDER,
   LogSheetPreview,
 } from './components/log-sheet-preview';
+import { CameraInput } from './components/camera-input';
 
 import {
   getLogSheetDetailAction,
@@ -87,6 +88,7 @@ type TDetail = {
     numericValue: number | null;
     boolValue: boolean | null;
     textValue: string | null;
+    fileUrl: string | null;
   }>;
 };
 
@@ -95,6 +97,8 @@ type TEntryState = {
   numericValue?: number | null;
   boolValue?: boolean | null;
   textValue?: string | null;
+  fileUrl?: string | null;
+  pendingFile?: File | null;
 };
 
 function makeEntryKey(
@@ -197,6 +201,7 @@ export default function LogSheetDetailPage() {
             numericValue: entry.numericValue,
             boolValue: entry.boolValue,
             textValue: entry.textValue,
+            fileUrl: entry.fileUrl,
           };
       }
       setEntryState(initial);
@@ -272,6 +277,33 @@ export default function LogSheetDetailPage() {
         return;
       }
 
+      // Upload pending files
+      const keys = Object.keys(entryState);
+      const uploadedUrls: Record<string, string> = {};
+
+      for (const key of keys) {
+        const entry = entryState[key];
+        if (entry.pendingFile) {
+          try {
+            const formData = new FormData();
+            formData.append('file', entry.pendingFile);
+            const uploadRes = await uploadLogSheetImageAction(formData);
+
+            if (uploadRes.success && uploadRes.url) {
+              uploadedUrls[key] = uploadRes.url;
+            } else {
+              toast.error('Gagal mengunggah foto', {
+                description: uploadRes.error || 'Unknown error',
+              });
+              return;
+            }
+          } catch (e) {
+            toast.error('Terjadi kesalahan saat mengunggah foto');
+            return;
+          }
+        }
+      }
+
       const entriesPayload: Array<{
         parameterId: string;
         machineId: string | null;
@@ -280,6 +312,7 @@ export default function LogSheetDetailPage() {
         numericValue?: number | null;
         boolValue?: boolean | null;
         textValue?: string | null;
+        fileUrl?: string | null;
       }> = [];
 
       for (const category of categories) {
@@ -291,6 +324,8 @@ export default function LogSheetDetailPage() {
             for (const ct of detail.machines.coolingTowers) {
               const key = makeEntryKey(param.id, ct.id, 'VALUE');
               const state = entryState[key];
+              const newFileUrl = uploadedUrls[key] || state?.fileUrl;
+
               entriesPayload.push({
                 parameterId: param.id,
                 machineId: ct.id,
@@ -308,11 +343,14 @@ export default function LogSheetDetailPage() {
                   param.valueType === 'TEXT'
                     ? (state?.textValue ?? null)
                     : null,
+                fileUrl: newFileUrl ?? null,
               });
             }
 
             const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
             const rawState = entryState[rawKey];
+            const rawFileUrl = uploadedUrls[rawKey] || rawState?.fileUrl;
+
             entriesPayload.push({
               parameterId: param.id,
               machineId: null,
@@ -330,6 +368,7 @@ export default function LogSheetDetailPage() {
                 param.valueType === 'TEXT'
                   ? (rawState?.textValue ?? null)
                   : null,
+              fileUrl: rawFileUrl ?? null,
             });
             continue;
           }
@@ -338,6 +377,8 @@ export default function LogSheetDetailPage() {
             for (const ct of detail.machines.coolingTowers) {
               const key = makeEntryKey(param.id, ct.id, 'VALUE');
               const state = entryState[key];
+              const newFileUrl = uploadedUrls[key] || state?.fileUrl;
+
               entriesPayload.push({
                 parameterId: param.id,
                 machineId: ct.id,
@@ -355,17 +396,21 @@ export default function LogSheetDetailPage() {
                   param.valueType === 'TEXT'
                     ? (state?.textValue ?? null)
                     : null,
+                fileUrl: newFileUrl ?? null,
               });
             }
 
             const noteKey = makeEntryKey(param.id, null, 'NOTE');
             const noteState = entryState[noteKey];
+            const noteFileUrl = uploadedUrls[noteKey] || noteState?.fileUrl;
+
             entriesPayload.push({
               parameterId: param.id,
               machineId: null,
               role: 'NOTE',
               valueType: 'TEXT',
               textValue: noteState?.textValue ?? null,
+              fileUrl: noteFileUrl ?? null,
             });
             continue;
           }
@@ -379,6 +424,8 @@ export default function LogSheetDetailPage() {
             const machineIdValue = machines.length > 0 ? m.id : null;
             const key = makeEntryKey(param.id, machineIdValue, 'VALUE');
             const state = entryState[key];
+            const newFileUrl = uploadedUrls[key] || state?.fileUrl;
+
             entriesPayload.push({
               parameterId: param.id,
               machineId: machineIdValue,
@@ -394,6 +441,7 @@ export default function LogSheetDetailPage() {
                   : null,
               textValue:
                 param.valueType === 'TEXT' ? (state?.textValue ?? null) : null,
+              fileUrl: newFileUrl ?? null,
             });
           }
         }
@@ -892,29 +940,57 @@ export default function LogSheetDetailPage() {
                               }
 
                               if (param.valueType === 'NUMBER') {
+                                const isWaterMeter =
+                                  cat === 'CONSUMPTION' &&
+                                  ['before', 'after'].some(k =>
+                                    param.name.toLowerCase().includes(k)
+                                  );
+
                                 return (
                                   <TableCell key={key}>
-                                    <Input
-                                      type="number"
-                                      inputMode="decimal"
-                                      value={
-                                        state?.numericValue === null ||
-                                        state?.numericValue === undefined
-                                          ? ''
-                                          : String(state.numericValue)
-                                      }
-                                      onChange={e => {
-                                        const raw = e.target.value;
-                                        setEntryState(prev => ({
-                                          ...prev,
-                                          [key]: {
-                                            valueType: 'NUMBER',
-                                            numericValue:
-                                              raw === '' ? null : Number(raw),
-                                          },
-                                        }));
-                                      }}
-                                    />
+                                    <div className="flex flex-col gap-2">
+                                      <Input
+                                        type="number"
+                                        inputMode="decimal"
+                                        value={
+                                          state?.numericValue === null ||
+                                          state?.numericValue === undefined
+                                            ? ''
+                                            : String(state.numericValue)
+                                        }
+                                        onChange={e => {
+                                          const raw = e.target.value;
+                                          setEntryState(prev => ({
+                                            ...prev,
+                                            [key]: {
+                                              ...prev[key],
+                                              valueType: 'NUMBER',
+                                              numericValue:
+                                                raw === '' ? null : Number(raw),
+                                            },
+                                          }));
+                                        }}
+                                      />
+                                      {isWaterMeter && (
+                                        <CameraInput
+                                          value={state?.fileUrl}
+                                          onChange={(url, file) => {
+                                            setEntryState(prev => ({
+                                              ...prev,
+                                              [key]: {
+                                                ...prev[key],
+                                                valueType: 'NUMBER',
+                                                numericValue:
+                                                  prev[key]?.numericValue ??
+                                                  null,
+                                                fileUrl: url,
+                                                pendingFile: file,
+                                              },
+                                            }));
+                                          }}
+                                        />
+                                      )}
+                                    </div>
                                   </TableCell>
                                 );
                               }
