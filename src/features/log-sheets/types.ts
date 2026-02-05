@@ -7,6 +7,9 @@ export type TLogSheetStatus = z.infer<typeof LogSheetStatusEnum>;
 export const LogSheetEntryRoleEnum = z.enum(['VALUE', 'RAW_WATER', 'NOTE']);
 export type TLogSheetEntryRole = z.infer<typeof LogSheetEntryRoleEnum>;
 
+export const LogSheetPhotoTypeEnum = z.enum(['BEFORE', 'AFTER']);
+export type TLogSheetPhotoType = z.infer<typeof LogSheetPhotoTypeEnum>;
+
 export const CreateLogSheetSchema = z.object({
   projectId: z.string().uuid('Project ID tidak valid'),
   date: z.coerce.date(),
@@ -74,6 +77,13 @@ export const CreateLogSheetEntrySchema = z
 
 export type TCreateLogSheetEntry = z.infer<typeof CreateLogSheetEntrySchema>;
 
+export const LogSheetPhotoSchema = z.object({
+  id: z.string().uuid().optional(),
+  type: LogSheetPhotoTypeEnum,
+  url: z.string().url(),
+  caption: z.string().nullable().optional(),
+});
+
 export interface ILogSheet {
   id: string;
   projectId: string;
@@ -98,6 +108,17 @@ export interface ILogSheetEntry {
   textValue: string | null;
   fileUrl: string | null;
   checkedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+export interface ILogSheetPhoto {
+  id: string;
+  logSheetId: string;
+  type: TLogSheetPhotoType;
+  url: string;
+  caption: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

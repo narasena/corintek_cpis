@@ -4,6 +4,7 @@ import type { IMachine } from '@/features/machines/types';
 import type {
   ILogSheet,
   ILogSheetEntry,
+  ILogSheetPhoto,
   TCreateLogSheet,
   TCreateLogSheetEntry,
   TUpdateLogSheet,
@@ -77,6 +78,7 @@ export interface ILogSheetDetailView {
     | 'displayOrder'
   >[];
   entries: ILogSheetEntry[];
+  photos: ILogSheetPhoto[];
 }
 
 export async function getLogSheetsByProject(
@@ -162,6 +164,10 @@ export async function getLogSheetDetail(
           parameter: true,
           machine: true,
         },
+        orderBy: [{ createdAt: 'asc' }],
+      },
+      photos: {
+        where: { deletedAt: null },
         orderBy: [{ createdAt: 'asc' }],
       },
     },
@@ -250,6 +256,16 @@ export async function getLogSheetDetail(
       updatedAt: e.updatedAt,
       deletedAt: e.deletedAt,
     })),
+    photos: logSheet.photos.map(photo => ({
+      id: photo.id,
+      logSheetId: photo.logSheetId,
+      type: photo.type,
+      url: photo.url,
+      caption: photo.caption,
+      createdAt: photo.createdAt,
+      updatedAt: photo.updatedAt,
+      deletedAt: photo.deletedAt,
+    })),
   };
 }
 
@@ -331,6 +347,64 @@ export async function upsertLogSheetEntries(
       } else {
         await tx.logSheetEntry.create({
           data: normalized,
+        });
+      }
+    }
+  });
+}
+
+export async function upsertLogSheetPhotos(
+  logSheetId: string,
+  photos: Array<{
+    id?: string;
+    type: ILogSheetPhoto['type'];
+    url: string;
+    caption?: string | null;
+  }>
+) {
+  const existing = await prisma.logSheetPhoto.findMany({
+    where: { logSheetId },
+    select: { id: true, deletedAt: true },
+  });
+
+  const existingById = new Map(existing.map(photo => [photo.id, photo]));
+  const seenIds = new Set<string>();
+
+  await prisma.$transaction(async tx => {
+    const now = new Date();
+
+    for (const photo of photos) {
+      if (photo.id && existingById.has(photo.id)) {
+        seenIds.add(photo.id);
+        await tx.logSheetPhoto.update({
+          where: { id: photo.id },
+          data: {
+            type: photo.type,
+            url: photo.url,
+            caption: photo.caption ?? null,
+            deletedAt: null,
+          },
+        });
+        continue;
+      }
+
+      const created = await tx.logSheetPhoto.create({
+        data: {
+          logSheetId,
+          type: photo.type,
+          url: photo.url,
+          caption: photo.caption ?? null,
+        },
+      });
+      seenIds.add(created.id);
+    }
+
+    for (const existingPhoto of existing) {
+      if (seenIds.has(existingPhoto.id)) continue;
+      if (existingPhoto.deletedAt === null) {
+        await tx.logSheetPhoto.update({
+          where: { id: existingPhoto.id },
+          data: { deletedAt: now },
         });
       }
     }

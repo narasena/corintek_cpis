@@ -7,6 +7,7 @@ import {
   CreateLogSheetEntrySchema,
   CreateLogSheetSchema,
   LogSheetEntryRoleEnum,
+  LogSheetPhotoSchema,
   LogSheetStatusEnum,
   UpdateLogSheetSchema,
 } from './types';
@@ -31,6 +32,11 @@ const SaveLogSheetEntriesSchema = z.object({
       checkedAt: z.coerce.date().nullable().optional(),
     })
   ),
+});
+
+const SaveLogSheetPhotosSchema = z.object({
+  logSheetId: z.string().uuid('Log sheet ID tidak valid'),
+  photos: z.array(LogSheetPhotoSchema),
 });
 
 function isEmptyEntry(entry: {
@@ -187,6 +193,23 @@ export async function saveLogSheetEntriesAction(data: unknown) {
   }
 }
 
+export async function saveLogSheetPhotosAction(data: unknown) {
+  try {
+    const validatedData = SaveLogSheetPhotosSchema.parse(data);
+    await logSheetService.upsertLogSheetPhotos(
+      validatedData.logSheetId,
+      validatedData.photos
+    );
+    revalidatePath('/log-sheets');
+    return { success: true };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Gagal menyimpan foto log sheet',
+    };
+  }
+}
+
 export async function uploadLogSheetImageAction(formData: FormData) {
   try {
     const file = formData.get('file') as File;
@@ -205,11 +228,11 @@ export async function uploadLogSheetImageAction(formData: FormData) {
     // Clean up filename
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const key = `log-sheets/${Date.now()}-${sanitizedName}`;
-    
+
     const response = await fetch(`${workerUrl}/${key}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${authSecret}`,
+        Authorization: `Bearer ${authSecret}`,
         'Content-Type': file.type,
       },
       body: buffer,
@@ -221,7 +244,7 @@ export async function uploadLogSheetImageAction(formData: FormData) {
 
     // The worker returns the object on GET, so the URL is the worker URL + key
     const url = `${workerUrl}/${key}`;
-    
+
     return { success: true, url };
   } catch (error: any) {
     console.error('Upload error:', error);

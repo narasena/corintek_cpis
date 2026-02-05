@@ -10,6 +10,11 @@ enum LogSheetEntryRole {
   NOTE
 }
 
+enum LogSheetPhotoType {
+  BEFORE
+  AFTER
+}
+
 model LogSheet {
   id        String         @id @default(uuid())
   projectId String
@@ -20,6 +25,7 @@ model LogSheet {
   status LogSheetStatus @default(DRAFT)
 
   entries LogSheetEntry[]
+  photos  LogSheetPhoto[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -59,4 +65,21 @@ model LogSheetEntry {
   @@index([machineId])
   @@index([role])
   @@map("log_sheet_entries")
+}
+
+model LogSheetPhoto {
+  id         String           @id @default(uuid())
+  logSheetId String
+  logSheet   LogSheet         @relation(fields: [logSheetId], references: [id])
+  type       LogSheetPhotoType
+  url        String
+  caption    String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([logSheetId])
+  @@index([type])
+  @@map("log_sheet_photos")
 }
