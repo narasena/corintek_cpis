@@ -177,6 +177,7 @@ export function LogSheetPreview({
   parameters,
   valuesByKey,
   photos,
+  chemicalUsages,
 }: {
   customerName: string;
   date: string | Date;
@@ -186,6 +187,11 @@ export function LogSheetPreview({
   parameters: TParameter[];
   valuesByKey: Record<string, TEntryState | undefined>;
   photos: TLogSheetPhoto[];
+  chemicalUsages?: Array<{
+    chemicalName?: string;
+    amount: number;
+    unit?: string;
+  }>;
 }) {
   // Override category for Deposit parameter to ensure it appears in General Condition
   const displayParameters = parameters.map(p => {
@@ -329,18 +335,20 @@ export function LogSheetPreview({
                         <th className="border-b border-black p-[2px] text-center font-bold">
                           Fill Up Chemical
                         </th>
-                        <th className="border-b border-l border-black p-[2px] text-center font-bold">
-                          C - 8196
-                        </th>
-                        <th className="border-b border-l border-black p-[2px] text-center font-bold">
-                          C - 8707
-                        </th>
-                        <th className="border-b border-l border-black p-[2px] text-center font-bold">
-                          C - 8606 P
-                        </th>
-                        <th className="border-b border-l border-black p-[2px] text-center font-bold">
-                          C - 8011
-                        </th>
+                        {(chemicalUsages || []).length > 0 ? (
+                          (chemicalUsages || []).map((c, i) => (
+                            <th
+                              key={i}
+                              className="border-b border-l border-black p-[2px] text-center font-bold"
+                            >
+                              {c.chemicalName || '-'}
+                            </th>
+                          ))
+                        ) : (
+                          <th className="border-b border-l border-black p-[2px] text-center font-bold">
+                            -
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -348,18 +356,20 @@ export function LogSheetPreview({
                         <td className="border-b border-black p-[2px] text-center font-semibold">
                           Quantity
                         </td>
-                        <td className="border-b border-l border-black p-[2px] text-center">
-                          24.6 Lt
-                        </td>
-                        <td className="border-b border-l border-black p-[2px] text-center">
-                          7.20 Lt
-                        </td>
-                        <td className="border-b border-l border-black p-[2px] text-center">
-                          14 Lt
-                        </td>
-                        <td className="border-b border-l border-black p-[2px] text-center">
-                          20 Lt
-                        </td>
+                        {(chemicalUsages || []).length > 0 ? (
+                          (chemicalUsages || []).map((c, i) => (
+                            <td
+                              key={i}
+                              className="border-b border-l border-black p-[2px] text-center"
+                            >
+                              {c.amount} {c.unit || ''}
+                            </td>
+                          ))
+                        ) : (
+                          <td className="border-b border-l border-black p-[2px] text-center">
+                            -
+                          </td>
+                        )}
                       </tr>
                     </tbody>
                   </table>
@@ -619,12 +629,11 @@ export function LogSheetPreview({
                         key={p.id}
                         className="flex flex-col items-center gap-2"
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <div className="aspect-square w-full relative border border-black">
                           <img
                             src={p.url}
                             alt="Sebelum"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         </div>
                         <div className="text-center text-xs">
@@ -644,7 +653,6 @@ export function LogSheetPreview({
                         key={p.id}
                         className="flex flex-col items-center gap-2"
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <div className="aspect-square w-full relative border border-black">
                           <img
                             src={p.url}
@@ -674,7 +682,6 @@ export function LogSheetPreview({
                         <div className="font-bold border border-black px-4 py-1 bg-blue-200 w-full text-center">
                           {entry.param.name}
                         </div>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <div className="aspect-square w-full relative border border-black">
                           <img
                             src={entry.url}

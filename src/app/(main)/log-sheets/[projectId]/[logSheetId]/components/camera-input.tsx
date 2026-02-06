@@ -1,14 +1,7 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
-import {
-  Camera,
-  Image as ImageIcon,
-  Loader2,
-  RotateCcw,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Camera, Image as ImageIcon, Loader2, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { compressImageV2 } from '@/lib/utils/image-compression';
@@ -42,7 +35,7 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
-    } catch (error) {
+    } catch {
       toast.error('Gagal mengakses kamera', {
         description: 'Pastikan izin kamera diberikan.',
       });
@@ -117,7 +110,7 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
           const previewUrl = URL.createObjectURL(compressedFile);
           onChange(previewUrl, compressedFile);
           handleClose();
-        } catch (error) {
+        } catch {
           toast.error('Gagal memproses gambar');
         } finally {
           setIsProcessing(false);
@@ -182,9 +175,8 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
             });
 
             const previewUrl = URL.createObjectURL(compressedFile);
-
             onChange(previewUrl, compressedFile);
-          } catch (error) {
+          } catch {
             toast.error('Gagal memproses gambar');
           } finally {
             URL.revokeObjectURL(objectUrl);
@@ -208,7 +200,6 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
   if (value) {
     return (
       <div className="relative w-32 h-32 border rounded-md overflow-hidden group">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={value} alt="Value" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <Button
