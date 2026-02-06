@@ -113,10 +113,10 @@
 
 **Tasks:**
 
-- [ ] Add client-side image compression before upload
-- [ ] Use Canvas API or lightweight library
-- [ ] Target 80-90% quality JPEG
-- [ ] Resize large images to max 1920px
+- [x] Add client-side image compression before upload
+- [x] Use Canvas API or lightweight library
+- [x] Target 80-90% quality JPEG (Implemented as WebP ~75% for better ratio)
+- [x] Resize large images to max 1920px (Implemented max 1600px)
 
 ---
 
