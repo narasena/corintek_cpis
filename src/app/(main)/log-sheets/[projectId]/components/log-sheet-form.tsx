@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useTransition, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -8,6 +8,13 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Form,
   FormControl,
@@ -18,6 +25,8 @@ import {
 } from '@/components/ui/form';
 import { CreateLogSheetSchema } from '@/features/log-sheets/types';
 import { createLogSheetAction } from '@/features/log-sheets/actions';
+import { getAllUsersAction } from '@/features/users/actions';
+import type { TUserResponse } from '@/@types/user.type';
 
 const formatDateForInput = (date?: unknown) => {
   if (!date) return '';
@@ -38,6 +47,15 @@ export function LogSheetForm({
   onCreated,
 }: ILogSheetFormProps) {
   const [isPending, startTransition] = useTransition();
+  const [technicians, setTechnicians] = useState<TUserResponse[]>([]);
+
+  useEffect(() => {
+    getAllUsersAction().then(res => {
+      if (res.success && res.data) {
+        setTechnicians(res.data);
+      }
+    });
+  }, []);
 
   const form = useForm({
     resolver: zodResolver(CreateLogSheetSchema),
@@ -45,6 +63,7 @@ export function LogSheetForm({
       projectId,
       date: new Date(),
       notes: '',
+      replacedByUserId: undefined,
     },
   });
 
@@ -77,6 +96,35 @@ export function LogSheetForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="replacedByUserId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Digantikan Oleh (Opsional)</FormLabel>
+              <Select
+                value={field.value ?? 'none'}
+                onValueChange={v => field.onChange(v === 'none' ? null : v)}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Teknisi Pengganti" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="none">- Tidak Ada Pengganti -</SelectItem>
+                  {technicians.map(t => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.firstName} {t.lastName || ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="date"

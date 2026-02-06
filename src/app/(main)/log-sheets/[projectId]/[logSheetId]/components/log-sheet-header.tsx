@@ -4,10 +4,12 @@ export function LogSheetHeader({
   customerName,
   date,
   byName,
+  replacedByName,
 }: {
   customerName: string;
   date: string | Date;
   byName: string;
+  replacedByName?: string | null;
 }) {
   const formattedDate =
     typeof date === 'string'
@@ -56,8 +58,15 @@ export function LogSheetHeader({
             Date <span className="font-bold ml-8">{formattedDate}</span>
           </div>
         </div>
-        <div>
-          By <span className="font-bold">{byName}</span>
+        <div className="text-right">
+          <div>
+            By <span className="font-bold">{byName}</span>
+          </div>
+          {replacedByName && (
+            <div>
+              Replaced By <span className="font-bold">{replacedByName}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

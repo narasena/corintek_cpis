@@ -14,6 +14,7 @@ export const CreateLogSheetSchema = z.object({
   projectId: z.string().uuid('Project ID tidak valid'),
   date: z.coerce.date(),
   notes: z.string().optional(),
+  replacedByUserId: z.string().uuid().optional().nullable(),
 });
 
 export const UpdateLogSheetSchema = CreateLogSheetSchema.partial().extend({
@@ -94,6 +95,11 @@ export interface ILogSheet {
   updatedAt: Date;
   deletedAt: Date | null;
   project?: { id: string; name: string };
+  replacedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  } | null;
 }
 
 export interface ILogSheetEntry {

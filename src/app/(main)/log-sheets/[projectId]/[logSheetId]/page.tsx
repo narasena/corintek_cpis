@@ -48,6 +48,8 @@ import {
   updateLogSheetAction,
 } from '@/features/log-sheets/actions';
 import type { TLogSheetStatus } from '@/features/log-sheets/types';
+import { getAllUsersAction } from '@/features/users/actions';
+import type { TUserResponse } from '@/@types/user.type';
 
 type TMachine = {
   id: string;
@@ -82,6 +84,11 @@ type TDetail = {
     date: string | Date;
     notes: string | null;
     status: TLogSheetStatus;
+    replacedBy?: {
+      id: string;
+      firstName: string;
+      lastName: string | null;
+    } | null;
   };
   project: { id: string; name: string; clientName: string | null };
   machines: { chillers: TMachine[]; coolingTowers: TMachine[] };
@@ -194,6 +201,8 @@ export default function LogSheetDetailPage() {
   const [mode, setMode] = useState<'input' | 'preview'>('input');
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState<TLogSheetStatus>('DRAFT');
+  const [replacedByUserId, setReplacedByUserId] = useState<string | null>(null);
+  const [technicians, setTechnicians] = useState<TUserResponse[]>([]);
   const [entryState, setEntryState] = useState<Record<string, TEntryState>>({});
   const [chemicalState, setChemicalState] = useState<TChemicalUsageState>([]);
   const [loading, setLoading] = useState(true);
@@ -245,6 +254,11 @@ export default function LogSheetDetailPage() {
 
   useEffect(() => {
     fetchData();
+    getAllUsersAction().then(res => {
+      if (res.success && res.data) {
+        setTechnicians(res.data);
+      }
+    });
   }, [fetchData]);
 
   const categories = useMemo(() => {
@@ -291,6 +305,21 @@ export default function LogSheetDetailPage() {
     },
     [detail]
   );
+
+  const replacedByName = useMemo(() => {
+    if (!replacedByUserId) return null;
+
+    const tech = technicians.find(t => t.id === replacedByUserId);
+    if (tech) return `${tech.firstName} ${tech.lastName || ''}`.trim();
+
+    if (detail?.logSheet.replacedBy?.id === replacedByUserId) {
+      return `${detail.logSheet.replacedBy.firstName} ${
+        detail.logSheet.replacedBy.lastName || ''
+      }`.trim();
+    }
+
+    return null;
+  }, [replacedByUserId, technicians, detail]);
 
   const handleSave = () => {
     if (!detail) return;
@@ -464,7 +493,7 @@ export default function LogSheetDetailPage() {
       {mode === 'input' && (
         <div className="space-y-6 print:hidden">
           <div className="grid gap-4 md:grid-cols-12">
-            <div className="md:col-span-4 space-y-2">
+            <div className="md:col-span-3 space-y-2">
               <label className="text-sm font-medium">Status</label>
               <Select
                 value={status}
@@ -480,7 +509,28 @@ export default function LogSheetDetailPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="md:col-span-8 space-y-2">
+            <div className="md:col-span-3 space-y-2">
+              <label className="text-sm font-medium">Digantikan Oleh</label>
+              <Select
+                value={replacedByUserId ?? 'none'}
+                onValueChange={v =>
+                  setReplacedByUserId(v === 'none' ? null : v)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih Teknisi Pengganti" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">- Tidak Ada Pengganti -</SelectItem>
+                  {technicians.map(t => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.firstName} {t.lastName || ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-6 space-y-2">
               <label className="text-sm font-medium">Catatan</label>
               <Textarea
                 placeholder="Catatan singkat..."
@@ -1000,6 +1050,7 @@ export default function LogSheetDetailPage() {
           customerName={detail.project.name}
           date={detail.logSheet.date}
           byName="-"
+          replacedByName={replacedByName}
           notes={notes.trim() ? notes.trim() : null}
           machines={detail.machines}
           parameters={detail.parameters}

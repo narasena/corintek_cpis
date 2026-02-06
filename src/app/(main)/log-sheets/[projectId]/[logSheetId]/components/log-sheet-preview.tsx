@@ -172,6 +172,7 @@ export function LogSheetPreview({
   customerName,
   date,
   byName,
+  replacedByName,
   notes,
   machines,
   parameters,
@@ -182,6 +183,7 @@ export function LogSheetPreview({
   customerName: string;
   date: string | Date;
   byName: string;
+  replacedByName?: string | null;
   notes: string | null;
   machines: { chillers: TMachine[]; coolingTowers: TMachine[] };
   parameters: TParameter[];
@@ -270,6 +272,7 @@ export function LogSheetPreview({
           customerName={customerName}
           date={date}
           byName={byName}
+          replacedByName={replacedByName}
         />
       </div>
 
@@ -614,6 +617,7 @@ export function LogSheetPreview({
             customerName={customerName}
             date={date}
             byName={byName}
+            replacedByName={replacedByName}
           />
           <div className="flex-1 border border-black border-t-0 p-4">
             <h2 className="text-lg font-bold mb-8 text-center underline">

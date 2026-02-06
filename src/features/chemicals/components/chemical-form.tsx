@@ -10,7 +10,6 @@ import {
   TChemicalCreateInput,
   TChemicalUpdateInput,
   TChemical,
-  ChemicalCategory,
   ChemicalCategoryLabel,
 } from '@/@types/chemical.type';
 import {

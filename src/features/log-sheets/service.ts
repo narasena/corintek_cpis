@@ -117,6 +117,7 @@ export async function createLogSheet(
       projectId: data.projectId,
       date: data.date,
       notes: data.notes ?? null,
+      replacedByUserId: data.replacedByUserId ?? null,
       status: 'DRAFT',
     },
   });
@@ -161,6 +162,13 @@ export async function getLogSheetDetail(
       project: {
         include: {
           client: { select: { name: true } },
+        },
+      },
+      replacedBy: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
         },
       },
       entries: {
@@ -243,6 +251,7 @@ export async function getLogSheetDetail(
       updatedAt: logSheet.updatedAt,
       deletedAt: logSheet.deletedAt,
       project: { id: logSheet.project.id, name: logSheet.project.name },
+      replacedBy: logSheet.replacedBy,
     },
     project: {
       id: logSheet.project.id,

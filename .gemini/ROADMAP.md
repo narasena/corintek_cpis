@@ -143,9 +143,9 @@
 
 **Tasks:**
 
-- [ ] Add `replacedByUserId` field to LogSheet or separate model
-- [ ] Add "Digantikan oleh" field in log sheet form
-- [ ] Display replacement info in preview
+- [x] Add `replacedByUserId` field to LogSheet or separate model
+- [x] Add "Digantikan oleh" field in log sheet form
+- [x] Display replacement info in preview
 
 ---
 
