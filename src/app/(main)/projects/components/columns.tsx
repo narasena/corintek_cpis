@@ -4,16 +4,20 @@ import { ColumnDef } from '@tanstack/react-table';
 import { IProject, TProjectStatus } from '@/features/projects/types';
 import { ActionCell } from '@/components/action-cell';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Settings2 } from 'lucide-react';
 
 interface GetColumnsProps {
   onEdit: (project: IProject) => void;
   onRefresh: () => void;
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>;
+  onParameter: (project: IProject) => void;
 }
 
 export const getProjectColumns = ({
   onEdit,
   onDelete,
+  onParameter,
 }: GetColumnsProps): ColumnDef<IProject>[] => {
   return [
     {
@@ -90,7 +94,11 @@ export const getProjectColumns = ({
           getEntityId={project => project.id}
           onEdit={() => onEdit(row.original)}
           onDelete={() => onDelete(row.original.id)}
-        />
+        >
+          <DropdownMenuItem onClick={() => onParameter(row.original)}>
+            <Settings2 className="mr-2 h-4 w-4" /> Parameter
+          </DropdownMenuItem>
+        </ActionCell>
       ),
     },
   ];

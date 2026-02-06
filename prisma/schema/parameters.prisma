@@ -39,6 +39,7 @@ model Parameter {
   displayOrder Int     @default(0)
   isActive     Boolean @default(true)
   logSheetEntries LogSheetEntry[]
+  projectOverrides ProjectParameterOverride[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

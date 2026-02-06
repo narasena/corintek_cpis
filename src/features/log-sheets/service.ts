@@ -162,6 +162,7 @@ export async function getLogSheetDetail(
       project: {
         include: {
           client: { select: { name: true } },
+          parameterOverrides: true,
         },
       },
       replacedBy: {
@@ -240,6 +241,21 @@ export async function getLogSheetDetail(
   const chillers = machines.filter(m => m.type === 'CHILLER');
   const coolingTowers = machines.filter(m => m.type === 'COOLING_TOWER');
 
+  // Apply project-specific parameter overrides
+  const overrides = logSheet.project.parameterOverrides || [];
+  const parametersWithOverrides = parameters.map(p => {
+    const override = overrides.find(o => o.parameterId === p.id);
+    if (!override) return p;
+
+    return {
+      ...p,
+      minValue: override.minValue ?? p.minValue,
+      maxValue: override.maxValue ?? p.maxValue,
+      rawWaterMinValue: override.rawWaterMinValue ?? p.rawWaterMinValue,
+      rawWaterMaxValue: override.rawWaterMaxValue ?? p.rawWaterMaxValue,
+    };
+  });
+
   return {
     logSheet: {
       id: logSheet.id,
@@ -262,7 +278,8 @@ export async function getLogSheetDetail(
       chillers,
       coolingTowers,
     },
-    parameters: parameters as unknown as ILogSheetDetailView['parameters'],
+    parameters:
+      parametersWithOverrides as unknown as ILogSheetDetailView['parameters'],
     entries: logSheet.entries.map(e => ({
       id: e.id,
       logSheetId: e.logSheetId,

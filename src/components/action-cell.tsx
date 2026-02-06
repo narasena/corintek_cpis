@@ -31,6 +31,7 @@ interface IActionCellProps<TData> {
   onEdit: () => void;
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>;
   getEntityId: (data: TData) => string;
+  children?: React.ReactNode;
 }
 
 export function ActionCell<TData>({
@@ -40,6 +41,7 @@ export function ActionCell<TData>({
   onEdit,
   onDelete,
   getEntityId,
+  children,
 }: IActionCellProps<TData>) {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -72,6 +74,7 @@ export function ActionCell<TData>({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+          {children}
           <DropdownMenuItem onClick={onEdit}>
             <Pencil className="mr-2 h-4 w-4" /> Ubah
           </DropdownMenuItem>

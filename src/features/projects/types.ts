@@ -75,4 +75,31 @@ export interface IProject {
     ownership: TMachineOwnership;
     status: TMachineStatus;
   }>;
+  parameterOverrides?: Array<{
+    id: string;
+    parameterId: string;
+    minValue: number | null;
+    maxValue: number | null;
+    rawWaterMinValue: number | null;
+    rawWaterMaxValue: number | null;
+    parameter?: {
+      id: string;
+      name: string;
+      unit: string | null;
+    };
+  }>;
 }
+
+export const ProjectParameterOverrideSchema = z.object({
+  id: z.string().uuid().optional(),
+  projectId: z.string().uuid('Project ID tidak valid'),
+  parameterId: z.string().uuid('Parameter ID tidak valid'),
+  minValue: z.number().optional().nullable(),
+  maxValue: z.number().optional().nullable(),
+  rawWaterMinValue: z.number().optional().nullable(),
+  rawWaterMaxValue: z.number().optional().nullable(),
+});
+
+export type TProjectParameterOverride = z.infer<
+  typeof ProjectParameterOverrideSchema
+>;

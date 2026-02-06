@@ -19,6 +19,7 @@ model Project {
   
   machines    Machine[]
   logSheets   LogSheet[]
+  parameterOverrides ProjectParameterOverride[]
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -34,4 +35,24 @@ enum ProjectStatus {
   PAUSED
   COMPLETED
   CANCELLED
+}
+
+model ProjectParameterOverride {
+  id           String    @id @default(uuid())
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id])
+  parameterId  String
+  parameter    Parameter @relation(fields: [parameterId], references: [id])
+
+  // Overrides
+  minValue         Float?
+  maxValue         Float?
+  rawWaterMinValue Float?
+  rawWaterMaxValue Float?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([projectId, parameterId])
+  @@map("project_parameter_overrides")
 }

@@ -79,6 +79,17 @@ export async function getProjectById(id: string): Promise<IProject | null> {
         },
         orderBy: [{ type: 'asc' }, { unitNumber: 'asc' }],
       },
+      parameterOverrides: {
+        include: {
+          parameter: {
+            select: {
+              id: true,
+              name: true,
+              unit: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -86,6 +97,35 @@ export async function getProjectById(id: string): Promise<IProject | null> {
 
   return project as unknown as IProject;
 }
+
+/**
+ * Upsert project parameter override
+ */
+export async function upsertProjectParameterOverride(data: {
+  projectId: string;
+  parameterId: string;
+  minValue?: number | null;
+  maxValue?: number | null;
+  rawWaterMinValue?: number | null;
+  rawWaterMaxValue?: number | null;
+}) {
+  const { projectId, parameterId, ...overrides } = data;
+
+  return prisma.projectParameterOverride.upsert({
+    where: {
+      projectId_parameterId: { projectId, parameterId },
+    },
+    create: {
+      projectId,
+      parameterId,
+      ...overrides,
+    },
+    update: {
+      ...overrides,
+    },
+  });
+}
+
 
 /**
  * Create a new project with optional machines
