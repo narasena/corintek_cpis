@@ -6,6 +6,8 @@ import {
   Building2,
   Clock,
   FileSpreadsheet,
+  FileText,
+  FlaskConical,
   LayoutDashboard,
   SlidersHorizontal,
   Users,
@@ -56,6 +58,11 @@ const data = {
       title: 'Reports',
       url: '/reports',
       icon: FileText,
+    },
+    {
+      title: 'Chemicals',
+      url: '/chemicals',
+      icon: FlaskConical,
     },
     {
       title: 'Parameters',
