@@ -1,13 +1,18 @@
 ---
-name: 'git-task-start'
-description: 'Enforces git branching strategy. Invoke IMMEDIATELY when starting any new coding task, feature, bugfix, or refactor.'
+name: 'git-work'
+description: 'Robust git workflow skill: enforce branching strategy, create commits, stage changes, and write clear commit messages (Conventional Commits).'
 ---
 
-# Git Task Starter
+# Git Work
 
-This skill ensures you never commit to protected branches (`main`, `dev`, `development`, `stage`) and enforces the project's branching and commit naming conventions.
+## Goal
+Ensure a safe, reviewable git workflow from branch creation through commit:
+- never commit to protected branches
+- enforce project branching & naming conventions
+- stage only intended changes
+- create logically-scoped commits with clear messages
 
-## 🛑 Critical Protocol
+## 🛑 Critical Protocol – Start Any Task
 
 **BEFORE writing any code or applying changes, you MUST:**
 
@@ -30,10 +35,50 @@ This skill ensures you never commit to protected branches (`main`, `dev`, `devel
     - Confirm you are on the new branch.
     - Proceed with the task.
 
-## 📝 Commit Convention Reminder
+## Commit Workflow (checklist)
 
-When ready to commit, ensure you use:
+When ready to commit:
 
-- `feat(scope): message`
-- `fix(scope): message`
-- `refactor(scope): message`
+1) Inspect the working tree before staging
+   - `git status`
+   - `git diff` (unstaged)
+   - If many changes: `git diff --stat`
+
+2) Decide commit boundaries (split if needed)
+   - Split by: feature vs refactor, backend vs frontend, formatting vs logic, tests vs prod code, dependency bumps vs behavior changes.
+   - If changes are mixed in one file, plan to use patch staging.
+
+3) Stage only what belongs in the next commit
+   - Prefer patch staging for mixed changes: `git add -p`
+   - To unstage a hunk/file: `git restore --staged -p` or `git restore --staged <path>`
+
+4) Review what will actually be committed
+   - `git diff --cached`
+   - Sanity checks:
+     - no secrets or tokens
+     - no accidental debug logging
+     - no unrelated formatting churn
+
+5) Describe the staged change in 1-2 sentences (before writing the message)
+   - "What changed?" + "Why?"
+   - If you cannot describe it cleanly, the commit is probably too big or mixed; go back to step 2.
+
+6) Write the commit message
+   - Use Conventional Commits (required):
+     - `type(scope): short summary`
+     - blank line
+     - body (what/why, not implementation diary)
+     - footer (BREAKING CHANGE) if needed
+   - Prefer an editor for multi-line messages: `git commit -v`
+   - Use `references/commit-message-template.md` if helpful.
+
+7) Run the smallest relevant verification
+   - Run the repo's fastest meaningful check (unit tests, lint, or build) before moving on.
+
+8) Repeat for the next commit until the working tree is clean
+
+## Deliverable
+Provide:
+- the final commit message(s)
+- a short summary per commit (what/why)
+- the commands used to stage/review (at minimum: `git diff --cached`, plus any tests run)
