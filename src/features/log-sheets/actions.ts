@@ -12,6 +12,7 @@ import {
   UpdateLogSheetSchema,
 } from './types';
 import { ValueTypeEnum } from '@/features/parameters/types';
+import { chemicalUsageSchema } from '@/@types/chemical.type';
 
 const SaveLogSheetEntriesSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
@@ -37,6 +38,11 @@ const SaveLogSheetEntriesSchema = z.object({
 const SaveLogSheetPhotosSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
   photos: z.array(LogSheetPhotoSchema),
+});
+
+const SaveLogSheetChemicalsSchema = z.object({
+  logSheetId: z.string().uuid('Log sheet ID tidak valid'),
+  usages: z.array(chemicalUsageSchema),
 });
 
 function isEmptyEntry(entry: {
@@ -73,10 +79,13 @@ export async function getLogSheetsByProjectAction(projectId: string) {
     const logSheets =
       await logSheetService.getLogSheetsByProject(validatedProjectId);
     return { success: true, data: logSheets };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message || 'Gagal mengambil data log sheet',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal mengambil data log sheet',
     };
   }
 }
@@ -89,10 +98,10 @@ export async function createLogSheetAction(data: unknown) {
     revalidatePath('/log-sheets');
     revalidatePath(`/log-sheets/${validatedData.projectId}`);
     return { success: true, data: logSheet };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message || 'Gagal membuat log sheet',
+      error: error instanceof Error ? error.message : 'Gagal membuat log sheet',
     };
   }
 }
@@ -105,10 +114,11 @@ export async function updateLogSheetAction(data: unknown) {
     revalidatePath('/log-sheets');
     revalidatePath(`/log-sheets/${logSheet.projectId}`);
     return { success: true, data: logSheet };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message || 'Gagal memperbarui log sheet',
+      error:
+        error instanceof Error ? error.message : 'Gagal memperbarui log sheet',
     };
   }
 }
@@ -126,10 +136,13 @@ export async function updateLogSheetStatusAction(data: unknown) {
     revalidatePath('/log-sheets');
     revalidatePath(`/log-sheets/${logSheet.projectId}`);
     return { success: true, data: logSheet };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message || 'Gagal memperbarui status log sheet',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal memperbarui status log sheet',
     };
   }
 }
@@ -142,10 +155,11 @@ export async function deleteLogSheetAction(id: string) {
     revalidatePath('/log-sheets');
     revalidatePath(`/log-sheets/${logSheet.projectId}`);
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message || 'Gagal menghapus log sheet',
+      error:
+        error instanceof Error ? error.message : 'Gagal menghapus log sheet',
     };
   }
 }
@@ -155,10 +169,13 @@ export async function getLogSheetDetailAction(id: string) {
     const validatedId = z.string().uuid().parse(id);
     const detail = await logSheetService.getLogSheetDetail(validatedId);
     return { success: true, data: detail };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message || 'Gagal mengambil detail log sheet',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal mengambil detail log sheet',
     };
   }
 }
@@ -185,10 +202,11 @@ export async function saveLogSheetEntriesAction(data: unknown) {
 
     revalidatePath('/log-sheets');
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message || 'Gagal menyimpan log sheet',
+      error:
+        error instanceof Error ? error.message : 'Gagal menyimpan log sheet',
     };
   }
 }
@@ -200,12 +218,37 @@ export async function saveLogSheetPhotosAction(data: unknown) {
       validatedData.logSheetId,
       validatedData.photos
     );
-    revalidatePath('/log-sheets');
+
+    revalidatePath(`/log-sheets/${validatedData.logSheetId}`);
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message || 'Gagal menyimpan foto log sheet',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal menyimpan foto log sheet',
+    };
+  }
+}
+
+export async function saveLogSheetChemicalsAction(data: unknown) {
+  try {
+    const validatedData = SaveLogSheetChemicalsSchema.parse(data);
+    await logSheetService.upsertLogSheetChemicalUsages(
+      validatedData.logSheetId,
+      validatedData.usages
+    );
+
+    revalidatePath(`/log-sheets/${validatedData.logSheetId}`);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal menyimpan penggunaan chemical',
     };
   }
 }
@@ -228,11 +271,11 @@ export async function uploadLogSheetImageAction(formData: FormData) {
 
     // Clean up filename
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    
+
     // Structure: projects/{projectId}/log-sheets/{logSheetId}/{timestamp}_{filename}
     // Fallback to old path if IDs are missing (backward compatibility/safety)
     let key = `log-sheets/${Date.now()}-${sanitizedName}`;
-    
+
     if (projectId && logSheetId) {
       key = `projects/${projectId}/log-sheets/${logSheetId}/${Date.now()}_${sanitizedName}`;
     }
@@ -254,8 +297,12 @@ export async function uploadLogSheetImageAction(formData: FormData) {
     const url = `${workerUrl}/${key}`;
 
     return { success: true, url };
-  } catch (error: any) {
+  } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Upload error:', error);
-    return { success: false, error: error.message };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Upload failed',
+    };
   }
 }

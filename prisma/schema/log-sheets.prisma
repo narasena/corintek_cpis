@@ -26,6 +26,7 @@ model LogSheet {
 
   entries LogSheetEntry[]
   photos  LogSheetPhoto[]
+  chemicalUsages ChemicalUsage[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

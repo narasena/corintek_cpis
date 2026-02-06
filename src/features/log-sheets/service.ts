@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import type { IParameter } from '@/features/parameters/types';
 import type { IMachine } from '@/features/machines/types';
+import type { TChemicalUsage } from '@/@types/chemical.type';
 import type {
   ILogSheet,
   ILogSheetEntry,
@@ -79,6 +80,10 @@ export interface ILogSheetDetailView {
   >[];
   entries: ILogSheetEntry[];
   photos: ILogSheetPhoto[];
+  chemicalUsages: (TChemicalUsage & {
+    chemicalName: string;
+    chemicalUnit: string;
+  })[];
 }
 
 export async function getLogSheetsByProject(
@@ -169,6 +174,15 @@ export async function getLogSheetDetail(
       photos: {
         where: { deletedAt: null },
         orderBy: [{ createdAt: 'asc' }],
+      },
+      chemicalUsages: {
+        where: { deletedAt: null },
+        include: {
+          chemical: true,
+        },
+        orderBy: {
+          chemical: { name: 'asc' },
+        },
       },
     },
   });
@@ -265,6 +279,16 @@ export async function getLogSheetDetail(
       createdAt: photo.createdAt,
       updatedAt: photo.updatedAt,
       deletedAt: photo.deletedAt,
+    })),
+    chemicalUsages: logSheet.chemicalUsages.map(u => ({
+      id: u.id,
+      logSheetId: u.logSheetId,
+      chemicalId: u.chemicalId,
+      amount: u.amount,
+      createdAt: u.createdAt,
+      updatedAt: u.updatedAt,
+      chemicalName: u.chemical.name,
+      chemicalUnit: u.chemical.unit ?? '',
     })),
   };
 }
@@ -404,6 +428,63 @@ export async function upsertLogSheetPhotos(
       if (existingPhoto.deletedAt === null) {
         await tx.logSheetPhoto.update({
           where: { id: existingPhoto.id },
+          data: { deletedAt: now },
+        });
+      }
+    }
+  });
+}
+
+export async function upsertLogSheetChemicalUsages(
+  logSheetId: string,
+  usages: Array<{
+    id?: string;
+    chemicalId: string;
+    amount: number;
+  }>
+) {
+  const existing = await prisma.chemicalUsage.findMany({
+    where: { logSheetId },
+    select: { id: true, deletedAt: true },
+  });
+
+  const existingById = new Map(existing.map(usage => [usage.id, usage]));
+  const seenIds = new Set<string>();
+
+  await prisma.$transaction(async tx => {
+    const now = new Date();
+
+    for (const usage of usages) {
+      if (usage.amount <= 0) continue; // Skip zero/negative amounts
+
+      if (usage.id && existingById.has(usage.id)) {
+        seenIds.add(usage.id);
+        await tx.chemicalUsage.update({
+          where: { id: usage.id },
+          data: {
+            chemicalId: usage.chemicalId,
+            amount: usage.amount,
+            deletedAt: null,
+          },
+        });
+        continue;
+      }
+
+      const created = await tx.chemicalUsage.create({
+        data: {
+          logSheetId,
+          chemicalId: usage.chemicalId,
+          amount: usage.amount,
+        },
+      });
+      seenIds.add(created.id);
+    }
+
+    for (const existingUsage of existing) {
+      if (seenIds.has(existingUsage.id)) continue;
+      if (existingUsage.deletedAt === null) {
+        await tx.chemicalUsage.update({
+          where: { id: existingUsage.id },
           data: { deletedAt: now },
         });
       }
