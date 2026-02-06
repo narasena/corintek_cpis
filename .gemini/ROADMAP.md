@@ -1,7 +1,7 @@
 # CPIS Project Implementation Roadmap
 
 > **Project:** Corintek Project Information System (CPIS)  
-> **Updated:** 2026-02-04  
+> **Updated:** 2026-02-06  
 > **Status:** Rescue Mode - MVP Priority
 
 ---
@@ -39,6 +39,7 @@
 | Parameters  | ✅     | ✅      | ✅      | ✅  | Master data with categories   |
 | Projects    | ✅     | ✅      | ✅      | ✅  | Full CRUD with status         |
 | Machines    | ✅     | ✅      | ✅      | ✅  | Nested in Projects form       |
+| Chemicals   | ✅     | ✅      | ✅      | ✅  | Master CRUD + Usage in LS     |
 | Worker (R2) | ✅     | ✅      | N/A     | N/A | Basic upload API ready        |
 
 ### ✅ Log Sheets Domain (Mostly Complete)
@@ -64,7 +65,7 @@
 | Feature                          | Status | FSD Reference                                                     |
 | -------------------------------- | ------ | ----------------------------------------------------------------- |
 | Photo Attachments (Before/After) | ✅     | Complete: max 8 photos, before/after sections, preview support    |
-| Chemical Fill-up Section         | ❌     | FSD: "Fill Up Chemical" linked to log sheet                       |
+| Chemical Fill-up Section         | ✅     | Complete: Master data + Log Sheet integration + Print support     |
 | Technician Replacement           | ❌     | FSD: "laporan teknisi yang tidak bisa masuk dan dapat digantikan" |
 | Video Attachments (Optional)     | ❌     | FSD: "Mengunggah lampiran video (opsional)"                       |
 
@@ -127,11 +128,11 @@
 
 **Tasks:**
 
-- [ ] Create `Chemical` master data schema
-- [ ] Create `ChemicalUsage` schema linked to LogSheet
-- [ ] Add Chemical master CRUD page
-- [ ] Add chemical usage section in log sheet form
-- [ ] Display in log sheet preview
+- [x] Create `Chemical` master data schema
+- [x] Create `ChemicalUsage` schema linked to LogSheet
+- [x] Add Chemical master CRUD page
+- [x] Add chemical usage section in log sheet form
+- [x] Display in log sheet preview
 
 ---
 

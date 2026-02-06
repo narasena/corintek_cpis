@@ -1,4 +1,5 @@
 ## 3. Git & Branching Strategy
+Before even writing a single line of code check this table first and proceed as instructed in this table.
 | Condition | Action | Naming |
 | :--- | :--- | :--- |
 | Task matches current branch | **Continue** | N/A |
