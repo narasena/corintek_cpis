@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Printer, Save } from 'lucide-react';
+import { ArrowLeft, Printer, Save } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,7 +39,6 @@ import { CameraInput } from './components/camera-input';
 import {
   getLogSheetDetailAction,
   saveLogSheetEntriesAction,
-  saveLogSheetPhotosAction,
   uploadLogSheetImageAction,
   updateLogSheetAction,
 } from '@/features/log-sheets/actions';
@@ -109,13 +108,7 @@ type TEntryState = {
   pendingFile?: File | null;
 };
 
-type TPhotoState = {
-  id?: string;
-  type: 'BEFORE' | 'AFTER';
-  url: string | null;
-  caption: string | null;
-  pendingFile?: File | null;
-};
+// TPhotoState removed
 
 function makeEntryKey(
   parameterId: string,
@@ -190,7 +183,6 @@ export default function LogSheetDetailPage() {
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState<TLogSheetStatus>('DRAFT');
   const [entryState, setEntryState] = useState<Record<string, TEntryState>>({});
-  const [photos, setPhotos] = useState<TPhotoState[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
@@ -222,14 +214,6 @@ export default function LogSheetDetailPage() {
           };
       }
       setEntryState(initial);
-      setPhotos(
-        d.photos.map(photo => ({
-          id: photo.id,
-          type: photo.type,
-          url: photo.url,
-          caption: photo.caption,
-        }))
-      );
     } catch {
       toast.error('Terjadi kesalahan saat memuat data');
     } finally {
@@ -286,44 +270,9 @@ export default function LogSheetDetailPage() {
     [detail]
   );
 
-  const photoCount = useMemo(() => {
-    return photos.filter(photo => photo.url || photo.pendingFile).length;
-  }, [photos]);
-
-  const addPhoto = useCallback(
-    (type: TPhotoState['type']) => {
-      setPhotos(prev => [
-        ...prev,
-        { type, url: null, caption: null, pendingFile: null },
-      ]);
-    },
-    [setPhotos]
-  );
-
-  const updatePhoto = useCallback(
-    (index: number, next: Partial<TPhotoState>) => {
-      setPhotos(prev =>
-        prev.map((photo, idx) =>
-          idx === index ? { ...photo, ...next } : photo
-        )
-      );
-    },
-    []
-  );
-
-  const removePhoto = useCallback((index: number) => {
-    setPhotos(prev => prev.filter((_, idx) => idx !== index));
-  }, []);
-
   const handleSave = () => {
     if (!detail) return;
     startTransition(async () => {
-      if (status !== 'DRAFT' && photoCount > 8) {
-        toast.error('Maksimal 8 foto sebelum submit');
-        return;
-      }
-      const shouldWarnOnPhotoCount = status === 'DRAFT' && photoCount > 8;
-
       const headerRes = await updateLogSheetAction({
         id: logSheetId,
         notes: notes.trim() ? notes.trim() : undefined,
@@ -339,35 +288,6 @@ export default function LogSheetDetailPage() {
 
       const keys = Object.keys(entryState);
       const uploadedUrls: Record<string, string> = {};
-
-      const resolvedPhotos: TPhotoState[] = [];
-      for (const [index, photo] of photos.entries()) {
-        if (photo.pendingFile) {
-          try {
-            const formData = new FormData();
-            formData.append('file', photo.pendingFile);
-            const uploadRes = await uploadLogSheetImageAction(formData);
-
-            if (uploadRes.success && uploadRes.url) {
-              resolvedPhotos.push({
-                ...photo,
-                url: uploadRes.url,
-                pendingFile: null,
-              });
-            } else {
-              toast.error('Gagal mengunggah foto', {
-                description: uploadRes.error || 'Unknown error',
-              });
-              return;
-            }
-          } catch {
-            toast.error('Terjadi kesalahan saat mengunggah foto');
-            return;
-          }
-        } else {
-          resolvedPhotos.push(photo);
-        }
-      }
 
       // Upload pending files
       for (const key of keys) {
@@ -386,7 +306,7 @@ export default function LogSheetDetailPage() {
               });
               return;
             }
-          } catch (e) {
+          } catch {
             toast.error('Terjadi kesalahan saat mengunggah foto');
             return;
           }
@@ -548,32 +468,7 @@ export default function LogSheetDetailPage() {
         return;
       }
 
-      const photosPayload = resolvedPhotos
-        .filter(photo => photo.url)
-        .map(photo => ({
-          id: photo.id,
-          type: photo.type,
-          url: photo.url as string,
-          caption: photo.caption?.trim() ? photo.caption.trim() : null,
-        }));
-
-      const photosRes = await saveLogSheetPhotosAction({
-        logSheetId,
-        photos: photosPayload,
-      });
-
-      if (!photosRes.success) {
-        toast.error('Gagal menyimpan foto log sheet', {
-          description: photosRes.error,
-        });
-        return;
-      }
-
-      toast.success('Log sheet berhasil disimpan', {
-        description: shouldWarnOnPhotoCount
-          ? 'Maksimal 8 foto. Submit akan ditolak.'
-          : undefined,
-      });
+      toast.success('Log sheet berhasil disimpan');
       await fetchData();
     });
   };
@@ -671,102 +566,7 @@ export default function LogSheetDetailPage() {
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold">Foto Dokumentasi</h2>
-                <p className="text-sm text-muted-foreground">
-                  Maksimal 8 foto per log sheet
-                </p>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {photoCount} / 8
-              </div>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2">
-              {(['BEFORE', 'AFTER'] as const).map(type => {
-                const label = type === 'BEFORE' ? 'Sebelum' : 'Sesudah';
-                const hasPhotos = photos.some(photo => photo.type === type);
-                return (
-                  <div key={type} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium">{label}</h3>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addPhoto(type)}
-                        disabled={isPending}
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Tambah Foto
-                      </Button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {!hasPhotos && (
-                        <div className="text-sm text-muted-foreground">
-                          Belum ada foto.
-                        </div>
-                      )}
-                      {photos.map((photo, index) => {
-                        if (photo.type !== type) return null;
-                        return (
-                          <div
-                            key={photo.id ?? `${type}-${index}`}
-                            className="flex flex-col gap-3 rounded-md border p-3"
-                          >
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                              <CameraInput
-                                value={photo.url ?? undefined}
-                                disabled={isPending}
-                                onChange={(url, file) => {
-                                  if (!url) {
-                                    removePhoto(index);
-                                    return;
-                                  }
-                                  updatePhoto(index, {
-                                    url,
-                                    pendingFile: file ?? null,
-                                  });
-                                }}
-                              />
-                              <div className="flex-1 space-y-2">
-                                <label className="text-sm font-medium">
-                                  Keterangan (Opsional)
-                                </label>
-                                <Textarea
-                                  value={photo.caption ?? ''}
-                                  onChange={e =>
-                                    updatePhoto(index, {
-                                      caption: e.target.value,
-                                    })
-                                  }
-                                  placeholder="Keterangan foto..."
-                                />
-                              </div>
-                            </div>
-                            <div className="flex justify-end">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removePhoto(index)}
-                                disabled={isPending}
-                              >
-                                Hapus
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* Foto Dokumentasi Section Removed */}
 
           {categories.map(category => {
             const params = parametersByCategory.get(category) ?? [];
@@ -1272,14 +1072,7 @@ export default function LogSheetDetailPage() {
           machines={detail.machines}
           parameters={detail.parameters}
           valuesByKey={entryState}
-          photos={photos
-            .filter(photo => photo.url)
-            .map(photo => ({
-              id: photo.id ?? `${photo.type}-${photo.url}`,
-              type: photo.type,
-              url: photo.url as string,
-              caption: photo.caption,
-            }))}
+          photos={[]}
         />
       )}
     </div>
