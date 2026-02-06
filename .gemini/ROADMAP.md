@@ -159,12 +159,26 @@
 
 **Tasks:**
 
-- [ ] Add schema for project-specific overrides (min/max + raw water min/max)
-- [ ] Add UI in Project form to edit overrides per parameter
-- [ ] Apply overrides when rendering log sheet limits + validations
-- [ ] Define submit behavior:
+- [x] Add schema for project-specific overrides (min/max + raw water min/max)
+- [x] Add UI in Project form to edit overrides per parameter
+- [x] Apply overrides when rendering log sheet limits + validations
+- [x] Define submit behavior:
   - Draft: allow out-of-range values (warn)
-  - Submit: block or require acknowledgement (TBD in implementation)
+  - Submit: block or require acknowledgement (Implemented: Block on submit)
+
+---
+
+#### 1.6 Unified Reports List
+
+**Scope ID:** `RP-01`
+**Priority:** HIGH (MVP)
+
+**Tasks:**
+
+- [x] Unified list view of all log sheets
+- [x] Filter by Project / Client
+- [x] Filter by Date
+- [x] Add to Sidebar Navigation
 
 ---
 

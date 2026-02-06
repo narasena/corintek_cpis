@@ -53,6 +53,11 @@ const data = {
       icon: FileSpreadsheet,
     },
     {
+      title: 'Reports',
+      url: '/reports',
+      icon: FileText,
+    },
+    {
       title: 'Parameters',
       url: '/parameters',
       icon: SlidersHorizontal,
