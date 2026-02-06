@@ -66,7 +66,7 @@
 | -------------------------------- | ------ | ----------------------------------------------------------------- |
 | Photo Attachments (Before/After) | ✅     | Complete: max 8 photos, before/after sections, preview support    |
 | Chemical Fill-up Section         | ✅     | Complete: Master data + Log Sheet integration + Print support     |
-| Technician Replacement           | ❌     | FSD: "laporan teknisi yang tidak bisa masuk dan dapat digantikan" |
+| Technician Replacement           | ✅     | FSD: "laporan teknisi yang tidak bisa masuk dan dapat digantikan" |
 | Video Attachments (Optional)     | ❌     | FSD: "Mengunggah lampiran video (opsional)"                       |
 
 ---
