@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { compressImageV2 } from '@/lib/utils/image-compression';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -42,7 +43,6 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
         videoRef.current.srcObject = mediaStream;
       }
     } catch (error) {
-      console.error('Error accessing camera:', error);
       toast.error('Gagal mengakses kamera', {
         description: 'Pastikan izin kamera diberikan.',
       });
@@ -100,16 +100,28 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
           return;
         }
 
-        const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
-        const previewUrl = URL.createObjectURL(file);
-
         setIsProcessing(true);
-        // Stop camera immediately after capture to freeze UX
-        stopCamera();
+        stopCamera(); // Freeze UX immediately
 
-        onChange(previewUrl, file);
-        handleClose();
-        setIsProcessing(false);
+        try {
+          // 1. Create initial file from canvas
+          const rawFile = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+
+          // 2. Compress using V2 Engine (WebP)
+          const compressedFile = await compressImageV2(rawFile, {
+            quality: 0.75,
+            maxDimension: 1600,
+            type: 'image/webp',
+          });
+
+          const previewUrl = URL.createObjectURL(compressedFile);
+          onChange(previewUrl, compressedFile);
+          handleClose();
+        } catch (error) {
+          toast.error('Gagal memproses gambar');
+        } finally {
+          setIsProcessing(false);
+        }
       },
       'image/jpeg',
       0.8
@@ -126,6 +138,8 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
       return;
     }
 
+    setIsProcessing(true);
+
     // Create a 1:1 crop from the uploaded file (center crop)
     // We need to load it into an image, then draw to canvas
     const img = new Image();
@@ -141,23 +155,51 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
       canvas.height = size;
 
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        setIsProcessing(false);
+        return;
+      }
 
       ctx.drawImage(img, x, y, size, size, 0, 0, size, size);
 
       canvas.toBlob(
         async blob => {
-          if (!blob) return;
+          if (!blob) {
+            setIsProcessing(false);
+            return;
+          }
 
-          const croppedFile = new File([blob], file.name, { type: file.type });
-          const previewUrl = URL.createObjectURL(croppedFile);
+          try {
+            const croppedFile = new File([blob], file.name, {
+              type: file.type,
+            });
 
-          onChange(previewUrl, croppedFile);
-          URL.revokeObjectURL(objectUrl);
+            // COMPRESSION V2
+            const compressedFile = await compressImageV2(croppedFile, {
+              quality: 0.75,
+              maxDimension: 1600,
+              type: 'image/webp',
+            });
+
+            const previewUrl = URL.createObjectURL(compressedFile);
+
+            onChange(previewUrl, compressedFile);
+          } catch (error) {
+            toast.error('Gagal memproses gambar');
+          } finally {
+            URL.revokeObjectURL(objectUrl);
+            setIsProcessing(false);
+          }
         },
         file.type,
         0.8
       );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      setIsProcessing(false);
+      toast.error('Gagal membaca file gambar');
     };
 
     img.src = objectUrl;
