@@ -132,6 +132,10 @@ export async function updateLogSheetStatusAction(data: unknown) {
       })
       .parse(data);
 
+    if (validatedData.status === 'SUBMITTED') {
+      await logSheetService.validateLogSheetForSubmission(validatedData.id);
+    }
+
     const logSheet = await logSheetService.updateLogSheet(validatedData);
     revalidatePath('/log-sheets');
     revalidatePath(`/log-sheets/${logSheet.projectId}`);
