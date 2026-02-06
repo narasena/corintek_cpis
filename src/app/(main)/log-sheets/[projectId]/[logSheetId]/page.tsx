@@ -223,6 +223,7 @@ export default function LogSheetDetailPage() {
       setDetail(d);
       setNotes(d.logSheet.notes ?? '');
       setStatus(d.logSheet.status);
+      setReplacedByUserId(d.logSheet.replacedBy?.id ?? null);
 
       const initial: Record<string, TEntryState> = {};
       for (const entry of d.entries) {
@@ -328,6 +329,7 @@ export default function LogSheetDetailPage() {
         id: logSheetId,
         notes: notes.trim() ? notes.trim() : undefined,
         status,
+        replacedByUserId,
       });
 
       if (!headerRes.success) {
