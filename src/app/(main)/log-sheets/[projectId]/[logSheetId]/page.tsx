@@ -35,10 +35,15 @@ import {
   LogSheetPreview,
 } from './components/log-sheet-preview';
 import { CameraInput } from './components/camera-input';
+import {
+  ChemicalUsageSection,
+  type TChemicalUsageState,
+} from './components/chemical-usage-section';
 
 import {
   getLogSheetDetailAction,
   saveLogSheetEntriesAction,
+  saveLogSheetChemicalsAction,
   uploadLogSheetImageAction,
   updateLogSheetAction,
 } from '@/features/log-sheets/actions';
@@ -96,6 +101,13 @@ type TDetail = {
     type: 'BEFORE' | 'AFTER';
     url: string;
     caption: string | null;
+  }>;
+  chemicalUsages: Array<{
+    id: string;
+    chemicalId: string;
+    amount: number;
+    chemicalName: string;
+    chemicalUnit: string;
   }>;
 };
 
@@ -183,6 +195,7 @@ export default function LogSheetDetailPage() {
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState<TLogSheetStatus>('DRAFT');
   const [entryState, setEntryState] = useState<Record<string, TEntryState>>({});
+  const [chemicalState, setChemicalState] = useState<TChemicalUsageState>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
@@ -214,6 +227,15 @@ export default function LogSheetDetailPage() {
           };
       }
       setEntryState(initial);
+
+      const chemicals = d.chemicalUsages.map(u => ({
+        id: u.id,
+        chemicalId: u.chemicalId,
+        amount: u.amount,
+        chemicalName: u.chemicalName,
+        unit: u.chemicalUnit,
+      }));
+      setChemicalState(chemicals);
     } catch {
       toast.error('Terjadi kesalahan saat memuat data');
     } finally {
@@ -305,175 +327,73 @@ export default function LogSheetDetailPage() {
             if (uploadRes.success && uploadRes.url) {
               uploadedUrls[key] = uploadRes.url;
             } else {
-              toast.error('Gagal mengunggah foto', {
-                description: uploadRes.error || 'Unknown error',
+              toast.error('Gagal mengupload foto', {
+                description: uploadRes.error,
               });
-              return;
+              // Don't return here, try to save other data
             }
-          } catch {
-            toast.error('Terjadi kesalahan saat mengunggah foto');
-            return;
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error('Upload error:', e);
+            toast.error('Gagal mengupload foto');
           }
         }
       }
 
-      const entriesPayload: Array<{
-        parameterId: string;
-        machineId: string | null;
-        role: TEntryRole;
-        valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
-        numericValue?: number | null;
-        boolValue?: boolean | null;
-        textValue?: string | null;
-        fileUrl?: string | null;
-      }> = [];
+      const entriesToSave = keys.map(key => {
+        const [parameterId, machineIdStr, roleStr] = key.split(':');
+        const machineId = machineIdStr === 'null' ? null : machineIdStr;
+        const role = roleStr as TEntryRole;
+        const state = entryState[key];
 
-      for (const category of categories) {
-        const params = parametersByCategory.get(category) ?? [];
-        const cat = category as TParameter['category'];
+        // Use uploaded URL if available, otherwise existing URL
+        const fileUrl = uploadedUrls[key] || state.fileUrl;
 
-        for (const param of params) {
-          if (cat === 'COOLING_WATER_QUALITY') {
-            for (const ct of detail.machines.coolingTowers) {
-              const key = makeEntryKey(param.id, ct.id, 'VALUE');
-              const state = entryState[key];
-              const newFileUrl = uploadedUrls[key] || state?.fileUrl;
-
-              entriesPayload.push({
-                parameterId: param.id,
-                machineId: ct.id,
-                role: 'VALUE',
-                valueType: param.valueType,
-                numericValue:
-                  param.valueType === 'NUMBER'
-                    ? (state?.numericValue ?? null)
-                    : null,
-                boolValue:
-                  param.valueType === 'BOOLEAN'
-                    ? (state?.boolValue ?? null)
-                    : null,
-                textValue:
-                  param.valueType === 'TEXT'
-                    ? (state?.textValue ?? null)
-                    : null,
-                fileUrl: newFileUrl ?? null,
-              });
-            }
-
-            const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
-            const rawState = entryState[rawKey];
-            const rawFileUrl = uploadedUrls[rawKey] || rawState?.fileUrl;
-
-            entriesPayload.push({
-              parameterId: param.id,
-              machineId: null,
-              role: 'RAW_WATER',
-              valueType: param.valueType,
-              numericValue:
-                param.valueType === 'NUMBER'
-                  ? (rawState?.numericValue ?? null)
-                  : null,
-              boolValue:
-                param.valueType === 'BOOLEAN'
-                  ? (rawState?.boolValue ?? null)
-                  : null,
-              textValue:
-                param.valueType === 'TEXT'
-                  ? (rawState?.textValue ?? null)
-                  : null,
-              fileUrl: rawFileUrl ?? null,
-            });
-            continue;
-          }
-
-          if (cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION') {
-            for (const ct of detail.machines.coolingTowers) {
-              const key = makeEntryKey(param.id, ct.id, 'VALUE');
-              const state = entryState[key];
-              const newFileUrl = uploadedUrls[key] || state?.fileUrl;
-
-              entriesPayload.push({
-                parameterId: param.id,
-                machineId: ct.id,
-                role: 'VALUE',
-                valueType: param.valueType,
-                numericValue:
-                  param.valueType === 'NUMBER'
-                    ? (state?.numericValue ?? null)
-                    : null,
-                boolValue:
-                  param.valueType === 'BOOLEAN'
-                    ? (state?.boolValue ?? null)
-                    : null,
-                textValue:
-                  param.valueType === 'TEXT'
-                    ? (state?.textValue ?? null)
-                    : null,
-                fileUrl: newFileUrl ?? null,
-              });
-            }
-
-            const noteKey = makeEntryKey(param.id, null, 'NOTE');
-            const noteState = entryState[noteKey];
-            const noteFileUrl = uploadedUrls[noteKey] || noteState?.fileUrl;
-
-            entriesPayload.push({
-              parameterId: param.id,
-              machineId: null,
-              role: 'NOTE',
-              valueType: 'TEXT',
-              textValue: noteState?.textValue ?? null,
-              fileUrl: noteFileUrl ?? null,
-            });
-            continue;
-          }
-
-          const { machines } = machinesForCategory(cat);
-          const targets =
-            machines.length > 0
-              ? machines
-              : [{ id: 'null', unitNumber: 0, type: 'CHILLER' as const }];
-          for (const m of targets) {
-            const machineIdValue = machines.length > 0 ? m.id : null;
-            const key = makeEntryKey(param.id, machineIdValue, 'VALUE');
-            const state = entryState[key];
-            const newFileUrl = uploadedUrls[key] || state?.fileUrl;
-
-            entriesPayload.push({
-              parameterId: param.id,
-              machineId: machineIdValue,
-              role: 'VALUE',
-              valueType: param.valueType,
-              numericValue:
-                param.valueType === 'NUMBER'
-                  ? (state?.numericValue ?? null)
-                  : null,
-              boolValue:
-                param.valueType === 'BOOLEAN'
-                  ? (state?.boolValue ?? null)
-                  : null,
-              textValue:
-                param.valueType === 'TEXT' ? (state?.textValue ?? null) : null,
-              fileUrl: newFileUrl ?? null,
-            });
-          }
-        }
-      }
+        return {
+          parameterId,
+          machineId,
+          role,
+          valueType: state.valueType,
+          numericValue: state.numericValue,
+          boolValue: state.boolValue,
+          textValue: state.textValue,
+          fileUrl,
+        };
+      });
 
       const entriesRes = await saveLogSheetEntriesAction({
         logSheetId,
-        entries: entriesPayload,
+        entries: entriesToSave,
       });
 
-      if (!entriesRes.success) {
-        toast.error('Gagal menyimpan nilai log sheet', {
-          description: entriesRes.error,
-        });
-        return;
-      }
+      const chemicalRes = await saveLogSheetChemicalsAction({
+        logSheetId,
+        usages: chemicalState
+          .filter(c => c.chemicalId && c.amount > 0)
+          .map(c => ({
+            id: c.id,
+            chemicalId: c.chemicalId,
+            amount: c.amount,
+          })),
+      });
 
-      toast.success('Log sheet berhasil disimpan');
-      await fetchData();
+      if (entriesRes.success && chemicalRes.success) {
+        toast.success('Log sheet berhasil disimpan');
+      } else {
+        if (!entriesRes.success) {
+          toast.error('Gagal menyimpan entry log sheet', {
+            description: entriesRes.error,
+          });
+        }
+        if (!chemicalRes.success) {
+          toast.error('Gagal menyimpan data chemical', {
+            description: chemicalRes.error,
+          });
+        }
+      }
+      router.refresh();
+      // Reload data to ensure fresh state
+      fetchData();
     });
   };
 
@@ -1064,6 +984,14 @@ export default function LogSheetDetailPage() {
               </div>
             );
           })}
+
+          <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <ChemicalUsageSection
+              initialUsages={chemicalState}
+              onChange={setChemicalState}
+              disabled={isPending}
+            />
+          </div>
         </div>
       )}
 
@@ -1077,6 +1005,7 @@ export default function LogSheetDetailPage() {
           parameters={detail.parameters}
           valuesByKey={entryState}
           photos={[]}
+          chemicalUsages={chemicalState}
         />
       )}
     </div>
