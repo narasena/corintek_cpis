@@ -337,9 +337,13 @@ export async function getLogSheetDetail(
     })),
     photos: logSheet.photos.map(photo => ({
       id: photo.id,
+      logSheetId: photo.logSheetId,
       url: photo.url,
       type: photo.type as unknown as ILogSheetPhoto['type'],
       caption: photo.caption,
+      createdAt: photo.createdAt,
+      updatedAt: photo.updatedAt,
+      deletedAt: photo.deletedAt,
     })),
     chemicalUsages: logSheet.chemicalUsages.map(usage => ({
       id: usage.id,
