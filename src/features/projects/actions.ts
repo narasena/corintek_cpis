@@ -40,7 +40,7 @@ export async function upsertProjectParameterOverrideAction(
     revalidatePath(`/projects`); // Revalidate list just in case
     // revalidatePath(`/projects/${validatedData.projectId}`); // Dynamic path not easily guessable here if we are on edit page, but we can try.
     // Actually, usually we revalidate the specific path.
-    
+
     return { success: true, data: override };
   } catch (error: any) {
     return {

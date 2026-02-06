@@ -191,6 +191,17 @@ function formatRawWaterLimit(
   return '-';
 }
 
+function isOutOfRange(
+  value: number | null | undefined,
+  min: number | null,
+  max: number | null
+) {
+  if (value === null || value === undefined) return false;
+  if (min !== null && value < min) return true;
+  if (max !== null && value > max) return true;
+  return false;
+}
+
 export default function LogSheetDetailPage() {
   const params = useParams<{ projectId: string; logSheetId: string }>();
   const router = useRouter();
@@ -651,11 +662,21 @@ export default function LogSheetDetailPage() {
                                 }
 
                                 if (param.valueType === 'NUMBER') {
+                                  const isError = isOutOfRange(
+                                    state?.numericValue,
+                                    param.minValue,
+                                    param.maxValue
+                                  );
                                   return (
                                     <TableCell key={key}>
                                       <Input
                                         type="number"
                                         inputMode="decimal"
+                                        className={
+                                          isError
+                                            ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
+                                            : ''
+                                        }
                                         value={
                                           state?.numericValue === null ||
                                           state?.numericValue === undefined
@@ -753,11 +774,21 @@ export default function LogSheetDetailPage() {
                                 }
 
                                 if (param.valueType === 'NUMBER') {
+                                  const isError = isOutOfRange(
+                                    rawState?.numericValue,
+                                    param.rawWaterMinValue ?? null,
+                                    param.rawWaterMaxValue ?? null
+                                  );
                                   return (
                                     <TableCell key={rawKey}>
                                       <Input
                                         type="number"
                                         inputMode="decimal"
+                                        className={
+                                          isError
+                                            ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
+                                            : ''
+                                        }
                                         value={
                                           rawState?.numericValue === null ||
                                           rawState?.numericValue === undefined
@@ -932,6 +963,11 @@ export default function LogSheetDetailPage() {
                                   ['before', 'after'].some(k =>
                                     param.name.toLowerCase().includes(k)
                                   );
+                                const isError = isOutOfRange(
+                                  state?.numericValue,
+                                  param.minValue,
+                                  param.maxValue
+                                );
 
                                 return (
                                   <TableCell key={key}>
@@ -939,6 +975,11 @@ export default function LogSheetDetailPage() {
                                       <Input
                                         type="number"
                                         inputMode="decimal"
+                                        className={
+                                          isError
+                                            ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
+                                            : ''
+                                        }
                                         value={
                                           state?.numericValue === null ||
                                           state?.numericValue === undefined

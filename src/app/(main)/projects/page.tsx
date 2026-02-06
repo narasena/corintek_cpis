@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
 import { getProjectColumns } from './components/columns';
 import { ProjectDialog } from './components/project-dialog';
-import { ProjectParameterOverridesDialog } from './components/project-parameter-overrides-dialog';
 
 import {
   getProjectsAction,
@@ -26,10 +25,6 @@ export default function ProjectsPage() {
     undefined
   );
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [parameterProject, setParameterProject] = useState<IProject | null>(
-    null
-  );
-  const [showParameterDialog, setShowParameterDialog] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -71,11 +66,6 @@ export default function ProjectsPage() {
   const handleEdit = (project: IProject) => {
     setSelectedProject(project);
     setShowEditDialog(true);
-  };
-
-  const handleParameter = (project: IProject) => {
-    setParameterProject(project);
-    setShowParameterDialog(true);
   };
 
   const handleDelete = async (id: string) => {
