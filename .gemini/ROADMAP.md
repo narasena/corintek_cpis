@@ -46,6 +46,7 @@
 
 | Feature                    | Status | File/Component                                                |
 | -------------------------- | ------ | ------------------------------------------------------------- |
+| Unified Reports List       | ✅     | `/reports/page.tsx`                                           |
 | Log Sheet List per Project | ✅     | `/log-sheets/[projectId]/page.tsx`                            |
 | Create Log Sheet Dialog    | ✅     | `log-sheet-dialog.tsx`, `log-sheet-form.tsx`                  |
 | Log Sheet Detail/Edit      | ✅     | `/log-sheets/[projectId]/[logSheetId]/page.tsx` (~1000 lines) |
