@@ -90,6 +90,21 @@ export async function getLogSheetsByProjectAction(projectId: string) {
   }
 }
 
+export async function getAllLogSheetsAction() {
+  try {
+    const logSheets = await logSheetService.getAllLogSheets();
+    return { success: true, data: logSheets };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal mengambil data log sheet',
+    };
+  }
+}
+
 export async function createLogSheetAction(data: unknown) {
   try {
     const validatedData = CreateLogSheetSchema.parse(data);

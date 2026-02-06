@@ -353,9 +353,9 @@ Different from regular log sheets - text-based work documentation.
 
 **Tasks:**
 
-- [ ] Unified reports list page
-- [ ] Sort/search/filter by client, project, date
-- [ ] Combined view of log sheets + work reports
+- [x] Unified reports list page
+- [x] Sort/search/filter by client, project, date
+- [ ] Combined view of log sheets + work reports (Pending WR-01)
 
 ---
 

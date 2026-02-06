@@ -57,6 +57,45 @@ export interface ILogSheetListItem {
   updatedAt: Date;
 }
 
+export interface IGlobalLogSheetListItem extends ILogSheetListItem {
+  project: {
+    name: string;
+    client: {
+      name: string;
+    } | null;
+  };
+}
+
+export async function getAllLogSheets(): Promise<IGlobalLogSheetListItem[]> {
+  const logSheets = await prisma.logSheet.findMany({
+    where: {
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      projectId: true,
+      date: true,
+      notes: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      project: {
+        select: {
+          name: true,
+          client: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+  });
+
+  return logSheets as unknown as IGlobalLogSheetListItem[];
+}
+
 export interface ILogSheetDetailView {
   logSheet: ILogSheet;
   project: { id: string; name: string; clientName: string | null };

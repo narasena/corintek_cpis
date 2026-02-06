@@ -1,11 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
 } from '@tanstack/react-table';
 
 import {
@@ -24,6 +27,7 @@ import {
   CardTitle,
   CardAction,
 } from '@/components/ui/card';
+import { ArrowUpDown } from 'lucide-react';
 
 interface IDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -36,11 +40,18 @@ export function DataTable<TData, TValue>({
   data,
   emptyMessage = 'Belum ada data.',
 }: IDataTableProps<TData, TValue>) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    state: {
+      sorting,
+    },
   });
 
   return (
@@ -59,12 +70,24 @@ export function DataTable<TData, TValue>({
                       key={header.id}
                       className="text-primary-foreground font-semibold"
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
+                      {header.isPlaceholder ? null : (
+                        <div
+                          className={
+                            header.column.getCanSort()
+                              ? 'flex items-center cursor-pointer select-none'
+                              : ''
+                          }
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                           )}
+                          {header.column.getCanSort() && (
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                          )}
+                        </div>
+                      )}
                     </TableHead>
                   );
                 })}
