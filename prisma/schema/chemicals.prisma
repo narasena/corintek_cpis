@@ -1,0 +1,42 @@
+enum ChemicalCategory {
+  BOILER_SYSTEM
+  COOLING_SYSTEM
+  CHEMICAL_CLEANING
+  WASTE_WATER_TREATMENT
+}
+
+model Chemical {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  unit        String?
+  description String?
+  category    ChemicalCategory @default(COOLING_SYSTEM)
+  // isActive removed as requested
+
+  chemicalUsages ChemicalUsage[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("chemicals")
+}
+
+model ChemicalUsage {
+  id         String   @id @default(uuid())
+  logSheetId String
+  logSheet   LogSheet @relation(fields: [logSheetId], references: [id])
+
+  chemicalId String
+  chemical   Chemical @relation(fields: [chemicalId], references: [id])
+
+  amount Float
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([logSheetId])
+  @@index([chemicalId])
+  @@map("chemical_usages")
+}
