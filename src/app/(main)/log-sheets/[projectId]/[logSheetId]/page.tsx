@@ -296,6 +296,10 @@ export default function LogSheetDetailPage() {
           try {
             const formData = new FormData();
             formData.append('file', entry.pendingFile);
+            // Append context IDs for better file organization
+            if (projectId) formData.append('projectId', projectId);
+            if (logSheetId) formData.append('logSheetId', logSheetId);
+
             const uploadRes = await uploadLogSheetImageAction(formData);
 
             if (uploadRes.success && uploadRes.url) {

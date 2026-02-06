@@ -213,6 +213,9 @@ export async function saveLogSheetPhotosAction(data: unknown) {
 export async function uploadLogSheetImageAction(formData: FormData) {
   try {
     const file = formData.get('file') as File;
+    const projectId = formData.get('projectId') as string;
+    const logSheetId = formData.get('logSheetId') as string;
+
     if (!file) throw new Error('No file uploaded');
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -220,14 +223,19 @@ export async function uploadLogSheetImageAction(formData: FormData) {
     const authSecret = process.env.R2_AUTH_SECRET;
 
     if (!workerUrl || !authSecret) {
-      // Fallback for development if envs are missing but we want to simulate success (or fail gracefully)
-      // But strictly we should fail.
       throw new Error('Server configuration error: Missing R2 credentials');
     }
 
     // Clean up filename
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const key = `log-sheets/${Date.now()}-${sanitizedName}`;
+    
+    // Structure: projects/{projectId}/log-sheets/{logSheetId}/{timestamp}_{filename}
+    // Fallback to old path if IDs are missing (backward compatibility/safety)
+    let key = `log-sheets/${Date.now()}-${sanitizedName}`;
+    
+    if (projectId && logSheetId) {
+      key = `projects/${projectId}/log-sheets/${logSheetId}/${Date.now()}_${sanitizedName}`;
+    }
 
     const response = await fetch(`${workerUrl}/${key}`, {
       method: 'PUT',

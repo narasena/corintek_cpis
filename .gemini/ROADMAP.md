@@ -99,7 +99,7 @@
 - [x] Reuse existing upload pipeline (Worker R2 + server action)
 - [x] Reuse existing camera/gallery UX (CameraInput + compression)
 - [x] Add dedicated photo section in log sheet UI (before/after + optional caption)
-- [x] Enforce max 8 photos per log sheet (prevent submit; allow draft with warning)
+- [x] Enforce max 2 photos per log sheet for water consumption section only (prevent submit; allow draft with warning)
 - [x] Render photos in preview/print (extend existing photo rendering)
 
 **Dependencies:** Worker R2 ✅
