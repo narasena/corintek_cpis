@@ -337,25 +337,56 @@ export async function getLogSheetDetail(
     })),
     photos: logSheet.photos.map(photo => ({
       id: photo.id,
-      logSheetId: photo.logSheetId,
-      type: photo.type,
       url: photo.url,
+      type: photo.type as unknown as ILogSheetPhoto['type'],
       caption: photo.caption,
-      createdAt: photo.createdAt,
-      updatedAt: photo.updatedAt,
-      deletedAt: photo.deletedAt,
     })),
-    chemicalUsages: logSheet.chemicalUsages.map(u => ({
-      id: u.id,
-      logSheetId: u.logSheetId,
-      chemicalId: u.chemicalId,
-      amount: u.amount,
-      createdAt: u.createdAt,
-      updatedAt: u.updatedAt,
-      chemicalName: u.chemical.name,
-      chemicalUnit: u.chemical.unit ?? '',
+    chemicalUsages: logSheet.chemicalUsages.map(usage => ({
+      id: usage.id,
+      logSheetId: usage.logSheetId,
+      chemicalId: usage.chemicalId,
+      amount: usage.amount,
+      chemicalName: usage.chemical.name,
+      chemicalUnit: usage.chemical.unit || '',
+      createdAt: usage.createdAt,
+      updatedAt: usage.updatedAt,
     })),
   };
+}
+
+export async function validateLogSheetForSubmission(id: string) {
+  const detail = await getLogSheetDetail(id);
+  const errors: string[] = [];
+
+  for (const entry of detail.entries) {
+    if (entry.valueType === 'NUMBER' && entry.numericValue !== null) {
+      const param = detail.parameters.find(p => p.id === entry.parameterId);
+      if (!param) continue;
+
+      let min: number | null = param.minValue;
+      let max: number | null = param.maxValue;
+
+      if (entry.role === 'RAW_WATER') {
+        min = param.rawWaterMinValue ?? null;
+        max = param.rawWaterMaxValue ?? null;
+      }
+
+      if (min !== null && entry.numericValue < min) {
+        errors.push(
+          `${param.name}: Nilai ${entry.numericValue} di bawah minimum ${min}`
+        );
+      }
+      if (max !== null && entry.numericValue > max) {
+        errors.push(
+          `${param.name}: Nilai ${entry.numericValue} di atas maksimum ${max}`
+        );
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Validasi gagal:\n${errors.join('\n')}`);
+  }
 }
 
 export async function upsertLogSheetEntries(
