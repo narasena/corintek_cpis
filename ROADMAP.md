@@ -19,7 +19,7 @@
 - **Reporting:** Unified Reports List (find + filter).
 - **[NEW] Lab Analysis:** Simple CRUD for entering lab results.
 - **[NEW] Work Reports:** Ad-hoc work requests/reports (different from daily log sheets).
-- **[NEW] Ops Readiness:** Seeding, Password Reset, Backups.
+- **[NEW] Ops Readiness:** Seeding (Password Reset & Backups deferred).
 
 ### Out of Scope (Defer)
 
@@ -29,6 +29,8 @@
 - Digital signatures (use paper print + sign for now).
 - Notifications system (complex alerts).
 - Client portal / external access.
+- **OPS-02 (Password Reset)**.
+- **OPS-03 (Backup Plan)**.
 
 ---
 
@@ -84,21 +86,6 @@ These tasks are absolutely critical for the system to be usable in production.
 - [x] Seed default Parameter Categories
 - [x] Seed default Chemical Categories
 
-**Scope ID:** `OPS-02` (Password Reset)
-**Why:** No "Forgot Password" flow; Admins must be able to reset technician passwords manually.
-**Tasks:**
-
-- [ ] Add "Reset Password" button in User Management table
-- [ ] Server Action to hash new password and update DB
-- [ ] Toast notification with new password
-
-**Scope ID:** `OPS-03` (Backup Plan)
-**Why:** High risk in "Rescue Mode"; need manual safety net.
-**Tasks:**
-
-- [ ] Document manual `pg_dump` / `psql` restore procedure in README
-- [ ] Verify backup restoration on dev DB
-
 #### 2.2 [NEW] Work Reports (Log Sheet Request)
 
 **Scope ID:** `WR-01`
@@ -106,12 +93,12 @@ These tasks are absolutely critical for the system to be usable in production.
 **Estimated Prompts:** 2-3
 **Tasks:**
 
-- [ ] Create `WorkReport` schema
+- [x] Create `WorkReport` schema
   - Fields: `projectId`, `machineIds[]`, `date`, `situation`, `workDone`, `workResult`
-- [ ] Create Service and Server Actions
-- [ ] Create List Page (per project) and Create/Edit Form
-- [ ] Integrate Photo Attachments (reuse `LogSheetPhoto` logic)
-- [ ] Create Print Preview page
+- [x] Create Service and Server Actions
+- [x] Create List Page (per project) and Create/Edit Form
+- [x] Integrate Photo Attachments (reuse `LogSheetPhoto` logic)
+- [x] Create Print Preview page
 
 #### 2.3 [NEW] Lab Analysis (Hasil Analisa Lab)
 

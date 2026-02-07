@@ -1,0 +1,44 @@
+import { z } from 'zod';
+
+export const WorkReportSchema = z.object({
+  projectId: z.string().uuid(),
+  date: z
+    .string()
+    .or(z.date())
+    .transform(val => new Date(val)),
+  situation: z.string().min(1, 'Situasi harus diisi'),
+  workDone: z.string().min(1, 'Pekerjaan harus diisi'),
+  workResult: z.string().min(1, 'Hasil pekerjaan harus diisi'),
+  machineIds: z.array(z.string()).optional().default([]),
+});
+
+export const UpdateWorkReportSchema = WorkReportSchema.extend({
+  id: z.string().uuid(),
+});
+
+export type CreateWorkReportInput = z.infer<typeof WorkReportSchema>;
+export type UpdateWorkReportInput = z.infer<typeof UpdateWorkReportSchema>;
+
+export type WorkReportRow = {
+  id: string;
+  projectId: string;
+  date: Date;
+  timeStart: string | null;
+  timeEnd: string | null;
+  zone: string | null;
+  situation: string;
+  workDone: string;
+  workResult: string;
+  createdAt: Date;
+  updatedAt: Date;
+  machines: {
+    id: string;
+    name: string;
+    unitNumber: number;
+  }[];
+  photos: {
+    id: string;
+    url: string;
+    caption: string | null;
+  }[];
+};
