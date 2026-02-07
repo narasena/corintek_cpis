@@ -10,6 +10,7 @@
 import { PrismaClient } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
+import { fileURLToPath } from 'url';
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -27,7 +28,11 @@ interface SeedData {
   projects: any[];
   machines: any[];
   parameters: any[];
+  projectParameterOverrides: any[];
+  chemicals: any[];
   logSheets: any[];
+  logSheetPhotos: any[];
+  chemicalUsages: any[];
   logSheetEntries: any[];
 }
 
@@ -40,7 +45,11 @@ async function exportSeedData() {
     projects: [],
     machines: [],
     parameters: [],
+    projectParameterOverrides: [],
+    chemicals: [],
     logSheets: [],
+    logSheetPhotos: [],
+    chemicalUsages: [],
     logSheetEntries: [],
   };
 
@@ -69,15 +78,32 @@ async function exportSeedData() {
       where: { deletedAt: null },
     });
 
-    // Export Parameters
     console.log('  📦 Exporting parameters...');
     seedData.parameters = await prisma.parameter.findMany({
       where: { deletedAt: null },
     });
 
-    // Export Log Sheets
+    console.log('  📦 Exporting project parameter overrides...');
+    seedData.projectParameterOverrides =
+      await prisma.projectParameterOverride.findMany();
+
+    console.log('  📦 Exporting chemicals...');
+    seedData.chemicals = await prisma.chemical.findMany({
+      where: { deletedAt: null },
+    });
+
     console.log('  📦 Exporting log sheets...');
     seedData.logSheets = await prisma.logSheet.findMany({
+      where: { deletedAt: null },
+    });
+
+    console.log('  📦 Exporting log sheet photos...');
+    seedData.logSheetPhotos = await prisma.logSheetPhoto.findMany({
+      where: { deletedAt: null },
+    });
+
+    console.log('  📦 Exporting chemical usages...');
+    seedData.chemicalUsages = await prisma.chemicalUsage.findMany({
       where: { deletedAt: null },
     });
 
@@ -92,7 +118,13 @@ async function exportSeedData() {
     console.log(`   Projects: ${seedData.projects.length}`);
     console.log(`   Machines: ${seedData.machines.length}`);
     console.log(`   Parameters: ${seedData.parameters.length}`);
+    console.log(
+      `   Project Parameter Overrides: ${seedData.projectParameterOverrides.length}`
+    );
+    console.log(`   Chemicals: ${seedData.chemicals.length}`);
     console.log(`   Log Sheets: ${seedData.logSheets.length}`);
+    console.log(`   Log Sheet Photos: ${seedData.logSheetPhotos.length}`);
+    console.log(`   Chemical Usages: ${seedData.chemicalUsages.length}`);
     console.log(`   Log Sheet Entries: ${seedData.logSheetEntries.length}`);
 
     return seedData;
@@ -106,7 +138,7 @@ async function exportSeedData() {
 
 function generateSeedFile(data: SeedData): string {
   const timestamp = new Date().toISOString();
-  
+
   return `/**
  * Seed Data
  *
@@ -184,7 +216,6 @@ export async function main() {
       }
     }
 
-    // Seed Parameters
     if (seedData.parameters.length > 0) {
       console.log('  📦 Seeding parameters...');
       for (const parameter of seedData.parameters) {
@@ -196,7 +227,33 @@ export async function main() {
       }
     }
 
-    // Seed Log Sheets
+    if (seedData.projectParameterOverrides.length > 0) {
+      console.log('  📦 Seeding project parameter overrides...');
+      for (const override of seedData.projectParameterOverrides) {
+        await prisma.projectParameterOverride.upsert({
+          where: {
+            projectId_parameterId: {
+              projectId: override.projectId,
+              parameterId: override.parameterId,
+            },
+          },
+          update: override,
+          create: override,
+        });
+      }
+    }
+
+    if (seedData.chemicals.length > 0) {
+      console.log('  📦 Seeding chemicals...');
+      for (const chemical of seedData.chemicals) {
+        await prisma.chemical.upsert({
+          where: { id: chemical.id },
+          update: chemical,
+          create: chemical,
+        });
+      }
+    }
+
     if (seedData.logSheets.length > 0) {
       console.log('  📦 Seeding log sheets...');
       for (const logSheet of seedData.logSheets) {
@@ -208,7 +265,28 @@ export async function main() {
       }
     }
 
-    // Seed Log Sheet Entries
+    if (seedData.logSheetPhotos.length > 0) {
+      console.log('  📦 Seeding log sheet photos...');
+      for (const photo of seedData.logSheetPhotos) {
+        await prisma.logSheetPhoto.upsert({
+          where: { id: photo.id },
+          update: photo,
+          create: photo,
+        });
+      }
+    }
+
+    if (seedData.chemicalUsages.length > 0) {
+      console.log('  📦 Seeding chemical usages...');
+      for (const usage of seedData.chemicalUsages) {
+        await prisma.chemicalUsage.upsert({
+          where: { id: usage.id },
+          update: usage,
+          create: usage,
+        });
+      }
+    }
+
     if (seedData.logSheetEntries.length > 0) {
       console.log('  📦 Seeding log sheet entries...');
       for (const entry of seedData.logSheetEntries) {
@@ -238,26 +316,28 @@ if (require.main === module) {
 `;
 }
 
-// Main execution
+export async function exportSeedDataToFile() {
+  const data = await exportSeedData();
+  const seedFileContent = generateSeedFile(data);
+  const fs = await import('fs');
+  const path = await import('path');
+  const seedFilePath = path.join(process.cwd(), 'prisma', 'seed-data.ts');
+  fs.writeFileSync(seedFilePath, seedFileContent, 'utf-8');
+  console.log(`\n✅ Seed file created: ${seedFilePath}`);
+  console.log('\n💡 To restore this data later, run:');
+  console.log('   npx tsx prisma/seed-data.ts');
+  return seedFilePath;
+}
+
 async function main() {
   try {
-    const data = await exportSeedData();
-    const seedFileContent = generateSeedFile(data);
-    
-    // Write to seed-data.ts
-    const fs = await import('fs');
-    const path = await import('path');
-    
-    const seedFilePath = path.join(process.cwd(), 'prisma', 'seed-data.ts');
-    fs.writeFileSync(seedFilePath, seedFileContent, 'utf-8');
-    
-    console.log(`\n✅ Seed file created: ${seedFilePath}`);
-    console.log('\n💡 To restore this data later, run:');
-    console.log('   npx tsx prisma/seed-data.ts');
+    await exportSeedDataToFile();
   } catch (error) {
     console.error('❌ Error:', error);
     process.exit(1);
   }
 }
 
-main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main();
+}

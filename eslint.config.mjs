@@ -33,6 +33,7 @@ const eslintConfig = [
       '_archives/**',
       'prisma/seed-data.ts',
       'prisma/seed-export.ts',
+      'prisma/seed.ts',
     ],
   },
   // Core Next.js, TypeScript, and React rules
