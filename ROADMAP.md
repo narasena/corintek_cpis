@@ -75,14 +75,14 @@ These tasks are absolutely critical for the system to be usable in production.
 
 #### 2.1 [NEW] Ops Readiness (Hidden Agenda)
 
-**Scope ID:** `OPS-01` (Database Seeding)
+**Scope ID:** `OPS-01` (Database Seeding) ✅
 **Why:** Cannot deploy without initial Admin user & default categories.
 **Tasks:**
 
-- [ ] Create `prisma/seed.ts` script
-- [ ] Seed default Admin user (`admin@corintek.com`)
-- [ ] Seed default Parameter Categories
-- [ ] Seed default Chemical Categories
+- [x] Create `prisma/seed.ts` script
+- [x] Seed default Admin user (`admin@corintek.com`)
+- [x] Seed default Parameter Categories
+- [x] Seed default Chemical Categories
 
 **Scope ID:** `OPS-02` (Password Reset)
 **Why:** No "Forgot Password" flow; Admins must be able to reset technician passwords manually.
