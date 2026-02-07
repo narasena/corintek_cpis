@@ -9,7 +9,9 @@ interface WorkReportCreateDialogProps {
   projectId: string;
 }
 
-export function WorkReportCreateDialog({ projectId }: WorkReportCreateDialogProps) {
+export function WorkReportCreateDialog({
+  projectId,
+}: WorkReportCreateDialogProps) {
   return (
     <CrudDialog
       mode="create"

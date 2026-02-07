@@ -10,9 +10,10 @@ description: Workflow for Git and TDD.
 | Feature | `feat/<domain>/<action>` | `feat/auth/login` |
 | Fix | `fix/<domain>/<issue>` | `fix/user/dup-email` |
 | Refactor | `refactor/<scope>` | `refactor/db-schema` |
-| Main | **STOP** | Branch first! |
+| Main / Development | **STOP** | Branch first! |
 
 **Atomic Commits:** One logical change = one commit.
+**No Direct Commit in `main`/`master`, `development`, `staging`** Always branch
 
 ## 2. TDD (Test Later)
 *   **Suspended:** No Red-Green-Refactor.

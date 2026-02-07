@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Camera, Image as ImageIcon, Loader2, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,16 +26,40 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const isMounted = useRef(false);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      stopCamera();
+    };
+  }, []);
+
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' },
       });
+
+      // Prevent race condition if component unmounted
+      if (!isMounted.current) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        return;
+      }
+
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        // Explicitly play to avoid black screen on some devices
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current
+            ?.play()
+            .catch(e => console.error('Auto-play failed:', e));
+        };
       }
-    } catch {
+    } catch (error) {
+      console.error('Camera access error:', error);
       toast.error('Gagal mengakses kamera', {
         description: 'Pastikan izin kamera diberikan.',
       });
@@ -50,14 +74,23 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
     }
   };
 
+  // Sync camera state with Dialog open state
+  useEffect(() => {
+    if (isOpen) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
   const handleOpen = () => {
     setIsOpen(true);
-    startCamera();
   };
 
   const handleClose = () => {
-    stopCamera();
     setIsOpen(false);
+    // stopCamera is triggered by useEffect when isOpen becomes false
   };
 
   const capturePhoto = async () => {
@@ -72,6 +105,11 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
     // Video dimensions
     const videoWidth = video.videoWidth;
     const videoHeight = video.videoHeight;
+
+    if (videoWidth === 0 || videoHeight === 0) {
+      toast.error('Kamera belum siap', { description: 'Tunggu sebentar...' });
+      return;
+    }
 
     // Calculate the square crop (center of the video)
     const size = Math.min(videoWidth, videoHeight);
@@ -206,6 +244,7 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
             variant="destructive"
             size="icon"
             className="h-8 w-8"
+            type="button"
             onClick={() => onChange(null, null)}
             disabled={disabled}
           >
@@ -220,6 +259,7 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
     <>
       <div className="flex gap-2">
         <Button
+          type="button"
           variant="outline"
           className="h-32 w-32 flex flex-col gap-2 border-dashed"
           onClick={handleOpen}
@@ -248,7 +288,7 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
               <ImageIcon className="h-8 w-8 text-muted-foreground" />
             )}
             <span className="text-xs text-muted-foreground">
-              {isProcessing ? 'Processing...' : 'Upload Galeri'}
+              {isProcessing ? 'Mengompresi...' : 'Upload Galeri'}
             </span>
           </Button>
         </div>
@@ -294,11 +334,16 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
 
           <div className="p-6 flex justify-center bg-black">
             {isProcessing ? (
-              <Button disabled className="rounded-full h-16 w-16 bg-white/20">
+              <Button
+                disabled
+                className="rounded-full h-16 w-16 bg-white/20"
+                type="button"
+              >
                 <Loader2 className="h-8 w-8 animate-spin text-white" />
               </Button>
             ) : (
               <Button
+                type="button"
                 className="rounded-full h-16 w-16 bg-white hover:bg-gray-200 border-4 border-gray-300 ring-2 ring-white ring-offset-2 ring-offset-black"
                 onClick={capturePhoto}
               />

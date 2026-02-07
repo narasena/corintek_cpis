@@ -29,18 +29,12 @@ export function WorkReportList({ projectId, data }: WorkReportListProps) {
         onOpenChange={open => !open && setEditingRow(null)}
         title="Ubah Laporan Kerja"
       >
-        {close => (
+        {({ onSuccess, onCancel }) => (
           <WorkReportForm
             projectId={projectId}
             initialData={editingRow || undefined}
-            onSuccess={() => {
-              close();
-              setEditingRow(null);
-            }}
-            onCancel={() => {
-              close();
-              setEditingRow(null);
-            }}
+            onSuccess={onSuccess}
+            onCancel={onCancel}
           />
         )}
       </CrudDialog>

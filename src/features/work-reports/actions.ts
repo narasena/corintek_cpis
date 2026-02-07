@@ -27,7 +27,43 @@ export async function getWorkReportByIdAction(id: string) {
   }
 }
 
+// Helper to upload file to R2
+async function uploadToR2(
+  file: File,
+  projectId: string,
+  workReportId: string
+): Promise<string> {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const workerUrl = process.env.R2_WORKER_URL;
+  const authSecret = process.env.R2_AUTH_SECRET;
+
+  if (!workerUrl || !authSecret) {
+    throw new Error('Server configuration error: Missing R2 credentials');
+  }
+
+  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const key = projectId
+    ? `projects/${projectId}/work-reports/${workReportId}/${Date.now()}_${sanitizedName}`
+    : `work-reports/${workReportId}/${Date.now()}_${sanitizedName}`;
+
+  const response = await fetch(`${workerUrl}/${key}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${authSecret}`,
+      'Content-Type': file.type,
+    },
+    body: buffer,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.statusText}`);
+  }
+
+  return `${workerUrl}/${key}`;
+}
+
 export async function createWorkReportAction(formData: FormData) {
+  let createdReportId: string | null = null;
   try {
     const rawData = {
       projectId: formData.get('projectId'),
@@ -39,16 +75,50 @@ export async function createWorkReportAction(formData: FormData) {
     };
 
     const validated = WorkReportSchema.parse(rawData);
-    await service.createWorkReport(validated);
+    const report = await service.createWorkReport(validated);
+    createdReportId = report.id;
+
+    // Handle Photos Transactionally (Compensating Transaction Pattern)
+    const photos = formData.getAll('photos') as File[];
+    console.log(`[WorkReport.Create] Processing ${photos.length} photos`);
+
+    if (photos.length > 0) {
+      try {
+        const uploadPromises = photos.map(async file => {
+          // Skip invalid files (e.g. empty inputs)
+          if (file.size === 0 || file.name === 'undefined') return;
+
+          const url = await uploadToR2(file, validated.projectId, report.id);
+          await service.addWorkReportPhoto(report.id, url);
+        });
+
+        await Promise.all(uploadPromises);
+      } catch (uploadError) {
+        // Rollback: Delete the report if photo upload fails
+        console.error(
+          '[CPIS-ERROR] WorkReport.Create (Photo Upload Failed - Rolling Back):',
+          uploadError
+        );
+        // Soft delete (or hard delete if preferred for immediate rollback)
+        await service.deleteWorkReport(report.id);
+
+        // Throw a specific error to be caught by the outer block
+        throw new Error('Gagal mengupload foto. Laporan dibatalkan otomatis.');
+      }
+    }
 
     revalidatePath(`/work-reports/${validated.projectId}`);
-    return { success: true };
+    return { success: true, data: { id: report.id } };
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Create:', error);
     if (error instanceof z.ZodError) {
       return { success: false, message: error.errors[0].message };
     }
-    return { success: false, message: 'Failed to create work report' };
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : 'Failed to create work report',
+    };
   }
 }
 
@@ -68,10 +138,17 @@ export async function updateWorkReportAction(formData: FormData) {
     };
 
     const validated = UpdateWorkReportSchema.parse(rawData);
-    await service.updateWorkReport(validated);
+    const result = await service.updateWorkReport(validated);
+
+    // Handle New Photos (Optional for Update)
+    // For update, we treat photos as additive and non-transactional (legacy behavior)
+    // or we can make it transactional too.
+    // User only asked for "work report should be reverted back" which implies Creation.
+    // For Update, reverting is harder (need to restore old state).
+    // So we'll keep Update as is, but we CAN allow adding photos here too for convenience.
 
     revalidatePath(`/work-reports/${validated.projectId}`);
-    return { success: true };
+    return { success: true, data: { id: result.id } };
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Update:', error);
     if (error instanceof z.ZodError) {
@@ -102,6 +179,7 @@ export async function uploadWorkReportPhotoAction(formData: FormData) {
     const file = formData.get('file') as File;
     const workReportId = formData.get('workReportId') as string;
     const projectId = formData.get('projectId') as string;
+    const skipRevalidate = formData.get('skipRevalidate') === 'true';
 
     if (!file || !workReportId) throw new Error('Missing file or ID');
 
@@ -136,12 +214,19 @@ export async function uploadWorkReportPhotoAction(formData: FormData) {
     // Save to DB
     await service.addWorkReportPhoto(workReportId, url);
 
-    revalidatePath(`/work-reports/${projectId}/${workReportId}`);
+    if (!skipRevalidate) {
+      revalidatePath(`/work-reports/${projectId}/${workReportId}`);
+    }
     return { success: true, url };
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.UploadPhoto:', error);
     return { success: false, message: 'Upload failed' };
   }
+}
+
+export async function revalidateWorkReportPathAction(projectId: string) {
+  revalidatePath(`/work-reports/${projectId}`);
+  return { success: true };
 }
 
 export async function deleteWorkReportPhotoAction(formData: FormData) {
