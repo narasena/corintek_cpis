@@ -34,7 +34,7 @@ import {
   CATEGORY_ORDER,
   LogSheetPreview,
 } from './components/log-sheet-preview';
-import { CameraInput } from './components/camera-input';
+import { CameraInput } from '@/components/camera-input';
 import {
   ChemicalUsageSection,
   type TChemicalUsageState,
