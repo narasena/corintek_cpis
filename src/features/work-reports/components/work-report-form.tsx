@@ -58,11 +58,21 @@ export function WorkReportForm({
 
   // Photo State Management
   const [existingPhotos, setExistingPhotos] = useState<
-    { id: string; url: string; caption: string | null }[]
-  >(initialData?.photos || []);
+    {
+      id: string;
+      url: string;
+      caption: string | null;
+      type: 'BEFORE' | 'AFTER' | 'GENERAL';
+    }[]
+  >((initialData?.photos as any) || []);
 
   const [pendingPhotos, setPendingPhotos] = useState<
-    { id: string; file: File; previewUrl: string }[]
+    {
+      id: string;
+      file: File;
+      previewUrl: string;
+      type: 'BEFORE' | 'AFTER' | 'GENERAL';
+    }[]
   >([]);
 
   const [deletedPhotoIds, setDeletedPhotoIds] = useState<string[]>([]);
@@ -85,7 +95,7 @@ export function WorkReportForm({
         const fetchedMachines = res.data as IMachine[];
         setMachineOptions(
           fetchedMachines.map(m => ({
-            label: `${m.name} (${m.unitNumber})`,
+            label: `${m.type.replace(/_/g, ' ')} #${m.unitNumber}`,
             value: m.id,
           }))
         );
@@ -121,15 +131,17 @@ export function WorkReportForm({
         },
   });
 
-  const handlePhotoUpload = (_url: string | null, file?: File | null) => {
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setPendingPhotos(prev => [
-        ...prev,
-        { id: `temp-${Date.now()}-${Math.random()}`, file, previewUrl },
-      ]);
-    }
-  };
+  const handlePhotoUpload =
+    (type: 'BEFORE' | 'AFTER' | 'GENERAL') =>
+    (_url: string | null, file?: File | null) => {
+      if (file) {
+        const previewUrl = URL.createObjectURL(file);
+        setPendingPhotos(prev => [
+          ...prev,
+          { id: `temp-${Date.now()}-${Math.random()}`, file, previewUrl, type },
+        ]);
+      }
+    };
 
   const handleDeletePhoto = (photoId: string, isTemp: boolean) => {
     if (isTemp) {
@@ -171,7 +183,12 @@ export function WorkReportForm({
             setSubmitStatus(
               `Menyimpan & Mengupload ${pendingPhotos.length} foto...`
             );
-            pendingPhotos.forEach(p => formData.append('photos', p.file));
+            pendingPhotos.forEach(p => {
+              if (p.type === 'BEFORE') formData.append('photos_BEFORE', p.file);
+              else if (p.type === 'AFTER')
+                formData.append('photos_AFTER', p.file);
+              else formData.append('photos', p.file);
+            });
           }
           result = await createWorkReportAction(formData);
         }
@@ -199,6 +216,7 @@ export function WorkReportForm({
 
         // 2. Upload Pending Photos (ONLY for Update mode)
         // For Create, photos are already handled transactionally in the action above.
+        let uploadErrors = false;
         if (initialData?.id && pendingPhotos.length > 0) {
           setSubmitStatus(`Mengupload ${pendingPhotos.length} foto...`);
           const uploadPromises = pendingPhotos.map(photo => {
@@ -207,16 +225,51 @@ export function WorkReportForm({
             fd.append('workReportId', reportId!);
             fd.append('projectId', projectId);
             fd.append('skipRevalidate', 'true'); // Batch mode
+            fd.append('type', photo.type);
             return uploadWorkReportPhotoAction(fd);
           });
 
           const uploadResults = await Promise.all(uploadPromises);
-          const failedUploads = uploadResults.filter(r => !r.success);
-          if (failedUploads.length > 0) {
-            toast.warning(`${failedUploads.length} foto gagal diupload`, {
-              description: 'Silakan coba upload ulang foto yang gagal nanti.',
+
+          // Handle partial successes
+          const successfulUploads: typeof existingPhotos = [];
+          const failedPendingIds: string[] = [];
+
+          uploadResults.forEach((res, index) => {
+            const photo = pendingPhotos[index];
+            if (res.success && (res as any).id) {
+              successfulUploads.push({
+                id: (res as any).id,
+                url: (res as any).url,
+                caption: null,
+                type: photo.type,
+              });
+            } else {
+              failedPendingIds.push(photo.id);
+            }
+          });
+
+          // Move successful uploads to existingPhotos
+          if (successfulUploads.length > 0) {
+            setExistingPhotos(prev => [...prev, ...successfulUploads]);
+            setPendingPhotos(prev =>
+              prev.filter(p => failedPendingIds.includes(p.id))
+            );
+          }
+
+          if (failedPendingIds.length > 0) {
+            uploadErrors = true;
+            // Get error details from first failure if available
+            const firstFailure = uploadResults.find(r => !r.success);
+            const errorMessage =
+              firstFailure && 'message' in firstFailure
+                ? (firstFailure as any).message
+                : 'Unknown error';
+
+            toast.error(`${failedPendingIds.length} foto gagal diupload`, {
+              description: `Error: ${errorMessage}. Laporan tersimpan, silakan coba upload ulang foto.`,
+              duration: 5000,
             });
-            // We do NOT return here, we proceed to success for the report itself
           }
         }
 
@@ -235,12 +288,18 @@ export function WorkReportForm({
 
         // 4. Final Revalidation
         setSubmitStatus('Memuat ulang data...');
-        await revalidateWorkReportPathAction(projectId);
+        await revalidateWorkReportPathAction(projectId, reportId || undefined);
 
-        toast.success(initialData ? 'Laporan diperbarui' : 'Laporan dibuat', {
-          description: 'Data dan foto berhasil disimpan',
-        });
-        onSuccess();
+        if (!uploadErrors) {
+          toast.success(initialData ? 'Laporan diperbarui' : 'Laporan dibuat', {
+            description: 'Data dan foto berhasil disimpan',
+          });
+          onSuccess();
+        } else {
+          // If upload errors occurred, DO NOT close the dialog (don't call onSuccess)
+          // The user can retry uploading the remaining pending photos.
+          setSubmitStatus(''); // Clear loading state
+        }
       } catch (error) {
         console.error('[WorkReportForm] Error:', error);
         toast.error('Terjadi kesalahan sistem', {
@@ -382,50 +441,38 @@ export function WorkReportForm({
             )}
           />
 
-          {/* Photo Section - Now part of the main flow */}
-          <div className="border rounded-md p-4 bg-gray-50/50">
-            <h3 className="text-sm font-medium mb-3">Foto Dokumentasi</h3>
-            <p className="text-xs text-muted-foreground mb-4">
-              Foto akan disimpan saat tombol &quot;Simpan&quot; ditekan.
-            </p>
+          {/* Photo Sections */}
+          <div className="space-y-4">
+            <h3 className="font-medium">Dokumentasi Foto</h3>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {allPhotos.map(photo => (
-                <div
-                  key={photo.id}
-                  className="relative aspect-square border rounded-md overflow-hidden group bg-white"
-                >
-                  <Image
-                    src={photo.url}
-                    alt="Work Report Photo"
-                    fill
-                    className="object-cover"
-                  />
-                  {photo.isTemp && (
-                    <div className="absolute top-1 right-1 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm z-10">
-                      Menunggu Upload
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      type="button"
-                      onClick={() => handleDeletePhoto(photo.id, photo.isTemp)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+            {/* Before Photos */}
+            <PhotoSection
+              title="Foto Sebelum (Before)"
+              photos={allPhotos.filter(p => p.type === 'BEFORE')}
+              onUpload={handlePhotoUpload('BEFORE')}
+              onDelete={handleDeletePhoto}
+              disabled={isPending}
+            />
 
-              <div className="flex items-center justify-center border border-dashed rounded-md p-4 bg-white hover:bg-gray-50 transition-colors min-h-[120px]">
-                <CameraInput
-                  onChange={handlePhotoUpload}
-                  disabled={isPending}
-                />
-              </div>
-            </div>
+            {/* After Photos */}
+            <PhotoSection
+              title="Foto Sesudah (After)"
+              photos={allPhotos.filter(p => p.type === 'AFTER')}
+              onUpload={handlePhotoUpload('AFTER')}
+              onDelete={handleDeletePhoto}
+              disabled={isPending}
+            />
+
+            {/* General/Legacy Photos */}
+            {allPhotos.some(p => p.type === 'GENERAL' || !p.type) && (
+              <PhotoSection
+                title="Foto Lainnya (General)"
+                photos={allPhotos.filter(p => p.type === 'GENERAL' || !p.type)}
+                onUpload={handlePhotoUpload('GENERAL')}
+                onDelete={handleDeletePhoto}
+                disabled={isPending}
+              />
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 pt-4 border-t">
@@ -453,6 +500,65 @@ export function WorkReportForm({
           </div>
         </form>
       </Form>
+    </div>
+  );
+}
+
+function PhotoSection({
+  title,
+  photos,
+  onUpload,
+  onDelete,
+  disabled,
+}: {
+  title: string;
+  photos: {
+    id: string;
+    url: string;
+    isTemp?: boolean;
+    type?: 'BEFORE' | 'AFTER' | 'GENERAL';
+  }[];
+  onUpload: (url: string | null, file?: File | null) => void;
+  onDelete: (id: string, isTemp: boolean) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="border rounded-md p-4 bg-gray-50/50">
+      <h3 className="text-sm font-medium mb-3">{title}</h3>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {photos.map(photo => (
+          <div
+            key={photo.id}
+            className="relative aspect-square border rounded-md overflow-hidden group bg-white"
+          >
+            <Image
+              src={photo.url}
+              alt="Work Report Photo"
+              fill
+              className="object-cover"
+            />
+            {photo.isTemp && (
+              <div className="absolute top-1 right-1 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm z-10">
+                Menunggu Upload
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Button
+                variant="destructive"
+                size="icon"
+                type="button"
+                onClick={() => onDelete(photo.id, !!photo.isTemp)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+
+        <div className="flex items-center justify-center border border-dashed rounded-md p-4 bg-white hover:bg-gray-50 transition-colors min-h-[120px]">
+          <CameraInput onChange={onUpload} disabled={disabled} />
+        </div>
+      </div>
     </div>
   );
 }

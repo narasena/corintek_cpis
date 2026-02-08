@@ -13,7 +13,7 @@ description: Workflow for Git and TDD.
 | Main / Development | **STOP** | Branch first! |
 
 **Atomic Commits:** One logical change = one commit.
-**No Direct Commit in `main`/`master`, `development`, `staging`** Always branch
+**No Direct Commit in `main`/`master`, `development`, `staging`** Always create new branch first before executing anything!!!
 
 ## 2. TDD (Test Later)
 *   **Suspended:** No Red-Green-Refactor.

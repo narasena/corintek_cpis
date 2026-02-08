@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { WorkReportPhotoType } from '@/generated/prisma/client';
 
 export const WorkReportSchema = z.object({
   projectId: z.string().uuid(),
@@ -33,12 +34,15 @@ export type WorkReportRow = {
   updatedAt: Date;
   machines: {
     id: string;
-    name: string;
+    // name: string; // Machine does not have name, use type/unitNumber
+    type: string;
     unitNumber: number;
+    brand: string | null;
   }[];
   photos: {
     id: string;
     url: string;
     caption: string | null;
+    type: WorkReportPhotoType;
   }[];
 };

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { WorkReportPhotoType } from '@/generated/prisma/client';
 
 import * as service from './service';
 import { WorkReportSchema, UpdateWorkReportSchema } from './types';
@@ -46,6 +47,13 @@ async function uploadToR2(
     ? `projects/${projectId}/work-reports/${workReportId}/${Date.now()}_${sanitizedName}`
     : `work-reports/${workReportId}/${Date.now()}_${sanitizedName}`;
 
+  console.log('[WorkReport.Upload] Uploading to R2:', {
+    key,
+    size: file.size,
+    type: file.type,
+    workerUrl: workerUrl ? 'SET' : 'MISSING',
+  });
+
   const response = await fetch(`${workerUrl}/${key}`, {
     method: 'PUT',
     headers: {
@@ -56,7 +64,15 @@ async function uploadToR2(
   });
 
   if (!response.ok) {
-    throw new Error(`Upload failed: ${response.statusText}`);
+    const errorText = await response.text();
+    console.error('[WorkReport.Upload] Worker Error:', {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorText,
+    });
+    throw new Error(
+      `Upload failed: ${response.statusText} (${response.status})`
+    );
   }
 
   return `${workerUrl}/${key}`;
@@ -79,17 +95,35 @@ export async function createWorkReportAction(formData: FormData) {
     createdReportId = report.id;
 
     // Handle Photos Transactionally (Compensating Transaction Pattern)
-    const photos = formData.getAll('photos') as File[];
-    console.log(`[WorkReport.Create] Processing ${photos.length} photos`);
+    const photosBefore = formData.getAll('photos_BEFORE') as File[];
+    const photosAfter = formData.getAll('photos_AFTER') as File[];
+    const photosGeneral = formData.getAll('photos') as File[];
 
-    if (photos.length > 0) {
+    const allPhotos = [
+      ...photosBefore.map(f => ({
+        file: f,
+        type: 'BEFORE' as WorkReportPhotoType,
+      })),
+      ...photosAfter.map(f => ({
+        file: f,
+        type: 'AFTER' as WorkReportPhotoType,
+      })),
+      ...photosGeneral.map(f => ({
+        file: f,
+        type: 'GENERAL' as WorkReportPhotoType,
+      })),
+    ];
+
+    console.log(`[WorkReport.Create] Processing ${allPhotos.length} photos`);
+
+    if (allPhotos.length > 0) {
       try {
-        const uploadPromises = photos.map(async file => {
+        const uploadPromises = allPhotos.map(async ({ file, type }) => {
           // Skip invalid files (e.g. empty inputs)
           if (file.size === 0 || file.name === 'undefined') return;
 
           const url = await uploadToR2(file, validated.projectId, report.id);
-          await service.addWorkReportPhoto(report.id, url);
+          await service.addWorkReportPhoto(report.id, url, undefined, type);
         });
 
         await Promise.all(uploadPromises);
@@ -180,6 +214,7 @@ export async function uploadWorkReportPhotoAction(formData: FormData) {
     const workReportId = formData.get('workReportId') as string;
     const projectId = formData.get('projectId') as string;
     const skipRevalidate = formData.get('skipRevalidate') === 'true';
+    const type = (formData.get('type') as WorkReportPhotoType) || 'GENERAL';
 
     if (!file || !workReportId) throw new Error('Missing file or ID');
 
@@ -212,20 +247,36 @@ export async function uploadWorkReportPhotoAction(formData: FormData) {
     const url = `${workerUrl}/${key}`;
 
     // Save to DB
-    await service.addWorkReportPhoto(workReportId, url);
+    const photo = await service.addWorkReportPhoto(
+      workReportId,
+      url,
+      undefined,
+      type
+    );
 
     if (!skipRevalidate) {
       revalidatePath(`/work-reports/${projectId}/${workReportId}`);
     }
-    return { success: true, url };
+    return { success: true, url, id: photo.id };
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.UploadPhoto:', error);
-    return { success: false, message: 'Upload failed' };
+    return {
+      success: false,
+      message:
+        'Upload failed: ' +
+        (error instanceof Error ? error.message : 'Unknown error'),
+    };
   }
 }
 
-export async function revalidateWorkReportPathAction(projectId: string) {
+export async function revalidateWorkReportPathAction(
+  projectId: string,
+  workReportId?: string
+) {
   revalidatePath(`/work-reports/${projectId}`);
+  if (workReportId) {
+    revalidatePath(`/work-reports/${projectId}/${workReportId}`);
+  }
   return { success: true };
 }
 

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { CreateWorkReportInput, UpdateWorkReportInput } from './types';
+import { WorkReportPhotoType } from '@/generated/prisma/client';
 
 export async function getWorkReportsByProject(projectId: string) {
   return await prisma.workReport.findMany({
@@ -70,13 +71,15 @@ export async function deleteWorkReport(id: string) {
 export async function addWorkReportPhoto(
   workReportId: string,
   url: string,
-  caption?: string
+  caption?: string,
+  type: WorkReportPhotoType = 'GENERAL'
 ) {
   return await prisma.workReportPhoto.create({
     data: {
       workReportId,
       url,
       caption,
+      type,
     },
   });
 }
