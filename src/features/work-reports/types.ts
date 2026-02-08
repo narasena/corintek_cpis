@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { WorkReportPhotoType } from '@/generated/prisma/client';
+import { WorkReportPhotoType } from '@/generated/prisma/enums';
 
 export const WorkReportSchema = z.object({
   projectId: z.string().uuid(),

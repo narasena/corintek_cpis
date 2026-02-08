@@ -9,6 +9,7 @@ import {
   FileText,
   FlaskConical,
   LayoutDashboard,
+  Microscope,
   SlidersHorizontal,
   Users,
 } from 'lucide-react';
@@ -55,9 +56,14 @@ const data = {
       icon: FileSpreadsheet,
     },
     {
-      title: 'Reports',
-      url: '/reports',
+      title: 'Work Reports',
+      url: '/work-reports',
       icon: FileText,
+    },
+    {
+      title: 'Lab Analyses',
+      url: '/lab-analyses',
+      icon: Microscope,
     },
     {
       title: 'Chemicals',

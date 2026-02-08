@@ -55,11 +55,7 @@ async function main() {
   // 2. Seed Default Parameters
   // We check if any parameters exist to avoid duplicates or re-seeding if data is there
   try {
-    const parameterCount = await prisma.parameter.count();
-    if (parameterCount === 0) {
-      console.log('Seeding default parameters...');
-
-      const parameters = [
+    const parameters = [
         {
           name: 'Temp In',
           variableName: 'temp_in_cond',
@@ -204,6 +200,45 @@ async function main() {
           isActive: true,
         },
         {
+          name: 'P. Alkalinity',
+          variableName: 'p_alkalinity_ct',
+          category: ParameterCategory.COOLING_WATER_QUALITY,
+          valueType: ValueType.NUMBER,
+          unit: 'ppm CaCO3',
+          minValue: null,
+          maxValue: null,
+          rawWaterMinValue: null,
+          rawWaterMaxValue: null,
+          displayOrder: 1,
+          isActive: true,
+        },
+        {
+          name: 'M. Alkalinity',
+          variableName: 'm_alkalinity_ct',
+          category: ParameterCategory.COOLING_WATER_QUALITY,
+          valueType: ValueType.NUMBER,
+          unit: 'ppm CaCO3',
+          minValue: null,
+          maxValue: null,
+          rawWaterMinValue: null,
+          rawWaterMaxValue: null,
+          displayOrder: 2,
+          isActive: true,
+        },
+        {
+          name: 'Total Hardness',
+          variableName: 'total_hardness_ct',
+          category: ParameterCategory.COOLING_WATER_QUALITY,
+          valueType: ValueType.NUMBER,
+          unit: 'ppm CaCO3',
+          minValue: null,
+          maxValue: null,
+          rawWaterMinValue: null,
+          rawWaterMaxValue: null,
+          displayOrder: 3,
+          isActive: true,
+        },
+        {
           name: 'TDS',
           variableName: 'tds_ct',
           category: ParameterCategory.COOLING_WATER_QUALITY,
@@ -213,7 +248,7 @@ async function main() {
           maxValue: null,
           rawWaterMinValue: null,
           rawWaterMaxValue: null,
-          displayOrder: 0,
+          displayOrder: 5,
           isActive: true,
         },
         {
@@ -226,7 +261,46 @@ async function main() {
           maxValue: null,
           rawWaterMinValue: null,
           rawWaterMaxValue: null,
-          displayOrder: 0,
+          displayOrder: 4,
+          isActive: true,
+        },
+        {
+          name: 'Chloride',
+          variableName: 'chloride_ct',
+          category: ParameterCategory.COOLING_WATER_QUALITY,
+          valueType: ValueType.NUMBER,
+          unit: 'ppm Cl',
+          minValue: null,
+          maxValue: null,
+          rawWaterMinValue: null,
+          rawWaterMaxValue: null,
+          displayOrder: 6,
+          isActive: true,
+        },
+        {
+          name: 'Iron (Fe)',
+          variableName: 'iron_fe_ct',
+          category: ParameterCategory.COOLING_WATER_QUALITY,
+          valueType: ValueType.NUMBER,
+          unit: 'ppm Fe',
+          minValue: null,
+          maxValue: null,
+          rawWaterMinValue: null,
+          rawWaterMaxValue: null,
+          displayOrder: 7,
+          isActive: true,
+        },
+        {
+          name: 'Nitrite (NO2)',
+          variableName: 'nitrite_no2_ct',
+          category: ParameterCategory.LAB_ANALYSIS,
+          valueType: ValueType.NUMBER,
+          unit: 'ppm',
+          minValue: null,
+          maxValue: null,
+          rawWaterMinValue: null,
+          rawWaterMaxValue: null,
+          displayOrder: 8,
           isActive: true,
         },
         {
@@ -239,7 +313,7 @@ async function main() {
           maxValue: null,
           rawWaterMinValue: null,
           rawWaterMaxValue: null,
-          displayOrder: 0,
+          displayOrder: 9,
           isActive: true,
         },
         {
@@ -374,14 +448,32 @@ async function main() {
         },
       ];
 
-      for (const param of parameters) {
-        await prisma.parameter.create({
-          data: param,
-        });
-      }
-      console.log(`Seeded ${parameters.length} parameters.`);
+    const existing = await prisma.parameter.findMany({
+      where: { variableName: { in: parameters.map(p => p.variableName) } },
+      select: { variableName: true },
+    });
+    const existingVariableNames = new Set(existing.map(p => p.variableName));
+
+    const missing = parameters.filter(p => !existingVariableNames.has(p.variableName));
+    for (const param of missing) {
+      await prisma.parameter.create({ data: param });
+    }
+
+    if (missing.length > 0) {
+      console.log(`Seeded ${missing.length} parameters.`);
     } else {
       console.log('Parameters already exist. Skipping parameter seeding.');
+    }
+
+    // Fix: Move Nitrite to LAB_ANALYSIS
+    try {
+      await prisma.parameter.update({
+        where: { variableName: 'nitrite_no2_ct' },
+        data: { category: ParameterCategory.LAB_ANALYSIS },
+      });
+      console.log('Updated Nitrite (NO2) category to LAB_ANALYSIS');
+    } catch (e) {
+      // Ignore if not found
     }
   } catch (error) {
     console.error('Error seeding parameters:', error);

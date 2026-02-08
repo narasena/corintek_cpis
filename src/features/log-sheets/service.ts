@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { ParameterCategory } from '@/generated/prisma/client';
 import type { IParameter } from '@/features/parameters/types';
 import type { IMachine } from '@/features/machines/types';
 import type { TChemicalUsage } from '@/@types/chemical.type';
@@ -256,6 +257,9 @@ export async function getLogSheetDetail(
     where: {
       deletedAt: null,
       isActive: true,
+      category: {
+        not: ParameterCategory.LAB_ANALYSIS,
+      },
     },
     select: {
       id: true,

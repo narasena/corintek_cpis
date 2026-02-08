@@ -44,6 +44,7 @@ const CATEGORIES: { value: string; label: string }[] = [
   { value: 'GENERAL_CONDITION', label: 'General' },
   { value: 'JOB_DESCRIPTION', label: 'Job Desc' },
   { value: 'CONSUMPTION', label: 'Consumption' },
+  { value: 'LAB_ANALYSIS', label: 'Lab Analysis' },
 ];
 
 export function ProjectParameterOverridesDialog({

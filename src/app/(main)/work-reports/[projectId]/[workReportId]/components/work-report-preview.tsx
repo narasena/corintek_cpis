@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { WorkReportHeader } from './work-report-header';
-import { WorkReportPhotoType } from '@/generated/prisma/client';
+import { WorkReportPhotoType } from '@/generated/prisma/enums';
 import Image from 'next/image';
 
 interface WorkReportPreviewProps {

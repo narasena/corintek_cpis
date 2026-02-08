@@ -12,6 +12,7 @@ export const ParameterCategoryEnum = z.enum([
   'GENERAL_CONDITION',
   'JOB_DESCRIPTION',
   'CONSUMPTION',
+  'LAB_ANALYSIS',
 ]);
 
 export type TValueType = z.infer<typeof ValueTypeEnum>;

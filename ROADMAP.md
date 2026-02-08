@@ -107,11 +107,11 @@ These tasks are absolutely critical for the system to be usable in production.
 **Estimated Prompts:** 2
 **Tasks:**
 
-- [ ] Create `LabAnalysis` schema
-- [ ] Create Manual Entry Form
+- [x] Create `LabAnalysis` schema
+- [x] Create Manual Entry Form
   - Fields: `Attention`, `Cc`, `Customer`, `Address`, `Parameter`, `Test Result`
-- [ ] Link to Project/Client
-- [ ] List View per Project
+- [x] Link to Project/Client
+- [x] List View per Project
 
 #### 2.4 Log Sheet Completions
 

@@ -17,6 +17,7 @@ enum ParameterCategory {
   GENERAL_CONDITION
   JOB_DESCRIPTION
   CONSUMPTION
+  LAB_ANALYSIS
 }
 
 model Parameter {
@@ -39,6 +40,7 @@ model Parameter {
   displayOrder Int     @default(0)
   isActive     Boolean @default(true)
   logSheetEntries LogSheetEntry[]
+  labAnalysisEntries LabAnalysisEntry[]
   projectOverrides ProjectParameterOverride[]
 
   createdAt DateTime  @default(now())

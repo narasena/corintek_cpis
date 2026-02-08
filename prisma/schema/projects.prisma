@@ -20,6 +20,7 @@ model Project {
   machines    Machine[]
   logSheets   LogSheet[]
   workReports WorkReport[]
+  labAnalyses LabAnalysis[]
   parameterOverrides ProjectParameterOverride[]
   
   createdAt   DateTime  @default(now())

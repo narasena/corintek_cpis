@@ -19,6 +19,7 @@ const categoryLabels: Record<string, string> = {
   GENERAL_CONDITION: 'Kondisi Umum',
   JOB_DESCRIPTION: 'Deskripsi Pekerjaan',
   CONSUMPTION: 'Konsumsi',
+  LAB_ANALYSIS: 'Lab Analysis',
 };
 
 const valueTypeLabels: Record<string, string> = {
