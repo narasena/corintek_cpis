@@ -1,0 +1,38 @@
+// =============================================================================
+// Summary Report Domain - MVP Schema
+// =============================================================================
+
+model SummaryReport {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  
+  // Period (Month/Year) - stored as first day of month
+  period      DateTime
+  
+  // PDF Uploads (Stored in R2, just URLs here)
+  dataTemuanUrl     String?
+  dataBlowdownUrl   String?
+  dataSuhuUrl       String?
+  dataSuratJalanUrl String?
+  
+  // Additional notes or config
+  notes       String?
+  includeExecutiveSummary Boolean @default(true)
+  includeLogSheets Boolean @default(true)
+  includeLabAnalysis Boolean @default(true)
+  includeWorkReports Boolean @default(true)
+  includeChemicalReports Boolean @default(true)
+  status      SummaryReportStatus @default(DRAFT)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([projectId, period]) // One report per project per month
+  @@map("summary_reports")
+}
+
+enum SummaryReportStatus {
+  DRAFT
+  FINAL
+}

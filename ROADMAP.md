@@ -24,7 +24,6 @@
 ### Out of Scope (Defer)
 
 - Dashboard complex charts (Project list only for MVP).
-- Automated Summary Report generation (PDFs).
 - Attendance module (use existing HR tools).
 - Digital signatures (use paper print + sign for now).
 - Notifications system (complex alerts).
@@ -75,7 +74,26 @@
 
 These tasks are absolutely critical for the system to be usable in production.
 
-#### 2.1 [NEW] Ops Readiness (Hidden Agenda)
+#### 2.1 [NEW] Summary Report (Laporan Bulanan) — MAIN FEATURE
+
+**Scope ID:** `SR-01`
+**Why:** Client requirement for monthly project sign-off.
+**Strategy:** Browser-Native Print (HTML -> PDF).
+**Tasks:**
+
+- [x] Create `SummaryReport` schema (for attachments like Surat Jalan, Data Temuan).
+- [x] Add section toggles for monthly report composition.
+- [x] Implement Selection Page (Project + Period + Sections).
+- [ ] Implement Print View Layout (A4 optimized).
+  - [ ] Cover Page & Table of Content.
+  - [ ] Bab I: Executive Summary (Auto-generated stats).
+  - [ ] Bab II: Log Sheets (Grid/List view of approved logs).
+  - [ ] Bab III: Lab Analysis (Table of results).
+  - [ ] Bab IV: Work Reports (List of ad-hoc work).
+  - [ ] Bab V: Chemical Reports (Usage summary).
+- [ ] Integrate PDF Uploads for Appendices.
+
+#### 2.2 [NEW] Ops Readiness (Hidden Agenda)
 
 **Scope ID:** `OPS-01` (Database Seeding) ✅
 **Why:** Cannot deploy without initial Admin user & default categories.
@@ -86,7 +104,7 @@ These tasks are absolutely critical for the system to be usable in production.
 - [x] Seed default Parameter Categories
 - [x] Seed default Chemical Categories
 
-#### 2.2 [NEW] Work Reports (Log Sheet Request)
+#### 2.3 [NEW] Work Reports (Log Sheet Request)
 
 **Scope ID:** `WR-01`
 **Why:** Technicians need to report ad-hoc repairs/requests separate from daily checklists.
@@ -100,7 +118,7 @@ These tasks are absolutely critical for the system to be usable in production.
 - [x] Integrate Photo Attachments (reuse `LogSheetPhoto` logic)
 - [x] Create Print Preview page
 
-#### 2.3 [NEW] Lab Analysis (Hasil Analisa Lab)
+#### 2.4 [NEW] Lab Analysis (Hasil Analisa Lab)
 
 **Scope ID:** `LB-01`
 **Why:** Critical for tracking water quality results from lab.
@@ -113,7 +131,7 @@ These tasks are absolutely critical for the system to be usable in production.
 - [x] Link to Project/Client
 - [x] List View per Project
 
-#### 2.4 Log Sheet Completions
+#### 2.5 Log Sheet Completions
 
 **Scope ID:** `LS-PHOTO` (Photo Attachments)
 **Status:** ✅ Mostly Done

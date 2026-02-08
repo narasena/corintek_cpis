@@ -21,6 +21,7 @@ model Project {
   logSheets   LogSheet[]
   workReports WorkReport[]
   labAnalyses LabAnalysis[]
+  summaryReports SummaryReport[]
   parameterOverrides ProjectParameterOverride[]
   
   createdAt   DateTime  @default(now())
