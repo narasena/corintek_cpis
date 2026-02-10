@@ -108,11 +108,10 @@ export function WorkReportForm({
     defaultValues: initialData
       ? {
           projectId,
-          id: initialData.id,
           date: new Date(initialData.date),
-          timeStart: initialData.timeStart,
-          timeEnd: initialData.timeEnd,
-          zone: initialData.zone,
+          timeStart: initialData.timeStart ?? undefined,
+          timeEnd: initialData.timeEnd ?? undefined,
+          zone: initialData.zone ?? undefined,
           situation: initialData.situation,
           workDone: initialData.workDone,
           workResult: initialData.workResult,

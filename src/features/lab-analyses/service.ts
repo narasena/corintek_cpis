@@ -57,14 +57,14 @@ export async function getCoolingWaterQualityParameters() {
 }
 
 function normalizeHeaderStrings<T extends Record<string, unknown>>(data: T) {
-  const next = { ...data };
+  const next: any = { ...data };
   for (const key of Object.keys(next)) {
     const value = next[key];
     if (typeof value === 'string' && value.trim() === '') {
-      next[key] = null as unknown as T[Extract<keyof T, string>];
+      next[key] = null;
     }
   }
-  return next;
+  return next as T;
 }
 
 function hasEntryValue(entry: {

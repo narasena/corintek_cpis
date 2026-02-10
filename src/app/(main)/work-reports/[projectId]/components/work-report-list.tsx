@@ -25,6 +25,7 @@ export function WorkReportList({ projectId, data }: WorkReportListProps) {
       <DataTable columns={columns} data={data} />
 
       <CrudDialog
+        mode="edit"
         open={!!editingRow}
         onOpenChange={open => !open && setEditingRow(null)}
         title="Ubah Laporan Kerja"

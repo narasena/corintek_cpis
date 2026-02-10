@@ -2,13 +2,13 @@
 
 import { CrudDialog } from '@/components/crud-dialog';
 import { WorkReportForm } from '@/features/work-reports/components/work-report-form';
-import { CreateWorkReportInput } from '@/features/work-reports/types';
+import { WorkReportRow } from '@/features/work-reports/types';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
 interface IWorkReportDialogProps {
   projectId: string;
-  initialData?: CreateWorkReportInput & { id?: string };
+  initialData?: WorkReportRow;
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;

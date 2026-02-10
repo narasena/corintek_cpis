@@ -3,14 +3,14 @@ import { WorkReportPhotoType } from '@/generated/prisma/enums';
 
 export const WorkReportSchema = z.object({
   projectId: z.string().uuid(),
-  date: z
-    .string()
-    .or(z.date())
-    .transform(val => new Date(val)),
+  date: z.date(),
   situation: z.string().min(1, 'Situasi harus diisi'),
   workDone: z.string().min(1, 'Pekerjaan harus diisi'),
   workResult: z.string().min(1, 'Hasil pekerjaan harus diisi'),
-  machineIds: z.array(z.string()).optional().default([]),
+  timeStart: z.string().optional(),
+  timeEnd: z.string().optional(),
+  zone: z.string().optional(),
+  machineIds: z.array(z.string()),
 });
 
 export const UpdateWorkReportSchema = WorkReportSchema.extend({

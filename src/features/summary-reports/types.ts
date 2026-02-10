@@ -1,4 +1,4 @@
-import { SummaryReport, SummaryReportStatus } from '@prisma/client';
+import { SummaryReport, SummaryReportStatus } from '@/generated/prisma/client';
 
 export type { SummaryReport, SummaryReportStatus };
 

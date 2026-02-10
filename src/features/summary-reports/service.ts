@@ -3,7 +3,7 @@ import type {
   CreateSummaryReportInput,
   UpdateSummaryReportInput,
 } from './types';
-import { SummaryReport } from '@prisma/client';
+import { SummaryReport } from '@/generated/prisma/client';
 
 export async function getSummaryReports(projectId: string) {
   return await prisma.summaryReport.findMany({

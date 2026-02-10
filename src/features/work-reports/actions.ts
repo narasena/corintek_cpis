@@ -83,7 +83,7 @@ export async function createWorkReportAction(formData: FormData) {
   try {
     const rawData = {
       projectId: formData.get('projectId'),
-      date: formData.get('date'),
+      date: new Date(formData.get('date') as string),
       situation: formData.get('situation'),
       workDone: formData.get('workDone'),
       workResult: formData.get('workResult'),
@@ -146,7 +146,7 @@ export async function createWorkReportAction(formData: FormData) {
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Create:', error);
     if (error instanceof z.ZodError) {
-      return { success: false, message: error.errors[0].message };
+      return { success: false, message: (error as any).errors[0].message };
     }
     return {
       success: false,
@@ -161,7 +161,7 @@ export async function updateWorkReportAction(formData: FormData) {
     const rawData = {
       id: formData.get('id'),
       projectId: formData.get('projectId'),
-      date: formData.get('date'),
+      date: new Date(formData.get('date') as string),
       timeStart: formData.get('timeStart'),
       timeEnd: formData.get('timeEnd'),
       zone: formData.get('zone'),
@@ -186,7 +186,7 @@ export async function updateWorkReportAction(formData: FormData) {
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Update:', error);
     if (error instanceof z.ZodError) {
-      return { success: false, message: error.errors[0].message };
+      return { success: false, message: (error as any).errors[0].message };
     }
     return { success: false, message: 'Failed to update work report' };
   }

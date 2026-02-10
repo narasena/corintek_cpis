@@ -37,11 +37,15 @@ export async function createLabAnalysisAction(input: unknown) {
   } catch (error) {
     console.error('[CPIS-ERROR] LabAnalyses.Create:', error);
     if (error instanceof z.ZodError) {
-      return { success: false, message: error.errors[0]?.message ?? 'Validasi gagal' };
+      return {
+        success: false,
+        message: (error as any).errors[0]?.message ?? 'Validasi gagal',
+      };
     }
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Gagal membuat lab analysis',
+      message:
+        error instanceof Error ? error.message : 'Gagal membuat lab analysis',
     };
   }
 }
@@ -57,12 +61,17 @@ export async function updateLabAnalysisAction(input: unknown) {
   } catch (error) {
     console.error('[CPIS-ERROR] LabAnalyses.Update:', error);
     if (error instanceof z.ZodError) {
-      return { success: false, message: error.errors[0]?.message ?? 'Validasi gagal' };
+      return {
+        success: false,
+        message: (error as any).errors[0]?.message ?? 'Validasi gagal',
+      };
     }
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Gagal memperbarui lab analysis',
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Gagal memperbarui lab analysis',
     };
   }
 }
-
