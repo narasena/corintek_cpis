@@ -3,7 +3,7 @@ import type {
   CreateSummaryReportInput,
   UpdateSummaryReportInput,
 } from './types';
-import { SummaryReport } from '@/generated/prisma/client';
+import { SummaryReport, ParameterCategory } from '@/generated/prisma/client';
 
 export async function getSummaryReports(projectId: string) {
   return await prisma.summaryReport.findMany({
@@ -73,11 +73,91 @@ export async function getMonthlyLogSheets(projectId: string, period: Date) {
     },
     include: {
       project: { include: { client: true } },
-      photos: true,
-      chemicalUsages: { include: { chemical: true } },
+      photos: {
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'asc' },
+      },
+      chemicalUsages: {
+        where: { deletedAt: null },
+        include: { chemical: true },
+        orderBy: { chemical: { name: 'asc' } },
+      },
+      entries: {
+        where: { deletedAt: null },
+        include: { parameter: true, machine: true },
+        orderBy: { createdAt: 'asc' },
+      },
+      replacedBy: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
     },
     orderBy: { date: 'asc' },
   });
+}
+
+export async function getProjectLogSheetConfig(projectId: string) {
+  const machines = await prisma.machine.findMany({
+    where: { projectId, deletedAt: null },
+    select: { id: true, unitNumber: true, type: true },
+    orderBy: [{ type: 'asc' }, { unitNumber: 'asc' }],
+  });
+
+  const parameters = await prisma.parameter.findMany({
+    where: {
+      deletedAt: null,
+      isActive: true,
+      category: {
+        not: ParameterCategory.LAB_ANALYSIS,
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      variableName: true,
+      category: true,
+      valueType: true,
+      unit: true,
+      minValue: true,
+      maxValue: true,
+      rawWaterMinValue: true,
+      rawWaterMaxValue: true,
+      displayOrder: true,
+    },
+    orderBy: [
+      { category: 'asc' },
+      { displayOrder: 'asc' },
+      { createdAt: 'asc' },
+    ],
+  });
+
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: { parameterOverrides: true },
+  });
+
+  const overrides = project?.parameterOverrides || [];
+  const effectiveParameters = parameters.map(p => {
+    const override = overrides.find(o => o.parameterId === p.id);
+    if (!override) return p;
+    return {
+      ...p,
+      minValue: override.minValue ?? p.minValue,
+      maxValue: override.maxValue ?? p.maxValue,
+      rawWaterMinValue: override.rawWaterMinValue ?? p.rawWaterMinValue,
+      rawWaterMaxValue: override.rawWaterMaxValue ?? p.rawWaterMaxValue,
+    };
+  });
+
+  return {
+    machines: {
+      chillers: machines.filter(m => m.type === 'CHILLER'),
+      coolingTowers: machines.filter(m => m.type === 'COOLING_TOWER'),
+    },
+    parameters: effectiveParameters,
+  };
 }
 
 export async function getMonthlyWorkReports(projectId: string, period: Date) {

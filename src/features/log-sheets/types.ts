@@ -127,5 +127,45 @@ export interface ILogSheetPhoto {
   caption: string | null;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt: Date | null;
 }
+
+export type TPreviewParameter = {
+  id: string;
+  name: string;
+  variableName: string;
+  category:
+    | 'UNIT_CONDENSOR'
+    | 'UNIT_EVAPORATOR'
+    | 'COOLING_WATER_QUALITY'
+    | 'GENERAL_CONDITION'
+    | 'JOB_DESCRIPTION'
+    | 'CONSUMPTION';
+  valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
+  unit: string | null;
+  minValue: number | null;
+  maxValue: number | null;
+  rawWaterMinValue?: number | null;
+  rawWaterMaxValue?: number | null;
+  displayOrder: number;
+};
+
+export type TPreviewMachine = {
+  id: string;
+  unitNumber: number;
+  type: 'CHILLER' | 'COOLING_TOWER';
+};
+
+export type TLogSheetPhoto = {
+  id: string;
+  type: 'BEFORE' | 'AFTER';
+  url: string;
+  caption: string | null;
+};
+
+export type TEntryState = {
+  valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
+  numericValue?: number | null;
+  boolValue?: boolean | null;
+  textValue?: string | null;
+  fileUrl?: string | null;
+};

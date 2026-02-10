@@ -12,7 +12,14 @@ import {
   getMonthlyLabAnalyses,
   getMonthlyLogSheets,
   getMonthlyWorkReports,
+  getProjectLogSheetConfig,
 } from '@/features/summary-reports/service';
+import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-preview';
+import { makeEntryKey } from '@/features/log-sheets/utils';
+import type {
+  TLogSheetEntryRole,
+  TPreviewParameter,
+} from '@/features/log-sheets/types';
 
 interface PageProps {
   params: Promise<{ projectId: string; period: string }>;
@@ -23,7 +30,8 @@ function parsePeriod(period: string) {
   const year = Number(yearStr);
   const month = Number(monthStr);
   if (!year || !month || month < 1 || month > 12) return null;
-  return new Date(year, month - 1, 1);
+  // Use UTC to avoid timezone shifts when calculating ranges in service
+  return new Date(Date.UTC(year, month - 1, 1));
 }
 
 export default async function SummaryReportPrintPage({ params }: PageProps) {
@@ -31,14 +39,21 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
   const periodDate = parsePeriod(period);
   if (!periodDate) return notFound();
 
-  const [project, summaryReport, logSheets, labAnalyses, workReports] =
-    await Promise.all([
-      getProjectById(projectId),
-      ensureSummaryReport(projectId, periodDate),
-      getMonthlyLogSheets(projectId, periodDate),
-      getMonthlyLabAnalyses(projectId, periodDate),
-      getMonthlyWorkReports(projectId, periodDate),
-    ]);
+  const [
+    project,
+    summaryReport,
+    logSheets,
+    labAnalyses,
+    workReports,
+    logSheetConfig,
+  ] = await Promise.all([
+    getProjectById(projectId),
+    ensureSummaryReport(projectId, periodDate),
+    getMonthlyLogSheets(projectId, periodDate),
+    getMonthlyLabAnalyses(projectId, periodDate),
+    getMonthlyWorkReports(projectId, periodDate),
+    getProjectLogSheetConfig(projectId),
+  ]);
 
   if (!project || !summaryReport) return notFound();
 
@@ -143,34 +158,71 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
         )}
 
         {summaryReport.includeLogSheets && (
-          <div className="break-before-page min-h-[297mm] p-8 print:p-0">
-            <h2 className="text-xl font-bold uppercase mb-4">
-              Bab II — Log Sheet Reports
-            </h2>
-            {logSheets.length === 0 ? (
-              <div className="text-sm text-gray-500">
-                Tidak ada log sheet pada periode ini.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {logSheets.map(ls => (
-                  <div key={ls.id} className="border p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="font-semibold">
-                        {format(ls.date, 'dd MMM yyyy', { locale: idLocale })}
-                      </div>
-                      <div className="text-xs uppercase">{ls.status}</div>
-                    </div>
-                    {ls.notes && (
-                      <div className="text-sm text-gray-600 mt-2">
-                        {ls.notes}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <>
+            <div className="break-before-page min-h-[297mm] p-8 print:p-0 flex flex-col justify-center text-center">
+              <h2 className="text-3xl font-bold uppercase mb-4">
+                Bab II — Log Sheet Reports
+              </h2>
+              {logSheets.length === 0 && (
+                <div className="text-sm text-gray-500">
+                  Tidak ada log sheet pada periode ini.
+                </div>
+              )}
+            </div>
+
+            {logSheets.map(ls => {
+              const valuesByKey: Record<string, TEntryState> = {};
+              ls.entries.forEach(entry => {
+                const key = makeEntryKey(
+                  entry.parameterId,
+                  entry.machineId,
+                  entry.role as TLogSheetEntryRole
+                );
+                valuesByKey[key] = {
+                  valueType: entry.parameter.valueType,
+                  numericValue: entry.numericValue,
+                  boolValue: entry.boolValue,
+                  textValue: entry.textValue,
+                  fileUrl: entry.fileUrl,
+                };
+              });
+
+              return (
+                <div
+                  key={ls.id}
+                  className="break-before-page min-h-[297mm] print:p-0"
+                >
+                  <LogSheetPreview
+                    customerName={project.client?.name ?? '-'}
+                    date={ls.date}
+                    byName="Operator" // This should probably be fetched or hardcoded if unknown
+                    replacedByName={
+                      ls.replacedBy
+                        ? `${ls.replacedBy.firstName} ${ls.replacedBy.lastName}`
+                        : null
+                    }
+                    notes={ls.notes}
+                    machines={logSheetConfig.machines}
+                    parameters={
+                      logSheetConfig.parameters as TPreviewParameter[]
+                    }
+                    valuesByKey={valuesByKey}
+                    photos={ls.photos.map(p => ({
+                      id: p.id,
+                      type: p.type as 'BEFORE' | 'AFTER',
+                      url: p.url,
+                      caption: p.caption,
+                    }))}
+                    chemicalUsages={ls.chemicalUsages.map(u => ({
+                      chemicalName: u.chemical.name,
+                      amount: u.amount ?? 0,
+                      unit: u.chemical.unit ?? '',
+                    }))}
+                  />
+                </div>
+              );
+            })}
+          </>
         )}
 
         {summaryReport.includeLabAnalysis && (
@@ -221,9 +273,7 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
                       <div className="font-semibold">
                         {format(wr.date, 'dd MMM yyyy', { locale: idLocale })}
                       </div>
-                      <div className="text-xs uppercase">
-                        {wr.zone ?? '-'}
-                      </div>
+                      <div className="text-xs uppercase">{wr.zone ?? '-'}</div>
                     </div>
                     <div className="text-sm mt-2">{wr.situation}</div>
                     <div className="text-sm text-gray-600 mt-1">

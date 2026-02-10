@@ -84,10 +84,10 @@ These tasks are absolutely critical for the system to be usable in production.
 - [x] Create `SummaryReport` schema (for attachments like Surat Jalan, Data Temuan).
 - [x] Add section toggles for monthly report composition.
 - [x] Implement Selection Page (Project + Period + Sections).
-- [ ] Implement Print View Layout (A4 optimized).
-  - [ ] Cover Page & Table of Content.
-  - [ ] Bab I: Executive Summary (Auto-generated stats).
-  - [ ] Bab II: Log Sheets (Grid/List view of approved logs).
+- [x] Implement Print View Layout (A4 optimized).
+  - [x] Cover Page & Table of Content.
+  - [x] Bab I: Executive Summary (Auto-generated stats).
+  - [x] Bab II: Log Sheets (Grid/List view of approved logs).
   - [ ] Bab III: Lab Analysis (Table of results).
   - [ ] Bab IV: Work Reports (List of ad-hoc work).
   - [ ] Bab V: Chemical Reports (Usage summary).
