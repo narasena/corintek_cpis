@@ -149,7 +149,7 @@ export async function createWorkReportAction(formData: FormData) {
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Create:', error);
     if (error instanceof z.ZodError) {
-      const firstError = error.errors?.[0];
+      const firstError = (error as any).errors?.[0];
       return {
         success: false,
         message: firstError?.message || 'Validation error',
@@ -193,7 +193,7 @@ export async function updateWorkReportAction(formData: FormData) {
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Update:', error);
     if (error instanceof z.ZodError) {
-      const firstError = error.errors?.[0];
+      const firstError = (error as any).errors?.[0];
       return {
         success: false,
         message: firstError?.message || 'Validation error',

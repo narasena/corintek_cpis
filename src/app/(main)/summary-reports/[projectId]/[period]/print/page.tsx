@@ -19,6 +19,7 @@ import { makeEntryKey } from '@/features/log-sheets/utils';
 import type {
   TLogSheetEntryRole,
   TPreviewParameter,
+  TEntryState,
 } from '@/features/log-sheets/types';
 import { WorkReportPreview } from '@/features/work-reports/components/work-report-preview';
 import { WorkReportPhotoType } from '@/generated/prisma/enums';
