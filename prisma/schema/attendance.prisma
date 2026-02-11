@@ -1,0 +1,24 @@
+model Attendance {
+  id               String           @id @default(uuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+  dateLocal        String
+  clockInAt        DateTime
+  clockOutAt       DateTime?
+  clockInPhotoUrl  String
+  clockOutPhotoUrl String?
+  totalHours       Float?
+  status           AttendanceStatus @default(OPEN)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  deletedAt        DateTime?
+
+  @@unique([userId, dateLocal])
+  @@index([dateLocal])
+  @@map("attendances")
+}
+
+enum AttendanceStatus {
+  OPEN
+  CLOSED
+}
