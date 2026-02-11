@@ -4,7 +4,7 @@ import type {
   CreateSummaryReportInput,
   UpdateSummaryReportInput,
 } from './types';
-import { SummaryReport, ParameterCategory } from '@/generated/prisma/client';
+import { ParameterCategory } from '@/generated/prisma/client';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 
 export async function getSummaryReports(projectId: string) {
@@ -28,6 +28,17 @@ export async function getSummaryReportByPeriod(
   });
 }
 
+export async function getSummaryReportProjectId(
+  id: string
+): Promise<string | null> {
+  const row = await prisma.summaryReport.findUnique({
+    where: { id },
+    select: { projectId: true },
+  });
+
+  return row?.projectId ?? null;
+}
+
 export async function createSummaryReport(
   actor: IJwtPayload,
   data: CreateSummaryReportInput
@@ -49,7 +60,11 @@ export async function updateSummaryReport(
 ) {
   ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'update');
 
-  if (data.status === 'FINAL' && actor.role !== 'REPORTING' && actor.role !== 'ADMIN') {
+  if (
+    data.status === 'FINAL' &&
+    actor.role !== 'REPORTING' &&
+    actor.role !== 'ADMIN'
+  ) {
     throw new Error('Unauthorized');
   }
 

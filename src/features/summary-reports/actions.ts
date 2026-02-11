@@ -2,9 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { getCurrentUser } from '@/lib/auth-helpers';
+import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import * as service from './service';
+import * as projectService from '@/features/projects/service';
+import type { IJwtPayload } from '@/@types/auth.type';
 
 const booleanField = z.preprocess(value => {
   if (value === 'true' || value === 'on') return true;
@@ -28,8 +30,13 @@ const updateSchema = z.object({
 });
 
 export async function updateSummaryReportAction(formData: FormData) {
-  const actor = await getCurrentUser();
-  if (!actor) return { error: 'Unauthorized' };
+  const actorDetails = await getCurrentUserDetails();
+  if (!actorDetails) return { error: 'Unauthorized' };
+  const actor: IJwtPayload = {
+    id: actorDetails.id,
+    email: actorDetails.email,
+    role: actorDetails.role,
+  };
 
   const data = Object.fromEntries(formData);
   const parsed = updateSchema.safeParse(data);
@@ -42,6 +49,9 @@ export async function updateSummaryReportAction(formData: FormData) {
   }
 
   try {
+    const projectId = await service.getSummaryReportProjectId(parsed.data.id);
+    if (!projectId) return { error: 'Not found' };
+    await projectService.assertCanAccessProject(actor, projectId);
     await service.updateSummaryReport(actor, parsed.data);
   } catch (error) {
     console.error('[CPIS-ERROR] SummaryReport.Update:', error);
@@ -134,8 +144,13 @@ async function uploadSummaryReportAttachment(
 }
 
 export async function createSummaryReportAction(formData: FormData) {
-  const actor = await getCurrentUser();
-  if (!actor) return { error: 'Unauthorized' };
+  const actorDetails = await getCurrentUserDetails();
+  if (!actorDetails) return { error: 'Unauthorized' };
+  const actor: IJwtPayload = {
+    id: actorDetails.id,
+    email: actorDetails.email,
+    role: actorDetails.role,
+  };
 
   const data = Object.fromEntries(formData);
   const parsed = createSchema.safeParse(data);
@@ -149,6 +164,7 @@ export async function createSummaryReportAction(formData: FormData) {
 
   try {
     ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'create');
+    await projectService.assertCanAccessProject(actor, parsed.data.projectId);
     const existing = await service.getSummaryReportByPeriod(
       parsed.data.projectId,
       parsed.data.period
@@ -181,8 +197,13 @@ export async function getSummaryReportByPeriodAction(
   projectId: string,
   period: Date
 ) {
-  const actor = await getCurrentUser();
-  if (!actor) return { error: 'Unauthorized' };
+  const actorDetails = await getCurrentUserDetails();
+  if (!actorDetails) return { error: 'Unauthorized' };
+  const actor: IJwtPayload = {
+    id: actorDetails.id,
+    email: actorDetails.email,
+    role: actorDetails.role,
+  };
 
   const parsed = getByPeriodSchema.safeParse({
     projectId,
@@ -198,6 +219,7 @@ export async function getSummaryReportByPeriodAction(
 
   try {
     ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'read');
+    await projectService.assertCanAccessProject(actor, parsed.data.projectId);
     const result = await service.getSummaryReportByPeriod(
       parsed.data.projectId,
       parsed.data.period
@@ -210,8 +232,13 @@ export async function getSummaryReportByPeriodAction(
 }
 
 export async function uploadSummaryReportAttachmentsAction(formData: FormData) {
-  const actor = await getCurrentUser();
-  if (!actor) return { error: 'Unauthorized' };
+  const actorDetails = await getCurrentUserDetails();
+  if (!actorDetails) return { error: 'Unauthorized' };
+  const actor: IJwtPayload = {
+    id: actorDetails.id,
+    email: actorDetails.email,
+    role: actorDetails.role,
+  };
 
   const data = Object.fromEntries(formData);
   const parsed = attachmentSchema.safeParse(data);
@@ -226,6 +253,8 @@ export async function uploadSummaryReportAttachmentsAction(formData: FormData) {
   const periodLabel = formData.get('period') as string;
 
   try {
+    ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'update');
+    await projectService.assertCanAccessProject(actor, parsed.data.projectId);
     const report = await service.ensureSummaryReport(
       actor,
       parsed.data.projectId,

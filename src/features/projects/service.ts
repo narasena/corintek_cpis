@@ -1,5 +1,10 @@
 import { prisma } from '@/lib/prisma';
-import { TCreateProject, TUpdateProject, IProject } from './types';
+import {
+  TCreateProject,
+  TUpdateProject,
+  IProject,
+  TProjectAssignmentInput,
+} from './types';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 
@@ -10,10 +15,29 @@ import { ensureAccess, RbacResource } from '@/lib/rbac';
 /**
  * Get all active projects with client details
  */
-export async function getProjects(): Promise<IProject[]> {
+export async function getProjects(actor: IJwtPayload): Promise<IProject[]> {
+  ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
+
+  const isScopedRole =
+    actor.role === 'SUPERVISOR' ||
+    actor.role === 'TECHNICIAN' ||
+    actor.role === 'CLIENT_SUPERVISOR' ||
+    actor.role === 'CLIENT_TECHNICIAN';
+
   const projects = await prisma.project.findMany({
     where: {
       deletedAt: null,
+      ...(isScopedRole
+        ? {
+            status: 'ONGOING',
+            assignments: {
+              some: {
+                userId: actor.id,
+                isActive: true,
+              },
+            },
+          }
+        : {}),
     },
     include: {
       client: {
@@ -51,11 +75,33 @@ export async function getProjects(): Promise<IProject[]> {
 /**
  * Get a single project by ID
  */
-export async function getProjectById(id: string): Promise<IProject | null> {
-  const project = await prisma.project.findUnique({
+export async function getProjectById(
+  actor: IJwtPayload,
+  id: string
+): Promise<IProject | null> {
+  ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
+
+  const isScopedRole =
+    actor.role === 'SUPERVISOR' ||
+    actor.role === 'TECHNICIAN' ||
+    actor.role === 'CLIENT_SUPERVISOR' ||
+    actor.role === 'CLIENT_TECHNICIAN';
+
+  const project = await prisma.project.findFirst({
     where: {
       id,
       deletedAt: null,
+      ...(isScopedRole
+        ? {
+            status: 'ONGOING',
+            assignments: {
+              some: {
+                userId: actor.id,
+                isActive: true,
+              },
+            },
+          }
+        : {}),
     },
     include: {
       client: {
@@ -98,6 +144,174 @@ export async function getProjectById(id: string): Promise<IProject | null> {
   if (!project) return null;
 
   return project as unknown as IProject;
+}
+
+export async function assertCanAccessProject(
+  actor: IJwtPayload,
+  projectId: string
+) {
+  const isScopedRole =
+    actor.role === 'SUPERVISOR' ||
+    actor.role === 'TECHNICIAN' ||
+    actor.role === 'CLIENT_SUPERVISOR' ||
+    actor.role === 'CLIENT_TECHNICIAN';
+
+  if (!isScopedRole) return;
+
+  const project = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      deletedAt: null,
+      status: 'ONGOING',
+      assignments: {
+        some: {
+          userId: actor.id,
+          isActive: true,
+        },
+      },
+    },
+    select: { id: true },
+  });
+
+  if (!project) {
+    throw new Error('Unauthorized');
+  }
+}
+
+export async function getAccessibleProjectIds(
+  actor: IJwtPayload
+): Promise<string[] | null> {
+  const isScopedRole =
+    actor.role === 'SUPERVISOR' ||
+    actor.role === 'TECHNICIAN' ||
+    actor.role === 'CLIENT_SUPERVISOR' ||
+    actor.role === 'CLIENT_TECHNICIAN';
+
+  if (!isScopedRole) return null;
+
+  const rows = await prisma.projectAssignment.findMany({
+    where: {
+      userId: actor.id,
+      isActive: true,
+      project: {
+        deletedAt: null,
+        status: 'ONGOING',
+      },
+    },
+    select: { projectId: true },
+    distinct: ['projectId'],
+  });
+
+  return rows.map(r => r.projectId);
+}
+
+export async function getProjectAssignments(
+  actor: IJwtPayload,
+  projectId: string
+) {
+  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'read');
+
+  return prisma.projectAssignment.findMany({
+    where: {
+      projectId,
+      isActive: true,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          isActive: true,
+          isBlocked: true,
+          deletedAt: true,
+        },
+      },
+    },
+    orderBy: [{ createdAt: 'asc' }],
+  });
+}
+
+export async function setProjectAssignments(
+  actor: IJwtPayload,
+  projectId: string,
+  assignments: TProjectAssignmentInput[]
+) {
+  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'update');
+
+  return prisma.$transaction(async tx => {
+    const existing = await tx.projectAssignment.findMany({
+      where: {
+        projectId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        userId: true,
+        role: true,
+      },
+    });
+
+    const incomingKeys = new Set(assignments.map(a => `${a.userId}:${a.role}`));
+
+    for (const assignment of assignments) {
+      await tx.projectAssignment.upsert({
+        where: {
+          projectId_userId_role: {
+            projectId,
+            userId: assignment.userId,
+            role: assignment.role,
+          },
+        },
+        create: {
+          projectId,
+          userId: assignment.userId,
+          role: assignment.role,
+          isActive: true,
+          startDate: new Date(),
+        },
+        update: {
+          isActive: true,
+          endDate: null,
+        },
+      });
+    }
+
+    const now = new Date();
+    for (const row of existing) {
+      const key = `${row.userId}:${row.role}`;
+      if (incomingKeys.has(key)) continue;
+      await tx.projectAssignment.update({
+        where: { id: row.id },
+        data: {
+          isActive: false,
+          endDate: now,
+        },
+      });
+    }
+
+    return tx.projectAssignment.findMany({
+      where: {
+        projectId,
+        isActive: true,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            isActive: true,
+            isBlocked: true,
+            deletedAt: true,
+          },
+        },
+      },
+      orderBy: [{ createdAt: 'asc' }],
+    });
+  });
 }
 
 /**

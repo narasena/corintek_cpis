@@ -6,10 +6,26 @@ import { WorkReportPhotoType } from '@/generated/prisma/client';
 
 import * as service from './service';
 import { WorkReportSchema, UpdateWorkReportSchema } from './types';
+import { getCurrentUserDetails } from '@/lib/auth-helpers';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
+import * as projectService from '@/features/projects/service';
+import type { IJwtPayload } from '@/@types/auth.type';
 
 export async function getWorkReportsByProjectAction(projectId: string) {
   try {
-    const data = await service.getWorkReportsByProject(projectId);
+    const actorDetails = await getCurrentUserDetails();
+    if (!actorDetails) return { success: false, message: 'Unauthorized' };
+    const actor: IJwtPayload = {
+      id: actorDetails.id,
+      email: actorDetails.email,
+      role: actorDetails.role,
+    };
+
+    ensureAccess(actor.role, RbacResource.WORK_REPORTS, 'read');
+    const validatedProjectId = z.string().uuid().parse(projectId);
+    await projectService.assertCanAccessProject(actor, validatedProjectId);
+
+    const data = await service.getWorkReportsByProject(validatedProjectId);
     return { success: true, data };
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.GetByProject:', error);
@@ -19,8 +35,20 @@ export async function getWorkReportsByProjectAction(projectId: string) {
 
 export async function getWorkReportByIdAction(id: string) {
   try {
-    const data = await service.getWorkReportById(id);
+    const actorDetails = await getCurrentUserDetails();
+    if (!actorDetails) return { success: false, message: 'Unauthorized' };
+    const actor: IJwtPayload = {
+      id: actorDetails.id,
+      email: actorDetails.email,
+      role: actorDetails.role,
+    };
+
+    ensureAccess(actor.role, RbacResource.WORK_REPORTS, 'read');
+    const validatedId = z.string().uuid().parse(id);
+    const data = await service.getWorkReportById(validatedId);
     if (!data) return { success: false, message: 'Not found' };
+
+    await projectService.assertCanAccessProject(actor, data.projectId);
     return { success: true, data };
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.GetById:', error);
@@ -79,8 +107,16 @@ async function uploadToR2(
 }
 
 export async function createWorkReportAction(formData: FormData) {
-  let createdReportId: string | null = null;
   try {
+    const actorDetails = await getCurrentUserDetails();
+    if (!actorDetails) return { success: false, message: 'Unauthorized' };
+    const actor: IJwtPayload = {
+      id: actorDetails.id,
+      email: actorDetails.email,
+      role: actorDetails.role,
+    };
+    ensureAccess(actor.role, RbacResource.WORK_REPORTS, 'create');
+
     const rawData = {
       projectId: formData.get('projectId'),
       date: new Date(formData.get('date') as string),
@@ -94,8 +130,8 @@ export async function createWorkReportAction(formData: FormData) {
     };
 
     const validated = WorkReportSchema.parse(rawData);
+    await projectService.assertCanAccessProject(actor, validated.projectId);
     const report = await service.createWorkReport(validated);
-    createdReportId = report.id;
 
     // Handle Photos Transactionally (Compensating Transaction Pattern)
     const photosBefore = formData.getAll('photos_BEFORE') as File[];
@@ -165,6 +201,15 @@ export async function createWorkReportAction(formData: FormData) {
 
 export async function updateWorkReportAction(formData: FormData) {
   try {
+    const actorDetails = await getCurrentUserDetails();
+    if (!actorDetails) return { success: false, message: 'Unauthorized' };
+    const actor: IJwtPayload = {
+      id: actorDetails.id,
+      email: actorDetails.email,
+      role: actorDetails.role,
+    };
+    ensureAccess(actor.role, RbacResource.WORK_REPORTS, 'update');
+
     const rawData = {
       id: formData.get('id'),
       projectId: formData.get('projectId'),
@@ -179,7 +224,15 @@ export async function updateWorkReportAction(formData: FormData) {
     };
 
     const validated = UpdateWorkReportSchema.parse(rawData);
-    const result = await service.updateWorkReport(validated);
+    const existing = await service.getWorkReportById(validated.id);
+    if (!existing) return { success: false, message: 'Not found' };
+
+    await projectService.assertCanAccessProject(actor, existing.projectId);
+
+    const result = await service.updateWorkReport({
+      ...validated,
+      projectId: existing.projectId,
+    });
 
     // Handle New Photos (Optional for Update)
     // For update, we treat photos as additive and non-transactional (legacy behavior)
@@ -205,13 +258,27 @@ export async function updateWorkReportAction(formData: FormData) {
 
 export async function deleteWorkReportAction(formData: FormData) {
   const id = formData.get('id') as string;
-  const projectId = formData.get('projectId') as string;
 
   if (!id) return { success: false, message: 'Missing ID' };
 
   try {
-    await service.deleteWorkReport(id);
-    revalidatePath(`/work-reports/${projectId}`);
+    const actorDetails = await getCurrentUserDetails();
+    if (!actorDetails) return { success: false, message: 'Unauthorized' };
+    const actor: IJwtPayload = {
+      id: actorDetails.id,
+      email: actorDetails.email,
+      role: actorDetails.role,
+    };
+    ensureAccess(actor.role, RbacResource.WORK_REPORTS, 'delete');
+
+    const validatedId = z.string().uuid().parse(id);
+    const existing = await service.getWorkReportById(validatedId);
+    if (!existing) return { success: false, message: 'Not found' };
+
+    await projectService.assertCanAccessProject(actor, existing.projectId);
+
+    await service.deleteWorkReport(validatedId);
+    revalidatePath(`/work-reports/${existing.projectId}`);
     return { success: true };
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Delete:', error);

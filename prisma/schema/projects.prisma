@@ -23,6 +23,7 @@ model Project {
   labAnalyses        LabAnalysis[]
   summaryReports     SummaryReport[]
   parameterOverrides ProjectParameterOverride[]
+  assignments        ProjectAssignment[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -38,6 +39,34 @@ enum ProjectStatus {
   PAUSED
   COMPLETED
   CANCELLED
+}
+
+model ProjectAssignment {
+  id        String @id @default(uuid())
+  projectId String
+  userId    String
+  role      ProjectAssignmentRole
+  isActive  Boolean @default(true)
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  project Project @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, userId, role])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_assignments")
+}
+
+enum ProjectAssignmentRole {
+  PROJECT_PIC
+  TECHNICIAN
+  CLIENT_PIC
 }
 
 model ProjectParameterOverride {

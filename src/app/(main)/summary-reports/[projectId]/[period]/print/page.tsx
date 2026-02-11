@@ -57,7 +57,7 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
     workReports,
     logSheetConfig,
   ] = await Promise.all([
-    getProjectById(projectId),
+    getProjectById(actor, projectId),
     ensureSummaryReport(actor, projectId, periodDate),
     getMonthlyLogSheets(projectId, periodDate),
     getMonthlyLabAnalyses(projectId, periodDate),

@@ -20,6 +20,14 @@ export const ProjectStatusEnum = z.enum([
 
 export type TProjectStatus = z.infer<typeof ProjectStatusEnum>;
 
+export const ProjectAssignmentRoleEnum = z.enum([
+  'PROJECT_PIC',
+  'TECHNICIAN',
+  'CLIENT_PIC',
+]);
+
+export type TProjectAssignmentRole = z.infer<typeof ProjectAssignmentRoleEnum>;
+
 // =============================================================================
 // Project Validation Schemas
 // =============================================================================
@@ -102,4 +110,19 @@ export const ProjectParameterOverrideSchema = z.object({
 
 export type TProjectParameterOverride = z.infer<
   typeof ProjectParameterOverrideSchema
+>;
+
+export const ProjectAssignmentSchema = z.object({
+  userId: z.string().uuid('User ID tidak valid'),
+  role: ProjectAssignmentRoleEnum,
+});
+
+export const SetProjectAssignmentsSchema = z.object({
+  projectId: z.string().uuid('Project ID tidak valid'),
+  assignments: z.array(ProjectAssignmentSchema),
+});
+
+export type TProjectAssignmentInput = z.infer<typeof ProjectAssignmentSchema>;
+export type TSetProjectAssignmentsInput = z.infer<
+  typeof SetProjectAssignmentsSchema
 >;

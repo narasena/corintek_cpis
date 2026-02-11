@@ -67,7 +67,7 @@ const ROLE_MATRIX: Record<TRbacRole, Partial<Record<TRbacResource, 'CRUD' | 'CRU
       LAB_ANALYSES: 'CRUD',
       ATTENDANCE: 'CRUD',
       PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: 'CRUD',
+      PROJECTS_ADMIN: '-',
       USERS_ADMIN: '-',
       MASTER_DATA: '-',
     },

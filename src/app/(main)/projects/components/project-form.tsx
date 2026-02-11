@@ -1,8 +1,8 @@
 'use client';
 
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTransition } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -26,6 +26,8 @@ import { Textarea } from '@/components/ui/textarea';
 
 import {
   createProjectAction,
+  getProjectAssignmentsAction,
+  setProjectAssignmentsAction,
   updateProjectAction,
 } from '@/features/projects/actions';
 import {
@@ -36,6 +38,9 @@ import {
 } from '@/features/projects/types';
 import { TClientResponse } from '@/@types/client.type';
 import { MachineFormSection } from '@/components/machine-form-section';
+import { getAllUsersAction } from '@/features/users/actions';
+import type { TUserResponse } from '@/@types/user.type';
+import { MultiSelect } from '@/components/multi-select';
 
 interface ProjectFormProps {
   mode: 'create' | 'edit';
@@ -57,7 +62,12 @@ export function ProjectForm({
   onSuccess,
   onCancel,
 }: ProjectFormProps) {
-  const [isPending, startTransition] = useTransition();
+  const [isProjectPending, startProjectTransition] = useTransition();
+  const [isAssignmentPending, startAssignmentTransition] = useTransition();
+  const [users, setUsers] = useState<TUserResponse[]>([]);
+  const [projectPicUserId, setProjectPicUserId] = useState<string>('none');
+  const [clientPicUserId, setClientPicUserId] = useState<string>('none');
+  const [technicianUserIds, setTechnicianUserIds] = useState<string[]>([]);
 
   const form = useForm({
     resolver: zodResolver(CreateProjectSchema),
@@ -79,7 +89,7 @@ export function ProjectForm({
   });
 
   const onSubmit = (data: TCreateProject) => {
-    startTransition(async () => {
+    startProjectTransition(async () => {
       try {
         let result;
         if (mode === 'create') {
@@ -108,6 +118,119 @@ export function ProjectForm({
         }
       } catch {
         toast.error('Terjadi kesalahan yang tidak terduga');
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (mode !== 'edit') return;
+    if (!defaultValues?.id) return;
+
+    (async () => {
+      const [usersRes, assignmentsRes] = await Promise.all([
+        getAllUsersAction(),
+        getProjectAssignmentsAction(defaultValues.id),
+      ]);
+
+      if (usersRes.success && usersRes.data) {
+        setUsers(usersRes.data);
+      } else {
+        toast.error(usersRes.error || 'Gagal mengambil data pengguna');
+      }
+
+      if (assignmentsRes.success && assignmentsRes.data) {
+        const assignments = assignmentsRes.data as Array<{
+          userId: string;
+          role: 'PROJECT_PIC' | 'TECHNICIAN' | 'CLIENT_PIC';
+        }>;
+
+        setProjectPicUserId(
+          assignments.find(a => a.role === 'PROJECT_PIC')?.userId ?? 'none'
+        );
+        setClientPicUserId(
+          assignments.find(a => a.role === 'CLIENT_PIC')?.userId ?? 'none'
+        );
+        setTechnicianUserIds(
+          assignments.filter(a => a.role === 'TECHNICIAN').map(a => a.userId)
+        );
+      } else {
+        toast.error(assignmentsRes.error || 'Gagal mengambil data penugasan');
+      }
+    })();
+  }, [defaultValues?.id, mode]);
+
+  const activeUsers = useMemo(
+    () => users.filter(u => u.isActive && !u.isBlocked && !u.deletedAt),
+    [users]
+  );
+
+  const projectPicOptions = useMemo(
+    () =>
+      activeUsers
+        .filter(u => u.role === 'SUPERVISOR')
+        .map(u => ({
+          label: `${u.firstName} ${u.lastName || ''}`.trim(),
+          value: u.id,
+        })),
+    [activeUsers]
+  );
+
+  const clientPicOptions = useMemo(
+    () =>
+      activeUsers
+        .filter(u => u.role === 'CLIENT_SUPERVISOR')
+        .map(u => ({
+          label: `${u.firstName} ${u.lastName || ''}`.trim(),
+          value: u.id,
+        })),
+    [activeUsers]
+  );
+
+  const technicianOptions = useMemo(
+    () =>
+      activeUsers
+        .filter(u => u.role === 'TECHNICIAN' || u.role === 'CLIENT_TECHNICIAN')
+        .map(u => ({
+          label: `${u.firstName} ${u.lastName || ''}`.trim(),
+          value: u.id,
+        })),
+    [activeUsers]
+  );
+
+  const saveAssignments = () => {
+    if (mode !== 'edit') return;
+    if (!defaultValues?.id) {
+      toast.error('ID proyek tidak ditemukan');
+      return;
+    }
+
+    startAssignmentTransition(async () => {
+      const assignments: Array<{
+        userId: string;
+        role: 'PROJECT_PIC' | 'TECHNICIAN' | 'CLIENT_PIC';
+      }> = [];
+
+      if (projectPicUserId !== 'none') {
+        assignments.push({ userId: projectPicUserId, role: 'PROJECT_PIC' });
+      }
+
+      for (const userId of technicianUserIds) {
+        assignments.push({ userId, role: 'TECHNICIAN' });
+      }
+
+      if (clientPicUserId !== 'none') {
+        assignments.push({ userId: clientPicUserId, role: 'CLIENT_PIC' });
+      }
+
+      const result = await setProjectAssignmentsAction({
+        projectId: defaultValues.id,
+        assignments,
+      });
+
+      if (result.success) {
+        toast.success('Penugasan berhasil disimpan');
+      } else {
+        toast.error(result.error || 'Gagal menyimpan penugasan');
       }
     });
   };
@@ -294,6 +417,73 @@ export function ProjectForm({
                 </FormItem>
               )}
             />
+
+            {mode === 'edit' && (
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-semibold text-lg border-b pb-2">
+                  Penugasan
+                </h3>
+
+                <div className="space-y-2">
+                  <FormLabel>PIC Project</FormLabel>
+                  <Select
+                    value={projectPicUserId}
+                    onValueChange={setProjectPicUserId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih PIC Project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">- Tidak Ada -</SelectItem>
+                      {projectPicOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>Teknisi</FormLabel>
+                  <MultiSelect
+                    options={technicianOptions}
+                    selected={technicianUserIds}
+                    onChange={setTechnicianUserIds}
+                    placeholder="Pilih teknisi..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <FormLabel>PIC Klien</FormLabel>
+                  <Select
+                    value={clientPicUserId}
+                    onValueChange={setClientPicUserId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih PIC Klien" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">- Tidak Ada -</SelectItem>
+                      {clientPicOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={isAssignmentPending}
+                  onClick={saveAssignments}
+                >
+                  {isAssignmentPending ? 'Menyimpan...' : 'Simpan Penugasan'}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Right Column: Machine List */}
@@ -306,8 +496,8 @@ export function ProjectForm({
           <Button type="button" variant="outline" onClick={onCancel}>
             Batal
           </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? 'Menyimpan...' : 'Simpan'}
+          <Button type="submit" disabled={isProjectPending}>
+            {isProjectPending ? 'Menyimpan...' : 'Simpan'}
           </Button>
         </div>
       </form>

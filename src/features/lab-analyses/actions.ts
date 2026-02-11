@@ -4,10 +4,26 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import * as service from './service';
 import { CreateLabAnalysisSchema, UpdateLabAnalysisSchema } from './types';
+import { getCurrentUserDetails } from '@/lib/auth-helpers';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
+import * as projectService from '@/features/projects/service';
+import type { IJwtPayload } from '@/@types/auth.type';
 
 export async function getLabAnalysesByProjectAction(projectId: string) {
   try {
-    const data = await service.getLabAnalysesByProject(projectId);
+    const actorDetails = await getCurrentUserDetails();
+    if (!actorDetails) return { success: false, message: 'Unauthorized' };
+    const actor: IJwtPayload = {
+      id: actorDetails.id,
+      email: actorDetails.email,
+      role: actorDetails.role,
+    };
+
+    ensureAccess(actor.role, RbacResource.LAB_ANALYSES, 'read');
+    const validatedProjectId = z.string().uuid().parse(projectId);
+    await projectService.assertCanAccessProject(actor, validatedProjectId);
+
+    const data = await service.getLabAnalysesByProject(validatedProjectId);
     return { success: true, data };
   } catch (error) {
     console.error('[CPIS-ERROR] LabAnalyses.GetByProject:', error);
@@ -17,8 +33,19 @@ export async function getLabAnalysesByProjectAction(projectId: string) {
 
 export async function getLabAnalysisDetailAction(id: string) {
   try {
-    const data = await service.getLabAnalysisDetail(id);
+    const actorDetails = await getCurrentUserDetails();
+    if (!actorDetails) return { success: false, message: 'Unauthorized' };
+    const actor: IJwtPayload = {
+      id: actorDetails.id,
+      email: actorDetails.email,
+      role: actorDetails.role,
+    };
+
+    ensureAccess(actor.role, RbacResource.LAB_ANALYSES, 'read');
+    const validatedId = z.string().uuid().parse(id);
+    const data = await service.getLabAnalysisDetail(validatedId);
     if (!data) return { success: false, message: 'Data tidak ditemukan' };
+    await projectService.assertCanAccessProject(actor, data.projectId);
     return { success: true, data };
   } catch (error) {
     console.error('[CPIS-ERROR] LabAnalyses.GetDetail:', error);
@@ -28,7 +55,17 @@ export async function getLabAnalysisDetailAction(id: string) {
 
 export async function createLabAnalysisAction(input: unknown) {
   try {
+    const actorDetails = await getCurrentUserDetails();
+    if (!actorDetails) return { success: false, message: 'Unauthorized' };
+    const actor: IJwtPayload = {
+      id: actorDetails.id,
+      email: actorDetails.email,
+      role: actorDetails.role,
+    };
+
+    ensureAccess(actor.role, RbacResource.LAB_ANALYSES, 'create');
     const validated = CreateLabAnalysisSchema.parse(input);
+    await projectService.assertCanAccessProject(actor, validated.projectId);
     const created = await service.createLabAnalysis(validated);
     revalidatePath(`/lab-analyses/${validated.projectId}`);
     revalidatePath(`/lab-analyses/${validated.projectId}/${created.id}/edit`);
@@ -52,11 +89,28 @@ export async function createLabAnalysisAction(input: unknown) {
 
 export async function updateLabAnalysisAction(input: unknown) {
   try {
+    const actorDetails = await getCurrentUserDetails();
+    if (!actorDetails) return { success: false, message: 'Unauthorized' };
+    const actor: IJwtPayload = {
+      id: actorDetails.id,
+      email: actorDetails.email,
+      role: actorDetails.role,
+    };
+
+    ensureAccess(actor.role, RbacResource.LAB_ANALYSES, 'update');
     const validated = UpdateLabAnalysisSchema.parse(input);
-    const updated = await service.updateLabAnalysis(validated);
-    revalidatePath(`/lab-analyses/${validated.projectId}`);
-    revalidatePath(`/lab-analyses/${validated.projectId}/${updated.id}/edit`);
-    revalidatePath(`/lab-analyses/${validated.projectId}/${updated.id}/print`);
+    const existing = await service.getLabAnalysisDetail(validated.id);
+    if (!existing) return { success: false, message: 'Data tidak ditemukan' };
+
+    await projectService.assertCanAccessProject(actor, existing.projectId);
+
+    const updated = await service.updateLabAnalysis({
+      ...validated,
+      projectId: existing.projectId,
+    });
+    revalidatePath(`/lab-analyses/${existing.projectId}`);
+    revalidatePath(`/lab-analyses/${existing.projectId}/${updated.id}/edit`);
+    revalidatePath(`/lab-analyses/${existing.projectId}/${updated.id}/print`);
     return { success: true, data: { id: updated.id } };
   } catch (error) {
     console.error('[CPIS-ERROR] LabAnalyses.Update:', error);

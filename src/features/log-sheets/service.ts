@@ -67,10 +67,13 @@ export interface IGlobalLogSheetListItem extends ILogSheetListItem {
   };
 }
 
-export async function getAllLogSheets(): Promise<IGlobalLogSheetListItem[]> {
+export async function getAllLogSheets(
+  projectIds?: string[]
+): Promise<IGlobalLogSheetListItem[]> {
   const logSheets = await prisma.logSheet.findMany({
     where: {
       deletedAt: null,
+      ...(projectIds ? { projectId: { in: projectIds } } : {}),
     },
     select: {
       id: true,
@@ -147,6 +150,20 @@ export async function getLogSheetsByProject(
   });
 
   return logSheets as unknown as ILogSheetListItem[];
+}
+
+export async function getLogSheetProjectId(id: string): Promise<string | null> {
+  const row = await prisma.logSheet.findFirst({
+    where: {
+      id,
+      deletedAt: null,
+    },
+    select: {
+      projectId: true,
+    },
+  });
+
+  return row?.projectId ?? null;
 }
 
 export async function createLogSheet(

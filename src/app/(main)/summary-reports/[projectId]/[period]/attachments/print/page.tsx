@@ -54,7 +54,7 @@ export default async function SummaryReportAttachmentsPrintPage({
   if (!periodDate) return notFound();
 
   const [project, summaryReport] = await Promise.all([
-    getProjectById(projectId),
+    getProjectById(actor, projectId),
     ensureSummaryReport(actor, projectId, periodDate),
   ]);
 
