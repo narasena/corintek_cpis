@@ -113,15 +113,16 @@ function machinesForCategory(
   category: TPreviewParameter['category'],
   machines: { chillers: TPreviewMachine[]; coolingTowers: TPreviewMachine[] }
 ) {
+  if (!machines) return [];
   if (category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR') {
-    return machines.chillers;
+    return machines.chillers || [];
   }
   if (
     category === 'COOLING_WATER_QUALITY' ||
     category === 'GENERAL_CONDITION' ||
     category === 'JOB_DESCRIPTION'
   ) {
-    return machines.coolingTowers;
+    return machines.coolingTowers || [];
   }
   return [];
 }
@@ -162,9 +163,11 @@ export function LogSheetPreview({
   });
 
   const categories = Array.from(
-    new Set(displayParameters.map(p => p.category))
+    new Set((displayParameters || []).map(p => p.category))
   ).sort((a, b) => {
-    return CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b);
+    return (
+      (CATEGORY_ORDER || []).indexOf(a) - (CATEGORY_ORDER || []).indexOf(b)
+    );
   });
 
   const paramsByCategory = new Map<

@@ -133,30 +133,54 @@ export async function getProjectLogSheetConfig(projectId: string) {
     ],
   });
 
+  const labParameters = await prisma.parameter.findMany({
+    where: {
+      deletedAt: null,
+      isActive: true,
+      category: ParameterCategory.LAB_ANALYSIS,
+    },
+    select: {
+      id: true,
+      name: true,
+      variableName: true,
+      category: true,
+      valueType: true,
+      unit: true,
+      minValue: true,
+      maxValue: true,
+      rawWaterMinValue: true,
+      rawWaterMaxValue: true,
+      displayOrder: true,
+    },
+    orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
+  });
+
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: { parameterOverrides: true },
   });
 
   const overrides = project?.parameterOverrides || [];
-  const effectiveParameters = parameters.map(p => {
-    const override = overrides.find(o => o.parameterId === p.id);
-    if (!override) return p;
-    return {
-      ...p,
-      minValue: override.minValue ?? p.minValue,
-      maxValue: override.maxValue ?? p.maxValue,
-      rawWaterMinValue: override.rawWaterMinValue ?? p.rawWaterMinValue,
-      rawWaterMaxValue: override.rawWaterMaxValue ?? p.rawWaterMaxValue,
-    };
-  });
+  const mapParameters = (params: typeof parameters) =>
+    params.map(p => {
+      const override = overrides.find(o => o.parameterId === p.id);
+      if (!override) return p;
+      return {
+        ...p,
+        minValue: override.minValue ?? p.minValue,
+        maxValue: override.maxValue ?? p.maxValue,
+        rawWaterMinValue: override.rawWaterMinValue ?? p.rawWaterMinValue,
+        rawWaterMaxValue: override.rawWaterMaxValue ?? p.rawWaterMaxValue,
+      };
+    });
 
   return {
     machines: {
       chillers: machines.filter(m => m.type === 'CHILLER'),
       coolingTowers: machines.filter(m => m.type === 'COOLING_TOWER'),
     },
-    parameters: effectiveParameters,
+    parameters: mapParameters(parameters),
+    labParameters: mapParameters(labParameters),
   };
 }
 
@@ -170,7 +194,9 @@ export async function getMonthlyWorkReports(projectId: string, period: Date) {
     },
     include: {
       machines: true,
-      photos: true,
+      photos: {
+        where: { deletedAt: null },
+      },
       project: true,
     },
     orderBy: { date: 'asc' },

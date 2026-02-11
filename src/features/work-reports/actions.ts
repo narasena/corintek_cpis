@@ -88,6 +88,9 @@ export async function createWorkReportAction(formData: FormData) {
       workDone: formData.get('workDone'),
       workResult: formData.get('workResult'),
       machineIds: formData.getAll('machineIds'),
+      timeStart: formData.get('timeStart')?.toString() || undefined,
+      timeEnd: formData.get('timeEnd')?.toString() || undefined,
+      zone: formData.get('zone')?.toString() || undefined,
     };
 
     const validated = WorkReportSchema.parse(rawData);
@@ -146,7 +149,11 @@ export async function createWorkReportAction(formData: FormData) {
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Create:', error);
     if (error instanceof z.ZodError) {
-      return { success: false, message: (error as any).errors[0].message };
+      const firstError = error.errors?.[0];
+      return {
+        success: false,
+        message: firstError?.message || 'Validation error',
+      };
     }
     return {
       success: false,
@@ -162,9 +169,9 @@ export async function updateWorkReportAction(formData: FormData) {
       id: formData.get('id'),
       projectId: formData.get('projectId'),
       date: new Date(formData.get('date') as string),
-      timeStart: formData.get('timeStart'),
-      timeEnd: formData.get('timeEnd'),
-      zone: formData.get('zone'),
+      timeStart: formData.get('timeStart')?.toString() || undefined,
+      timeEnd: formData.get('timeEnd')?.toString() || undefined,
+      zone: formData.get('zone')?.toString() || undefined,
       situation: formData.get('situation'),
       workDone: formData.get('workDone'),
       workResult: formData.get('workResult'),
@@ -186,7 +193,11 @@ export async function updateWorkReportAction(formData: FormData) {
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Update:', error);
     if (error instanceof z.ZodError) {
-      return { success: false, message: (error as any).errors[0].message };
+      const firstError = error.errors?.[0];
+      return {
+        success: false,
+        message: firstError?.message || 'Validation error',
+      };
     }
     return { success: false, message: 'Failed to update work report' };
   }

@@ -1,5 +1,5 @@
 import { getWorkReportById } from '@/features/work-reports/service';
-import { WorkReportPreview } from './components/work-report-preview';
+import { WorkReportPreview } from '@/features/work-reports/components/work-report-preview';
 import { PrintButton } from '@/components/print-button';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';

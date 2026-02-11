@@ -88,9 +88,9 @@ These tasks are absolutely critical for the system to be usable in production.
   - [x] Cover Page & Table of Content.
   - [x] Bab I: Executive Summary (Auto-generated stats).
   - [x] Bab II: Log Sheets (Grid/List view of approved logs).
-  - [ ] Bab III: Lab Analysis (Table of results).
-  - [ ] Bab IV: Work Reports (List of ad-hoc work).
-  - [ ] Bab V: Chemical Reports (Usage summary).
+  - [x] Bab III: Lab Analysis (Table of results).
+  - [x] Bab IV: Work Reports (List of ad-hoc work).
+  - [x] Bab V: Chemical Reports (Usage summary).
 - [ ] Integrate PDF Uploads for Appendices.
 
 #### 2.2 [NEW] Ops Readiness (Hidden Agenda)

@@ -20,6 +20,9 @@ import type {
   TLogSheetEntryRole,
   TPreviewParameter,
 } from '@/features/log-sheets/types';
+import { WorkReportPreview } from '@/features/work-reports/components/work-report-preview';
+import { WorkReportPhotoType } from '@/generated/prisma/enums';
+import { LabAnalysisPrint } from '@/features/lab-analyses/components/lab-analysis-print';
 
 interface PageProps {
   params: Promise<{ projectId: string; period: string }>;
@@ -226,64 +229,72 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
         )}
 
         {summaryReport.includeLabAnalysis && (
-          <div className="break-before-page min-h-[297mm] p-8 print:p-0">
-            <h2 className="text-xl font-bold uppercase mb-4">
-              Bab III — Analisa Laboratorium
-            </h2>
-            {labAnalyses.length === 0 ? (
-              <div className="text-sm text-gray-500">
-                Tidak ada analisa laboratorium pada periode ini.
+          <>
+            <div className="break-before-page min-h-[297mm] p-8 print:p-0 flex flex-col justify-center text-center">
+              <h2 className="text-3xl font-bold uppercase mb-4">
+                Bab III — Analisa Laboratorium
+              </h2>
+              {labAnalyses.length === 0 && (
+                <div className="text-sm text-gray-500">
+                  Tidak ada analisa laboratorium pada periode ini.
+                </div>
+              )}
+            </div>
+
+            {labAnalyses.map(la => (
+              <div
+                key={la.id}
+                className="break-before-page min-h-[297mm] print:p-0"
+              >
+                <LabAnalysisPrint
+                  labAnalysis={la}
+                  parameters={logSheetConfig.labParameters}
+                />
               </div>
-            ) : (
-              <div className="space-y-3">
-                {labAnalyses.map(la => (
-                  <div key={la.id} className="border p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="font-semibold">
-                        {format(la.date, 'dd MMM yyyy', { locale: idLocale })}
-                      </div>
-                      <div className="text-xs uppercase">
-                        {la.reportNumber ?? '-'}
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-600 mt-2">
-                      Attn: {la.attention ?? '-'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+            ))}
+          </>
         )}
 
         {summaryReport.includeWorkReports && (
-          <div className="break-before-page min-h-[297mm] p-8 print:p-0">
-            <h2 className="text-xl font-bold uppercase mb-4">
-              Bab IV — Work Reports
-            </h2>
-            {workReports.length === 0 ? (
-              <div className="text-sm text-gray-500">
-                Tidak ada work report pada periode ini.
+          <>
+            <div className="break-before-page min-h-[297mm] p-8 print:p-0 flex flex-col justify-center text-center">
+              <h2 className="text-3xl font-bold uppercase mb-4">
+                Bab IV — Work Reports
+              </h2>
+              {workReports.length === 0 && (
+                <div className="text-sm text-gray-500">
+                  Tidak ada work report pada periode ini.
+                </div>
+              )}
+            </div>
+
+            {workReports.map(wr => (
+              <div
+                key={wr.id}
+                className="break-before-page min-h-[297mm] print:p-0"
+              >
+                <WorkReportPreview
+                  data={{
+                    project,
+                    date: wr.date,
+                    situation: wr.situation,
+                    workDone: wr.workDone,
+                    workResult: wr.workResult,
+                    machines: wr.machines.map(m => ({
+                      type: m.type,
+                      unitNumber: m.unitNumber,
+                      brand: m.brand,
+                    })),
+                    photos: wr.photos.map(p => ({
+                      url: p.url,
+                      caption: p.caption,
+                      type: p.type as WorkReportPhotoType,
+                    })),
+                  }}
+                />
               </div>
-            ) : (
-              <div className="space-y-3">
-                {workReports.map(wr => (
-                  <div key={wr.id} className="border p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="font-semibold">
-                        {format(wr.date, 'dd MMM yyyy', { locale: idLocale })}
-                      </div>
-                      <div className="text-xs uppercase">{wr.zone ?? '-'}</div>
-                    </div>
-                    <div className="text-sm mt-2">{wr.situation}</div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {wr.workDone}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+            ))}
+          </>
         )}
 
         {summaryReport.includeChemicalReports && (
