@@ -1,25 +1,25 @@
 # CPIS Project Implementation Roadmap
 
 > **Project:** Corintek Project Information System (CPIS)
-> **Updated:** 2026-02-07
-> **Status:** Rescue Mode - MVP Priority
+> **Updated:** 2026-02-11
+> **Status:** MVP Phase Completed - Transitioning to Operational Phase
 
 ---
 
-## 0. MVP Definition (Rescue Mode)
+## 0. MVP Definition (Rescue Mode) - ✅ COMPLETED
 
 ### In Scope (MVP)
 
-- **Users:** Internal users only (ADMIN / SUPERVISOR / TECHNICIAN).
-- **Masters:** Clients, Projects, Machines, Parameters, Chemicals.
-- **Log Sheets:**
-  - Draft save + submit flow.
-  - Photo attachments (before/after) - Max 8 photos.
-  - Print (A4 single page) / Save as PDF via browser print.
-- **Reporting:** Unified Reports List (find + filter).
-- **[NEW] Lab Analysis:** Simple CRUD for entering lab results.
-- **[NEW] Work Reports:** Ad-hoc work requests/reports (different from daily log sheets).
-- **[NEW] Ops Readiness:** Seeding (Password Reset & Backups deferred).
+- **Users:** Internal users only (ADMIN / SUPERVISOR / TECHNICIAN). ✅
+- **Masters:** Clients, Projects, Machines, Parameters, Chemicals. ✅
+- **Log Sheets:** ✅
+  - Draft save + submit flow. ✅
+  - Photo attachments (before/after) - Max 8 photos. ✅
+  - Print (A4 single page) / Save as PDF via browser print. ✅
+- **Reporting:** Unified Reports List (find + filter). ✅
+- **[NEW] Lab Analysis:** Simple CRUD for entering lab results. ✅
+- **[NEW] Work Reports:** Ad-hoc work requests/reports (different from daily log sheets). ✅
+- **[NEW] Ops Readiness:** Seeding (Password Reset & Backups deferred). ✅
 
 ### Out of Scope (Defer)
 
@@ -37,16 +37,20 @@
 
 ### ✅ Completed Domains
 
-| Domain      | Schema | Service | Actions | UI  | Notes                         |
-| ----------- | ------ | ------- | ------- | --- | ----------------------------- |
-| Auth        | ✅     | ✅      | ✅      | ✅  | Login/session management      |
-| Clients     | ✅     | ✅      | ✅      | ✅  | Full CRUD with DataTable      |
-| Users       | ✅     | ✅      | ✅      | ✅  | Full CRUD, roles, soft delete |
-| Parameters  | ✅     | ✅      | ✅      | ✅  | Master data with categories   |
-| Projects    | ✅     | ✅      | ✅      | ✅  | Full CRUD with status         |
-| Machines    | ✅     | ✅      | ✅      | ✅  | Nested in Projects form       |
-| Chemicals   | ✅     | ✅      | ✅      | ✅  | Master CRUD + Usage in LS     |
-| Worker (R2) | ✅     | ✅      | N/A     | N/A | Basic upload API ready        |
+| Domain          | Schema | Service | Actions | UI  | Notes                           |
+| --------------- | ------ | ------- | ------- | --- | ------------------------------- |
+| Auth            | ✅     | ✅      | ✅      | ✅  | Login/session management        |
+| Clients         | ✅     | ✅      | ✅      | ✅  | Full CRUD with DataTable        |
+| Users           | ✅     | ✅      | ✅      | ✅  | Full CRUD, roles, soft delete   |
+| Parameters      | ✅     | ✅      | ✅      | ✅  | Master data with categories     |
+| Projects        | ✅     | ✅      | ✅      | ✅  | Full CRUD with status           |
+| Machines        | ✅     | ✅      | ✅      | ✅  | Nested in Projects form         |
+| Chemicals       | ✅     | ✅      | ✅      | ✅  | Master CRUD + Usage in LS       |
+| Attendance      | ✅     | ✅      | ✅      | ✅  | Clock in/out + Photo validation |
+| Lab Analysis    | ✅     | ✅      | ✅      | ✅  | Results tracking per project    |
+| Work Reports    | ✅     | ✅      | ✅      | ✅  | Ad-hoc technician reports       |
+| Summary Reports | ✅     | ✅      | ✅      | ✅  | Monthly project sign-off        |
+| Worker (R2)     | ✅     | ✅      | N/A     | N/A | Basic upload API ready          |
 
 ### ✅ Log Sheets Domain (Mostly Complete)
 
@@ -348,3 +352,33 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 - **Jenis Project:** Langsung vs Subcon
 - **Pekerjaan:** Operasional, Proyek/Konstruksi, Ad Hoc
 - **Warranty:** X months warranty period
+
+---
+
+## 3. Operational Phase Roadmap (Post-MVP)
+
+### 🚨 P0: Critical Stabilizations
+
+#### 3.1 Submission Locking (LS-LOCK)
+
+- [ ] Add `locked` field to LogSheet/WorkReport/LabAnalysis schemas.
+- [ ] Implement Server Action logic to prevent updates on locked records.
+- [ ] Add Admin-only "Unlock" capability.
+
+#### 3.2 Basic Dashboard (DB-01)
+
+- [ ] Replace placeholders with real-time stats.
+- [ ] Active Projects & Machines overview.
+- [ ] Recent submissions feed.
+
+### ⚠️ P1: Operational Efficiency
+
+#### 4.1 Notifications (NT-01)
+
+- [ ] Alert supervisors when parameters exceed thresholds.
+- [ ] Notifications for pending approvals.
+
+#### 4.2 Digital Signatures (DS-01)
+
+- [ ] Signature pad integration for technicians.
+- [ ] Automatic timestamping on sign-off.

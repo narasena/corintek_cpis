@@ -18,6 +18,7 @@ import Image from 'next/image';
 
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { filterNavItems } from '@/lib/rbac';
 import {
   Sidebar,
   SidebarContent,
@@ -28,73 +29,73 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 
-const data = {
-  user: {
-    name: 'User',
-    email: 'user@corintek.com',
-    avatar: '/avatars/shadcn.jpg',
+const navMain = [
+  {
+    title: 'Dashboard',
+    url: '/',
+    icon: LayoutDashboard,
+    isActive: true,
   },
-  navMain: [
-    {
-      title: 'Dashboard',
-      url: '/',
-      icon: LayoutDashboard,
-      isActive: true,
-    },
-    {
-      title: 'Clients',
-      url: '/clients',
-      icon: BookUser,
-    },
-    {
-      title: 'Projects',
-      url: '/projects',
-      icon: Building2,
-    },
-    {
-      title: 'Summary Reports',
-      url: '/summary-reports',
-      icon: ClipboardList,
-    },
-    {
-      title: 'Log Sheets',
-      url: '/log-sheets',
-      icon: FileSpreadsheet,
-    },
-    {
-      title: 'Work Reports',
-      url: '/work-reports',
-      icon: FileText,
-    },
-    {
-      title: 'Lab Analyses',
-      url: '/lab-analyses',
-      icon: Microscope,
-    },
-    {
-      title: 'Chemicals',
-      url: '/chemicals',
-      icon: FlaskConical,
-    },
-    {
-      title: 'Parameters',
-      url: '/parameters',
-      icon: SlidersHorizontal,
-    },
-    {
-      title: 'Users',
-      url: '/users',
-      icon: Users,
-    },
-    {
-      title: 'Absensi',
-      url: '/attendance',
-      icon: Clock,
-    },
-  ],
-};
+  {
+    title: 'Clients',
+    url: '/clients',
+    icon: BookUser,
+  },
+  {
+    title: 'Projects',
+    url: '/projects',
+    icon: Building2,
+  },
+  {
+    title: 'Summary Reports',
+    url: '/summary-reports',
+    icon: ClipboardList,
+  },
+  {
+    title: 'Log Sheets',
+    url: '/log-sheets',
+    icon: FileSpreadsheet,
+  },
+  {
+    title: 'Work Reports',
+    url: '/work-reports',
+    icon: FileText,
+  },
+  {
+    title: 'Lab Analyses',
+    url: '/lab-analyses',
+    icon: Microscope,
+  },
+  {
+    title: 'Chemicals',
+    url: '/chemicals',
+    icon: FlaskConical,
+  },
+  {
+    title: 'Parameters',
+    url: '/parameters',
+    icon: SlidersHorizontal,
+  },
+  {
+    title: 'Users',
+    url: '/users',
+    icon: Users,
+  },
+  {
+    title: 'Absensi',
+    url: '/attendance',
+    icon: Clock,
+  },
+];
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  user,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  user: { name: string; email: string; avatar: string | null; role: string };
+}) {
+  const items = filterNavItems(user.role, navMain);
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -120,10 +121,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={items} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   );

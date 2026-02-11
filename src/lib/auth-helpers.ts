@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers';
 import { verifyToken } from './jwt';
 import { IJwtPayload } from '@/@types/auth.type';
+import { prisma } from '@/lib/prisma';
+import { TUserRole } from '@/@types/user.type';
 import bcrypt from 'bcrypt';
 
 const AUTH_COOKIE_NAME = 'auth_token';
@@ -24,6 +26,46 @@ export async function getCurrentUser(): Promise<IJwtPayload | null> {
   } catch {
     return null;
   }
+}
+
+export interface ICurrentUserDetails {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string | null;
+  avatarUrl: string | null;
+  role: TUserRole;
+}
+
+export async function getCurrentUserDetails(): Promise<ICurrentUserDetails | null> {
+  const payload = await getCurrentUser();
+  if (!payload) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: payload.id },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      avatarUrl: true,
+      role: true,
+      isActive: true,
+      isBlocked: true,
+      deletedAt: true,
+    },
+  });
+
+  if (!user || user.deletedAt || !user.isActive || user.isBlocked) return null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    avatarUrl: user.avatarUrl,
+    role: user.role as TUserRole,
+  };
 }
 
 /**

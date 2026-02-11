@@ -15,6 +15,7 @@ import {
   deleteClient,
 } from './service';
 import { revalidatePath } from 'next/cache';
+import { getCurrentUser } from '@/lib/auth-helpers';
 
 type TActionResponse<T = unknown> = {
   success: boolean;
@@ -28,12 +29,15 @@ type TActionResponse<T = unknown> = {
 export async function createClientAction(
   input: TClientCreateInput
 ): Promise<TActionResponse<TClientResponse>> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     // Validate input
     const validatedData = clientCreateSchema.parse(input);
 
     // Call service
-    const client = await createClient(validatedData);
+    const client = await createClient(actor, validatedData);
 
     // Revalidate client list pages
     revalidatePath('/clients');
@@ -43,6 +47,7 @@ export async function createClientAction(
       data: client,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Clients.Create:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Gagal membuat klien',
@@ -56,14 +61,18 @@ export async function createClientAction(
 export async function getAllClientsAction(): Promise<
   TActionResponse<TClientResponse[]>
 > {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
-    const clients = await getAllClients();
+    const clients = await getAllClients(actor);
 
     return {
       success: true,
       data: clients,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Clients.List:', error);
     return {
       success: false,
       error:
@@ -78,18 +87,22 @@ export async function getAllClientsAction(): Promise<
 export async function getClientByIdAction(
   id: string
 ): Promise<TActionResponse<TClientResponse>> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     if (!id || typeof id !== 'string') {
       throw new Error('ID klien tidak valid');
     }
 
-    const client = await getClientById(id);
+    const client = await getClientById(actor, id);
 
     return {
       success: true,
       data: client,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Clients.GetById:', error);
     return {
       success: false,
       error:
@@ -105,6 +118,9 @@ export async function updateClientAction(
   id: string,
   input: TClientUpdateInput
 ): Promise<TActionResponse<TClientResponse>> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     if (!id || typeof id !== 'string') {
       throw new Error('ID klien tidak valid');
@@ -114,7 +130,7 @@ export async function updateClientAction(
     const validatedData = clientUpdateSchema.parse(input);
 
     // Call service
-    const client = await updateClient(id, validatedData);
+    const client = await updateClient(actor, id, validatedData);
 
     // Revalidate client pages
     revalidatePath('/clients');
@@ -125,6 +141,7 @@ export async function updateClientAction(
       data: client,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Clients.Update:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Gagal memperbarui klien',
@@ -136,12 +153,15 @@ export async function updateClientAction(
  * Server Action: Delete client (soft delete)
  */
 export async function deleteClientAction(id: string): Promise<TActionResponse> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     if (!id || typeof id !== 'string') {
       throw new Error('ID klien tidak valid');
     }
 
-    await deleteClient(id);
+    await deleteClient(actor, id);
 
     // Revalidate client pages
     revalidatePath('/clients');
@@ -151,6 +171,7 @@ export async function deleteClientAction(id: string): Promise<TActionResponse> {
       data: { id },
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Clients.Delete:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Gagal menghapus klien',

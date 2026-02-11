@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth-helpers';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 import * as service from './service';
 
 const booleanField = z.preprocess(value => {
@@ -27,8 +28,8 @@ const updateSchema = z.object({
 });
 
 export async function updateSummaryReportAction(formData: FormData) {
-  const user = await getCurrentUser();
-  if (!user) return { error: 'Unauthorized' };
+  const actor = await getCurrentUser();
+  if (!actor) return { error: 'Unauthorized' };
 
   const data = Object.fromEntries(formData);
   const parsed = updateSchema.safeParse(data);
@@ -41,7 +42,7 @@ export async function updateSummaryReportAction(formData: FormData) {
   }
 
   try {
-    await service.updateSummaryReport(parsed.data);
+    await service.updateSummaryReport(actor, parsed.data);
   } catch (error) {
     console.error('[CPIS-ERROR] SummaryReport.Update:', error);
     return { error: 'Failed to update report' };
@@ -133,8 +134,8 @@ async function uploadSummaryReportAttachment(
 }
 
 export async function createSummaryReportAction(formData: FormData) {
-  const user = await getCurrentUser();
-  if (!user) return { error: 'Unauthorized' };
+  const actor = await getCurrentUser();
+  if (!actor) return { error: 'Unauthorized' };
 
   const data = Object.fromEntries(formData);
   const parsed = createSchema.safeParse(data);
@@ -147,13 +148,14 @@ export async function createSummaryReportAction(formData: FormData) {
   }
 
   try {
+    ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'create');
     const existing = await service.getSummaryReportByPeriod(
       parsed.data.projectId,
       parsed.data.period
     );
 
     if (existing) {
-      const updated = await service.updateSummaryReport({
+      const updated = await service.updateSummaryReport(actor, {
         id: existing.id,
         notes: parsed.data.notes,
         includeExecutiveSummary: parsed.data.includeExecutiveSummary,
@@ -166,7 +168,7 @@ export async function createSummaryReportAction(formData: FormData) {
       return { success: true, data: updated };
     }
 
-    const created = await service.createSummaryReport(parsed.data);
+    const created = await service.createSummaryReport(actor, parsed.data);
     revalidatePath('/summary-reports');
     return { success: true, data: created };
   } catch (error) {
@@ -179,8 +181,8 @@ export async function getSummaryReportByPeriodAction(
   projectId: string,
   period: Date
 ) {
-  const user = await getCurrentUser();
-  if (!user) return { error: 'Unauthorized' };
+  const actor = await getCurrentUser();
+  if (!actor) return { error: 'Unauthorized' };
 
   const parsed = getByPeriodSchema.safeParse({
     projectId,
@@ -195,6 +197,7 @@ export async function getSummaryReportByPeriodAction(
   }
 
   try {
+    ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'read');
     const result = await service.getSummaryReportByPeriod(
       parsed.data.projectId,
       parsed.data.period
@@ -207,8 +210,8 @@ export async function getSummaryReportByPeriodAction(
 }
 
 export async function uploadSummaryReportAttachmentsAction(formData: FormData) {
-  const user = await getCurrentUser();
-  if (!user) return { error: 'Unauthorized' };
+  const actor = await getCurrentUser();
+  if (!actor) return { error: 'Unauthorized' };
 
   const data = Object.fromEntries(formData);
   const parsed = attachmentSchema.safeParse(data);
@@ -224,6 +227,7 @@ export async function uploadSummaryReportAttachmentsAction(formData: FormData) {
 
   try {
     const report = await service.ensureSummaryReport(
+      actor,
       parsed.data.projectId,
       parsed.data.period
     );
@@ -287,7 +291,7 @@ export async function uploadSummaryReportAttachmentsAction(formData: FormData) {
       );
     }
 
-    await service.updateSummaryReport(updates);
+    await service.updateSummaryReport(actor, updates);
 
     revalidatePath('/summary-reports');
     if (periodLabel) {

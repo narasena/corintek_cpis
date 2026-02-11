@@ -1,15 +1,26 @@
 import { prisma } from '@/lib/prisma';
 import { TUserCreateInput, TUserUpdateInput } from '@/@types/user.type';
+import type { IJwtPayload } from '@/@types/auth.type';
+import { canAccess, RbacResource } from '@/lib/rbac';
 import bcrypt from 'bcrypt';
 
 const SALT_ROUNDS = 10;
+
+function ensureUsersAccess(actor: IJwtPayload, capability: 'create' | 'read' | 'update' | 'delete') {
+  if (!canAccess(actor.role, RbacResource.USERS_ADMIN, capability)) {
+    throw new Error('Unauthorized');
+  }
+}
 
 /**
  * Create a new user with hashed password
  */
 export async function createUser(
+  actor: IJwtPayload,
   data: Omit<TUserCreateInput, 'confirmPassword'>
 ) {
+  ensureUsersAccess(actor, 'create');
+
   // Check for existing user with same email or phone (including soft-deleted)
   const existingUser = await prisma.user.findFirst({
     where: {
@@ -68,7 +79,9 @@ export async function createUser(
 /**
  * Get all non-deleted users
  */
-export async function getAllUsers() {
+export async function getAllUsers(actor: IJwtPayload) {
+  ensureUsersAccess(actor, 'read');
+
   const users = await prisma.user.findMany({
     where: {
       deletedAt: null,
@@ -100,7 +113,9 @@ export async function getAllUsers() {
 /**
  * Get a single user by ID
  */
-export async function getUserById(id: string) {
+export async function getUserById(actor: IJwtPayload, id: string) {
+  ensureUsersAccess(actor, 'read');
+
   const user = await prisma.user.findUnique({
     where: {
       id,
@@ -137,7 +152,13 @@ export async function getUserById(id: string) {
 /**
  * Update user information
  */
-export async function updateUser(id: string, data: TUserUpdateInput) {
+export async function updateUser(
+  actor: IJwtPayload,
+  id: string,
+  data: TUserUpdateInput
+) {
+  ensureUsersAccess(actor, 'update');
+
   // Check if user exists
   const existingUser = await prisma.user.findUnique({
     where: { id },
@@ -204,7 +225,9 @@ export async function updateUser(id: string, data: TUserUpdateInput) {
 /**
  * Soft delete a user by setting deletedAt timestamp
  */
-export async function deleteUser(id: string) {
+export async function deleteUser(actor: IJwtPayload, id: string) {
+  ensureUsersAccess(actor, 'delete');
+
   // Check if user exists
   const existingUser = await prisma.user.findUnique({
     where: { id },

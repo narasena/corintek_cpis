@@ -3,11 +3,18 @@ import {
   TChemicalCreateInput,
   TChemicalUpdateInput,
 } from '@/@types/chemical.type';
+import type { IJwtPayload } from '@/@types/auth.type';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 
 /**
  * Create a new chemical
  */
-export async function createChemical(data: TChemicalCreateInput) {
+export async function createChemical(
+  actor: IJwtPayload,
+  data: TChemicalCreateInput
+) {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'create');
+
   // Check for existing chemical with same name
   const existingChemical = await prisma.chemical.findFirst({
     where: {
@@ -39,7 +46,12 @@ export async function createChemical(data: TChemicalCreateInput) {
 /**
  * Update a chemical
  */
-export async function updateChemical(data: TChemicalUpdateInput) {
+export async function updateChemical(
+  actor: IJwtPayload,
+  data: TChemicalUpdateInput
+) {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
+
   const existingChemical = await prisma.chemical.findUnique({
     where: {
       id: data.id,
@@ -82,7 +94,9 @@ export async function updateChemical(data: TChemicalUpdateInput) {
 /**
  * Delete a chemical (soft delete)
  */
-export async function deleteChemical(id: string) {
+export async function deleteChemical(actor: IJwtPayload, id: string) {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'delete');
+
   const chemical = await prisma.chemical.findUnique({
     where: { id },
   });
@@ -104,7 +118,9 @@ export async function deleteChemical(id: string) {
 /**
  * Get all non-deleted chemicals
  */
-export async function getAllChemicals() {
+export async function getAllChemicals(actor: IJwtPayload) {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+
   const chemicals = await prisma.chemical.findMany({
     where: {
       deletedAt: null,
@@ -120,7 +136,9 @@ export async function getAllChemicals() {
 /**
  * Get a single chemical by ID
  */
-export async function getChemicalById(id: string) {
+export async function getChemicalById(actor: IJwtPayload, id: string) {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+
   const chemical = await prisma.chemical.findUnique({
     where: {
       id,

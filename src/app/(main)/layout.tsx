@@ -7,16 +7,30 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
+import { getCurrentUserDetails } from '@/lib/auth-helpers';
 
-export default function MainLayout({
+export default async function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const currentUser = await getCurrentUserDetails();
+
+  const name = currentUser
+    ? `${currentUser.firstName} ${currentUser.lastName ?? ''}`.trim()
+    : 'User';
+
+  const sidebarUser = {
+    name,
+    email: currentUser?.email ?? '',
+    avatar: currentUser?.avatarUrl ?? '',
+    role: currentUser?.role ?? 'DIRECTOR',
+  };
+
   return (
     <SidebarProvider>
       <div className="print:hidden">
-        <AppSidebar />
+        <AppSidebar user={sidebarUser} />
       </div>
       <SidebarInset className="print:m-0">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-primary text-primary-foreground px-4 print:hidden">
@@ -32,7 +46,7 @@ export default function MainLayout({
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8 print:p-0 pb-20 md:pb-6">
           {children}
         </div>
-        <MobileNav />
+        <MobileNav role={sidebarUser.role} />
       </SidebarInset>
     </SidebarProvider>
   );

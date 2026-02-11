@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyToken } from './lib/jwt';
+import { canAccess, matchPathToResource } from './lib/rbac';
 
 // Routes that don't require authentication
 const PUBLIC_ROUTES = ['/login'];
@@ -16,10 +17,12 @@ export async function middleware(request: NextRequest) {
 
   // Check if user is authenticated
   let isAuthenticated = false;
+  let role: string | null = null;
   if (token) {
     try {
-      await verifyToken(token);
+      const payload = await verifyToken(token);
       isAuthenticated = true;
+      role = (payload as { role?: string }).role ?? null;
     } catch {
       // Token is invalid or expired
       isAuthenticated = false;
@@ -47,6 +50,13 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('from', pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (isAuthenticated && role) {
+    const resource = matchPathToResource(pathname);
+    if (resource && !canAccess(role, resource, 'read')) {
+      return NextResponse.redirect(new URL('/forbidden', request.url));
+    }
   }
 
   return NextResponse.next();

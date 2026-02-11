@@ -14,6 +14,8 @@ import {
   getMachinesByProject,
   getMachineById,
 } from './service';
+import { getCurrentUser } from '@/lib/auth-helpers';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 
 // =============================================================================
 // Machine Actions - Server Action Layer
@@ -31,12 +33,15 @@ type ActionResult<T = unknown> = {
 export async function createMachineAction(
   data: TCreateMachine
 ): Promise<ActionResult> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     // Validate input
     const validated = CreateMachineSchema.parse(data);
 
     // Call service
-    const machine = await createMachine(validated);
+    const machine = await createMachine(actor, validated);
 
     // Revalidate project page to show new machine
     revalidatePath(`/projects/${machine.projectId}`);
@@ -47,7 +52,7 @@ export async function createMachineAction(
       data: machine,
     };
   } catch (error) {
-    console.error('Error creating machine:', error);
+    console.error('[CPIS-ERROR] Machines.Create:', error);
     return {
       success: false,
       error:
@@ -64,6 +69,9 @@ export async function createMachineAction(
 export async function updateMachineAction(
   data: TUpdateMachine
 ): Promise<ActionResult> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     // Validate input
     const validated = UpdateMachineSchema.parse(data);
@@ -76,7 +84,7 @@ export async function updateMachineAction(
     }
 
     // Call service
-    const machine = await updateMachine(validated.id, validated);
+    const machine = await updateMachine(actor, validated.id, validated);
 
     // Revalidate project page
     revalidatePath(`/projects/${machine.projectId}`);
@@ -87,7 +95,7 @@ export async function updateMachineAction(
       data: machine,
     };
   } catch (error) {
-    console.error('Error updating machine:', error);
+    console.error('[CPIS-ERROR] Machines.Update:', error);
     return {
       success: false,
       error:
@@ -102,6 +110,9 @@ export async function updateMachineAction(
  * Delete a machine (soft delete)
  */
 export async function deleteMachineAction(id: string): Promise<ActionResult> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     if (!id) {
       return {
@@ -111,7 +122,7 @@ export async function deleteMachineAction(id: string): Promise<ActionResult> {
     }
 
     // Get machine to find projectId for revalidation
-    const machine = await getMachineById(id);
+    const machine = await getMachineById(actor, id);
     if (!machine) {
       return {
         success: false,
@@ -120,7 +131,7 @@ export async function deleteMachineAction(id: string): Promise<ActionResult> {
     }
 
     // Call service
-    await deleteMachine(id);
+    await deleteMachine(actor, id);
 
     // Revalidate project page
     revalidatePath(`/projects/${machine.projectId}`);
@@ -130,7 +141,7 @@ export async function deleteMachineAction(id: string): Promise<ActionResult> {
       success: true,
     };
   } catch (error) {
-    console.error('Error deleting machine:', error);
+    console.error('[CPIS-ERROR] Machines.Delete:', error);
     return {
       success: false,
       error:
@@ -147,6 +158,9 @@ export async function deleteMachineAction(id: string): Promise<ActionResult> {
 export async function getMachinesByProjectAction(
   projectId: string
 ): Promise<ActionResult> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     if (!projectId) {
       return {
@@ -155,6 +169,7 @@ export async function getMachinesByProjectAction(
       };
     }
 
+    ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'read');
     const machines = await getMachinesByProject(projectId);
 
     return {
@@ -162,7 +177,7 @@ export async function getMachinesByProjectAction(
       data: machines,
     };
   } catch (error) {
-    console.error('Error fetching machines:', error);
+    console.error('[CPIS-ERROR] Machines.ListByProject:', error);
     return {
       success: false,
       error:
@@ -177,6 +192,9 @@ export async function getMachinesByProjectAction(
  * Get a single machine by ID
  */
 export async function getMachineByIdAction(id: string): Promise<ActionResult> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     if (!id) {
       return {
@@ -185,7 +203,7 @@ export async function getMachineByIdAction(id: string): Promise<ActionResult> {
       };
     }
 
-    const machine = await getMachineById(id);
+    const machine = await getMachineById(actor, id);
 
     if (!machine) {
       return {
@@ -199,7 +217,7 @@ export async function getMachineByIdAction(id: string): Promise<ActionResult> {
       data: machine,
     };
   } catch (error) {
-    console.error('Error fetching machine:', error);
+    console.error('[CPIS-ERROR] Machines.GetById:', error);
     return {
       success: false,
       error:

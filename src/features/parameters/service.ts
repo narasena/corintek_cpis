@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { TCreateParameter, TUpdateParameter, IParameter } from './types';
+import type { IJwtPayload } from '@/@types/auth.type';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 
 // =============================================================================
 // Parameter Service - Business Logic
@@ -8,7 +10,9 @@ import { TCreateParameter, TUpdateParameter, IParameter } from './types';
 /**
  * Get all active parameters
  */
-export async function getAllParameters(): Promise<IParameter[]> {
+export async function getAllParameters(actor: IJwtPayload): Promise<IParameter[]> {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+
   const parameters = await prisma.parameter.findMany({
     where: {
       deletedAt: null,
@@ -22,7 +26,12 @@ export async function getAllParameters(): Promise<IParameter[]> {
 /**
  * Get a single parameter by ID
  */
-export async function getParameterById(id: string): Promise<IParameter | null> {
+export async function getParameterById(
+  actor: IJwtPayload,
+  id: string
+): Promise<IParameter | null> {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+
   const parameter = await prisma.parameter.findUnique({
     where: {
       id,
@@ -39,8 +48,11 @@ export async function getParameterById(id: string): Promise<IParameter | null> {
  * Create a new parameter
  */
 export async function createParameter(
+  actor: IJwtPayload,
   data: TCreateParameter
 ): Promise<IParameter> {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'create');
+
   const parameter = await prisma.parameter.create({
     data: {
       name: data.name,
@@ -64,8 +76,11 @@ export async function createParameter(
  * Update an existing parameter
  */
 export async function updateParameter(
+  actor: IJwtPayload,
   data: TUpdateParameter
 ): Promise<IParameter> {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
+
   const { id, ...updateData } = data;
 
   const parameter = await prisma.parameter.update({
@@ -79,7 +94,12 @@ export async function updateParameter(
 /**
  * Soft delete a parameter
  */
-export async function deleteParameter(id: string): Promise<IParameter> {
+export async function deleteParameter(
+  actor: IJwtPayload,
+  id: string
+): Promise<IParameter> {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'delete');
+
   const parameter = await prisma.parameter.update({
     where: { id },
     data: {

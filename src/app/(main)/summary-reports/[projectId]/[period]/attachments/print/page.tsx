@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { PrintButton } from '@/components/print-button';
 import { getProjectById } from '@/features/projects/service';
 import { ensureSummaryReport } from '@/features/summary-reports/service';
+import { getCurrentUser } from '@/lib/auth-helpers';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 
 interface PageProps {
   params: Promise<{ projectId: string; period: string }>;
@@ -43,13 +45,17 @@ function getPdfEmbedUrl(url: string) {
 export default async function SummaryReportAttachmentsPrintPage({
   params,
 }: PageProps) {
+  const actor = await getCurrentUser();
+  if (!actor) return notFound();
+  ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'read');
+
   const { projectId, period } = await params;
   const periodDate = parsePeriod(period);
   if (!periodDate) return notFound();
 
   const [project, summaryReport] = await Promise.all([
     getProjectById(projectId),
-    ensureSummaryReport(projectId, periodDate),
+    ensureSummaryReport(actor, projectId, periodDate),
   ]);
 
   if (!project || !summaryReport) return notFound();

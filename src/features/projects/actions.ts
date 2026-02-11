@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import * as projectService from './service';
+import { getCurrentUser } from '@/lib/auth-helpers';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 import {
   CreateProjectSchema,
   UpdateProjectSchema,
@@ -21,6 +23,9 @@ import {
 export async function upsertProjectParameterOverrideAction(
   data: TProjectParameterOverride
 ) {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     const validatedData = ProjectParameterOverrideSchema.parse(data);
 
@@ -28,7 +33,7 @@ export async function upsertProjectParameterOverrideAction(
       throw new Error('Project ID dan Parameter ID wajib diisi');
     }
 
-    const override = await projectService.upsertProjectParameterOverride({
+    const override = await projectService.upsertProjectParameterOverride(actor, {
       projectId: validatedData.projectId,
       parameterId: validatedData.parameterId,
       minValue: validatedData.minValue,
@@ -43,6 +48,7 @@ export async function upsertProjectParameterOverrideAction(
 
     return { success: true, data: override };
   } catch (error: any) {
+    console.error('[CPIS-ERROR] Projects.UpsertParameterOverride:', error);
     return {
       success: false,
       error: error.message || 'Gagal menyimpan pengaturan parameter',
@@ -54,13 +60,17 @@ export async function upsertProjectParameterOverrideAction(
  * Create project action
  */
 export async function createProjectAction(data: TCreateProject) {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     const validatedData = CreateProjectSchema.parse(data);
-    const project = await projectService.createProject(validatedData);
+    const project = await projectService.createProject(actor, validatedData);
 
     revalidatePath('/projects');
     return { success: true, data: project };
   } catch (error: any) {
+    console.error('[CPIS-ERROR] Projects.Create:', error);
     return {
       success: false,
       error: error.message || 'Gagal membuat proyek',
@@ -72,13 +82,17 @@ export async function createProjectAction(data: TCreateProject) {
  * Update project action
  */
 export async function updateProjectAction(data: TUpdateProject) {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     const validatedData = UpdateProjectSchema.parse(data);
-    const project = await projectService.updateProject(validatedData);
+    const project = await projectService.updateProject(actor, validatedData);
 
     revalidatePath('/projects');
     return { success: true, data: project };
   } catch (error: any) {
+    console.error('[CPIS-ERROR] Projects.Update:', error);
     return {
       success: false,
       error: error.message || 'Gagal memperbarui proyek',
@@ -90,12 +104,16 @@ export async function updateProjectAction(data: TUpdateProject) {
  * Delete project action
  */
 export async function deleteProjectAction(id: string) {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
-    await projectService.deleteProject(id);
+    await projectService.deleteProject(actor, id);
 
     revalidatePath('/projects');
     return { success: true };
   } catch (error: any) {
+    console.error('[CPIS-ERROR] Projects.Delete:', error);
     return {
       success: false,
       error: error.message || 'Gagal menghapus proyek',
@@ -107,11 +125,15 @@ export async function deleteProjectAction(id: string) {
  * Get projects action (for internal data fetching if needed)
  */
 export async function getProjectsAction() {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
+    ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
     const projects = await projectService.getProjects();
     return { success: true, data: projects };
   } catch (error: any) {
-    console.error('[getProjectsAction] Error:', error);
+    console.error('[CPIS-ERROR] Projects.List:', error);
     return {
       success: false,
       error: error.message || 'Gagal mengambil data proyek',
@@ -123,13 +145,18 @@ export async function getProjectsAction() {
  * Get single project action
  */
 export async function getProjectAction(id: string) {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
+    ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
     const project = await projectService.getProjectById(id);
     if (!project) {
       return { success: false, error: 'Proyek tidak ditemukan' };
     }
     return { success: true, data: project };
   } catch (error: any) {
+    console.error('[CPIS-ERROR] Projects.GetById:', error);
     return {
       success: false,
       error: error.message || 'Gagal mengambil data proyek',

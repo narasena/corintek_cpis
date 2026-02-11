@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import * as parameterService from './service';
+import { getCurrentUser } from '@/lib/auth-helpers';
 import {
   CreateParameterSchema,
   UpdateParameterSchema,
@@ -17,10 +18,14 @@ import {
  * Get all parameters action
  */
 export async function getParametersAction() {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
-    const parameters = await parameterService.getAllParameters();
+    const parameters = await parameterService.getAllParameters(actor);
     return { success: true, data: parameters };
   } catch (error: any) {
+    console.error('[CPIS-ERROR] Parameters.List:', error);
     return {
       success: false,
       error: error.message || 'Gagal mengambil data parameter',
@@ -32,13 +37,17 @@ export async function getParametersAction() {
  * Create parameter action
  */
 export async function createParameterAction(data: TCreateParameter) {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     const validatedData = CreateParameterSchema.parse(data);
-    const parameter = await parameterService.createParameter(validatedData);
+    const parameter = await parameterService.createParameter(actor, validatedData);
 
     revalidatePath('/parameters');
     return { success: true, data: parameter };
   } catch (error: any) {
+    console.error('[CPIS-ERROR] Parameters.Create:', error);
     // Handle Prisma unique constraint violation
     // Check both standard Prisma error object and string representation for robustness
     const isUniqueConstraintViolation =
@@ -68,19 +77,17 @@ export async function createParameterAction(data: TCreateParameter) {
  * Update parameter action
  */
 export async function updateParameterAction(data: TUpdateParameter) {
-  // DEBUG: Log incoming data
-  console.log('[DEBUG] updateParameterAction received data:', data);
-  console.log('[DEBUG] updateParameterAction data.id:', data.id);
-  console.log('[DEBUG] updateParameterAction id type:', typeof data.id);
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
     const validatedData = UpdateParameterSchema.parse(data);
-    console.log('[DEBUG] Validation passed, validatedData:', validatedData);
-    const parameter = await parameterService.updateParameter(validatedData);
+    const parameter = await parameterService.updateParameter(actor, validatedData);
 
     revalidatePath('/parameters');
     return { success: true, data: parameter };
   } catch (error: any) {
+    console.error('[CPIS-ERROR] Parameters.Update:', error);
     // Handle Prisma unique constraint violation
     // Check both standard Prisma error object and string representation for robustness
     const isUniqueConstraintViolation =
@@ -110,12 +117,16 @@ export async function updateParameterAction(data: TUpdateParameter) {
  * Delete parameter action
  */
 export async function deleteParameterAction(id: string) {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
-    await parameterService.deleteParameter(id);
+    await parameterService.deleteParameter(actor, id);
 
     revalidatePath('/parameters');
     return { success: true };
   } catch (error: any) {
+    console.error('[CPIS-ERROR] Parameters.Delete:', error);
     return {
       success: false,
       error: error.message || 'Gagal menghapus parameter',

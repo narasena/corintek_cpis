@@ -15,6 +15,7 @@ import {
   deleteChemical,
 } from './service';
 import { revalidatePath } from 'next/cache';
+import { getCurrentUser } from '@/lib/auth-helpers';
 
 type TActionResponse<T = unknown> = {
   success: boolean;
@@ -28,12 +29,15 @@ type TActionResponse<T = unknown> = {
 export async function createChemicalAction(
   input: TChemicalCreateInput
 ): Promise<TActionResponse<TChemical>> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     // Validate input
     const validatedData = chemicalCreateSchema.parse(input);
 
     // Call service
-    const chemical = await createChemical(validatedData);
+    const chemical = await createChemical(actor, validatedData);
 
     // Revalidate chemical list pages
     revalidatePath('/chemicals');
@@ -43,6 +47,7 @@ export async function createChemicalAction(
       data: chemical,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Chemicals.Create:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Gagal membuat chemical',
@@ -56,13 +61,17 @@ export async function createChemicalAction(
 export async function getChemicalsAction(): Promise<
   TActionResponse<TChemical[]>
 > {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
-    const chemicals = await getAllChemicals();
+    const chemicals = await getAllChemicals(actor);
     return {
       success: true,
       data: chemicals,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Chemicals.List:', error);
     return {
       success: false,
       error:
@@ -79,12 +88,15 @@ export async function getChemicalsAction(): Promise<
 export async function updateChemicalAction(
   input: TChemicalUpdateInput
 ): Promise<TActionResponse<TChemical>> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     // Validate input
     const validatedData = chemicalUpdateSchema.parse(input);
 
     // Call service
-    const chemical = await updateChemical(validatedData);
+    const chemical = await updateChemical(actor, validatedData);
 
     // Revalidate chemical list pages
     revalidatePath('/chemicals');
@@ -94,6 +106,7 @@ export async function updateChemicalAction(
       data: chemical,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Chemicals.Update:', error);
     return {
       success: false,
       error:
@@ -108,10 +121,13 @@ export async function updateChemicalAction(
 export async function deleteChemicalAction(
   id: string
 ): Promise<TActionResponse<boolean>> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     if (!id) throw new Error('ID required');
 
-    await deleteChemical(id);
+    await deleteChemical(actor, id);
 
     revalidatePath('/chemicals');
 
@@ -120,6 +136,7 @@ export async function deleteChemicalAction(
       data: true,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Chemicals.Delete:', error);
     return {
       success: false,
       error:
@@ -134,14 +151,18 @@ export async function deleteChemicalAction(
 export async function getAllChemicalsAction(): Promise<
   TActionResponse<TChemical[]>
 > {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
-    const chemicals = await getAllChemicals();
+    const chemicals = await getAllChemicals(actor);
 
     return {
       success: true,
       data: chemicals,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Chemicals.ListAll:', error);
     return {
       success: false,
       error:
@@ -158,18 +179,22 @@ export async function getAllChemicalsAction(): Promise<
 export async function getChemicalByIdAction(
   id: string
 ): Promise<TActionResponse<TChemical>> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     if (!id || typeof id !== 'string') {
       throw new Error('ID chemical tidak valid');
     }
 
-    const chemical = await getChemicalById(id);
+    const chemical = await getChemicalById(actor, id);
 
     return {
       success: true,
       data: chemical,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Chemicals.GetById:', error);
     return {
       success: false,
       error:

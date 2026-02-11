@@ -1,9 +1,11 @@
 import { prisma } from '@/lib/prisma';
+import type { IJwtPayload } from '@/@types/auth.type';
 import type {
   CreateSummaryReportInput,
   UpdateSummaryReportInput,
 } from './types';
 import { SummaryReport, ParameterCategory } from '@/generated/prisma/client';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 
 export async function getSummaryReports(projectId: string) {
   return await prisma.summaryReport.findMany({
@@ -26,7 +28,11 @@ export async function getSummaryReportByPeriod(
   });
 }
 
-export async function createSummaryReport(data: CreateSummaryReportInput) {
+export async function createSummaryReport(
+  actor: IJwtPayload,
+  data: CreateSummaryReportInput
+) {
+  ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'create');
   const { projectId, period, ...rest } = data;
   return await prisma.summaryReport.create({
     data: {
@@ -37,7 +43,16 @@ export async function createSummaryReport(data: CreateSummaryReportInput) {
   });
 }
 
-export async function updateSummaryReport(data: UpdateSummaryReportInput) {
+export async function updateSummaryReport(
+  actor: IJwtPayload,
+  data: UpdateSummaryReportInput
+) {
+  ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'update');
+
+  if (data.status === 'FINAL' && actor.role !== 'REPORTING' && actor.role !== 'ADMIN') {
+    throw new Error('Unauthorized');
+  }
+
   const { id, ...rest } = data;
   return await prisma.summaryReport.update({
     where: { id },
@@ -46,11 +61,16 @@ export async function updateSummaryReport(data: UpdateSummaryReportInput) {
 }
 
 // Ensure a report exists for the period (upsert logic basically)
-export async function ensureSummaryReport(projectId: string, period: Date) {
+export async function ensureSummaryReport(
+  actor: IJwtPayload,
+  projectId: string,
+  period: Date
+) {
+  ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'create');
   const existing = await getSummaryReportByPeriod(projectId, period);
   if (existing) return existing;
 
-  return await createSummaryReport({ projectId, period });
+  return await createSummaryReport(actor, { projectId, period });
 }
 
 function getMonthRange(period: Date) {

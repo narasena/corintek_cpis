@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { TCreateProject, TUpdateProject, IProject } from './types';
+import type { IJwtPayload } from '@/@types/auth.type';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 
 // =============================================================================
 // Project Service - Business Logic
@@ -101,14 +103,19 @@ export async function getProjectById(id: string): Promise<IProject | null> {
 /**
  * Upsert project parameter override
  */
-export async function upsertProjectParameterOverride(data: {
-  projectId: string;
-  parameterId: string;
-  minValue?: number | null;
-  maxValue?: number | null;
-  rawWaterMinValue?: number | null;
-  rawWaterMaxValue?: number | null;
-}) {
+export async function upsertProjectParameterOverride(
+  actor: IJwtPayload,
+  data: {
+    projectId: string;
+    parameterId: string;
+    minValue?: number | null;
+    maxValue?: number | null;
+    rawWaterMinValue?: number | null;
+    rawWaterMaxValue?: number | null;
+  }
+) {
+  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'update');
+
   const { projectId, parameterId, ...overrides } = data;
 
   return prisma.projectParameterOverride.upsert({
@@ -129,7 +136,12 @@ export async function upsertProjectParameterOverride(data: {
 /**
  * Create a new project with optional machines
  */
-export async function createProject(data: TCreateProject): Promise<IProject> {
+export async function createProject(
+  actor: IJwtPayload,
+  data: TCreateProject
+): Promise<IProject> {
+  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'create');
+
   const { machines, ...projectData } = data;
 
   // Use transaction to ensure atomicity
@@ -182,7 +194,12 @@ export async function createProject(data: TCreateProject): Promise<IProject> {
 /**
  * Update an existing project
  */
-export async function updateProject(data: TUpdateProject): Promise<IProject> {
+export async function updateProject(
+  actor: IJwtPayload,
+  data: TUpdateProject
+): Promise<IProject> {
+  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'update');
+
   const { id, machines, ...updateData } = data;
 
   // Use transaction to ensure atomicity
@@ -279,7 +296,12 @@ export async function updateProject(data: TUpdateProject): Promise<IProject> {
 /**
  * Soft delete a project
  */
-export async function deleteProject(id: string): Promise<IProject> {
+export async function deleteProject(
+  actor: IJwtPayload,
+  id: string
+): Promise<IProject> {
+  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'delete');
+
   const project = await prisma.project.update({
     where: { id },
     data: {

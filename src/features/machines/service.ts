@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { TCreateMachine, TUpdateMachine } from './types';
+import type { IJwtPayload } from '@/@types/auth.type';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 
 // =============================================================================
 // Machine Service - Pure Business Logic Layer
@@ -8,7 +10,8 @@ import { TCreateMachine, TUpdateMachine } from './types';
 /**
  * Create a new machine for a project
  */
-export async function createMachine(data: TCreateMachine) {
+export async function createMachine(actor: IJwtPayload, data: TCreateMachine) {
+  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'update');
   return await prisma.machine.create({
     data: {
       projectId: data.projectId,
@@ -35,7 +38,12 @@ export async function createMachine(data: TCreateMachine) {
 /**
  * Update an existing machine
  */
-export async function updateMachine(id: string, data: TUpdateMachine) {
+export async function updateMachine(
+  actor: IJwtPayload,
+  id: string,
+  data: TUpdateMachine
+) {
+  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'update');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id: _id, ...updateData } = data;
 
@@ -72,7 +80,8 @@ export async function updateMachine(id: string, data: TUpdateMachine) {
 /**
  * Soft delete a machine (set deletedAt timestamp)
  */
-export async function deleteMachine(id: string) {
+export async function deleteMachine(actor: IJwtPayload, id: string) {
+  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'delete');
   return await prisma.machine.update({
     where: { id },
     data: {
@@ -100,7 +109,8 @@ export async function getMachinesByProject(projectId: string) {
 /**
  * Get a single machine by ID with project relation
  */
-export async function getMachineById(id: string) {
+export async function getMachineById(actor: IJwtPayload, id: string) {
+  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'read');
   return await prisma.machine.findUnique({
     where: { id },
     include: {

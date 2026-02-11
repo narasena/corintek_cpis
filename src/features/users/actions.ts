@@ -15,6 +15,7 @@ import {
 } from './service';
 import { revalidatePath } from 'next/cache';
 import { TUserResponse } from '@/@types/user.type';
+import { getCurrentUser } from '@/lib/auth-helpers';
 
 type TActionResponse<T = unknown> = {
   success: boolean;
@@ -28,6 +29,9 @@ type TActionResponse<T = unknown> = {
 export async function createUserAction(
   input: TUserCreateInput
 ): Promise<TActionResponse<TUserResponse>> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     // Validate input
     const validatedData = userCreateSchema.parse(input);
@@ -37,7 +41,7 @@ export async function createUserAction(
     const { confirmPassword, ...userData } = validatedData;
 
     // Call service
-    const user = await createUser(userData);
+    const user = await createUser(actor, userData);
 
     // Revalidate user list pages
     revalidatePath('/users');
@@ -48,6 +52,7 @@ export async function createUserAction(
       data: user,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Users.Create:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Gagal membuat pengguna',
@@ -61,14 +66,18 @@ export async function createUserAction(
 export async function getAllUsersAction(): Promise<
   TActionResponse<TUserResponse[]>
 > {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
-    const users = await getAllUsers();
+    const users = await getAllUsers(actor);
 
     return {
       success: true,
       data: users,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Users.List:', error);
     return {
       success: false,
       error:
@@ -85,18 +94,22 @@ export async function getAllUsersAction(): Promise<
 export async function getUserByIdAction(
   id: string
 ): Promise<TActionResponse<TUserResponse>> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     if (!id || typeof id !== 'string') {
       throw new Error('ID pengguna tidak valid');
     }
 
-    const user = await getUserById(id);
+    const user = await getUserById(actor, id);
 
     return {
       success: true,
       data: user,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Users.GetById:', error);
     return {
       success: false,
       error:
@@ -114,6 +127,9 @@ export async function updateUserAction(
   id: string,
   input: TUserUpdateInput
 ): Promise<TActionResponse<TUserResponse>> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     if (!id || typeof id !== 'string') {
       throw new Error('ID pengguna tidak valid');
@@ -123,7 +139,7 @@ export async function updateUserAction(
     const validatedData = userUpdateSchema.parse(input);
 
     // Call service
-    const user = await updateUser(id, validatedData);
+    const user = await updateUser(actor, id, validatedData);
 
     // Revalidate user pages
     revalidatePath('/users');
@@ -135,6 +151,7 @@ export async function updateUserAction(
       data: user,
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Users.Update:', error);
     return {
       success: false,
       error:
@@ -147,12 +164,15 @@ export async function updateUserAction(
  * Server Action: Delete user (soft delete)
  */
 export async function deleteUserAction(id: string): Promise<TActionResponse> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
   try {
     if (!id || typeof id !== 'string') {
       throw new Error('ID pengguna tidak valid');
     }
 
-    await deleteUser(id);
+    await deleteUser(actor, id);
 
     // Revalidate user pages
     revalidatePath('/users');
@@ -163,6 +183,7 @@ export async function deleteUserAction(id: string): Promise<TActionResponse> {
       data: { id },
     };
   } catch (error) {
+    console.error('[CPIS-ERROR] Users.Delete:', error);
     return {
       success: false,
       error:
