@@ -87,8 +87,8 @@ const data = {
       icon: Users,
     },
     {
-      title: 'Absence',
-      url: '/absence',
+      title: 'Absensi',
+      url: '/attendance',
       icon: Clock,
     },
   ],

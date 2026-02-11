@@ -30,10 +30,10 @@ export function MobileNav() {
       active: pathname.startsWith('/log-sheets'),
     },
     {
-      href: '/absence',
-      label: 'Absence',
+      href: '/attendance',
+      label: 'Absensi',
       icon: Clock,
-      active: pathname.startsWith('/absence'),
+      active: pathname.startsWith('/attendance'),
     },
   ];
 
