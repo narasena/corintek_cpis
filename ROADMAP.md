@@ -227,23 +227,23 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 
 #### 4.1 Attendance (Absensi)
 
-**Scope ID:** `AB-01` (Schema & Service)
+**Scope ID:** `AB-01` (Schema & Service) ✅
 **Tasks:**
 
-- [ ] Create `Attendance` schema (userId, clockIn, clockOut, photos)
-- [ ] Service and actions for clock-in/out
+- [x] Create `Attendance` schema (userId, clockIn, clockOut, photos)
+- [x] Service and actions for clock-in/out
 
-**Scope ID:** `AB-02` (UI)
+**Scope ID:** `AB-02` (UI) ✅
 **Tasks:**
 
-- [ ] Clock In/Out button with photo capture
-- [ ] Today's record display
+- [x] Clock In/Out button with photo capture
+- [x] Today's record display
 
-**Scope ID:** `AB-03` (Admin)
+**Scope ID:** `AB-03` (Admin) ✅
 **Tasks:**
 
-- [ ] Admin view of attendance records
-- [ ] Export to Excel
+- [x] Admin view of attendance records
+- [x] Export to Excel
 
 #### 4.2 Notifications
 
