@@ -206,15 +206,10 @@ These improve operations significantly but can be delayed a few days if necessar
 - [x] Store in R2, link to Project
 - [x] PDF preview/download UI (Attachment Pack Print View)
 
-#### 3.2 Basic Dashboard
+#### 3.2 Basic Dashboard (DB-01) ✅
 
-**Scope ID:** `DB-01`
-**Estimated Prompts:** 1
-**Tasks:**
-
-- [ ] Dashboard layout with project cards/stats
-- [ ] Active projects count
-- [ ] Quick status indicators
+- [x] Dashboard layout with project cards/stats (Scoped for PIC/Technician/Client)
+- [x] Active projects count & Quick action buttons
 - [ ] Recent activity list
 
 #### 3.3 Log Sheet Ops
