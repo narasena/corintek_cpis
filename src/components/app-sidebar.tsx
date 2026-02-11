@@ -4,6 +4,7 @@ import * as React from 'react';
 import {
   BookUser,
   Building2,
+  ClipboardList,
   Clock,
   FileSpreadsheet,
   FileText,
@@ -49,6 +50,11 @@ const data = {
       title: 'Projects',
       url: '/projects',
       icon: Building2,
+    },
+    {
+      title: 'Summary Reports',
+      url: '/summary-reports',
+      icon: ClipboardList,
     },
     {
       title: 'Log Sheets',
