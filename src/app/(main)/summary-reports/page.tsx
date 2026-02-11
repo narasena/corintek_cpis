@@ -1,6 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -18,7 +24,10 @@ import {
 } from '@/components/ui/select';
 import { getProjectsAction } from '@/features/projects/actions';
 import type { IProject } from '@/features/projects/types';
-import { createSummaryReportAction } from '@/features/summary-reports/actions';
+import {
+  createSummaryReportAction,
+  uploadSummaryReportAttachmentsAction,
+} from '@/features/summary-reports/actions';
 
 export default function SummaryReportsPage() {
   const router = useRouter();
@@ -34,6 +43,17 @@ export default function SummaryReportsPage() {
     lab: true,
     work: true,
     chemical: true,
+  });
+  const [attachments, setAttachments] = useState<{
+    dataTemuan: File | null;
+    dataBlowdown: File | null;
+    dataSuhu: File | null;
+    dataSuratJalan: File | null;
+  }>({
+    dataTemuan: null,
+    dataBlowdown: null,
+    dataSuhu: null,
+    dataSuratJalan: null,
   });
 
   const fetchProjects = useCallback(async () => {
@@ -59,6 +79,17 @@ export default function SummaryReportsPage() {
   const canSubmit = useMemo(() => {
     return !!projectId && !!monthStr;
   }, [projectId, monthStr]);
+
+  const hasAttachments = useMemo(() => {
+    return Object.values(attachments).some(Boolean);
+  }, [attachments]);
+
+  const handleAttachmentChange =
+    (key: keyof typeof attachments) =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0] ?? null;
+      setAttachments(prev => ({ ...prev, [key]: file }));
+    };
 
   const handleSubmit = async () => {
     if (!canSubmit) {
@@ -94,7 +125,45 @@ export default function SummaryReportsPage() {
     });
 
     const periodLabel = `${year}-${String(month).padStart(2, '0')}`;
+
+    if (hasAttachments) {
+      const attachForm = new FormData();
+      attachForm.set('projectId', projectId);
+      attachForm.set('period', monthStr);
+      if (attachments.dataTemuan)
+        attachForm.set('dataTemuanFile', attachments.dataTemuan);
+      if (attachments.dataBlowdown)
+        attachForm.set('dataBlowdownFile', attachments.dataBlowdown);
+      if (attachments.dataSuhu)
+        attachForm.set('dataSuhuFile', attachments.dataSuhu);
+      if (attachments.dataSuratJalan)
+        attachForm.set('dataSuratJalanFile', attachments.dataSuratJalan);
+
+      const uploadRes = await uploadSummaryReportAttachmentsAction(attachForm);
+      if ((uploadRes as any)?.error) {
+        toast.error('Gagal mengupload lampiran', {
+          description: (uploadRes as any).error,
+        });
+      } else {
+        toast.success('Lampiran tersimpan', {
+          description: 'Lampiran siap dicetak terpisah',
+        });
+      }
+    }
+
     router.push(`/summary-reports/${projectId}/${periodLabel}/print`);
+  };
+
+  const handleOpenAttachments = () => {
+    if (!canSubmit) {
+      toast.error('Lengkapi pilihan proyek dan periode');
+      return;
+    }
+    const [year, month] = monthStr.split('-').map(Number);
+    const periodLabel = `${year}-${String(month).padStart(2, '0')}`;
+    router.push(
+      `/summary-reports/${projectId}/${periodLabel}/attachments/print`
+    );
   };
 
   return (
@@ -110,7 +179,11 @@ export default function SummaryReportsPage() {
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Proyek</label>
-            <Select value={projectId} onValueChange={v => setProjectId(v)}>
+            <Select
+              value={projectId}
+              onValueChange={v => setProjectId(v)}
+              disabled={loading}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih proyek" />
               </SelectTrigger>
@@ -203,9 +276,77 @@ export default function SummaryReportsPage() {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <h2 className="text-lg font-semibold">Lampiran Klien</h2>
+        <p className="text-muted-foreground text-sm">
+          PDF atau gambar akan dicetak terpisah pada Attachment Pack.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Data Temuan</label>
+            <Input
+              type="file"
+              accept="application/pdf,image/*"
+              onChange={handleAttachmentChange('dataTemuan')}
+            />
+            {attachments.dataTemuan && (
+              <p className="text-xs text-muted-foreground">
+                {attachments.dataTemuan.name}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Data Blowdown Silang</label>
+            <Input
+              type="file"
+              accept="application/pdf,image/*"
+              onChange={handleAttachmentChange('dataBlowdown')}
+            />
+            {attachments.dataBlowdown && (
+              <p className="text-xs text-muted-foreground">
+                {attachments.dataBlowdown.name}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Data Suhu</label>
+            <Input
+              type="file"
+              accept="application/pdf,image/*"
+              onChange={handleAttachmentChange('dataSuhu')}
+            />
+            {attachments.dataSuhu && (
+              <p className="text-xs text-muted-foreground">
+                {attachments.dataSuhu.name}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Data Surat Jalan</label>
+            <Input
+              type="file"
+              accept="application/pdf,image/*"
+              onChange={handleAttachmentChange('dataSuratJalan')}
+            />
+            {attachments.dataSuratJalan && (
+              <p className="text-xs text-muted-foreground">
+                {attachments.dataSuratJalan.name}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={() => router.push('/reports')}>
           Batal
+        </Button>
+        <Button
+          variant="outline"
+          onClick={handleOpenAttachments}
+          disabled={!canSubmit}
+        >
+          Cetak Lampiran
         </Button>
         <Button onClick={handleSubmit} disabled={!canSubmit}>
           Buat & Cetak

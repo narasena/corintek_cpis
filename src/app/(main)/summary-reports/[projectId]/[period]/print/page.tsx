@@ -80,9 +80,18 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-gray-100 p-8 print:p-0 print:bg-white">
       <div className="max-w-[210mm] mx-auto mb-6 flex items-center justify-between print:hidden">
-        <Button variant="ghost" asChild>
-          <Link href="/summary-reports">Kembali</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" asChild>
+            <Link href="/summary-reports">Kembali</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link
+              href={`/summary-reports/${projectId}/${period}/attachments/print`}
+            >
+              Lampiran
+            </Link>
+          </Button>
+        </div>
         <PrintButton />
       </div>
 

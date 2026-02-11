@@ -79,6 +79,59 @@ const getByPeriodSchema = z.object({
     .refine(date => !isNaN(date.getTime()), { message: 'Invalid date' }),
 });
 
+const attachmentSchema = z.object({
+  projectId: z.string().uuid(),
+  period: z
+    .string()
+    .transform(value => {
+      const d = new Date(value);
+      return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+    })
+    .refine(date => !isNaN(date.getTime()), { message: 'Invalid date' }),
+});
+
+function isAllowedAttachmentType(file: File) {
+  return file.type === 'application/pdf' || file.type.startsWith('image/');
+}
+
+async function uploadSummaryReportAttachment(
+  file: File,
+  projectId: string,
+  reportId: string
+) {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const workerUrl = process.env.R2_WORKER_URL;
+  const authSecret = process.env.R2_AUTH_SECRET;
+
+  if (!workerUrl || !authSecret) {
+    throw new Error('Server configuration error: Missing R2 credentials');
+  }
+
+  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const key = `projects/${projectId}/summary-reports/${reportId}/attachments/${Date.now()}_${sanitizedName}`;
+
+  const response = await fetch(`${workerUrl}/${key}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${authSecret}`,
+      'Content-Type': file.type,
+    },
+    body: buffer,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[CPIS-ERROR] SummaryReport.AttachmentUpload:', {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorText,
+    });
+    throw new Error(`Upload failed: ${response.statusText}`);
+  }
+
+  return `${workerUrl}/${key}`;
+}
+
 export async function createSummaryReportAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) return { error: 'Unauthorized' };
@@ -150,5 +203,104 @@ export async function getSummaryReportByPeriodAction(
   } catch (error) {
     console.error('[CPIS-ERROR] SummaryReport.GetByPeriod:', error);
     return { error: 'Failed to fetch report' };
+  }
+}
+
+export async function uploadSummaryReportAttachmentsAction(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Unauthorized' };
+
+  const data = Object.fromEntries(formData);
+  const parsed = attachmentSchema.safeParse(data);
+
+  if (!parsed.success) {
+    return {
+      error: 'Validation failed',
+      fields: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  const periodLabel = formData.get('period') as string;
+
+  try {
+    const report = await service.ensureSummaryReport(
+      parsed.data.projectId,
+      parsed.data.period
+    );
+
+    const dataTemuanFile = formData.get('dataTemuanFile') as File | null;
+    const dataBlowdownFile = formData.get('dataBlowdownFile') as File | null;
+    const dataSuhuFile = formData.get('dataSuhuFile') as File | null;
+    const dataSuratJalanFile = formData.get(
+      'dataSuratJalanFile'
+    ) as File | null;
+
+    const updates: {
+      id: string;
+      dataTemuanUrl?: string;
+      dataBlowdownUrl?: string;
+      dataSuhuUrl?: string;
+      dataSuratJalanUrl?: string;
+    } = { id: report.id };
+
+    if (dataTemuanFile?.size) {
+      if (!isAllowedAttachmentType(dataTemuanFile)) {
+        return { error: 'Tipe file data temuan tidak didukung' };
+      }
+      updates.dataTemuanUrl = await uploadSummaryReportAttachment(
+        dataTemuanFile,
+        parsed.data.projectId,
+        report.id
+      );
+    }
+
+    if (dataBlowdownFile?.size) {
+      if (!isAllowedAttachmentType(dataBlowdownFile)) {
+        return { error: 'Tipe file data blowdown tidak didukung' };
+      }
+      updates.dataBlowdownUrl = await uploadSummaryReportAttachment(
+        dataBlowdownFile,
+        parsed.data.projectId,
+        report.id
+      );
+    }
+
+    if (dataSuhuFile?.size) {
+      if (!isAllowedAttachmentType(dataSuhuFile)) {
+        return { error: 'Tipe file data suhu tidak didukung' };
+      }
+      updates.dataSuhuUrl = await uploadSummaryReportAttachment(
+        dataSuhuFile,
+        parsed.data.projectId,
+        report.id
+      );
+    }
+
+    if (dataSuratJalanFile?.size) {
+      if (!isAllowedAttachmentType(dataSuratJalanFile)) {
+        return { error: 'Tipe file surat jalan tidak didukung' };
+      }
+      updates.dataSuratJalanUrl = await uploadSummaryReportAttachment(
+        dataSuratJalanFile,
+        parsed.data.projectId,
+        report.id
+      );
+    }
+
+    await service.updateSummaryReport(updates);
+
+    revalidatePath('/summary-reports');
+    if (periodLabel) {
+      revalidatePath(
+        `/summary-reports/${parsed.data.projectId}/${periodLabel}/print`
+      );
+      revalidatePath(
+        `/summary-reports/${parsed.data.projectId}/${periodLabel}/attachments/print`
+      );
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('[CPIS-ERROR] SummaryReport.UploadAttachments:', error);
+    return { error: 'Gagal mengupload lampiran' };
   }
 }

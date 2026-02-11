@@ -91,7 +91,7 @@ These tasks are absolutely critical for the system to be usable in production.
   - [x] Bab III: Lab Analysis (Table of results).
   - [x] Bab IV: Work Reports (List of ad-hoc work).
   - [x] Bab V: Chemical Reports (Usage summary).
-- [ ] Integrate PDF Uploads for Appendices.
+- [x] Integrate PDF Uploads for Appendices.
 
 #### 2.2 [NEW] Ops Readiness (Hidden Agenda)
 
@@ -176,17 +176,18 @@ These improve operations significantly but can be delayed a few days if necessar
 #### 3.1 PDF Uploads for Summary
 
 **Scope ID:** `SR-04`
+**Status:** ✅ Done
 **Estimated Prompts:** 1
 **Tasks:**
 
-- [ ] Create `ProjectDocument` schema or similar
-- [ ] Upload sections for scanned documents:
+- [x] Create `ProjectDocument` schema or similar (Added to `SummaryReport`)
+- [x] Upload sections for scanned documents:
   - Data temuan
   - Data blowdown silang
   - Data suhu
   - Surat jalan
-- [ ] Store in R2, link to Project
-- [ ] PDF preview/download UI
+- [x] Store in R2, link to Project
+- [x] PDF preview/download UI (Attachment Pack Print View)
 
 #### 3.2 Basic Dashboard
 
