@@ -4,6 +4,19 @@
 > **Updated:** 2026-02-11
 > **Status:** MVP Phase Completed - Transitioning to Operational Phase
 
+#### 2.6 [NEW] RBAC & Project Scoping (Keamanan & Pembatasan Proyek)
+
+**Scope ID:** `RBAC-02`
+**Why:** Critical for data privacy between projects and preventing unauthorized access by scoped roles (PIC/Technician).
+**Tasks:**
+
+- [x] Implement `ProjectAssignment` model to link users and projects.
+- [x] Update `ROLE_MATRIX` with resource-level permissions (PROJECTS_ADMIN, PROJECTS_LIST, etc.).
+- [x] Enforce project-scoped access in `getProjectsAction` for SUPERVISOR/TECHNICIAN roles.
+- [x] Implement `assertCanAccessProject` middleware-like helper in Service layer.
+- [x] Protect Log Sheets, Work Reports, Lab Analyses, and Summary Reports from URL guessing.
+- [x] Add Assignment Management UI in Project edit dialog (PIC Project, Teknisi, PIC Klien).
+
 ---
 
 ## 0. MVP Definition (Rescue Mode) - ✅ COMPLETED
@@ -320,17 +333,17 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 - [ ] Profile view
 - [ ] Avatar upload
 
-**Scope ID:** `CP-01` (Client Portal)
+**Scope ID:** `CP-01` (Client Portal) 🚧
 **Tasks:**
 
-- [ ] Filtered views for CLIENT role
+- [x] Filtered views for CLIENT role (via project-scoped RBAC)
 - [ ] Read-only dashboard
 
-**Scope ID:** `AC-01` (RBAC)
+**Scope ID:** `AC-01` (RBAC) ✅
 **Tasks:**
 
-- [ ] Implement user matrix per FSD Section 10
-- [ ] Middleware role checks
+- [x] Implement user matrix per FSD Section 10
+- [x] Middleware role checks (Server Action layer)
 
 ---
 
@@ -343,8 +356,8 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 3.  **Attendance/Absensi (AB-\*)** - Clock in/out with photo validation. (Deferred to P2)
 4.  **Digital Signature (DS-\*)** - For log sheet approval. (Deferred to P2)
 5.  **Notifications (NT-\*)** - When values exceed parameter limits. (Deferred to P2)
-6.  **Project Personnel Assignment** - PIC Corintek, PIC Klien, Technicians. (Deferred to P2)
-7.  **User Matrix/RBAC** - Different access levels per role. (Deferred to P2)
+6.  **Project Personnel Assignment** - PIC Corintek, PIC Klien, Technicians. ✅ (Implemented)
+7.  **User Matrix/RBAC** - Different access levels per role. ✅ (Implemented)
 
 ### Project Fields in FSD but May Need Review:
 
