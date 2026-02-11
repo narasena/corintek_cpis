@@ -16,16 +16,16 @@ enum LogSheetPhotoType {
 }
 
 model LogSheet {
-  id        String         @id @default(uuid())
+  id        String  @id @default(uuid())
   projectId String
-  project   Project        @relation(fields: [projectId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
 
   date   DateTime
   notes  String?
   status LogSheetStatus @default(DRAFT)
 
-  entries LogSheetEntry[]
-  photos  LogSheetPhoto[]
+  entries        LogSheetEntry[]
+  photos         LogSheetPhoto[]
   chemicalUsages ChemicalUsage[]
 
   replacedByUserId String?
@@ -72,9 +72,9 @@ model LogSheetEntry {
 }
 
 model LogSheetPhoto {
-  id         String           @id @default(uuid())
+  id         String            @id @default(uuid())
   logSheetId String
-  logSheet   LogSheet         @relation(fields: [logSheetId], references: [id])
+  logSheet   LogSheet          @relation(fields: [logSheetId], references: [id])
   type       LogSheetPhotoType
   url        String
   caption    String?

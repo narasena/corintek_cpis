@@ -3,17 +3,17 @@
 // =============================================================================
 
 model WorkReport {
-  id        String   @id @default(uuid())
+  id        String  @id @default(uuid())
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
 
-  date      DateTime @default(now())
-  timeStart String?  // Jam Mulai (e.g. "10:00")
-  timeEnd   String?  // Jam Selesai (e.g. "17:30")
-  zone      String?  // Zone / Area (Text)
-  situation String   // Kondisi/Situasi (Text)
-  workDone  String   // Pekerjaan yang dilakukan (Text)
-  workResult String  // Hasil pekerjaan (Text)
+  date       DateTime @default(now())
+  timeStart  String? // Jam Mulai (e.g. "10:00")
+  timeEnd    String? // Jam Selesai (e.g. "17:30")
+  zone       String? // Zone / Area (Text)
+  situation  String // Kondisi/Situasi (Text)
+  workDone   String // Pekerjaan yang dilakukan (Text)
+  workResult String // Hasil pekerjaan (Text)
 
   // Relations
   machines Machine[] // Implicit Many-to-Many
@@ -24,8 +24,8 @@ model WorkReport {
   // Roadmap says "reuse LogSheetPhoto logic", which implies we might need a similar table `WorkReportPhoto`.
   photos WorkReportPhoto[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@map("work_reports")
@@ -41,13 +41,13 @@ model WorkReportPhoto {
   id           String     @id @default(uuid())
   workReportId String
   workReport   WorkReport @relation(fields: [workReportId], references: [id])
-  
-  url          String
-  caption      String?
-  type         WorkReportPhotoType @default(GENERAL)
-  
-  createdAt    DateTime   @default(now())
-  deletedAt    DateTime?
+
+  url     String
+  caption String?
+  type    WorkReportPhotoType @default(GENERAL)
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   @@map("work_report_photos")
 }

@@ -3,49 +3,49 @@
 // =============================================================================
 
 model Project {
-  id          String   @id @default(uuid())
-  clientId    String
-  client      Client   @relation(fields: [clientId], references: [id])
-  
+  id       String @id @default(uuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
   name        String
   description String?
   quoteNumber String?
   poNumber    String?
-  
-  startDate   DateTime
-  endDate     DateTime?
-  
-  status      ProjectStatus @default(PENDING)
-  
-  machines    Machine[]
-  logSheets   LogSheet[]
-  workReports WorkReport[]
-  labAnalyses LabAnalysis[]
-  summaryReports SummaryReport[]
+
+  startDate DateTime
+  endDate   DateTime?
+
+  status ProjectStatus @default(PENDING)
+
+  machines           Machine[]
+  logSheets          LogSheet[]
+  workReports        WorkReport[]
+  labAnalyses        LabAnalysis[]
+  summaryReports     SummaryReport[]
   parameterOverrides ProjectParameterOverride[]
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
   @@index([clientId])
   @@map("projects")
 }
 
 enum ProjectStatus {
   PENDING
-  ONGOING  
+  ONGOING
   PAUSED
   COMPLETED
   CANCELLED
 }
 
 model ProjectParameterOverride {
-  id           String    @id @default(uuid())
-  projectId    String
-  project      Project   @relation(fields: [projectId], references: [id])
-  parameterId  String
-  parameter    Parameter @relation(fields: [parameterId], references: [id])
+  id          String    @id @default(uuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id])
+  parameterId String
+  parameter   Parameter @relation(fields: [parameterId], references: [id])
 
   // Overrides
   minValue         Float?
@@ -53,8 +53,8 @@ model ProjectParameterOverride {
   rawWaterMinValue Float?
   rawWaterMaxValue Float?
 
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([projectId, parameterId])
   @@map("project_parameter_overrides")

@@ -10,14 +10,14 @@ model LabAnalysis {
   projectId String
   project   Project @relation(fields: [projectId], references: [id])
 
-  date           DateTime
-  attention      String?
-  cc             String?
-  customer       String?
-  address        String?
-  faxNumber      String?
-  reportNumber   String?
-  remarks        String?
+  date            DateTime
+  attention       String?
+  cc              String?
+  customer        String?
+  address         String?
+  faxNumber       String?
+  reportNumber    String?
+  remarks         String?
   recommendations String?
 
   columns LabAnalysisColumn[]
@@ -32,13 +32,13 @@ model LabAnalysis {
 }
 
 model LabAnalysisColumn {
-  id            String              @id @default(uuid())
+  id            String      @id @default(uuid())
   labAnalysisId String
-  labAnalysis   LabAnalysis         @relation(fields: [labAnalysisId], references: [id])
+  labAnalysis   LabAnalysis @relation(fields: [labAnalysisId], references: [id])
 
   name         String
   kind         LabAnalysisColumnKind @default(OTHER)
-  displayOrder Int                 @default(0)
+  displayOrder Int                   @default(0)
 
   entries LabAnalysisEntry[]
 
@@ -52,9 +52,9 @@ model LabAnalysisColumn {
 }
 
 model LabAnalysisEntry {
-  id            String          @id @default(uuid())
+  id            String      @id @default(uuid())
   labAnalysisId String
-  labAnalysis   LabAnalysis     @relation(fields: [labAnalysisId], references: [id])
+  labAnalysis   LabAnalysis @relation(fields: [labAnalysisId], references: [id])
 
   parameterId String
   parameter   Parameter @relation(fields: [parameterId], references: [id])

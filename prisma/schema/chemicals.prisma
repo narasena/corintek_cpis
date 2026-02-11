@@ -6,8 +6,8 @@ enum ChemicalCategory {
 }
 
 model Chemical {
-  id          String  @id @default(uuid())
-  name        String  @unique
+  id          String           @id @default(uuid())
+  name        String           @unique
   unit        String?
   description String?
   category    ChemicalCategory @default(COOLING_SYSTEM)

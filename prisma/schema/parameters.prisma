@@ -4,9 +4,9 @@
 
 // ValueType enum - determines how parameter value is stored/displayed
 enum ValueType {
-  NUMBER  // Float values (temperature, pH, etc.)
+  NUMBER // Float values (temperature, pH, etc.)
   BOOLEAN // Yes/No, Running/Stop
-  TEXT    // Free text values
+  TEXT // Free text values
 }
 
 // ParameterCategory - grouping for UI sections
@@ -37,11 +37,11 @@ model Parameter {
   rawWaterMaxValue Float?
 
   // Display metadata
-  displayOrder Int     @default(0)
-  isActive     Boolean @default(true)
-  logSheetEntries LogSheetEntry[]
+  displayOrder       Int                        @default(0)
+  isActive           Boolean                    @default(true)
+  logSheetEntries    LogSheetEntry[]
   labAnalysisEntries LabAnalysisEntry[]
-  projectOverrides ProjectParameterOverride[]
+  projectOverrides   ProjectParameterOverride[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
