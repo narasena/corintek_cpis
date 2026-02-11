@@ -12,8 +12,14 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // Singleton pattern to prevent multiple instances in development
+const cachedPrisma = globalForPrisma.prisma;
+const prismaIsOutdated =
+  cachedPrisma &&
+  typeof cachedPrisma === 'object' &&
+  !('attendance' in cachedPrisma);
+
 export const prisma =
-  globalForPrisma.prisma ??
+  (!prismaIsOutdated ? cachedPrisma : undefined) ??
   new PrismaClient({
     adapter,
     log:
