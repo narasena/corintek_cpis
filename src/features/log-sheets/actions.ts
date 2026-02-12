@@ -139,6 +139,10 @@ export async function createLogSheetAction(data: unknown) {
     ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'create');
     const validatedData = CreateLogSheetSchema.parse(data);
     await projectService.assertCanAccessProject(actor, validatedData.projectId);
+    await logSheetService.assertCanCreateLogSheet(
+      actor,
+      validatedData.projectId
+    );
     const logSheet = await logSheetService.createLogSheet(validatedData);
 
     revalidatePath('/log-sheets');

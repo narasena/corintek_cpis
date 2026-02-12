@@ -51,6 +51,51 @@ function isEntryEmpty(entry: {
   return true;
 }
 
+function isEntryComplete(
+  entry?: Pick<
+    ILogSheetEntry,
+    'valueType' | 'numericValue' | 'boolValue' | 'textValue'
+  >
+) {
+  if (!entry) return false;
+
+  if (entry.valueType === 'NUMBER') {
+    return (
+      entry.numericValue !== null &&
+      entry.numericValue !== undefined &&
+      !Number.isNaN(entry.numericValue)
+    );
+  }
+
+  if (entry.valueType === 'BOOLEAN') {
+    return entry.boolValue !== null && entry.boolValue !== undefined;
+  }
+
+  if (entry.valueType === 'TEXT') {
+    return !!entry.textValue && entry.textValue.trim() !== '';
+  }
+
+  return false;
+}
+
+async function hasProjectAssignment(
+  userId: string,
+  projectId: string,
+  role: 'PROJECT_PIC' | 'TECHNICIAN' | 'CLIENT_PIC'
+) {
+  const assignment = await prisma.projectAssignment.findFirst({
+    where: {
+      userId,
+      projectId,
+      role,
+      isActive: true,
+    },
+    select: { id: true },
+  });
+
+  return !!assignment;
+}
+
 export interface ILogSheetListItem {
   id: string;
   projectId: string;
@@ -169,6 +214,24 @@ export async function getLogSheetProjectId(id: string): Promise<string | null> {
   return row?.projectId ?? null;
 }
 
+export async function assertCanCreateLogSheet(
+  actor: IJwtPayload,
+  projectId: string
+) {
+  if (actor.role === 'ADMIN') return;
+
+  const isInternalPic =
+    actor.role === 'SUPERVISOR' &&
+    (await hasProjectAssignment(actor.id, projectId, 'PROJECT_PIC'));
+  const isInternalTechnician =
+    actor.role === 'TECHNICIAN' &&
+    (await hasProjectAssignment(actor.id, projectId, 'TECHNICIAN'));
+
+  if (!isInternalPic && !isInternalTechnician) {
+    throw new Error('Unauthorized');
+  }
+}
+
 export async function createLogSheet(
   data: TCreateLogSheet
 ): Promise<ILogSheet> {
@@ -219,18 +282,13 @@ export async function updateLogSheetStatus(
 
   await projectService.assertCanAccessProject(actor, row.projectId);
 
-  const isProjectPic =
-    actor.role === 'ADMIN'
-      ? true
-      : !!(await prisma.projectAssignment.findFirst({
-          where: {
-            projectId: row.projectId,
-            userId: actor.id,
-            isActive: true,
-            role: 'PROJECT_PIC',
-          },
-          select: { id: true },
-        }));
+  const isInternalPic =
+    actor.role === 'ADMIN' ||
+    (actor.role === 'SUPERVISOR' &&
+      (await hasProjectAssignment(actor.id, row.projectId, 'PROJECT_PIC')));
+  const isInternalTechnician =
+    actor.role === 'TECHNICIAN' &&
+    (await hasProjectAssignment(actor.id, row.projectId, 'TECHNICIAN'));
 
   const current = row.status;
 
@@ -246,13 +304,17 @@ export async function updateLogSheetStatus(
     if (current !== 'DRAFT') {
       throw new Error('Log sheet hanya bisa dikirim dari status DRAFT');
     }
+    if (!isInternalTechnician && !isInternalPic) {
+      throw new Error('Unauthorized');
+    }
   } else if (status === 'APPROVED') {
     if (current !== 'SUBMITTED') {
       throw new Error('Log sheet hanya bisa disetujui dari status SUBMITTED');
     }
-    if (!isProjectPic) {
+    if (!isInternalPic) {
       throw new Error('Unauthorized');
     }
+    await validateLogSheetForApproval(id);
   } else if (status === 'DRAFT') {
     throw new Error('Tidak dapat mengubah status kembali ke DRAFT');
   }
@@ -472,6 +534,118 @@ export async function validateLogSheetForSubmission(id: string) {
         errors.push(
           `${param.name}: Nilai ${entry.numericValue} di atas maksimum ${max}`
         );
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Validasi gagal:\n${errors.join('\n')}`);
+  }
+}
+
+export async function validateLogSheetForApproval(id: string) {
+  const detail = await getLogSheetDetail(id);
+  const parameterById = new Map(detail.parameters.map(p => [p.id, p]));
+  const entryByKey = new Map(
+    detail.entries.map(entry => [
+      makeEntryKey(
+        entry.parameterId,
+        entry.machineId,
+        entry.role as ILogSheetEntry['role']
+      ),
+      entry,
+    ])
+  );
+  const machineLabelById = new Map<string, string>();
+
+  for (const machine of detail.machines.chillers) {
+    machineLabelById.set(machine.id, `Chiller #${machine.unitNumber}`);
+  }
+  for (const machine of detail.machines.coolingTowers) {
+    machineLabelById.set(machine.id, `CT #${machine.unitNumber}`);
+  }
+
+  const errors: string[] = [];
+
+  for (const entry of detail.entries) {
+    if (entry.valueType === 'NUMBER' && entry.numericValue !== null) {
+      const param = parameterById.get(entry.parameterId);
+      if (!param) continue;
+
+      let min: number | null = param.minValue;
+      let max: number | null = param.maxValue;
+
+      if (entry.role === 'RAW_WATER') {
+        min = param.rawWaterMinValue ?? null;
+        max = param.rawWaterMaxValue ?? null;
+      }
+
+      if (min !== null && entry.numericValue < min) {
+        errors.push(
+          `${param.name}: Nilai ${entry.numericValue} di bawah minimum ${min}`
+        );
+      }
+      if (max !== null && entry.numericValue > max) {
+        errors.push(
+          `${param.name}: Nilai ${entry.numericValue} di atas maksimum ${max}`
+        );
+      }
+    }
+  }
+
+  for (const param of detail.parameters) {
+    const category = param.category;
+
+    if (category === 'COOLING_WATER_QUALITY') {
+      for (const machine of detail.machines.coolingTowers) {
+        const key = makeEntryKey(param.id, machine.id, 'VALUE');
+        const entry = entryByKey.get(key);
+        if (!isEntryComplete(entry)) {
+          const label = machineLabelById.get(machine.id) ?? 'Mesin';
+          errors.push(`${param.name} (${label}) wajib diisi`);
+        }
+      }
+
+      const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
+      const rawEntry = entryByKey.get(rawKey);
+      if (!isEntryComplete(rawEntry)) {
+        errors.push(`${param.name} (Raw Water) wajib diisi`);
+      }
+
+      continue;
+    }
+
+    const usesChillers =
+      category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR';
+    const usesCoolingTowers =
+      category === 'GENERAL_CONDITION' || category === 'JOB_DESCRIPTION';
+    const machines = usesChillers
+      ? detail.machines.chillers
+      : usesCoolingTowers
+        ? detail.machines.coolingTowers
+        : [];
+    const targets =
+      machines.length > 0
+        ? machines.map(machine => ({ id: machine.id }))
+        : [{ id: null as string | null }];
+
+    for (const target of targets) {
+      const key = makeEntryKey(param.id, target.id, 'VALUE');
+      const entry = entryByKey.get(key);
+      if (!isEntryComplete(entry)) {
+        const label =
+          target.id === null
+            ? 'Nilai'
+            : (machineLabelById.get(target.id) ?? 'Mesin');
+        errors.push(`${param.name} (${label}) wajib diisi`);
+      }
+    }
+
+    if (usesCoolingTowers) {
+      const noteKey = makeEntryKey(param.id, null, 'NOTE');
+      const noteEntry = entryByKey.get(noteKey);
+      if (!isEntryComplete(noteEntry)) {
+        errors.push(`${param.name} (Catatan) wajib diisi`);
       }
     }
   }

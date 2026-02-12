@@ -334,108 +334,115 @@ export default function LogSheetDetailPage() {
     return null;
   }, [replacedByUserId, technicians, detail]);
 
-  const handleSave = () => {
-    if (!detail) return;
-    startTransition(async () => {
-      const headerRes = await updateLogSheetAction({
-        id: logSheetId,
-        notes: notes.trim() ? notes.trim() : undefined,
-        replacedByUserId,
+  const saveDraft = async (showToast: boolean) => {
+    if (!detail) return false;
+    const headerRes = await updateLogSheetAction({
+      id: logSheetId,
+      notes: notes.trim() ? notes.trim() : undefined,
+      replacedByUserId,
+    });
+
+    if (!headerRes.success) {
+      toast.error('Gagal menyimpan header log sheet', {
+        description: headerRes.error,
       });
+      return false;
+    }
 
-      if (!headerRes.success) {
-        toast.error('Gagal menyimpan header log sheet', {
-          description: headerRes.error,
-        });
-        return;
-      }
+    const keys = Object.keys(entryState);
+    const uploadedUrls: Record<string, string> = {};
 
-      const keys = Object.keys(entryState);
-      const uploadedUrls: Record<string, string> = {};
+    // Upload pending files
+    for (const key of keys) {
+      const entry = entryState[key];
+      if (entry.pendingFile) {
+        try {
+          const formData = new FormData();
+          formData.append('file', entry.pendingFile);
+          // Append context IDs for better file organization
+          if (projectId) formData.append('projectId', projectId);
+          if (logSheetId) formData.append('logSheetId', logSheetId);
 
-      // Upload pending files
-      for (const key of keys) {
-        const entry = entryState[key];
-        if (entry.pendingFile) {
-          try {
-            const formData = new FormData();
-            formData.append('file', entry.pendingFile);
-            // Append context IDs for better file organization
-            if (projectId) formData.append('projectId', projectId);
-            if (logSheetId) formData.append('logSheetId', logSheetId);
+          const uploadRes = await uploadLogSheetImageAction(formData);
 
-            const uploadRes = await uploadLogSheetImageAction(formData);
-
-            if (uploadRes.success && uploadRes.url) {
-              uploadedUrls[key] = uploadRes.url;
-            } else {
-              toast.error('Gagal mengupload foto', {
-                description: uploadRes.error,
-              });
-              // Don't return here, try to save other data
-            }
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.error('Upload error:', e);
-            toast.error('Gagal mengupload foto');
+          if (uploadRes.success && uploadRes.url) {
+            uploadedUrls[key] = uploadRes.url;
+          } else {
+            toast.error('Gagal mengupload foto', {
+              description: uploadRes.error,
+            });
+            // Don't return here, try to save other data
           }
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error('Upload error:', e);
+          toast.error('Gagal mengupload foto');
         }
       }
+    }
 
-      const entriesToSave = keys.map(key => {
-        const [parameterId, machineIdStr, roleStr] = key.split(':');
-        const machineId = machineIdStr === 'null' ? null : machineIdStr;
-        const role = roleStr as TEntryRole;
-        const state = entryState[key];
+    const entriesToSave = keys.map(key => {
+      const [parameterId, machineIdStr, roleStr] = key.split(':');
+      const machineId = machineIdStr === 'null' ? null : machineIdStr;
+      const role = roleStr as TEntryRole;
+      const state = entryState[key];
 
-        // Use uploaded URL if available, otherwise existing URL
-        const fileUrl = uploadedUrls[key] || state.fileUrl;
+      // Use uploaded URL if available, otherwise existing URL
+      const fileUrl = uploadedUrls[key] || state.fileUrl;
 
-        return {
-          parameterId,
-          machineId,
-          role,
-          valueType: state.valueType,
-          numericValue: state.numericValue,
-          boolValue: state.boolValue,
-          textValue: state.textValue,
-          fileUrl,
-        };
-      });
+      return {
+        parameterId,
+        machineId,
+        role,
+        valueType: state.valueType,
+        numericValue: state.numericValue,
+        boolValue: state.boolValue,
+        textValue: state.textValue,
+        fileUrl,
+      };
+    });
 
-      const entriesRes = await saveLogSheetEntriesAction({
-        logSheetId,
-        entries: entriesToSave,
-      });
+    const entriesRes = await saveLogSheetEntriesAction({
+      logSheetId,
+      entries: entriesToSave,
+    });
 
-      const chemicalRes = await saveLogSheetChemicalsAction({
-        logSheetId,
-        usages: chemicalState
-          .filter(c => c.chemicalId && c.amount > 0)
-          .map(c => ({
-            id: c.id,
-            chemicalId: c.chemicalId,
-            amount: c.amount,
-          })),
-      });
+    const chemicalRes = await saveLogSheetChemicalsAction({
+      logSheetId,
+      usages: chemicalState
+        .filter(c => c.chemicalId && c.amount > 0)
+        .map(c => ({
+          id: c.id,
+          chemicalId: c.chemicalId,
+          amount: c.amount,
+        })),
+    });
 
-      if (entriesRes.success && chemicalRes.success) {
+    if (entriesRes.success && chemicalRes.success) {
+      if (showToast) {
         toast.success('Log sheet berhasil disimpan');
-      } else {
-        if (!entriesRes.success) {
-          toast.error('Gagal menyimpan entry log sheet', {
-            description: entriesRes.error,
-          });
-        }
-        if (!chemicalRes.success) {
-          toast.error('Gagal menyimpan data chemical', {
-            description: chemicalRes.error,
-          });
-        }
       }
-      router.refresh();
-      // Reload data to ensure fresh state
-      fetchData();
+    } else {
+      if (!entriesRes.success) {
+        toast.error('Gagal menyimpan entry log sheet', {
+          description: entriesRes.error,
+        });
+      }
+      if (!chemicalRes.success) {
+        toast.error('Gagal menyimpan data chemical', {
+          description: chemicalRes.error,
+        });
+      }
+    }
+    router.refresh();
+    // Reload data to ensure fresh state
+    fetchData();
+    return entriesRes.success && chemicalRes.success;
+  };
+
+  const handleSave = () => {
+    startTransition(async () => {
+      await saveDraft(true);
     });
   };
 
@@ -446,6 +453,8 @@ export default function LogSheetDetailPage() {
 
   const handleSubmit = () => {
     startTransition(async () => {
+      const saved = await saveDraft(false);
+      if (!saved) return;
       const res = await submitLogSheetAction(logSheetId);
       if (!res.success) {
         toast.error('Gagal mengirim log sheet', { description: res.error });
@@ -470,7 +479,7 @@ export default function LogSheetDetailPage() {
 
   if (loading || !detail) {
     return (
-      <div className="p-8 max-w-7xl mx-auto">
+      <div>
         <div className="flex items-center justify-center p-8 border rounded-lg h-64 bg-muted/20">
           <div className="flex flex-col items-center gap-2">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -482,7 +491,7 @@ export default function LogSheetDetailPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-4 md:space-y-8 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
+    <div className="space-y-4 md:space-y-8 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between print:hidden">
         <div className="flex items-center gap-2">
           <Button
