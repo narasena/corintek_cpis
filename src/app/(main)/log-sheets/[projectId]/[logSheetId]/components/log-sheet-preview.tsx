@@ -262,8 +262,8 @@ export function LogSheetPreview({
     afterPhotos.length > 0;
 
   return (
-    <div className="bg-white text-black text-[11px] leading-tight w-[210mm] min-h-[297mm] mx-auto shadow-xl print:shadow-none print:w-full print:min-h-0 print:mx-0 print:text-[11px]">
-      <div className="print:hidden mb-2 text-xs text-muted-foreground p-2 text-center">
+    <div className="bg-white text-black text-[11px] leading-tight w-full max-w-[210mm] md:w-[210mm] min-h-[297mm] mx-auto shadow-xl print:shadow-none print:w-full print:min-h-0 print:mx-0 print:text-[11px] overflow-hidden">
+      <div className="print:hidden mb-2 text-xs text-muted-foreground p-2 text-center bg-muted/20">
         Mode cetak: gunakan tombol Print pada halaman ini.
       </div>
 
@@ -284,6 +284,20 @@ export function LogSheetPreview({
 
           const cat = category as TParameter['category'];
           const sectionMachines = machinesForCategory(cat, machines);
+
+          // Hide machine-dependent categories if no machines are active
+          const isMachineDependent = [
+            'UNIT_CONDENSOR',
+            'UNIT_EVAPORATOR',
+            'COOLING_WATER_QUALITY',
+            'GENERAL_CONDITION',
+            'JOB_DESCRIPTION',
+          ].includes(cat);
+
+          if (isMachineDependent && sectionMachines.length === 0) {
+            return null;
+          }
+
           const hasNotes =
             cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION';
           const showLimit = !['CONSUMPTION'].includes(cat);

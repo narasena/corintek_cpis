@@ -49,6 +49,7 @@ import {
   approveLogSheetAction,
   submitLogSheetAction,
   updateLogSheetAction,
+  saveLogSheetMachinesAction,
 } from '@/features/log-sheets/actions';
 import type { TLogSheetStatus } from '@/features/log-sheets/types';
 import { getAllUsersAction } from '@/features/users/actions';
@@ -119,6 +120,10 @@ type TDetail = {
     chemicalName: string;
     chemicalUnit: string;
   }>;
+  activeMachineIds: {
+    chillers: string[];
+    coolingTowers: string[];
+  };
 };
 
 type TEntryState = {
@@ -205,6 +210,196 @@ function isOutOfRange(
   return false;
 }
 
+interface MobileEntryCardProps {
+  param: TParameter;
+  machines: TMachine[];
+  entryState: Record<string, TEntryState>;
+  setEntryState: React.Dispatch<
+    React.SetStateAction<Record<string, TEntryState>>
+  >;
+  hasNotes?: boolean;
+  isWaterMeter?: (paramName: string) => boolean;
+}
+
+function MobileEntryCard({
+  param,
+  machines,
+  entryState,
+  setEntryState,
+  hasNotes,
+  isWaterMeter,
+}: MobileEntryCardProps) {
+  const targets =
+    machines.length > 0
+      ? machines
+      : ([
+          {
+            id: 'null',
+            unitNumber: 0,
+            type: 'CHILLER' as const,
+          },
+        ] as TMachine[]);
+
+  return (
+    <div className="rounded-lg border bg-card p-4 space-y-4 shadow-sm">
+      <div className="flex items-start justify-between border-b pb-2">
+        <div>
+          <h3 className="font-semibold text-sm">
+            {param.name}
+            {param.unit ? ` (${param.unit})` : ''}
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            Target: {formatLimit(param)}
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {targets.map(m => {
+          const machineIdValue = machines.length > 0 ? m.id : null;
+          const key = makeEntryKey(param.id, machineIdValue, 'VALUE');
+          const state = entryState[key];
+
+          return (
+            <div key={key} className="space-y-2">
+              {machines.length > 0 && (
+                <div className="text-xs font-medium text-muted-foreground">
+                  {m.type === 'CHILLER' ? 'Chiller' : 'CT'} #{m.unitNumber}
+                </div>
+              )}
+
+              {param.valueType === 'BOOLEAN' ? (
+                <div className="flex items-center gap-4">
+                  <Checkbox
+                    id={key}
+                    checked={state?.boolValue ?? false}
+                    onCheckedChange={value => {
+                      setEntryState(prev => ({
+                        ...prev,
+                        [key]: {
+                          valueType: 'BOOLEAN',
+                          boolValue: value === true,
+                        },
+                      }));
+                    }}
+                  />
+                  <label htmlFor={key} className="text-sm">
+                    {state?.boolValue === true
+                      ? 'Ya'
+                      : state?.boolValue === false
+                        ? 'Tidak'
+                        : 'Pilih...'}
+                  </label>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    className="h-7 text-xs ml-auto"
+                    onClick={() =>
+                      setEntryState(prev => ({
+                        ...prev,
+                        [key]: { valueType: 'BOOLEAN', boolValue: null },
+                      }))
+                    }
+                  >
+                    Kosongkan
+                  </Button>
+                </div>
+              ) : param.valueType === 'NUMBER' ? (
+                <div className="flex flex-col gap-2">
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="Nilai..."
+                    className={
+                      isOutOfRange(
+                        state?.numericValue,
+                        param.minValue,
+                        param.maxValue
+                      )
+                        ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
+                        : ''
+                    }
+                    value={
+                      state?.numericValue === null ||
+                      state?.numericValue === undefined
+                        ? ''
+                        : String(state.numericValue)
+                    }
+                    onChange={e => {
+                      const raw = e.target.value;
+                      setEntryState(prev => ({
+                        ...prev,
+                        [key]: {
+                          ...prev[key],
+                          valueType: 'NUMBER',
+                          numericValue: raw === '' ? null : Number(raw),
+                        },
+                      }));
+                    }}
+                  />
+                  {isWaterMeter?.(param.name) && (
+                    <CameraInput
+                      value={state?.fileUrl}
+                      onChange={(url, file) => {
+                        setEntryState(prev => ({
+                          ...prev,
+                          [key]: {
+                            ...prev[key],
+                            valueType: 'NUMBER',
+                            numericValue: prev[key]?.numericValue ?? null,
+                            fileUrl: url,
+                            pendingFile: file,
+                          },
+                        }));
+                      }}
+                    />
+                  )}
+                </div>
+              ) : (
+                <Input
+                  placeholder="Keterangan..."
+                  value={state?.textValue ?? ''}
+                  onChange={e => {
+                    const raw = e.target.value;
+                    setEntryState(prev => ({
+                      ...prev,
+                      [key]: { valueType: 'TEXT', textValue: raw },
+                    }));
+                  }}
+                />
+              )}
+            </div>
+          );
+        })}
+
+        {hasNotes && (
+          <div className="pt-2 border-t mt-2">
+            <div className="text-xs font-medium text-muted-foreground mb-1">
+              Catatan
+            </div>
+            {(() => {
+              const key = makeEntryKey(param.id, null, 'NOTE');
+              const state = entryState[key];
+              return (
+                <Input
+                  placeholder="Catatan tambahan..."
+                  value={state?.textValue ?? ''}
+                  onChange={e => {
+                    setEntryState(prev => ({
+                      ...prev,
+                      [key]: { valueType: 'TEXT', textValue: e.target.value },
+                    }));
+                  }}
+                />
+              );
+            })()}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function LogSheetDetailPage() {
   const params = useParams<{ projectId: string; logSheetId: string }>();
   const router = useRouter();
@@ -218,7 +413,10 @@ export default function LogSheetDetailPage() {
   const [technicians, setTechnicians] = useState<TUserResponse[]>([]);
   const [entryState, setEntryState] = useState<Record<string, TEntryState>>({});
   const [chemicalState, setChemicalState] = useState<TChemicalUsageState>([]);
+  const [activeChillerIds, setActiveChillerIds] = useState<string[]>([]);
+  const [activeCTIds, setActiveCTIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobileView, setIsMobileView] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const fetchData = useCallback(async () => {
@@ -236,6 +434,8 @@ export default function LogSheetDetailPage() {
       setDetail(d);
       setNotes(d.logSheet.notes ?? '');
       setReplacedByUserId(d.logSheet.replacedBy?.id ?? null);
+      setActiveChillerIds(d.activeMachineIds.chillers);
+      setActiveCTIds(d.activeMachineIds.coolingTowers);
 
       const initial: Record<string, TEntryState> = {};
       for (const entry of d.entries) {
@@ -274,6 +474,15 @@ export default function LogSheetDetailPage() {
     });
   }, [fetchData]);
 
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const categories = useMemo(() => {
     if (!detail) return [];
     const unique = Array.from(new Set(detail.parameters.map(p => p.category)));
@@ -302,22 +511,40 @@ export default function LogSheetDetailPage() {
     (category: TParameter['category']) => {
       if (!detail) return { machines: [] as TMachine[], label: '' };
       if (category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR') {
-        return { machines: detail.machines.chillers, label: 'Chiller' };
+        const filtered = detail.machines.chillers.filter(m =>
+          activeChillerIds.includes(m.id)
+        );
+        return { machines: filtered, label: 'Chiller' };
       }
       if (
         category === 'COOLING_WATER_QUALITY' ||
         category === 'GENERAL_CONDITION' ||
         category === 'JOB_DESCRIPTION'
       ) {
+        const filtered = detail.machines.coolingTowers.filter(m =>
+          activeCTIds.includes(m.id)
+        );
         return {
-          machines: detail.machines.coolingTowers,
+          machines: filtered,
           label: 'Cooling Tower',
         };
       }
       return { machines: [] as TMachine[], label: '' };
     },
-    [detail]
+    [detail, activeChillerIds, activeCTIds]
   );
+
+  const activeMachines = useMemo(() => {
+    if (!detail) return { chillers: [], coolingTowers: [] };
+    return {
+      chillers: detail.machines.chillers.filter(m =>
+        activeChillerIds.includes(m.id)
+      ),
+      coolingTowers: detail.machines.coolingTowers.filter(m =>
+        activeCTIds.includes(m.id)
+      ),
+    };
+  }, [detail, activeChillerIds, activeCTIds]);
 
   const replacedByName = useMemo(() => {
     if (!replacedByUserId) return null;
@@ -333,6 +560,102 @@ export default function LogSheetDetailPage() {
 
     return null;
   }, [replacedByUserId, technicians, detail]);
+
+  const validateEntries = useCallback(() => {
+    if (!detail)
+      return { valid: false, errors: ['Detail log sheet tidak ditemukan'] };
+
+    const errors: string[] = [];
+    const missingFields: string[] = [];
+
+    // 1. Validasi Parameter Mesin yang Aktif
+    const unitCategories: TParameter['category'][] = [
+      'UNIT_CONDENSOR',
+      'UNIT_EVAPORATOR',
+      'GENERAL_CONDITION',
+      'JOB_DESCRIPTION',
+    ];
+
+    unitCategories.forEach(cat => {
+      const params = parametersByCategory.get(cat) ?? [];
+      const { machines, label } = machinesForCategory(cat);
+
+      params.forEach(param => {
+        machines.forEach(m => {
+          const key = makeEntryKey(param.id, m.id, 'VALUE');
+          const state = entryState[key];
+          const isEmpty =
+            state?.numericValue === null ||
+            state?.numericValue === undefined ||
+            state?.boolValue === null ||
+            state?.boolValue === undefined ||
+            (state?.valueType === 'TEXT' && !state?.textValue?.trim());
+
+          if (isEmpty) {
+            missingFields.push(
+              `${cat}: ${param.name} (${label} #${m.unitNumber})`
+            );
+          }
+        });
+      });
+    });
+
+    // 2. Validasi Cooling Water Quality (Unit Aktif + Raw Water)
+    const cwqParams = parametersByCategory.get('COOLING_WATER_QUALITY') ?? [];
+    const activeCTs = detail.machines.coolingTowers.filter(m =>
+      activeCTIds.includes(m.id)
+    );
+
+    cwqParams.forEach(param => {
+      // Per unit CT aktif
+      activeCTs.forEach(m => {
+        const key = makeEntryKey(param.id, m.id, 'VALUE');
+        const state = entryState[key];
+        if (state?.numericValue === null || state?.numericValue === undefined) {
+          missingFields.push(
+            `Cooling Water Quality: ${param.name} (CT #${m.unitNumber})`
+          );
+        }
+      });
+
+      // Raw Water
+      const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
+      const rawState = entryState[rawKey];
+      if (
+        rawState?.numericValue === null ||
+        rawState?.numericValue === undefined
+      ) {
+        missingFields.push(`Raw Water Quality: ${param.name}`);
+      }
+    });
+
+    // 3. Validasi Consumption (Water Meter)
+    const consumptionParams = parametersByCategory.get('CONSUMPTION') ?? [];
+    consumptionParams.forEach(param => {
+      const key = makeEntryKey(param.id, null, 'VALUE');
+      const state = entryState[key];
+      if (state?.numericValue === null || state?.numericValue === undefined) {
+        missingFields.push(`Consumption: ${param.name}`);
+      }
+    });
+
+    if (missingFields.length > 0) {
+      errors.push(`${missingFields.length} field wajib belum diisi.`);
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      missingFields,
+    };
+  }, [
+    detail,
+    entryState,
+    activeChillerIds,
+    activeCTIds,
+    machinesForCategory,
+    parametersByCategory,
+  ]);
 
   const saveDraft = async (showToast: boolean) => {
     if (!detail) return false;
@@ -441,6 +764,12 @@ export default function LogSheetDetailPage() {
   };
 
   const handleSave = () => {
+    const { valid, missingFields } = validateEntries();
+    if (!valid) {
+      toast.warning('Data belum lengkap', {
+        description: `${missingFields.length} field wajib belum diisi. Tetap menyimpan sebagai draft.`,
+      });
+    }
     startTransition(async () => {
       await saveDraft(true);
     });
@@ -452,6 +781,14 @@ export default function LogSheetDetailPage() {
   };
 
   const handleSubmit = () => {
+    const { valid, missingFields } = validateEntries();
+    if (!valid) {
+      toast.error('Gagal mengirim log sheet', {
+        description: `Ada ${missingFields.length} field wajib yang belum diisi. Lengkapi data sebelum mengirim.`,
+      });
+      return;
+    }
+
     startTransition(async () => {
       const saved = await saveDraft(false);
       if (!saved) return;
@@ -474,6 +811,80 @@ export default function LogSheetDetailPage() {
       }
       toast.success('Log sheet disetujui');
       await fetchData();
+    });
+  };
+
+  const handleToggleMachine = (
+    id: string,
+    type: 'CHILLER' | 'COOLING_TOWER'
+  ) => {
+    startTransition(async () => {
+      let newIds: string[] = [];
+      if (type === 'CHILLER') {
+        newIds = activeChillerIds.includes(id)
+          ? activeChillerIds.filter(i => i !== id)
+          : [...activeChillerIds, id];
+        setActiveChillerIds(newIds);
+      } else {
+        newIds = activeCTIds.includes(id)
+          ? activeCTIds.filter(i => i !== id)
+          : [...activeCTIds, id];
+        setActiveCTIds(newIds);
+      }
+
+      const res = await saveLogSheetMachinesAction({
+        logSheetId,
+        machineIds:
+          type === 'CHILLER'
+            ? [...newIds, ...activeCTIds]
+            : [...activeChillerIds, ...newIds],
+      });
+
+      if (!res.success) {
+        toast.error('Gagal menyimpan unit aktif', { description: res.error });
+        // Revert on failure
+        if (type === 'CHILLER') {
+          setActiveChillerIds(activeChillerIds);
+        } else {
+          setActiveCTIds(activeCTIds);
+        }
+      }
+    });
+  };
+
+  const handleSelectAllMachines = (type: 'CHILLER' | 'COOLING_TOWER') => {
+    if (!detail) return;
+    startTransition(async () => {
+      const allIds =
+        type === 'CHILLER'
+          ? detail.machines.chillers.map(m => m.id)
+          : detail.machines.coolingTowers.map(m => m.id);
+
+      if (type === 'CHILLER') setActiveChillerIds(allIds);
+      else setActiveCTIds(allIds);
+
+      const res = await saveLogSheetMachinesAction({
+        logSheetId,
+        machineIds:
+          type === 'CHILLER'
+            ? [...allIds, ...activeCTIds]
+            : [...activeChillerIds, ...allIds],
+      });
+      if (!res.success) toast.error('Gagal menyimpan unit aktif');
+    });
+  };
+
+  const handleClearMachines = (type: 'CHILLER' | 'COOLING_TOWER') => {
+    startTransition(async () => {
+      if (type === 'CHILLER') setActiveChillerIds([]);
+      else setActiveCTIds([]);
+
+      const res = await saveLogSheetMachinesAction({
+        logSheetId,
+        machineIds:
+          type === 'CHILLER' ? [...activeCTIds] : [...activeChillerIds],
+      });
+      if (!res.success) toast.error('Gagal menyimpan unit aktif');
     });
   };
 
@@ -595,16 +1006,255 @@ export default function LogSheetDetailPage() {
             </div>
           </div>
 
-          {/* Foto Dokumentasi Section Removed */}
+          <div className="rounded-lg border bg-card p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Unit Mesin Aktif Hari Ini</h3>
+              <p className="text-xs text-muted-foreground">
+                Pilih unit yang beroperasi untuk menampilkan kolom input.
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Chillers</span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => handleSelectAllMachines('CHILLER')}
+                    >
+                      Pilih Semua
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-destructive"
+                      onClick={() => handleClearMachines('CHILLER')}
+                    >
+                      Kosongkan
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {detail.machines.chillers.map(m => (
+                    <div key={m.id} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`chiller-${m.id}`}
+                        checked={activeChillerIds.includes(m.id)}
+                        onCheckedChange={() =>
+                          handleToggleMachine(m.id, 'CHILLER')
+                        }
+                      />
+                      <label
+                        htmlFor={`chiller-${m.id}`}
+                        className="text-sm cursor-pointer"
+                      >
+                        #{m.unitNumber}
+                      </label>
+                    </div>
+                  ))}
+                  {detail.machines.chillers.length === 0 && (
+                    <p className="text-sm text-muted-foreground italic">
+                      Tidak ada chiller di proyek ini
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Cooling Towers</span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => handleSelectAllMachines('COOLING_TOWER')}
+                    >
+                      Pilih Semua
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-destructive"
+                      onClick={() => handleClearMachines('COOLING_TOWER')}
+                    >
+                      Kosongkan
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {detail.machines.coolingTowers.map(m => (
+                    <div key={m.id} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`ct-${m.id}`}
+                        checked={activeCTIds.includes(m.id)}
+                        onCheckedChange={() =>
+                          handleToggleMachine(m.id, 'COOLING_TOWER')
+                        }
+                      />
+                      <label
+                        htmlFor={`ct-${m.id}`}
+                        className="text-sm cursor-pointer"
+                      >
+                        #{m.unitNumber}
+                      </label>
+                    </div>
+                  ))}
+                  {detail.machines.coolingTowers.length === 0 && (
+                    <p className="text-sm text-muted-foreground italic">
+                      Tidak ada cooling tower di proyek ini
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
 
           {categories.map(category => {
             const params = parametersByCategory.get(category) ?? [];
             const cat = category as TParameter['category'];
-            const { machines } = machinesForCategory(cat);
+            const { machines, label } = machinesForCategory(cat);
             if (params.length === 0) return null;
 
+            // Jika kategori ini butuh mesin tapi tidak ada mesin aktif, tampilkan pesan
+            const isUnitCategory = [
+              'UNIT_CONDENSOR',
+              'UNIT_EVAPORATOR',
+              'GENERAL_CONDITION',
+              'JOB_DESCRIPTION',
+            ].includes(cat);
+
+            if (isUnitCategory && machines.length === 0) {
+              return (
+                <div key={category} className="space-y-3">
+                  <h2 className="text-lg font-semibold">{category}</h2>
+                  <div className="rounded-md border p-8 text-center bg-muted/20">
+                    <p className="text-sm text-muted-foreground italic">
+                      Pilih unit {label} aktif di atas untuk menampilkan kolom
+                      input.
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+
             if (cat === 'COOLING_WATER_QUALITY') {
-              const ctMachines = detail.machines.coolingTowers;
+              const activeCTs = detail.machines.coolingTowers.filter(m =>
+                activeCTIds.includes(m.id)
+              );
+
+              if (isMobileView) {
+                return (
+                  <div key={category} className="space-y-4">
+                    <h2 className="text-lg font-semibold">{category}</h2>
+                    <div className="grid gap-4">
+                      {params.map(param => (
+                        <div
+                          key={param.id}
+                          className="rounded-lg border bg-card p-4 space-y-4 shadow-sm"
+                        >
+                          <div className="flex items-start justify-between border-b pb-2">
+                            <div>
+                              <h3 className="font-semibold text-sm">
+                                {param.name}
+                                {param.unit ? ` (${param.unit})` : ''}
+                              </h3>
+                              <p className="text-xs text-muted-foreground">
+                                Target: {formatLimit(param)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            {/* CT Active Entries */}
+                            {activeCTs.map(m => {
+                              const key = makeEntryKey(param.id, m.id, 'VALUE');
+                              const state = entryState[key];
+                              return (
+                                <div key={key} className="space-y-2">
+                                  <div className="text-xs font-medium text-muted-foreground">
+                                    CT #{m.unitNumber}
+                                  </div>
+                                  <Input
+                                    type="number"
+                                    inputMode="decimal"
+                                    placeholder="Nilai..."
+                                    value={
+                                      state?.numericValue === null ||
+                                      state?.numericValue === undefined
+                                        ? ''
+                                        : String(state.numericValue)
+                                    }
+                                    onChange={e => {
+                                      const raw = e.target.value;
+                                      setEntryState(prev => ({
+                                        ...prev,
+                                        [key]: {
+                                          valueType: 'NUMBER',
+                                          numericValue:
+                                            raw === '' ? null : Number(raw),
+                                        },
+                                      }));
+                                    }}
+                                  />
+                                </div>
+                              );
+                            })}
+
+                            {/* Raw Water Entry */}
+                            {(() => {
+                              const rawKey = makeEntryKey(
+                                param.id,
+                                null,
+                                'RAW_WATER'
+                              );
+                              const rawState = entryState[rawKey];
+                              return (
+                                <div className="space-y-2 pt-2 border-t">
+                                  <div className="flex justify-between items-center">
+                                    <div className="text-xs font-medium text-muted-foreground">
+                                      Raw Water
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground">
+                                      Target: {formatRawWaterLimit(param)}
+                                    </div>
+                                  </div>
+                                  <Input
+                                    type="number"
+                                    inputMode="decimal"
+                                    placeholder="Nilai Raw Water..."
+                                    value={
+                                      rawState?.numericValue === null ||
+                                      rawState?.numericValue === undefined
+                                        ? ''
+                                        : String(rawState.numericValue)
+                                    }
+                                    onChange={e => {
+                                      const raw = e.target.value;
+                                      setEntryState(prev => ({
+                                        ...prev,
+                                        [rawKey]: {
+                                          valueType: 'NUMBER',
+                                          numericValue:
+                                            raw === '' ? null : Number(raw),
+                                        },
+                                      }));
+                                    }}
+                                  />
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div key={category} className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -621,7 +1271,7 @@ export default function LogSheetDetailPage() {
                           <TableHead className="min-w-[160px]">
                             Target
                           </TableHead>
-                          {ctMachines.map(m => (
+                          {activeCTs.map(m => (
                             <TableHead
                               key={m.id}
                               className="min-w-[140px] text-center"
@@ -648,7 +1298,7 @@ export default function LogSheetDetailPage() {
                                 </div>
                               </TableCell>
                               <TableCell>{formatLimit(param)}</TableCell>
-                              {ctMachines.map(m => {
+                              {activeCTs.map(m => {
                                 const key = makeEntryKey(
                                   param.id,
                                   m.id,
@@ -887,6 +1537,33 @@ export default function LogSheetDetailPage() {
 
             const hasNotes =
               cat === 'GENERAL_CONDITION' || cat === 'JOB_DESCRIPTION';
+
+            if (isMobileView) {
+              return (
+                <div key={category} className="space-y-4">
+                  <h2 className="text-lg font-semibold">{category}</h2>
+                  <div className="grid gap-4">
+                    {params.map(param => (
+                      <MobileEntryCard
+                        key={param.id}
+                        param={param}
+                        machines={machines}
+                        entryState={entryState}
+                        setEntryState={setEntryState}
+                        hasNotes={hasNotes}
+                        isWaterMeter={paramName =>
+                          cat === 'CONSUMPTION' &&
+                          ['before', 'after'].some(k =>
+                            paramName.toLowerCase().includes(k)
+                          )
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div key={category} className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -1137,12 +1814,33 @@ export default function LogSheetDetailPage() {
           byName="-"
           replacedByName={replacedByName}
           notes={notes.trim() ? notes.trim() : null}
-          machines={detail.machines}
+          machines={activeMachines}
           parameters={detail.parameters}
           valuesByKey={entryState}
-          photos={[]}
+          photos={detail.photos}
           chemicalUsages={chemicalState}
         />
+      )}
+
+      {/* Sticky Action Bar for Mobile */}
+      {mode === 'input' && detail.logSheet.status === 'DRAFT' && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t flex gap-2 md:hidden z-50">
+          <Button
+            className="flex-1"
+            variant="outline"
+            onClick={handleSave}
+            disabled={isPending}
+          >
+            Simpan Draft
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={handleSubmit}
+            disabled={isPending}
+          >
+            Kirim
+          </Button>
+        </div>
       )}
     </div>
   );
