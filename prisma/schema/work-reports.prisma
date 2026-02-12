@@ -15,6 +15,11 @@ model WorkReport {
   workDone   String // Pekerjaan yang dilakukan (Text)
   workResult String // Hasil pekerjaan (Text)
 
+  status           WorkReportStatus @default(DRAFT)
+  approvedAt       DateTime?
+  approvedByUserId String?
+  approvedBy       User?           @relation("WorkReportApprovedBy", fields: [approvedByUserId], references: [id])
+
   // Relations
   machines Machine[] // Implicit Many-to-Many
 
@@ -29,6 +34,12 @@ model WorkReport {
   deletedAt DateTime?
 
   @@map("work_reports")
+}
+
+enum WorkReportStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
 }
 
 enum WorkReportPhotoType {

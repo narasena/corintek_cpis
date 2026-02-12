@@ -1,4 +1,4 @@
-import { getWorkReportById } from '@/features/work-reports/service';
+import { getWorkReportByIdAction } from '@/features/work-reports/actions';
 import { WorkReportPreview } from '@/features/work-reports/components/work-report-preview';
 import { PrintButton } from '@/components/print-button';
 import { Button } from '@/components/ui/button';
@@ -12,20 +12,27 @@ interface PageProps {
 
 export default async function WorkReportDetailPage({ params }: PageProps) {
   const { projectId, workReportId } = await params;
-  const data = await getWorkReportById(workReportId);
+  const res = await getWorkReportByIdAction(workReportId);
+  const data = res.success ? (res.data as any) : null;
 
   if (!data) return notFound();
+  if (data.projectId !== projectId) return notFound();
 
   return (
     <div className="min-h-screen bg-gray-100 p-8 print:p-0 print:bg-white">
       {/* Navigation & Actions - Hidden when printing */}
       <div className="max-w-[210mm] mx-auto mb-6 flex items-center justify-between print:hidden">
-        <Button variant="ghost" asChild>
-          <Link href={`/work-reports/${projectId}`}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Kembali
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" asChild>
+            <Link href={`/work-reports/${projectId}`}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Kembali
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href={`/my-projects/${projectId}`}>Proyek</Link>
+          </Button>
+        </div>
         <PrintButton />
       </div>
 

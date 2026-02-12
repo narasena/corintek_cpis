@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { WorkReportPhotoType } from '@/generated/prisma/enums';
 
+export const WorkReportStatusEnum = z.enum(['DRAFT', 'SUBMITTED', 'APPROVED']);
+export type TWorkReportStatus = z.infer<typeof WorkReportStatusEnum>;
+
 export const WorkReportSchema = z.object({
   projectId: z.string().uuid(),
   date: z.date(),
@@ -11,6 +14,7 @@ export const WorkReportSchema = z.object({
   timeEnd: z.string().optional(),
   zone: z.string().optional(),
   machineIds: z.array(z.string()),
+  status: WorkReportStatusEnum.optional(),
 });
 
 export const UpdateWorkReportSchema = WorkReportSchema.extend({
@@ -24,6 +28,8 @@ export type WorkReportRow = {
   id: string;
   projectId: string;
   date: Date;
+  status: TWorkReportStatus;
+  approvedAt: Date | null;
   timeStart: string | null;
   timeEnd: string | null;
   zone: string | null;

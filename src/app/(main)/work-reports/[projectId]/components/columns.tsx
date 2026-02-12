@@ -4,11 +4,17 @@ import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { ActionCell } from '@/components/action-cell';
+import { Badge } from '@/components/ui/badge';
 import { WorkReportRow } from '@/features/work-reports/types';
-import { deleteWorkReportAction } from '@/features/work-reports/actions';
+import {
+  approveWorkReportAction,
+  deleteWorkReportAction,
+  submitWorkReportAction,
+} from '@/features/work-reports/actions';
 import { useRouter } from 'next/navigation';
 import { Eye } from 'lucide-react';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 interface GetColumnsProps {
   projectId: string;
@@ -25,6 +31,20 @@ export const getWorkReportColumns = ({
     cell: ({ row }) => {
       const date = new Date(row.getValue('date'));
       return format(date, 'dd MMMM yyyy', { locale: id });
+    },
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => {
+      const status = row.getValue('status') as WorkReportRow['status'];
+      const variant =
+        status === 'APPROVED'
+          ? 'default'
+          : status === 'SUBMITTED'
+            ? 'secondary'
+            : 'outline';
+      return <Badge variant={variant}>{status}</Badge>;
     },
   },
   {
@@ -64,6 +84,40 @@ export const getWorkReportColumns = ({
             return await deleteWorkReportAction(formData);
           }}
         >
+          {row.original.status === 'DRAFT' && (
+            <DropdownMenuItem
+              onClick={async () => {
+                const res = await submitWorkReportAction(row.original.id);
+                if (!res.success) {
+                  toast.error('Gagal mengirim laporan', {
+                    description: (res as any).message,
+                  });
+                  return;
+                }
+                toast.success('Laporan berhasil dikirim');
+                router.refresh();
+              }}
+            >
+              Kirim ke PIC
+            </DropdownMenuItem>
+          )}
+          {row.original.status === 'SUBMITTED' && (
+            <DropdownMenuItem
+              onClick={async () => {
+                const res = await approveWorkReportAction(row.original.id);
+                if (!res.success) {
+                  toast.error('Gagal menyetujui laporan', {
+                    description: (res as any).message,
+                  });
+                  return;
+                }
+                toast.success('Laporan disetujui');
+                router.refresh();
+              }}
+            >
+              Setujui
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={() =>
               router.push(`/work-reports/${projectId}/${row.original.id}`)

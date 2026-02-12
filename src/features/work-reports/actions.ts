@@ -5,7 +5,11 @@ import { z } from 'zod';
 import { WorkReportPhotoType } from '@/generated/prisma/client';
 
 import * as service from './service';
-import { WorkReportSchema, UpdateWorkReportSchema } from './types';
+import {
+  WorkReportSchema,
+  WorkReportStatusEnum,
+  UpdateWorkReportSchema,
+} from './types';
 import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import * as projectService from '@/features/projects/service';
@@ -127,10 +131,17 @@ export async function createWorkReportAction(formData: FormData) {
       timeStart: formData.get('timeStart')?.toString() || undefined,
       timeEnd: formData.get('timeEnd')?.toString() || undefined,
       zone: formData.get('zone')?.toString() || undefined,
+      status: formData.get('status')?.toString() || undefined,
     };
 
     const validated = WorkReportSchema.parse(rawData);
     await projectService.assertCanAccessProject(actor, validated.projectId);
+
+    const status = validated.status ?? 'DRAFT';
+    if (status === 'APPROVED') {
+      throw new Error('Unauthorized');
+    }
+
     const report = await service.createWorkReport(validated);
 
     // Handle Photos Transactionally (Compensating Transaction Pattern)
@@ -181,6 +192,8 @@ export async function createWorkReportAction(formData: FormData) {
     }
 
     revalidatePath(`/work-reports/${validated.projectId}`);
+    revalidatePath(`/my-projects/${validated.projectId}`);
+    revalidatePath(`/`);
     return { success: true, data: { id: report.id } };
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Create:', error);
@@ -221,6 +234,7 @@ export async function updateWorkReportAction(formData: FormData) {
       workDone: formData.get('workDone'),
       workResult: formData.get('workResult'),
       machineIds: formData.getAll('machineIds'),
+      status: formData.get('status')?.toString() || undefined,
     };
 
     const validated = UpdateWorkReportSchema.parse(rawData);
@@ -228,6 +242,27 @@ export async function updateWorkReportAction(formData: FormData) {
     if (!existing) return { success: false, message: 'Not found' };
 
     await projectService.assertCanAccessProject(actor, existing.projectId);
+
+    const existingStatus = (existing as any).status as
+      | 'DRAFT'
+      | 'SUBMITTED'
+      | 'APPROVED';
+    const desiredStatus = (validated.status ?? existingStatus) as
+      | 'DRAFT'
+      | 'SUBMITTED'
+      | 'APPROVED';
+
+    if (existingStatus === 'APPROVED' || desiredStatus === 'APPROVED') {
+      throw new Error('Laporan sudah disetujui');
+    }
+    if (existingStatus !== 'DRAFT') {
+      throw new Error('Laporan sudah dikirim dan tidak bisa diubah');
+    }
+    if (desiredStatus === 'DRAFT' || desiredStatus === 'SUBMITTED') {
+      // allowed
+    } else {
+      throw new Error('Status tidak valid');
+    }
 
     const result = await service.updateWorkReport({
       ...validated,
@@ -242,6 +277,8 @@ export async function updateWorkReportAction(formData: FormData) {
     // So we'll keep Update as is, but we CAN allow adding photos here too for convenience.
 
     revalidatePath(`/work-reports/${validated.projectId}`);
+    revalidatePath(`/my-projects/${validated.projectId}`);
+    revalidatePath(`/`);
     return { success: true, data: { id: result.id } };
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Update:', error);
@@ -254,6 +291,57 @@ export async function updateWorkReportAction(formData: FormData) {
     }
     return { success: false, message: 'Failed to update work report' };
   }
+}
+
+export async function updateWorkReportStatusAction(data: unknown) {
+  try {
+    const actorDetails = await getCurrentUserDetails();
+    if (!actorDetails) return { success: false, message: 'Unauthorized' };
+    const actor: IJwtPayload = {
+      id: actorDetails.id,
+      email: actorDetails.email,
+      role: actorDetails.role,
+    };
+
+    ensureAccess(actor.role, RbacResource.WORK_REPORTS, 'update');
+    const validated = z
+      .object({
+        id: z.string().uuid(),
+        status: WorkReportStatusEnum,
+      })
+      .parse(data);
+
+    const report = await service.updateWorkReportStatus(
+      actor,
+      validated.id,
+      validated.status
+    );
+
+    if (!report) return { success: false, message: 'Not found' };
+
+    revalidatePath(`/work-reports/${report.projectId}`);
+    revalidatePath(`/my-projects/${report.projectId}`);
+    revalidatePath(`/`);
+    return {
+      success: true,
+      data: { id: report.id, status: (report as any).status },
+    };
+  } catch (error) {
+    console.error('[CPIS-ERROR] WorkReport.UpdateStatus:', error);
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : 'Failed to update work report',
+    };
+  }
+}
+
+export async function submitWorkReportAction(id: string) {
+  return updateWorkReportStatusAction({ id, status: 'SUBMITTED' });
+}
+
+export async function approveWorkReportAction(id: string) {
+  return updateWorkReportStatusAction({ id, status: 'APPROVED' });
 }
 
 export async function deleteWorkReportAction(formData: FormData) {
@@ -279,6 +367,8 @@ export async function deleteWorkReportAction(formData: FormData) {
 
     await service.deleteWorkReport(validatedId);
     revalidatePath(`/work-reports/${existing.projectId}`);
+    revalidatePath(`/my-projects/${existing.projectId}`);
+    revalidatePath(`/`);
     return { success: true };
   } catch (error) {
     console.error('[CPIS-ERROR] WorkReport.Delete:', error);
@@ -355,6 +445,8 @@ export async function revalidateWorkReportPathAction(
   if (workReportId) {
     revalidatePath(`/work-reports/${projectId}/${workReportId}`);
   }
+  revalidatePath(`/my-projects/${projectId}`);
+  revalidatePath(`/`);
   return { success: true };
 }
 

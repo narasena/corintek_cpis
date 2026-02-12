@@ -8,6 +8,7 @@ import {
   useTransition,
 } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { ArrowLeft, Printer, Save } from 'lucide-react';
 
@@ -45,6 +46,8 @@ import {
   saveLogSheetEntriesAction,
   saveLogSheetChemicalsAction,
   uploadLogSheetImageAction,
+  approveLogSheetAction,
+  submitLogSheetAction,
   updateLogSheetAction,
 } from '@/features/log-sheets/actions';
 import type { TLogSheetStatus } from '@/features/log-sheets/types';
@@ -211,7 +214,6 @@ export default function LogSheetDetailPage() {
   const [detail, setDetail] = useState<TDetail | null>(null);
   const [mode, setMode] = useState<'input' | 'preview'>('input');
   const [notes, setNotes] = useState('');
-  const [status, setStatus] = useState<TLogSheetStatus>('DRAFT');
   const [replacedByUserId, setReplacedByUserId] = useState<string | null>(null);
   const [technicians, setTechnicians] = useState<TUserResponse[]>([]);
   const [entryState, setEntryState] = useState<Record<string, TEntryState>>({});
@@ -233,7 +235,6 @@ export default function LogSheetDetailPage() {
       const d = result.data as unknown as TDetail;
       setDetail(d);
       setNotes(d.logSheet.notes ?? '');
-      setStatus(d.logSheet.status);
       setReplacedByUserId(d.logSheet.replacedBy?.id ?? null);
 
       const initial: Record<string, TEntryState> = {};
@@ -339,7 +340,6 @@ export default function LogSheetDetailPage() {
       const headerRes = await updateLogSheetAction({
         id: logSheetId,
         notes: notes.trim() ? notes.trim() : undefined,
-        status,
         replacedByUserId,
       });
 
@@ -444,6 +444,30 @@ export default function LogSheetDetailPage() {
     setTimeout(() => window.print(), 0);
   };
 
+  const handleSubmit = () => {
+    startTransition(async () => {
+      const res = await submitLogSheetAction(logSheetId);
+      if (!res.success) {
+        toast.error('Gagal mengirim log sheet', { description: res.error });
+        return;
+      }
+      toast.success('Log sheet berhasil dikirim');
+      await fetchData();
+    });
+  };
+
+  const handleApprove = () => {
+    startTransition(async () => {
+      const res = await approveLogSheetAction(logSheetId);
+      if (!res.success) {
+        toast.error('Gagal menyetujui log sheet', { description: res.error });
+        return;
+      }
+      toast.success('Log sheet disetujui');
+      await fetchData();
+    });
+  };
+
   if (loading || !detail) {
     return (
       <div className="p-8 max-w-7xl mx-auto">
@@ -467,6 +491,9 @@ export default function LogSheetDetailPage() {
             onClick={() => router.push(`/log-sheets/${projectId}`)}
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/my-projects/${projectId}`}>Proyek</Link>
           </Button>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
@@ -496,6 +523,24 @@ export default function LogSheetDetailPage() {
           <Button variant="outline" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" /> Print
           </Button>
+          {detail.logSheet.status === 'DRAFT' && (
+            <Button
+              variant="secondary"
+              onClick={handleSubmit}
+              disabled={isPending}
+            >
+              Kirim
+            </Button>
+          )}
+          {detail.logSheet.status === 'SUBMITTED' && (
+            <Button
+              variant="secondary"
+              onClick={handleApprove}
+              disabled={isPending}
+            >
+              Setujui
+            </Button>
+          )}
           <Button onClick={handleSave} disabled={isPending}>
             <Save className="mr-2 h-4 w-4" />{' '}
             {isPending ? 'Menyimpan...' : 'Simpan'}
@@ -508,19 +553,7 @@ export default function LogSheetDetailPage() {
           <div className="grid gap-4 md:grid-cols-12">
             <div className="md:col-span-3 space-y-2">
               <label className="text-sm font-medium">Status</label>
-              <Select
-                value={status}
-                onValueChange={v => setStatus(v as TLogSheetStatus)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DRAFT">DRAFT</SelectItem>
-                  <SelectItem value="SUBMITTED">SUBMITTED</SelectItem>
-                  <SelectItem value="APPROVED">APPROVED</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input value={detail.logSheet.status} readOnly />
             </div>
             <div className="md:col-span-3 space-y-2">
               <label className="text-sm font-medium">Digantikan Oleh</label>

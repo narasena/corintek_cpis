@@ -174,6 +174,27 @@ export async function getProjectsAction() {
   }
 }
 
+export async function getDashboardProjectsAction() {
+  const actor = await getCurrentUserDetails();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
+  try {
+    ensureAccess(actor.role, RbacResource.DASHBOARD, 'read');
+    const projects = await projectService.getDashboardProjects({
+      id: actor.id,
+      email: actor.email,
+      role: actor.role,
+    });
+    return { success: true, data: projects };
+  } catch (error: any) {
+    console.error('[CPIS-ERROR] Projects.DashboardList:', error);
+    return {
+      success: false,
+      error: error.message || 'Gagal mengambil data proyek',
+    };
+  }
+}
+
 /**
  * Get single project action
  */

@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition, useEffect, useState } from 'react';
+import { useTransition, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -52,6 +52,12 @@ export function WorkReportForm({
 }: IWorkReportFormProps) {
   const [isPending, startTransition] = useTransition();
   const [submitStatus, setSubmitStatus] = useState<string>('');
+  const [statusIntent, setStatusIntent] = useState<'DRAFT' | 'SUBMITTED'>(
+    initialData?.status === 'SUBMITTED' ? 'SUBMITTED' : 'DRAFT'
+  );
+  const statusIntentRef = useRef<'DRAFT' | 'SUBMITTED'>(
+    initialData?.status === 'SUBMITTED' ? 'SUBMITTED' : 'DRAFT'
+  );
   const [machineOptions, setMachineOptions] = useState<
     { label: string; value: string }[]
   >([]);
@@ -154,6 +160,7 @@ export function WorkReportForm({
   const onSubmit = (data: CreateWorkReportInput) => {
     startTransition(async () => {
       try {
+        const intent = statusIntentRef.current;
         setSubmitStatus('Menyimpan data laporan...');
         // 1. Submit the report data first
         const formData = new FormData();
@@ -165,6 +172,7 @@ export function WorkReportForm({
         formData.append('situation', data.situation);
         formData.append('workDone', data.workDone);
         formData.append('workResult', data.workResult);
+        formData.append('status', intent);
 
         if (data.machineIds) {
           data.machineIds.forEach(id => formData.append('machineIds', id));
@@ -290,9 +298,16 @@ export function WorkReportForm({
         await revalidateWorkReportPathAction(projectId, reportId || undefined);
 
         if (!uploadErrors) {
-          toast.success(initialData ? 'Laporan diperbarui' : 'Laporan dibuat', {
-            description: 'Data dan foto berhasil disimpan',
-          });
+          toast.success(
+            intent === 'SUBMITTED'
+              ? 'Laporan berhasil dikirim'
+              : initialData
+                ? 'Laporan diperbarui'
+                : 'Laporan dibuat',
+            {
+              description: 'Data dan foto berhasil disimpan',
+            }
+          );
           onSuccess();
         } else {
           // If upload errors occurred, DO NOT close the dialog (don't call onSuccess)
@@ -483,8 +498,16 @@ export function WorkReportForm({
             >
               Batal
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? (
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={isPending}
+              onClick={() => {
+                statusIntentRef.current = 'DRAFT';
+                setStatusIntent('DRAFT');
+              }}
+            >
+              {isPending && statusIntent === 'DRAFT' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {submitStatus || 'Menyimpan...'}
@@ -492,8 +515,28 @@ export function WorkReportForm({
               ) : (
                 <>
                   <Save className="mr-2 h-4 w-4" />
-                  Simpan Laporan
+                  Simpan Draft
                 </>
+              )}
+            </Button>
+            <Button
+              type="submit"
+              disabled={
+                isPending ||
+                (initialData ? initialData.status !== 'DRAFT' : false)
+              }
+              onClick={() => {
+                statusIntentRef.current = 'SUBMITTED';
+                setStatusIntent('SUBMITTED');
+              }}
+            >
+              {isPending && statusIntent === 'SUBMITTED' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {submitStatus || 'Mengirim...'}
+                </>
+              ) : (
+                'Kirim ke PIC'
               )}
             </Button>
           </div>

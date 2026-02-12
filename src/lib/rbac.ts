@@ -43,100 +43,102 @@ function permissionSet(level: 'CRUD' | 'CRU' | 'R' | '-'): TRbacPermissionSet {
   return { create: false, read: false, update: false, delete: false };
 }
 
-const ROLE_MATRIX: Record<TRbacRole, Partial<Record<TRbacResource, 'CRUD' | 'CRU' | 'R' | '-'>>> =
-  {
-    ADMIN: {
-      DASHBOARD: 'CRUD',
-      SUMMARY_REPORTS: 'CRUD',
-      LOG_SHEETS: 'CRUD',
-      WORK_REPORTS: 'CRUD',
-      REPORTS: 'CRUD',
-      LAB_ANALYSES: 'CRUD',
-      ATTENDANCE: 'CRUD',
-      USERS_ADMIN: 'CRUD',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: 'CRUD',
-      MASTER_DATA: 'CRUD',
-    },
-    SUPERVISOR: {
-      DASHBOARD: 'CRUD',
-      SUMMARY_REPORTS: 'CRUD',
-      LOG_SHEETS: 'CRUD',
-      WORK_REPORTS: 'CRUD',
-      REPORTS: 'CRUD',
-      LAB_ANALYSES: 'CRUD',
-      ATTENDANCE: 'CRUD',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      USERS_ADMIN: '-',
-      MASTER_DATA: '-',
-    },
-    TECHNICIAN: {
-      DASHBOARD: 'R',
-      SUMMARY_REPORTS: '-',
-      LOG_SHEETS: 'CRU',
-      WORK_REPORTS: 'CRU',
-      REPORTS: 'R',
-      LAB_ANALYSES: '-',
-      ATTENDANCE: 'CRU',
-      USERS_ADMIN: '-',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      MASTER_DATA: '-',
-    },
-    REPORTING: {
-      DASHBOARD: 'R',
-      SUMMARY_REPORTS: 'CRU',
-      LOG_SHEETS: 'CRU',
-      WORK_REPORTS: 'CRU',
-      REPORTS: 'CRU',
-      LAB_ANALYSES: '-',
-      ATTENDANCE: '-',
-      USERS_ADMIN: '-',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      MASTER_DATA: '-',
-    },
-    DIRECTOR: {
-      DASHBOARD: 'R',
-      SUMMARY_REPORTS: 'R',
-      LOG_SHEETS: 'R',
-      WORK_REPORTS: 'R',
-      REPORTS: 'R',
-      LAB_ANALYSES: '-',
-      ATTENDANCE: '-',
-      USERS_ADMIN: '-',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      MASTER_DATA: '-',
-    },
-    CLIENT_SUPERVISOR: {
-      DASHBOARD: 'R',
-      SUMMARY_REPORTS: 'R',
-      LOG_SHEETS: 'R',
-      WORK_REPORTS: 'R',
-      REPORTS: 'R',
-      LAB_ANALYSES: '-',
-      ATTENDANCE: '-',
-      USERS_ADMIN: '-',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      MASTER_DATA: '-',
-    },
-    CLIENT_TECHNICIAN: {
-      DASHBOARD: 'R',
-      SUMMARY_REPORTS: '-',
-      LOG_SHEETS: 'CRU',
-      WORK_REPORTS: 'CRU',
-      REPORTS: 'R',
-      LAB_ANALYSES: '-',
-      ATTENDANCE: 'CRU',
-      USERS_ADMIN: '-',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      MASTER_DATA: '-',
-    },
-  };
+const ROLE_MATRIX: Record<
+  TRbacRole,
+  Partial<Record<TRbacResource, 'CRUD' | 'CRU' | 'R' | '-'>>
+> = {
+  ADMIN: {
+    DASHBOARD: 'CRUD',
+    SUMMARY_REPORTS: 'CRUD',
+    LOG_SHEETS: 'CRUD',
+    WORK_REPORTS: 'CRUD',
+    REPORTS: 'CRUD',
+    LAB_ANALYSES: 'CRUD',
+    ATTENDANCE: 'CRUD',
+    USERS_ADMIN: 'CRUD',
+    PROJECTS_LIST: 'R',
+    PROJECTS_ADMIN: 'CRUD',
+    MASTER_DATA: 'CRUD',
+  },
+  SUPERVISOR: {
+    DASHBOARD: 'CRUD',
+    SUMMARY_REPORTS: 'CRUD',
+    LOG_SHEETS: 'CRUD',
+    WORK_REPORTS: 'CRUD',
+    REPORTS: 'CRUD',
+    LAB_ANALYSES: 'CRUD',
+    ATTENDANCE: 'CRUD',
+    PROJECTS_LIST: 'R',
+    PROJECTS_ADMIN: '-',
+    USERS_ADMIN: '-',
+    MASTER_DATA: '-',
+  },
+  TECHNICIAN: {
+    DASHBOARD: 'R',
+    SUMMARY_REPORTS: '-',
+    LOG_SHEETS: 'CRU',
+    WORK_REPORTS: 'CRU',
+    REPORTS: 'R',
+    LAB_ANALYSES: '-',
+    ATTENDANCE: 'CRU',
+    USERS_ADMIN: '-',
+    PROJECTS_LIST: 'R',
+    PROJECTS_ADMIN: '-',
+    MASTER_DATA: '-',
+  },
+  REPORTING: {
+    DASHBOARD: 'R',
+    SUMMARY_REPORTS: 'CRU',
+    LOG_SHEETS: 'CRU',
+    WORK_REPORTS: 'CRU',
+    REPORTS: 'CRU',
+    LAB_ANALYSES: '-',
+    ATTENDANCE: '-',
+    USERS_ADMIN: '-',
+    PROJECTS_LIST: 'R',
+    PROJECTS_ADMIN: '-',
+    MASTER_DATA: '-',
+  },
+  DIRECTOR: {
+    DASHBOARD: 'R',
+    SUMMARY_REPORTS: 'R',
+    LOG_SHEETS: 'R',
+    WORK_REPORTS: 'R',
+    REPORTS: 'R',
+    LAB_ANALYSES: '-',
+    ATTENDANCE: '-',
+    USERS_ADMIN: '-',
+    PROJECTS_LIST: 'R',
+    PROJECTS_ADMIN: '-',
+    MASTER_DATA: '-',
+  },
+  CLIENT_SUPERVISOR: {
+    DASHBOARD: 'R',
+    SUMMARY_REPORTS: 'R',
+    LOG_SHEETS: 'R',
+    WORK_REPORTS: 'R',
+    REPORTS: 'R',
+    LAB_ANALYSES: '-',
+    ATTENDANCE: '-',
+    USERS_ADMIN: '-',
+    PROJECTS_LIST: 'R',
+    PROJECTS_ADMIN: '-',
+    MASTER_DATA: '-',
+  },
+  CLIENT_TECHNICIAN: {
+    DASHBOARD: 'R',
+    SUMMARY_REPORTS: '-',
+    LOG_SHEETS: 'CRU',
+    WORK_REPORTS: 'CRU',
+    REPORTS: 'R',
+    LAB_ANALYSES: '-',
+    ATTENDANCE: 'CRU',
+    USERS_ADMIN: '-',
+    PROJECTS_LIST: 'R',
+    PROJECTS_ADMIN: '-',
+    MASTER_DATA: '-',
+  },
+};
 
 export function canAccess(
   role: string,
@@ -180,7 +182,8 @@ export function getRoleLabel(role: string) {
 
 export function matchPathToResource(pathname: string): TRbacResource | null {
   if (pathname === '/' || pathname === '') return RbacResource.DASHBOARD;
-  if (pathname.startsWith('/summary-reports')) return RbacResource.SUMMARY_REPORTS;
+  if (pathname.startsWith('/summary-reports'))
+    return RbacResource.SUMMARY_REPORTS;
   if (pathname.startsWith('/log-sheets')) return RbacResource.LOG_SHEETS;
   if (pathname.startsWith('/work-reports')) return RbacResource.WORK_REPORTS;
   if (pathname.startsWith('/reports')) return RbacResource.REPORTS;
@@ -188,6 +191,7 @@ export function matchPathToResource(pathname: string): TRbacResource | null {
   if (pathname.startsWith('/attendance') || pathname.startsWith('/absence'))
     return RbacResource.ATTENDANCE;
   if (pathname.startsWith('/users')) return RbacResource.USERS_ADMIN;
+  if (pathname.startsWith('/my-projects')) return RbacResource.PROJECTS_LIST;
   if (pathname.startsWith('/projects')) return RbacResource.PROJECTS_ADMIN;
   if (
     pathname.startsWith('/clients') ||

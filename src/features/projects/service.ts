@@ -3,6 +3,7 @@ import {
   TCreateProject,
   TUpdateProject,
   IProject,
+  IProjectDashboardCard,
   TProjectAssignmentInput,
 } from './types';
 import type { IJwtPayload } from '@/@types/auth.type';
@@ -70,6 +71,98 @@ export async function getProjects(actor: IJwtPayload): Promise<IProject[]> {
   });
 
   return projects as unknown as IProject[];
+}
+
+export async function getDashboardProjects(
+  actor: IJwtPayload
+): Promise<IProjectDashboardCard[]> {
+  ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
+
+  const isScopedRole =
+    actor.role === 'SUPERVISOR' ||
+    actor.role === 'TECHNICIAN' ||
+    actor.role === 'CLIENT_SUPERVISOR' ||
+    actor.role === 'CLIENT_TECHNICIAN';
+
+  const projects = await prisma.project.findMany({
+    where: {
+      deletedAt: null,
+      ...(isScopedRole
+        ? {
+            status: 'ONGOING',
+            assignments: {
+              some: {
+                userId: actor.id,
+                isActive: true,
+              },
+            },
+          }
+        : {}),
+    },
+    select: {
+      id: true,
+      name: true,
+      quoteNumber: true,
+      status: true,
+      client: { select: { id: true, name: true } },
+      assignments: {
+        where: { userId: actor.id, isActive: true },
+        select: { role: true },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const projectIds = projects.map(p => p.id);
+
+  const logSheetCounts =
+    projectIds.length === 0
+      ? []
+      : await prisma.logSheet.groupBy({
+          by: ['projectId'],
+          where: {
+            projectId: { in: projectIds },
+            deletedAt: null,
+            status: 'SUBMITTED',
+          },
+          _count: { _all: true },
+        });
+
+  const logSheetsPendingByProjectId = new Map<string, number>(
+    logSheetCounts.map(row => [row.projectId, row._count._all])
+  );
+
+  const workReportCounts =
+    projectIds.length === 0
+      ? []
+      : await prisma.workReport.groupBy({
+          by: ['projectId'],
+          where: {
+            projectId: { in: projectIds },
+            deletedAt: null,
+            status: 'SUBMITTED',
+          },
+          _count: { _all: true },
+        });
+
+  const workReportsPendingByProjectId = new Map<string, number>(
+    workReportCounts.map(row => [row.projectId, row._count._all])
+  );
+
+  return projects.map(project => ({
+    id: project.id,
+    name: project.name,
+    quoteNumber: project.quoteNumber,
+    status: project.status as any,
+    client: project.client ?? undefined,
+    myAssignmentRoles: project.assignments.map(a => a.role as any),
+    taskCounts: {
+      logSheetsPendingApproval:
+        logSheetsPendingByProjectId.get(project.id) ?? 0,
+      workReportsPendingApproval:
+        workReportsPendingByProjectId.get(project.id) ?? 0,
+    },
+  }));
 }
 
 /**

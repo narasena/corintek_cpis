@@ -18,9 +18,10 @@ model User {
   isActive  Boolean @default(true)
   isBlocked Boolean @default(false)
 
-  replacedLogSheets LogSheet[]   @relation("LogSheetReplacedBy")
-  attendances       Attendance[]
-  projectAssignments ProjectAssignment[]
+  replacedLogSheets    LogSheet[]   @relation("LogSheetReplacedBy")
+  approvedWorkReports  WorkReport[] @relation("WorkReportApprovedBy")
+  attendances          Attendance[]
+  projectAssignments   ProjectAssignment[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

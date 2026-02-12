@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 
@@ -96,18 +97,23 @@ export default function ProjectLogSheetsPage() {
               : 'Kelola log sheet per proyek.'}
           </p>
         </div>
-        <LogSheetDialog
-          projectId={projectId}
-          onCreated={logSheetId =>
-            router.push(`/log-sheets/${projectId}/${logSheetId}`)
-          }
-          onSuccess={() => refresh()}
-          trigger={
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Tambah Log Sheet
-            </Button>
-          }
-        />
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
+            <Link href={`/my-projects/${projectId}`}>Kembali ke Proyek</Link>
+          </Button>
+          <LogSheetDialog
+            projectId={projectId}
+            onCreated={logSheetId =>
+              router.push(`/log-sheets/${projectId}/${logSheetId}`)
+            }
+            onSuccess={() => refresh()}
+            trigger={
+              <Button className="w-full sm:w-auto">
+                <Plus className="mr-2 h-4 w-4" /> Tambah Log Sheet
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       {loading && logSheets.length === 0 ? (

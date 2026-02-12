@@ -98,6 +98,19 @@ export interface IProject {
   }>;
 }
 
+export interface IProjectDashboardCard {
+  id: string;
+  name: string;
+  quoteNumber: string | null;
+  status: TProjectStatus;
+  client?: { id: string; name: string };
+  myAssignmentRoles: TProjectAssignmentRole[];
+  taskCounts: {
+    logSheetsPendingApproval: number;
+    workReportsPendingApproval: number;
+  };
+}
+
 export const ProjectParameterOverrideSchema = z.object({
   id: z.string().uuid().optional(),
   projectId: z.string().uuid('Project ID tidak valid'),

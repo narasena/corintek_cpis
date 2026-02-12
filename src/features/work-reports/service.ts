@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { CreateWorkReportInput, UpdateWorkReportInput } from './types';
 import { WorkReportPhotoType } from '@/generated/prisma/client';
+import type { IJwtPayload } from '@/@types/auth.type';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
+import * as projectService from '@/features/projects/service';
 
 export async function getWorkReportsByProject(projectId: string) {
   return await prisma.workReport.findMany({
@@ -38,6 +41,7 @@ export async function createWorkReport(data: CreateWorkReportInput) {
   return await prisma.workReport.create({
     data: {
       ...rest,
+      status: rest.status ?? 'DRAFT',
       machines: {
         connect: machineIds?.map(id => ({ id })) || [],
       },
@@ -55,6 +59,69 @@ export async function updateWorkReport(data: UpdateWorkReportInput) {
         set: [], // Clear existing relations
         connect: machineIds?.map(id => ({ id })) || [],
       },
+    },
+  });
+}
+
+export async function updateWorkReportStatus(
+  actor: IJwtPayload,
+  id: string,
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED'
+) {
+  ensureAccess(actor.role, RbacResource.WORK_REPORTS, 'update');
+
+  const row = await prisma.workReport.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, projectId: true, status: true },
+  });
+
+  if (!row) {
+    throw new Error('Work report tidak ditemukan');
+  }
+
+  await projectService.assertCanAccessProject(actor, row.projectId);
+
+  const isProjectPic =
+    actor.role === 'ADMIN'
+      ? true
+      : !!(await prisma.projectAssignment.findFirst({
+          where: {
+            projectId: row.projectId,
+            userId: actor.id,
+            isActive: true,
+            role: 'PROJECT_PIC',
+          },
+          select: { id: true },
+        }));
+
+  const current = row.status as any;
+
+  if (status === current) {
+    return await prisma.workReport.findFirst({ where: { id: row.id } });
+  }
+
+  if (status === 'SUBMITTED') {
+    if (current !== 'DRAFT') {
+      throw new Error('Work report hanya bisa dikirim dari status DRAFT');
+    }
+  } else if (status === 'APPROVED') {
+    if (current !== 'SUBMITTED') {
+      throw new Error('Work report hanya bisa disetujui dari status SUBMITTED');
+    }
+    if (!isProjectPic) {
+      throw new Error('Unauthorized');
+    }
+  } else if (status === 'DRAFT') {
+    throw new Error('Tidak dapat mengubah status kembali ke DRAFT');
+  }
+
+  return await prisma.workReport.update({
+    where: { id: row.id },
+    data: {
+      status,
+      ...(status === 'APPROVED'
+        ? { approvedAt: new Date(), approvedByUserId: actor.id }
+        : {}),
     },
   });
 }

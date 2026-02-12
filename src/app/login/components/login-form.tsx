@@ -50,7 +50,7 @@ export function LoginForm() {
         toast.success('Login berhasil', {
           description: 'Mengalihkan ke dashboard...',
         });
-        router.push('/users');
+        router.push('/');
       } else {
         toast.error('Login gagal', {
           description: result.message,

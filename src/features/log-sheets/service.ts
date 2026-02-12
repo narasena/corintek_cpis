@@ -3,6 +3,9 @@ import { ParameterCategory } from '@/generated/prisma/client';
 import type { IParameter } from '@/features/parameters/types';
 import type { IMachine } from '@/features/machines/types';
 import type { TChemicalUsage } from '@/@types/chemical.type';
+import type { IJwtPayload } from '@/@types/auth.type';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
+import * as projectService from '@/features/projects/service';
 import type {
   ILogSheet,
   ILogSheetEntry,
@@ -196,6 +199,70 @@ export async function updateLogSheet(
   });
 
   return logSheet as unknown as ILogSheet;
+}
+
+export async function updateLogSheetStatus(
+  actor: IJwtPayload,
+  id: string,
+  status: ILogSheet['status']
+): Promise<ILogSheet> {
+  ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'update');
+
+  const row = await prisma.logSheet.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, projectId: true, status: true },
+  });
+
+  if (!row) {
+    throw new Error('Log sheet tidak ditemukan');
+  }
+
+  await projectService.assertCanAccessProject(actor, row.projectId);
+
+  const isProjectPic =
+    actor.role === 'ADMIN'
+      ? true
+      : !!(await prisma.projectAssignment.findFirst({
+          where: {
+            projectId: row.projectId,
+            userId: actor.id,
+            isActive: true,
+            role: 'PROJECT_PIC',
+          },
+          select: { id: true },
+        }));
+
+  const current = row.status;
+
+  if (status === current) {
+    const unchanged = await prisma.logSheet.findFirst({
+      where: { id: row.id, deletedAt: null },
+    });
+    if (!unchanged) throw new Error('Log sheet tidak ditemukan');
+    return unchanged as unknown as ILogSheet;
+  }
+
+  if (status === 'SUBMITTED') {
+    if (current !== 'DRAFT') {
+      throw new Error('Log sheet hanya bisa dikirim dari status DRAFT');
+    }
+  } else if (status === 'APPROVED') {
+    if (current !== 'SUBMITTED') {
+      throw new Error('Log sheet hanya bisa disetujui dari status SUBMITTED');
+    }
+    if (!isProjectPic) {
+      throw new Error('Unauthorized');
+    }
+  } else if (status === 'DRAFT') {
+    throw new Error('Tidak dapat mengubah status kembali ke DRAFT');
+  }
+
+  const updated = await prisma.logSheet.update({
+    where: { id: row.id },
+    data: { status },
+  });
+
+  return updated as unknown as ILogSheet;
 }
 
 export async function deleteLogSheet(id: string): Promise<ILogSheet> {

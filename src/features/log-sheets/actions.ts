@@ -143,6 +143,8 @@ export async function createLogSheetAction(data: unknown) {
 
     revalidatePath('/log-sheets');
     revalidatePath(`/log-sheets/${validatedData.projectId}`);
+    revalidatePath('/');
+    revalidatePath(`/my-projects/${validatedData.projectId}`);
     return { success: true, data: logSheet };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.Create:', error);
@@ -159,10 +161,15 @@ export async function updateLogSheetAction(data: unknown) {
     ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'update');
     const validatedData = UpdateLogSheetSchema.parse(data);
     await assertCanAccessLogSheet(actor, validatedData.id);
-    const logSheet = await logSheetService.updateLogSheet(validatedData);
+    const logSheet = await logSheetService.updateLogSheet({
+      ...validatedData,
+      status: undefined,
+    });
 
     revalidatePath('/log-sheets');
     revalidatePath(`/log-sheets/${logSheet.projectId}`);
+    revalidatePath('/');
+    revalidatePath(`/my-projects/${logSheet.projectId}`);
     return { success: true, data: logSheet };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.Update:', error);
@@ -185,15 +192,19 @@ export async function updateLogSheetStatusAction(data: unknown) {
       })
       .parse(data);
 
-    await assertCanAccessLogSheet(actor, validatedData.id);
-
     if (validatedData.status === 'SUBMITTED') {
       await logSheetService.validateLogSheetForSubmission(validatedData.id);
     }
 
-    const logSheet = await logSheetService.updateLogSheet(validatedData);
+    const logSheet = await logSheetService.updateLogSheetStatus(
+      actor,
+      validatedData.id,
+      validatedData.status
+    );
     revalidatePath('/log-sheets');
     revalidatePath(`/log-sheets/${logSheet.projectId}`);
+    revalidatePath('/');
+    revalidatePath(`/my-projects/${logSheet.projectId}`);
     return { success: true, data: logSheet };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.UpdateStatus:', error);
@@ -207,6 +218,14 @@ export async function updateLogSheetStatusAction(data: unknown) {
   }
 }
 
+export async function submitLogSheetAction(id: string) {
+  return updateLogSheetStatusAction({ id, status: 'SUBMITTED' });
+}
+
+export async function approveLogSheetAction(id: string) {
+  return updateLogSheetStatusAction({ id, status: 'APPROVED' });
+}
+
 export async function deleteLogSheetAction(id: string) {
   try {
     const actor = await requireActor();
@@ -217,6 +236,8 @@ export async function deleteLogSheetAction(id: string) {
 
     revalidatePath('/log-sheets');
     revalidatePath(`/log-sheets/${logSheet.projectId}`);
+    revalidatePath('/');
+    revalidatePath(`/my-projects/${logSheet.projectId}`);
     return { success: true };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.Delete:', error);

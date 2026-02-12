@@ -367,10 +367,12 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 
 ### 🚨 P0: Critical Stabilizations
 
-#### 3.1 Submission Locking (LS-LOCK)
+#### 3.1 Submission Locking & Approval (LS-LOCK / WR-APP)
 
-- [ ] Add `locked` field to LogSheet/WorkReport/LabAnalysis schemas.
-- [ ] Implement Server Action logic to prevent updates on locked records.
+- [ ] Add `locked` field to LogSheet/LabAnalysis schemas.
+- [x] Implement `status` (DRAFT/SUBMITTED/APPROVED) for `WorkReport`.
+- [x] Implement Server Action logic to prevent updates on locked/approved `WorkReport`.
+- [x] Add Admin/PIC-only "Approve" capability for `WorkReport`.
 - [ ] Add Admin-only "Unlock" capability.
 
 #### 3.2 Basic Dashboard (DB-01)
