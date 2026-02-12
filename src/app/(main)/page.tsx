@@ -29,7 +29,7 @@ export default async function Page() {
 
   // Default Dashboard for ADMIN, DIRECTOR, REPORTING
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
+    <div className="flex flex-1 flex-col gap-4">
       <div className="grid auto-rows-min gap-4 md:grid-cols-3">
         <div className="aspect-video rounded-xl bg-muted/50 flex flex-col items-center justify-center p-6 text-center">
           <span className="text-2xl font-bold">Corintek CPIS</span>
