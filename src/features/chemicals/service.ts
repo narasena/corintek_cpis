@@ -133,6 +133,26 @@ export async function getAllChemicals(actor: IJwtPayload) {
   return chemicals;
 }
 
+export async function getChemicalsForLogSheet(actor: IJwtPayload) {
+  try {
+    ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'read');
+
+    const chemicals = await prisma.chemical.findMany({
+      where: {
+        deletedAt: null,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+
+    return chemicals ?? [];
+  } catch (error) {
+    console.error('[CPIS-ERROR] Chemicals.getChemicalsForLogSheet:', error);
+    throw error;
+  }
+}
+
 /**
  * Get a single chemical by ID
  */

@@ -57,7 +57,7 @@ export function ChemicalUsageSection({
       if (res.success && res.data) {
         setChemicals(res.data);
       } else {
-        toast.error('Gagal memuat data chemical');
+        toast.error(res.error || 'Gagal memuat data chemical');
       }
       setLoading(false);
     });

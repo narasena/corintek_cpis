@@ -13,6 +13,7 @@ import {
   getChemicalById,
   updateChemical,
   deleteChemical,
+  getChemicalsForLogSheet,
 } from './service';
 import { revalidatePath } from 'next/cache';
 import { getCurrentUser } from '@/lib/auth-helpers';
@@ -65,13 +66,13 @@ export async function getChemicalsAction(): Promise<
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
-    const chemicals = await getAllChemicals(actor);
+    const chemicals = await getChemicalsForLogSheet(actor);
     return {
       success: true,
-      data: chemicals,
+      data: chemicals || [],
     };
   } catch (error) {
-    console.error('[CPIS-ERROR] Chemicals.List:', error);
+    console.error('[CPIS-ERROR] Chemicals.getChemicalsAction:', error);
     return {
       success: false,
       error:
