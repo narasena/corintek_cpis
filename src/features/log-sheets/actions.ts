@@ -49,6 +49,11 @@ const SaveLogSheetChemicalsSchema = z.object({
   usages: z.array(chemicalUsageSchema),
 });
 
+const SaveLogSheetMachinesSchema = z.object({
+  logSheetId: z.string().uuid('Log sheet ID tidak valid'),
+  machineIds: z.array(z.string().uuid('Machine ID tidak valid')),
+});
+
 function isEmptyEntry(entry: {
   valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
   numericValue?: number | null;
@@ -354,6 +359,30 @@ export async function saveLogSheetChemicalsAction(data: unknown) {
         error instanceof Error
           ? error.message
           : 'Gagal menyimpan penggunaan chemical',
+    };
+  }
+}
+
+export async function saveLogSheetMachinesAction(data: unknown) {
+  try {
+    const actor = await requireActor();
+    ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'update');
+    const validatedData = SaveLogSheetMachinesSchema.parse(data);
+    await assertCanAccessLogSheet(actor, validatedData.logSheetId);
+
+    await logSheetService.upsertLogSheetMachines(
+      validatedData.logSheetId,
+      validatedData.machineIds
+    );
+
+    revalidatePath(`/log-sheets/${validatedData.logSheetId}`);
+    return { success: true };
+  } catch (error) {
+    console.error('[CPIS-ERROR] LogSheet.SaveMachines:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'Gagal menyimpan pilihan unit',
     };
   }
 }

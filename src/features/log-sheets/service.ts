@@ -175,6 +175,57 @@ export interface ILogSheetDetailView {
     chemicalName: string;
     chemicalUnit: string;
   })[];
+  activeMachineIds: {
+    chillers: string[];
+    coolingTowers: string[];
+  };
+}
+
+export async function getLogSheetActiveMachines(logSheetId: string) {
+  const machines = await prisma.logSheetMachine.findMany({
+    where: { logSheetId },
+    select: { machineId: true },
+  });
+  return machines.map(m => m.machineId);
+}
+
+export async function upsertLogSheetMachines(
+  logSheetId: string,
+  machineIds: string[]
+) {
+  const existing = await getLogSheetActiveMachines(logSheetId);
+  const toAdd = machineIds.filter(id => !existing.includes(id));
+  const toRemove = existing.filter(id => !machineIds.includes(id));
+
+  await prisma.$transaction(async tx => {
+    if (toRemove.length > 0) {
+      await tx.logSheetMachine.deleteMany({
+        where: {
+          logSheetId,
+          machineId: { in: toRemove },
+        },
+      });
+
+      // Also soft-delete entries for removed machines
+      await tx.logSheetEntry.updateMany({
+        where: {
+          logSheetId,
+          machineId: { in: toRemove },
+          deletedAt: null,
+        },
+        data: { deletedAt: new Date() },
+      });
+    }
+
+    if (toAdd.length > 0) {
+      await tx.logSheetMachine.createMany({
+        data: toAdd.map(machineId => ({
+          logSheetId,
+          machineId,
+        })),
+      });
+    }
+  });
 }
 
 export async function getLogSheetsByProject(
@@ -379,6 +430,7 @@ export async function getLogSheetDetail(
           chemical: { name: 'asc' },
         },
       },
+      activeMachines: true,
     },
   });
 
@@ -429,6 +481,20 @@ export async function getLogSheetDetail(
 
   const chillers = machines.filter(m => m.type === 'CHILLER');
   const coolingTowers = machines.filter(m => m.type === 'COOLING_TOWER');
+
+  // activeMachineIds logic
+  let activeChillerIds = logSheet.activeMachines
+    .filter(am => chillers.some(c => c.id === am.machineId))
+    .map(am => am.machineId);
+  let activeCTIds = logSheet.activeMachines
+    .filter(am => coolingTowers.some(ct => ct.id === am.machineId))
+    .map(am => am.machineId);
+
+  // Fallback: if no active machines recorded, assume all are active
+  if (logSheet.activeMachines.length === 0) {
+    activeChillerIds = chillers.map(c => c.id);
+    activeCTIds = coolingTowers.map(ct => ct.id);
+  }
 
   // Apply project-specific parameter overrides
   const overrides = logSheet.project.parameterOverrides || [];
@@ -505,6 +571,10 @@ export async function getLogSheetDetail(
       createdAt: usage.createdAt,
       updatedAt: usage.updatedAt,
     })),
+    activeMachineIds: {
+      chillers: activeChillerIds,
+      coolingTowers: activeCTIds,
+    },
   };
 }
 
@@ -597,7 +667,10 @@ export async function validateLogSheetForApproval(id: string) {
     const category = param.category;
 
     if (category === 'COOLING_WATER_QUALITY') {
-      for (const machine of detail.machines.coolingTowers) {
+      const activeCTs = detail.machines.coolingTowers.filter(m =>
+        detail.activeMachineIds.coolingTowers.includes(m.id)
+      );
+      for (const machine of activeCTs) {
         const key = makeEntryKey(param.id, machine.id, 'VALUE');
         const entry = entryByKey.get(key);
         if (!isEntryComplete(entry)) {
@@ -619,15 +692,26 @@ export async function validateLogSheetForApproval(id: string) {
       category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR';
     const usesCoolingTowers =
       category === 'GENERAL_CONDITION' || category === 'JOB_DESCRIPTION';
+
+    const activeChillers = detail.machines.chillers.filter(m =>
+      detail.activeMachineIds.chillers.includes(m.id)
+    );
+    const activeCTs = detail.machines.coolingTowers.filter(m =>
+      detail.activeMachineIds.coolingTowers.includes(m.id)
+    );
+
     const machines = usesChillers
-      ? detail.machines.chillers
+      ? activeChillers
       : usesCoolingTowers
-        ? detail.machines.coolingTowers
+        ? activeCTs
         : [];
+
     const targets =
       machines.length > 0
         ? machines.map(machine => ({ id: machine.id }))
-        : [{ id: null as string | null }];
+        : category === 'CONSUMPTION'
+          ? [{ id: null as string | null }]
+          : [];
 
     for (const target of targets) {
       const key = makeEntryKey(param.id, target.id, 'VALUE');
@@ -641,7 +725,7 @@ export async function validateLogSheetForApproval(id: string) {
       }
     }
 
-    if (usesCoolingTowers) {
+    if (usesCoolingTowers && activeCTs.length > 0) {
       const noteKey = makeEntryKey(param.id, null, 'NOTE');
       const noteEntry = entryByKey.get(noteKey);
       if (!isEntryComplete(noteEntry)) {

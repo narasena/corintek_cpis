@@ -27,6 +27,7 @@ model LogSheet {
   entries        LogSheetEntry[]
   photos         LogSheetPhoto[]
   chemicalUsages ChemicalUsage[]
+  activeMachines LogSheetMachine[]
 
   replacedByUserId String?
   replacedBy       User?   @relation("LogSheetReplacedBy", fields: [replacedByUserId], references: [id])
@@ -86,4 +87,18 @@ model LogSheetPhoto {
   @@index([logSheetId])
   @@index([type])
   @@map("log_sheet_photos")
+}
+
+model LogSheetMachine {
+  id         String   @id @default(uuid())
+  logSheetId String
+  logSheet   LogSheet @relation(fields: [logSheetId], references: [id])
+
+  machineId String
+  machine   Machine @relation(fields: [machineId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([logSheetId, machineId])
+  @@map("log_sheet_machines")
 }
