@@ -392,3 +392,60 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 
 - [ ] Signature pad integration for technicians.
 - [ ] Automatic timestamping on sign-off.
+
+---
+
+## 6. Gap Audit (FSD vs Current Implementation)
+
+### 6.1 Dashboard (DB-02/DB-03)
+
+- [ ] Historical charts for Approach/Ampere (Condenser & Evaporator).
+- [ ] Photo gallery of log sheet images sorted by latest.
+- [ ] Parameter snapshot panel for active project.
+- [ ] Recent activity list (log sheet + work report + approvals).
+
+### 6.2 Log Sheet Adjustments (LS-ADJ)
+
+- [ ] Optional video attachment upload (before/after).
+- [ ] Final A4 print fit for all log sheet variants.
+- [ ] Inline min/max limit warnings (notifikasi ringan di form).
+- [ ] Mandatory fields mapping review vs FSD (unit selection, notes).
+
+### 6.3 Summary Report Analytics (SR-02)
+
+- [ ] Executive Summary Water Quality (avg/min/max per parameter).
+- [ ] Executive Summary Condenser Approach (avg/min/max per unit).
+
+### 6.4 Project Data Completeness (PRJ-FIELDS)
+
+- [ ] Add project type (Utama/Addendum) with continuity rules.
+- [ ] Add project kind (Langsung/Subcon).
+- [ ] Add job type (Operasional/Proyek-Konstruksi/Ad Hoc).
+- [ ] Add warranty duration (months).
+- [ ] Add multi-select jenis pekerjaan.
+
+### 6.5 Client & User Data Completeness (CLIENT/USER-FIELDS)
+
+- [ ] Client website field.
+- [ ] User company field for client accounts.
+- [ ] User address field.
+
+### 6.6 My Profile (MP-01)
+
+- [ ] Profile view with editable personal info.
+- [ ] Avatar upload.
+
+### 6.7 Notifications (NT-01/NT-02/NT-03)
+
+- [ ] Notification schema + creation service.
+- [ ] Limit exceed alerts on log sheet submission.
+- [ ] Notification bell + unread count UI.
+
+### 6.8 Digital Signatures (DS-02)
+
+- [ ] Technician signature in log sheet.
+- [ ] Supervisor/PIC approval signature.
+
+### 6.9 Client Portal Read-Only UX (CP-01)
+
+- [ ] Read-only dashboard for client roles (summary only).
