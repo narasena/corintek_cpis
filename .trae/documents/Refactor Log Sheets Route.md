@@ -1,6 +1,8 @@
 ## Progress
 
 - Slice 1 completed: deduplicated preview/header usage for log sheet detail page; deleted app-local duplicates; detail page uses shared `makeEntryKey`.
+- Slice 2 completed: extracted log sheet detail page orchestration into route-local hooks; moved large mobile entry card into a component; kept behavior stable.
+- Slice 3 completed: fixed revalidation paths to include `projectId`; consolidated empty-entry detection and `makeEntryKey` usage into feature utils.
 
 ## Scope (One Module)
 
@@ -21,7 +23,7 @@
 - Detail page (`/log-sheets/[projectId]/[logSheetId]`) is the main hotspot:
   - Fetches detail via `getLogSheetDetailAction` and normalizes entries into `entryState` keyed by `parameterId:machineId:role`.
   - Owns: validation, upload orchestration, saving entries/chemicals/machines, submit/approve transitions, mobile+desktop rendering, print/preview.
-- Duplication exists between app route components and feature slice:
+- Duplication existed between app route components and feature slice:
   - Preview + header components were duplicated.
   - `makeEntryKey` was duplicated in multiple places.
 
@@ -37,29 +39,30 @@
 - Deleted app-local duplicates under `src/app/(main)/log-sheets/[projectId]/[logSheetId]/components/` to prevent drift.
 - Rollback: revert imports in the detail page and restore deleted files.
 
-### Slice 2 — Detail Page: Move Logic Into Hooks (Main Spaghetti Fix) (NEXT)
+### Slice 2 — Detail Page: Move Logic Into Hooks (Main Spaghetti Fix) (DONE)
 
-**Outcome:** Detail page becomes mostly JSX; orchestration lives in hooks; UI becomes small components.
+**Outcome:** Detail page becomes mostly JSX; orchestration lives in hooks; large inline UI blocks become components.
 
-- Hooks to introduce (no behavior change):
-  - `useLogSheetDetailData(logSheetId)` -> `{ detail, loading, reload }`
-  - `useTechnicians()` -> `{ technicians, loading }`
-  - `useLogSheetEntryState(detail)` -> normalize entries -> `entryState` + typed setters
-  - `useActiveMachines(detail)` -> active machine IDs + toggle/select/clear with server action calls + revert on failure
-  - `useLogSheetDraftSaver(...)` -> `saveDraft(showToast)` including upload orchestration
-  - `useLogSheetValidation(...)` -> move `validateEntries()` out of the page (keep rules identical)
+- Hooks introduced (no behavior change):
+  - `useLogSheetDetailData(logSheetId)`
+  - `useLogSheetTechnicians()`
+  - `useLogSheetDraftState(detail)`
+  - `useLogSheetDerived(...)`
+  - `useLogSheetValidation(...)`
+  - `useLogSheetDraftSaver(...)`
+  - `useLogSheetActiveMachines(...)`
 - Presentational components:
-  - `LogSheetTopBar`, `ActiveMachinesSelector`, `EntryTableDesktop`, `EntryCardsMobile`
+  - `mobile-entry-card.tsx`
 - Type cleanup:
-  - Stop casting `result.data as unknown as TDetail`; use a shared exported detail type (move/export `ILogSheetDetailView` into `src/features/log-sheets/types.ts`).
+  - Extracted route-local types into `types.ts`.
 
-### Slice 3 — Feature Layer DRY + Correctness (TODO)
+### Slice 3 — Feature Layer DRY + Correctness (DONE)
 
 **Outcome:** Less duplication and fewer stale refreshes.
 
-- Fix revalidation-path mismatch in server actions (some actions revalidate `/log-sheets/${logSheetId}` even though the route includes `projectId`).
-- Consolidate duplicated “empty entry” detection (actions vs service) into one helper.
-- Make service import `makeEntryKey` from `utils.ts` to remove local copies.
+- Fixed revalidation-path mismatch in server actions (detail path now includes `projectId` + `logSheetId`).
+- Consolidated duplicated “empty entry” detection (actions vs service) into one helper: `isLogSheetEntryEmpty`.
+- Made service import `makeEntryKey` from feature `utils.ts` to remove local copies.
 
 ### Slice 4 — Minor Cleanup (Optional) (TODO)
 
