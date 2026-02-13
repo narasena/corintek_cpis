@@ -21,6 +21,7 @@ import { isLogSheetEntryEmpty } from './utils';
 
 const SaveLogSheetEntriesSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
+  adminOverride: z.boolean().optional(),
   entries: z.array(
     z.object({
       parameterId: z.string().uuid('Parameter ID tidak valid'),
@@ -42,16 +43,19 @@ const SaveLogSheetEntriesSchema = z.object({
 
 const SaveLogSheetPhotosSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
+  adminOverride: z.boolean().optional(),
   photos: z.array(LogSheetPhotoSchema),
 });
 
 const SaveLogSheetChemicalsSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
+  adminOverride: z.boolean().optional(),
   usages: z.array(chemicalUsageSchema),
 });
 
 const SaveLogSheetMachinesSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
+  adminOverride: z.boolean().optional(),
   machineIds: z.array(z.string().uuid('Machine ID tidak valid')),
 });
 
@@ -143,7 +147,7 @@ export async function updateLogSheetAction(data: unknown) {
     ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'update');
     const validatedData = UpdateLogSheetSchema.parse(data);
     await assertCanAccessLogSheet(actor, validatedData.id);
-    const logSheet = await logSheetService.updateLogSheet({
+    const logSheet = await logSheetService.updateLogSheet(actor, {
       ...validatedData,
       status: undefined,
     });
@@ -155,6 +159,35 @@ export async function updateLogSheetAction(data: unknown) {
     return { success: true, data: logSheet };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.Update:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'Gagal memperbarui log sheet',
+    };
+  }
+}
+
+export async function updateLogSheetAdminOverrideAction(data: unknown) {
+  try {
+    const actor = await requireActor();
+    ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'update');
+    if (actor.role !== 'ADMIN') throw new Error('Unauthorized');
+
+    const validatedData = UpdateLogSheetSchema.parse(data);
+    await assertCanAccessLogSheet(actor, validatedData.id);
+    const logSheet = await logSheetService.updateLogSheet(
+      actor,
+      { ...validatedData, status: undefined },
+      { allowAdminOverride: true }
+    );
+
+    revalidatePath('/log-sheets');
+    revalidatePath(`/log-sheets/${logSheet.projectId}`);
+    revalidatePath('/');
+    revalidatePath(`/my-projects/${logSheet.projectId}`);
+    return { success: true, data: logSheet };
+  } catch (error) {
+    console.error('[CPIS-ERROR] LogSheet.UpdateAdminOverride:', error);
     return {
       success: false,
       error:
@@ -258,6 +291,9 @@ export async function saveLogSheetEntriesAction(data: unknown) {
     const validatedData = SaveLogSheetEntriesSchema.parse(data);
     await assertCanAccessLogSheet(actor, validatedData.logSheetId);
 
+    const allowAdminOverride =
+      actor.role === 'ADMIN' && validatedData.adminOverride === true;
+
     for (const entry of validatedData.entries) {
       if (isLogSheetEntryEmpty(entry)) continue;
       CreateLogSheetEntrySchema.parse({
@@ -267,11 +303,13 @@ export async function saveLogSheetEntriesAction(data: unknown) {
     }
 
     await logSheetService.upsertLogSheetEntries(
+      actor,
       validatedData.logSheetId,
       validatedData.entries.map(entry => ({
         ...entry,
         logSheetId: validatedData.logSheetId,
-      }))
+      })),
+      { allowAdminOverride }
     );
 
     const projectId = await logSheetService.getLogSheetProjectId(
@@ -299,9 +337,14 @@ export async function saveLogSheetPhotosAction(data: unknown) {
     ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'update');
     const validatedData = SaveLogSheetPhotosSchema.parse(data);
     await assertCanAccessLogSheet(actor, validatedData.logSheetId);
+
+    const allowAdminOverride =
+      actor.role === 'ADMIN' && validatedData.adminOverride === true;
     await logSheetService.upsertLogSheetPhotos(
+      actor,
       validatedData.logSheetId,
-      validatedData.photos
+      validatedData.photos,
+      { allowAdminOverride }
     );
 
     const projectId = await logSheetService.getLogSheetProjectId(
@@ -331,9 +374,14 @@ export async function saveLogSheetChemicalsAction(data: unknown) {
     ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'update');
     const validatedData = SaveLogSheetChemicalsSchema.parse(data);
     await assertCanAccessLogSheet(actor, validatedData.logSheetId);
+
+    const allowAdminOverride =
+      actor.role === 'ADMIN' && validatedData.adminOverride === true;
     await logSheetService.upsertLogSheetChemicalUsages(
+      actor,
       validatedData.logSheetId,
-      validatedData.usages
+      validatedData.usages,
+      { allowAdminOverride }
     );
 
     const projectId = await logSheetService.getLogSheetProjectId(
@@ -364,9 +412,14 @@ export async function saveLogSheetMachinesAction(data: unknown) {
     const validatedData = SaveLogSheetMachinesSchema.parse(data);
     await assertCanAccessLogSheet(actor, validatedData.logSheetId);
 
+    const allowAdminOverride =
+      actor.role === 'ADMIN' && validatedData.adminOverride === true;
+
     await logSheetService.upsertLogSheetMachines(
+      actor,
       validatedData.logSheetId,
-      validatedData.machineIds
+      validatedData.machineIds,
+      { allowAdminOverride }
     );
 
     const projectId = await logSheetService.getLogSheetProjectId(

@@ -61,6 +61,43 @@ async function hasProjectAssignment(
   return !!assignment;
 }
 
+type TLogSheetEditOptions = {
+  allowAdminOverride?: boolean;
+};
+
+async function assertLogSheetEditable(
+  actor: IJwtPayload,
+  logSheetId: string,
+  options?: TLogSheetEditOptions
+) {
+  ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'update');
+
+  const row = await prisma.logSheet.findFirst({
+    where: { id: logSheetId, deletedAt: null },
+    select: { id: true, projectId: true, status: true },
+  });
+
+  if (!row) {
+    throw new Error('Log sheet tidak ditemukan');
+  }
+
+  await projectService.assertCanAccessProject(actor, row.projectId);
+
+  if (row.status === 'DRAFT') {
+    return row;
+  }
+
+  if (actor.role === 'ADMIN' && options?.allowAdminOverride) {
+    return row;
+  }
+
+  if (row.status === 'APPROVED') {
+    throw new Error('Log sheet sudah disetujui');
+  }
+
+  throw new Error('Log sheet sudah dikirim dan tidak bisa diubah');
+}
+
 export interface ILogSheetListItem {
   id: string;
   projectId: string;
@@ -115,7 +152,15 @@ export async function getAllLogSheets(
 
 export interface ILogSheetDetailView {
   logSheet: ILogSheet;
-  project: { id: string; name: string; clientName: string | null };
+  project: {
+    id: string;
+    name: string;
+    clientName: string | null;
+    assignments?: Array<{
+      role: 'PROJECT_PIC' | 'TECHNICIAN' | 'CLIENT_PIC';
+      user: { id: string; firstName: string; lastName: string | null };
+    }>;
+  };
   machines: {
     chillers: Pick<IMachine, 'id' | 'unitNumber' | 'type'>[];
     coolingTowers: Pick<IMachine, 'id' | 'unitNumber' | 'type'>[];
@@ -155,9 +200,13 @@ export async function getLogSheetActiveMachines(logSheetId: string) {
 }
 
 export async function upsertLogSheetMachines(
+  actor: IJwtPayload,
   logSheetId: string,
-  machineIds: string[]
+  machineIds: string[],
+  options?: TLogSheetEditOptions
 ) {
+  await assertLogSheetEditable(actor, logSheetId, options);
+
   const existing = await getLogSheetActiveMachines(logSheetId);
   const toAdd = machineIds.filter(id => !existing.includes(id));
   const toRemove = existing.filter(id => !machineIds.includes(id));
@@ -265,9 +314,13 @@ export async function createLogSheet(
 }
 
 export async function updateLogSheet(
-  data: TUpdateLogSheet
+  actor: IJwtPayload,
+  data: TUpdateLogSheet,
+  options?: TLogSheetEditOptions
 ): Promise<ILogSheet> {
   const { id, ...updateData } = data;
+
+  await assertLogSheetEditable(actor, id, options);
 
   const logSheet = await prisma.logSheet.update({
     where: { id },
@@ -335,9 +388,18 @@ export async function updateLogSheetStatus(
     throw new Error('Tidak dapat mengubah status kembali ke DRAFT');
   }
 
+  const now = new Date();
   const updated = await prisma.logSheet.update({
     where: { id: row.id },
-    data: { status },
+    data: {
+      status,
+      ...(status === 'SUBMITTED'
+        ? { submittedAt: now, submittedByUserId: actor.id }
+        : {}),
+      ...(status === 'APPROVED'
+        ? { approvedAt: now, approvedByUserId: actor.id }
+        : {}),
+    },
   });
 
   return updated as unknown as ILogSheet;
@@ -365,9 +427,31 @@ export async function getLogSheetDetail(
         include: {
           client: { select: { name: true } },
           parameterOverrides: true,
+          assignments: {
+            where: { isActive: true },
+            include: {
+              user: {
+                select: { id: true, firstName: true, lastName: true },
+              },
+            },
+          },
         },
       },
       replacedBy: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+      submittedBy: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+      approvedBy: {
         select: {
           id: true,
           firstName: true,
@@ -483,16 +567,26 @@ export async function getLogSheetDetail(
       date: logSheet.date,
       notes: logSheet.notes,
       status: logSheet.status as unknown as ILogSheet['status'],
+      submittedAt: logSheet.submittedAt,
+      submittedByUserId: logSheet.submittedByUserId,
+      approvedAt: logSheet.approvedAt,
+      approvedByUserId: logSheet.approvedByUserId,
       createdAt: logSheet.createdAt,
       updatedAt: logSheet.updatedAt,
       deletedAt: logSheet.deletedAt,
       project: { id: logSheet.project.id, name: logSheet.project.name },
       replacedBy: logSheet.replacedBy,
+      submittedBy: logSheet.submittedBy,
+      approvedBy: logSheet.approvedBy,
     },
     project: {
       id: logSheet.project.id,
       name: logSheet.project.name,
       clientName: logSheet.project.client?.name ?? null,
+      assignments: (logSheet.project.assignments ?? []).map(a => ({
+        role: a.role as unknown as 'PROJECT_PIC' | 'TECHNICIAN' | 'CLIENT_PIC',
+        user: a.user,
+      })),
     },
     machines: {
       chillers,
@@ -705,14 +799,18 @@ export async function validateLogSheetForApproval(id: string) {
 }
 
 export async function upsertLogSheetEntries(
+  actor: IJwtPayload,
   logSheetId: string,
   entries: (TCreateLogSheetEntry & {
     numericValue?: number | null;
     boolValue?: boolean | null;
     textValue?: string | null;
     fileUrl?: string | null;
-  })[]
+  })[],
+  options?: TLogSheetEditOptions
 ) {
+  await assertLogSheetEditable(actor, logSheetId, options);
+
   const existing = await prisma.logSheetEntry.findMany({
     where: { logSheetId },
     select: {
@@ -789,14 +887,18 @@ export async function upsertLogSheetEntries(
 }
 
 export async function upsertLogSheetPhotos(
+  actor: IJwtPayload,
   logSheetId: string,
   photos: Array<{
     id?: string;
     type: ILogSheetPhoto['type'];
     url: string;
     caption?: string | null;
-  }>
+  }>,
+  options?: TLogSheetEditOptions
 ) {
+  await assertLogSheetEditable(actor, logSheetId, options);
+
   const existing = await prisma.logSheetPhoto.findMany({
     where: { logSheetId },
     select: { id: true, deletedAt: true },
@@ -847,13 +949,17 @@ export async function upsertLogSheetPhotos(
 }
 
 export async function upsertLogSheetChemicalUsages(
+  actor: IJwtPayload,
   logSheetId: string,
   usages: Array<{
     id?: string;
     chemicalId: string;
     amount: number;
-  }>
+  }>,
+  options?: TLogSheetEditOptions
 ) {
+  await assertLogSheetEditable(actor, logSheetId, options);
+
   const existing = await prisma.chemicalUsage.findMany({
     where: { logSheetId },
     select: { id: true, deletedAt: true },
