@@ -915,14 +915,6 @@ export default function LogSheetDetailPage() {
           <Button variant="outline" size="sm" asChild>
             <Link href={`/my-projects/${projectId}`}>Proyek</Link>
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Log Sheet: {detail.project.name}
-            </h1>
-            <p className="text-muted-foreground">
-              {formatDate(detail.logSheet.date)} • {detail.logSheet.status}
-            </p>
-          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
@@ -967,6 +959,14 @@ export default function LogSheetDetailPage() {
           </Button>
         </div>
       </div>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">
+          Log Sheet: {detail.project.name}
+        </h1>
+        <p className="text-muted-foreground">
+          {formatDate(detail.logSheet.date)} • {detail.logSheet.status}
+        </p>
+      </div>
 
       {mode === 'input' && (
         <div className="space-y-6 print:hidden">
@@ -995,14 +995,6 @@ export default function LogSheetDetailPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="md:col-span-6 space-y-2">
-              <label className="text-sm font-medium">Catatan</label>
-              <Textarea
-                placeholder="Catatan singkat..."
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-              />
             </div>
           </div>
 
@@ -1261,16 +1253,14 @@ export default function LogSheetDetailPage() {
                     <h2 className="text-lg font-semibold">{category}</h2>
                   </div>
 
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table>
+                  <div className="rounded-md border">
+                    <Table className="w-max min-w-full">
                       <TableHeader>
                         <TableRow className="bg-muted/40">
-                          <TableHead className="min-w-[220px]">
+                          <TableHead className="w-max-plus">
                             Parameter
                           </TableHead>
-                          <TableHead className="min-w-[160px]">
-                            Target
-                          </TableHead>
+                          <TableHead className="w-max-plus">Target</TableHead>
                           {activeCTs.map(m => (
                             <TableHead
                               key={m.id}
@@ -1279,10 +1269,10 @@ export default function LogSheetDetailPage() {
                               {`CT #${m.unitNumber}`}
                             </TableHead>
                           ))}
-                          <TableHead className="min-w-[200px] text-center">
+                          <TableHead className="w-max-plus text-center">
                             Raw Water
                           </TableHead>
-                          <TableHead className="min-w-[160px] text-center">
+                          <TableHead className="w-max-plus text-center">
                             Target (Raw Water)
                           </TableHead>
                         </TableRow>
@@ -1570,14 +1560,12 @@ export default function LogSheetDetailPage() {
                   <h2 className="text-lg font-semibold">{category}</h2>
                 </div>
 
-                <div className="rounded-md border overflow-x-auto">
-                  <Table>
+                <div className="rounded-md border">
+                  <Table className="w-max!">
                     <TableHeader>
                       <TableRow className="bg-muted/40">
-                        <TableHead className="min-w-[220px]">
-                          Parameter
-                        </TableHead>
-                        <TableHead className="min-w-[160px]">Target</TableHead>
+                        <TableHead className="w-max-plus!">Parameter</TableHead>
+                        <TableHead className="">Target</TableHead>
                         {machines.length > 0 ? (
                           machines.map(m => (
                             <TableHead
@@ -1585,7 +1573,7 @@ export default function LogSheetDetailPage() {
                               className="min-w-[140px] text-center"
                             >
                               {m.type === 'CHILLER'
-                                ? `Chiller #${m.unitNumber}`
+                                ? `#${m.unitNumber}`
                                 : `CT #${m.unitNumber}`}
                             </TableHead>
                           ))
@@ -1615,7 +1603,7 @@ export default function LogSheetDetailPage() {
                               ] as TMachine[]);
                         return (
                           <TableRow key={param.id}>
-                            <TableCell>
+                            <TableCell className="w-max-plus!">
                               <div className="font-medium">
                                 {param.name}
                                 {param.unit ? ` (${param.unit})` : ''}
@@ -1655,22 +1643,6 @@ export default function LogSheetDetailPage() {
                                           }));
                                         }}
                                       />
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() =>
-                                          setEntryState(prev => ({
-                                            ...prev,
-                                            [key]: {
-                                              valueType: 'BOOLEAN',
-                                              boolValue: null,
-                                            },
-                                          }))
-                                        }
-                                      >
-                                        Kosongkan
-                                      </Button>
                                     </div>
                                   </TableCell>
                                 );
@@ -1802,6 +1774,14 @@ export default function LogSheetDetailPage() {
               initialUsages={chemicalState}
               onChange={setChemicalState}
               disabled={isPending}
+            />
+          </div>
+          <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <label className="text-sm font-medium">Catatan</label>
+            <Textarea
+              placeholder="Catatan singkat..."
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
             />
           </div>
         </div>

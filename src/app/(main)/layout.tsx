@@ -33,7 +33,7 @@ export default async function MainLayout({
         <AppSidebar user={sidebarUser} />
       </div>
       <SidebarInset className="print:m-0">
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-primary text-primary-foreground px-4 print:hidden">
+        <header className="flex fixed top-0 z-40 w-full h-16 shrink-0 items-center gap-2 border-b bg-primary text-primary-foreground px-4 print:hidden">
           <SidebarTrigger className="-ml-1 hidden md:flex" />
           <Separator
             orientation="vertical"
@@ -43,7 +43,7 @@ export default async function MainLayout({
             <HeaderTitle />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8 print:p-0 pb-20 md:pb-6">
+        <div className="mt-16 flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8 print:p-0 pb-20 md:pb-6 max-w-fit mx-auto w-full print:w!">
           {children}
         </div>
         <MobileNav role={sidebarUser.role} />
