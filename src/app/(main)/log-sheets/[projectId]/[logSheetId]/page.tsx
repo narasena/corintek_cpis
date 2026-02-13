@@ -34,7 +34,7 @@ import {
 import {
   CATEGORY_ORDER,
   LogSheetPreview,
-} from './components/log-sheet-preview';
+} from '@/features/log-sheets/components/log-sheet-preview';
 import { CameraInput } from '@/components/camera-input';
 import {
   ChemicalUsageSection,
@@ -52,6 +52,7 @@ import {
   saveLogSheetMachinesAction,
 } from '@/features/log-sheets/actions';
 import type { TLogSheetStatus } from '@/features/log-sheets/types';
+import { makeEntryKey } from '@/features/log-sheets/utils';
 import { getAllUsersAction } from '@/features/users/actions';
 import type { TUserResponse } from '@/@types/user.type';
 
@@ -136,14 +137,6 @@ type TEntryState = {
 };
 
 // TPhotoState removed
-
-function makeEntryKey(
-  parameterId: string,
-  machineId: string | null,
-  role: TEntryRole
-) {
-  return `${parameterId}:${machineId ?? 'null'}:${role}`;
-}
 
 function formatDate(value: string | Date) {
   const date = typeof value === 'string' ? new Date(value) : value;
