@@ -19,6 +19,8 @@ model User {
   isBlocked Boolean @default(false)
 
   replacedLogSheets    LogSheet[]   @relation("LogSheetReplacedBy")
+  submittedLogSheets   LogSheet[]   @relation("LogSheetSubmittedBy")
+  approvedLogSheets    LogSheet[]   @relation("LogSheetApprovedBy")
   approvedWorkReports  WorkReport[] @relation("WorkReportApprovedBy")
   attendances          Attendance[]
   projectAssignments   ProjectAssignment[]

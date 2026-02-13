@@ -91,11 +91,25 @@ export interface ILogSheet {
   date: Date;
   notes: string | null;
   status: TLogSheetStatus;
+  submittedAt: Date | null;
+  submittedByUserId: string | null;
+  approvedAt: Date | null;
+  approvedByUserId: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
   project?: { id: string; name: string };
   replacedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  } | null;
+  submittedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  } | null;
+  approvedBy?: {
     id: string;
     firstName: string;
     lastName: string | null;

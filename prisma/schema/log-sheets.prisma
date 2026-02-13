@@ -32,6 +32,14 @@ model LogSheet {
   replacedByUserId String?
   replacedBy       User?   @relation("LogSheetReplacedBy", fields: [replacedByUserId], references: [id])
 
+  submittedAt       DateTime?
+  submittedByUserId String?
+  submittedBy       User?     @relation("LogSheetSubmittedBy", fields: [submittedByUserId], references: [id])
+
+  approvedAt       DateTime?
+  approvedByUserId String?
+  approvedBy       User?     @relation("LogSheetApprovedBy", fields: [approvedByUserId], references: [id])
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?

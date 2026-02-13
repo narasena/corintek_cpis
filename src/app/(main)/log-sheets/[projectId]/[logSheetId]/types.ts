@@ -35,13 +35,35 @@ export type TDetail = {
     date: string | Date;
     notes: string | null;
     status: TLogSheetStatus;
+    submittedAt: string | Date | null;
+    submittedByUserId: string | null;
+    approvedAt: string | Date | null;
+    approvedByUserId: string | null;
     replacedBy?: {
       id: string;
       firstName: string;
       lastName: string | null;
     } | null;
+    submittedBy?: {
+      id: string;
+      firstName: string;
+      lastName: string | null;
+    } | null;
+    approvedBy?: {
+      id: string;
+      firstName: string;
+      lastName: string | null;
+    } | null;
   };
-  project: { id: string; name: string; clientName: string | null };
+  project: {
+    id: string;
+    name: string;
+    clientName: string | null;
+    assignments?: Array<{
+      role: 'PROJECT_PIC' | 'TECHNICIAN' | 'CLIENT_PIC';
+      user: { id: string; firstName: string; lastName: string | null };
+    }>;
+  };
   machines: { chillers: TMachine[]; coolingTowers: TMachine[] };
   parameters: TParameter[];
   entries: Array<{
