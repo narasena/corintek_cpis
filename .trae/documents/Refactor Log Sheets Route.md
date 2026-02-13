@@ -3,6 +3,7 @@
 - Slice 1 completed: deduplicated preview/header usage for log sheet detail page; deleted app-local duplicates; detail page uses shared `makeEntryKey`.
 - Slice 2 completed: extracted log sheet detail page orchestration into route-local hooks; moved large mobile entry card into a component; kept behavior stable.
 - Slice 3 completed: fixed revalidation paths to include `projectId`; consolidated empty-entry detection and `makeEntryKey` usage into feature utils.
+- Slice 4 completed: minor cleanup (rename `initialUsages` -> `usages`, fix date input timezone drift, standardize Indonesian date formatting).
 
 ## Scope (One Module)
 
@@ -64,11 +65,13 @@
 - Consolidated duplicated “empty entry” detection (actions vs service) into one helper: `isLogSheetEntryEmpty`.
 - Made service import `makeEntryKey` from feature `utils.ts` to remove local copies.
 
-### Slice 4 — Minor Cleanup (Optional) (TODO)
+### Slice 4 — Minor Cleanup (Optional) (DONE)
 
-- Rename misleading controlled props like `initialUsages` -> `usages` in `ChemicalUsageSection`.
-- Improve date handling in `LogSheetForm` to avoid timezone drift.
-- Standardize Indonesian date formatting.
+**Outcome:** Small correctness and readability improvements.
+
+- Renamed controlled props `initialUsages` -> `usages` in `ChemicalUsageSection`.
+- Fixed date input handling in `LogSheetForm` to avoid timezone drift.
+- Standardized Indonesian date formatting in print header.
 
 ## Risk Notes
 
