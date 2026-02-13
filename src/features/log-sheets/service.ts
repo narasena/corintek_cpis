@@ -14,42 +14,7 @@ import type {
   TCreateLogSheetEntry,
   TUpdateLogSheet,
 } from './types';
-
-function makeEntryKey(
-  parameterId: string,
-  machineId: string | null,
-  role: ILogSheetEntry['role']
-) {
-  return `${parameterId}:${machineId ?? 'null'}:${role}`;
-}
-
-function isEntryEmpty(entry: {
-  valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
-  numericValue?: number | null;
-  boolValue?: boolean | null;
-  textValue?: string | null;
-  fileUrl?: string | null;
-}) {
-  if (entry.fileUrl) return false;
-
-  if (entry.valueType === 'NUMBER') {
-    return entry.numericValue === null || entry.numericValue === undefined;
-  }
-
-  if (entry.valueType === 'BOOLEAN') {
-    return entry.boolValue === null || entry.boolValue === undefined;
-  }
-
-  if (entry.valueType === 'TEXT') {
-    return (
-      entry.textValue === null ||
-      entry.textValue === undefined ||
-      entry.textValue.trim() === ''
-    );
-  }
-
-  return true;
-}
+import { isLogSheetEntryEmpty, makeEntryKey } from './utils';
 
 function isEntryComplete(
   entry?: Pick<
@@ -781,7 +746,7 @@ export async function upsertLogSheetEntries(
         role
       );
       const existingEntry = existingByKey.get(key);
-      const empty = isEntryEmpty(entry);
+      const empty = isLogSheetEntryEmpty(entry);
 
       if (empty) {
         if (existingEntry && existingEntry.deletedAt === null) {

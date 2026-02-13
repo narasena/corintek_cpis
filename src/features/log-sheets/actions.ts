@@ -17,6 +17,7 @@ import { chemicalUsageSchema } from '@/@types/chemical.type';
 import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import type { IJwtPayload } from '@/@types/auth.type';
+import { isLogSheetEntryEmpty } from './utils';
 
 const SaveLogSheetEntriesSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
@@ -53,34 +54,6 @@ const SaveLogSheetMachinesSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
   machineIds: z.array(z.string().uuid('Machine ID tidak valid')),
 });
-
-function isEmptyEntry(entry: {
-  valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
-  numericValue?: number | null;
-  boolValue?: boolean | null;
-  textValue?: string | null;
-  fileUrl?: string | null;
-}) {
-  if (entry.fileUrl) return false;
-
-  if (entry.valueType === 'NUMBER') {
-    return entry.numericValue === null || entry.numericValue === undefined;
-  }
-
-  if (entry.valueType === 'BOOLEAN') {
-    return entry.boolValue === null || entry.boolValue === undefined;
-  }
-
-  if (entry.valueType === 'TEXT') {
-    return (
-      entry.textValue === null ||
-      entry.textValue === undefined ||
-      entry.textValue.trim() === ''
-    );
-  }
-
-  return true;
-}
 
 async function requireActor(): Promise<IJwtPayload> {
   const user = await getCurrentUserDetails();
@@ -286,7 +259,7 @@ export async function saveLogSheetEntriesAction(data: unknown) {
     await assertCanAccessLogSheet(actor, validatedData.logSheetId);
 
     for (const entry of validatedData.entries) {
-      if (isEmptyEntry(entry)) continue;
+      if (isLogSheetEntryEmpty(entry)) continue;
       CreateLogSheetEntrySchema.parse({
         ...entry,
         logSheetId: validatedData.logSheetId,
@@ -301,7 +274,14 @@ export async function saveLogSheetEntriesAction(data: unknown) {
       }))
     );
 
+    const projectId = await logSheetService.getLogSheetProjectId(
+      validatedData.logSheetId
+    );
     revalidatePath('/log-sheets');
+    if (projectId) {
+      revalidatePath(`/log-sheets/${projectId}`);
+      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+    }
     return { success: true };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.SaveEntries:', error);
@@ -324,7 +304,14 @@ export async function saveLogSheetPhotosAction(data: unknown) {
       validatedData.photos
     );
 
-    revalidatePath(`/log-sheets/${validatedData.logSheetId}`);
+    const projectId = await logSheetService.getLogSheetProjectId(
+      validatedData.logSheetId
+    );
+    revalidatePath('/log-sheets');
+    if (projectId) {
+      revalidatePath(`/log-sheets/${projectId}`);
+      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+    }
     return { success: true };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.SavePhotos:', error);
@@ -349,7 +336,14 @@ export async function saveLogSheetChemicalsAction(data: unknown) {
       validatedData.usages
     );
 
-    revalidatePath(`/log-sheets/${validatedData.logSheetId}`);
+    const projectId = await logSheetService.getLogSheetProjectId(
+      validatedData.logSheetId
+    );
+    revalidatePath('/log-sheets');
+    if (projectId) {
+      revalidatePath(`/log-sheets/${projectId}`);
+      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+    }
     return { success: true };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.SaveChemicals:', error);
@@ -375,7 +369,14 @@ export async function saveLogSheetMachinesAction(data: unknown) {
       validatedData.machineIds
     );
 
-    revalidatePath(`/log-sheets/${validatedData.logSheetId}`);
+    const projectId = await logSheetService.getLogSheetProjectId(
+      validatedData.logSheetId
+    );
+    revalidatePath('/log-sheets');
+    if (projectId) {
+      revalidatePath(`/log-sheets/${projectId}`);
+      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+    }
     return { success: true };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.SaveMachines:', error);
