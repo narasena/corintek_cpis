@@ -34,13 +34,13 @@ export type TChemicalUsageState = Array<{
 }>;
 
 interface ChemicalUsageSectionProps {
-  initialUsages: TChemicalUsageState;
+  usages: TChemicalUsageState;
   onChange: (usages: TChemicalUsageState) => void;
   disabled?: boolean;
 }
 
 export function ChemicalUsageSection({
-  initialUsages,
+  usages,
   onChange,
   disabled,
 }: ChemicalUsageSectionProps) {
@@ -76,11 +76,11 @@ export function ChemicalUsageSection({
     if (!chemical) return;
 
     // Check if already added
-    const existingIndex = initialUsages.findIndex(
+    const existingIndex = usages.findIndex(
       u => u.chemicalId === selectedChemicalId
     );
 
-    const newUsages = [...initialUsages];
+    const newUsages = [...usages];
 
     if (existingIndex >= 0) {
       // Update existing
@@ -104,7 +104,7 @@ export function ChemicalUsageSection({
   };
 
   const handleRemove = (index: number) => {
-    const newUsages = [...initialUsages];
+    const newUsages = [...usages];
     newUsages.splice(index, 1);
     onChange(newUsages);
   };
@@ -172,7 +172,7 @@ export function ChemicalUsageSection({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {initialUsages.length === 0 ? (
+            {usages.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={3}
@@ -182,7 +182,7 @@ export function ChemicalUsageSection({
                 </TableCell>
               </TableRow>
             ) : (
-              initialUsages.map((usage, index) => (
+              usages.map((usage, index) => (
                 <TableRow key={`${usage.chemicalId}-${index}`}>
                   <TableCell>{usage.chemicalName || 'Loading...'}</TableCell>
                   <TableCell>

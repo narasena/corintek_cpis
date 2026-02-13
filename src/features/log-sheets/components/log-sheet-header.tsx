@@ -13,13 +13,13 @@ export function LogSheetHeader({
 }) {
   const formattedDate =
     typeof date === 'string'
-      ? new Date(date).toLocaleDateString('en-US', {
+      ? new Date(date).toLocaleDateString('id-ID', {
           weekday: 'long',
           day: 'numeric',
           month: 'long',
           year: 'numeric',
         })
-      : date.toLocaleDateString('en-US', {
+      : date.toLocaleDateString('id-ID', {
           weekday: 'long',
           day: 'numeric',
           month: 'long',

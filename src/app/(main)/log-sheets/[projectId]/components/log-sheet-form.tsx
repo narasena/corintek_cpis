@@ -30,7 +30,19 @@ import type { TUserResponse } from '@/@types/user.type';
 
 const formatDateForInput = (date?: unknown) => {
   if (!date) return '';
-  return new Date(date as any).toISOString().split('T')[0];
+  const d = new Date(date as any);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateFromInput = (value: string) => {
+  const [yearRaw, monthRaw, dayRaw] = value.split('-');
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  return new Date(year, month - 1, day);
 };
 
 interface ILogSheetFormProps {
@@ -135,7 +147,9 @@ export function LogSheetForm({
                 <Input
                   type="date"
                   value={formatDateForInput(field.value)}
-                  onChange={e => field.onChange(new Date(e.target.value))}
+                  onChange={e =>
+                    field.onChange(parseDateFromInput(e.target.value))
+                  }
                 />
               </FormControl>
               <FormMessage />

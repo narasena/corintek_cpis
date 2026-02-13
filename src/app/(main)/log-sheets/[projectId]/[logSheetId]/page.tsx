@@ -1061,7 +1061,7 @@ export default function LogSheetDetailPage() {
 
           <div className="rounded-lg border bg-card p-6 shadow-sm">
             <ChemicalUsageSection
-              initialUsages={chemicalState}
+              usages={chemicalState}
               onChange={setChemicalState}
               disabled={isPending}
             />
