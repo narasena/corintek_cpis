@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useTransition,
-} from 'react';
+import { useState, useTransition } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -31,367 +25,33 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  CATEGORY_ORDER,
-  LogSheetPreview,
-} from '@/features/log-sheets/components/log-sheet-preview';
+import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-preview';
 import { CameraInput } from '@/components/camera-input';
-import {
-  ChemicalUsageSection,
-  type TChemicalUsageState,
-} from './components/chemical-usage-section';
+import { ChemicalUsageSection } from './components/chemical-usage-section';
 
 import {
-  getLogSheetDetailAction,
-  saveLogSheetEntriesAction,
-  saveLogSheetChemicalsAction,
-  uploadLogSheetImageAction,
   approveLogSheetAction,
   submitLogSheetAction,
-  updateLogSheetAction,
-  saveLogSheetMachinesAction,
 } from '@/features/log-sheets/actions';
-import type { TLogSheetStatus } from '@/features/log-sheets/types';
 import { makeEntryKey } from '@/features/log-sheets/utils';
-import { getAllUsersAction } from '@/features/users/actions';
-import type { TUserResponse } from '@/@types/user.type';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-type TMachine = {
-  id: string;
-  unitNumber: number;
-  type: 'CHILLER' | 'COOLING_TOWER';
-};
-type TEntryRole = 'VALUE' | 'RAW_WATER' | 'NOTE';
-type TParameter = {
-  id: string;
-  name: string;
-  variableName: string;
-  category:
-    | 'UNIT_CONDENSOR'
-    | 'UNIT_EVAPORATOR'
-    | 'COOLING_WATER_QUALITY'
-    | 'GENERAL_CONDITION'
-    | 'JOB_DESCRIPTION'
-    | 'CONSUMPTION';
-  valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
-  unit: string | null;
-  minValue: number | null;
-  maxValue: number | null;
-  rawWaterMinValue?: number | null;
-  rawWaterMaxValue?: number | null;
-  displayOrder: number;
-};
+import type { TMachine, TParameter } from './types';
+import { useLogSheetDetailData } from './hooks/use-log-sheet-detail-data';
+import { useLogSheetDerived } from './hooks/use-log-sheet-derived';
+import { useLogSheetDraftState } from './hooks/use-log-sheet-draft-state';
+import { useLogSheetDraftSaver } from './hooks/use-log-sheet-draft-saver';
+import { useLogSheetActiveMachines } from './hooks/use-log-sheet-active-machines';
+import { useLogSheetTechnicians } from './hooks/use-log-sheet-technicians';
+import { useLogSheetValidation } from './hooks/use-log-sheet-validation';
 
-type TDetail = {
-  logSheet: {
-    id: string;
-    projectId: string;
-    date: string | Date;
-    notes: string | null;
-    status: TLogSheetStatus;
-    replacedBy?: {
-      id: string;
-      firstName: string;
-      lastName: string | null;
-    } | null;
-  };
-  project: { id: string; name: string; clientName: string | null };
-  machines: { chillers: TMachine[]; coolingTowers: TMachine[] };
-  parameters: TParameter[];
-  entries: Array<{
-    parameterId: string;
-    machineId: string | null;
-    role: TEntryRole;
-    valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
-    numericValue: number | null;
-    boolValue: boolean | null;
-    textValue: string | null;
-    fileUrl: string | null;
-  }>;
-  photos: Array<{
-    id: string;
-    type: 'BEFORE' | 'AFTER';
-    url: string;
-    caption: string | null;
-  }>;
-  chemicalUsages: Array<{
-    id: string;
-    chemicalId: string;
-    amount: number;
-    chemicalName: string;
-    chemicalUnit: string;
-  }>;
-  activeMachineIds: {
-    chillers: string[];
-    coolingTowers: string[];
-  };
-};
-
-type TEntryState = {
-  valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
-  numericValue?: number | null;
-  boolValue?: boolean | null;
-  textValue?: string | null;
-  fileUrl?: string | null;
-  pendingFile?: File | null;
-};
-
-// TPhotoState removed
-
-function formatDate(value: string | Date) {
-  const date = typeof value === 'string' ? new Date(value) : value;
-  return date.toLocaleDateString('id-ID', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-function formatLimit(
-  parameter: Pick<TParameter, 'minValue' | 'maxValue' | 'unit'>
-) {
-  const unit = parameter.unit ? ` ${parameter.unit}` : '';
-  const min = parameter.minValue;
-  const max = parameter.maxValue;
-
-  if (min !== null && min !== undefined && max !== null && max !== undefined) {
-    return `${min}${unit} ~ ${max}${unit}`;
-  }
-
-  if (max !== null && max !== undefined) {
-    return `≤ ${max}${unit}`;
-  }
-
-  if (min !== null && min !== undefined) {
-    return `≥ ${min}${unit}`;
-  }
-
-  return '-';
-}
-
-function formatRawWaterLimit(
-  parameter: Pick<TParameter, 'rawWaterMinValue' | 'rawWaterMaxValue' | 'unit'>
-) {
-  const unit = parameter.unit ? ` ${parameter.unit}` : '';
-  const min = parameter.rawWaterMinValue;
-  const max = parameter.rawWaterMaxValue;
-
-  if (min !== null && min !== undefined && max !== null && max !== undefined) {
-    return `${min}${unit} ~ ${max}${unit}`;
-  }
-
-  if (max !== null && max !== undefined) {
-    return `≤ ${max}${unit}`;
-  }
-
-  if (min !== null && min !== undefined) {
-    return `≥ ${min}${unit}`;
-  }
-
-  return '-';
-}
-
-function isOutOfRange(
-  value: number | null | undefined,
-  min: number | null,
-  max: number | null
-) {
-  if (value === null || value === undefined) return false;
-  if (min !== null && value < min) return true;
-  if (max !== null && value > max) return true;
-  return false;
-}
-
-interface MobileEntryCardProps {
-  param: TParameter;
-  machines: TMachine[];
-  entryState: Record<string, TEntryState>;
-  setEntryState: React.Dispatch<
-    React.SetStateAction<Record<string, TEntryState>>
-  >;
-  hasNotes?: boolean;
-  isWaterMeter?: (paramName: string) => boolean;
-}
-
-function MobileEntryCard({
-  param,
-  machines,
-  entryState,
-  setEntryState,
-  hasNotes,
-  isWaterMeter,
-}: MobileEntryCardProps) {
-  const targets =
-    machines.length > 0
-      ? machines
-      : ([
-          {
-            id: 'null',
-            unitNumber: 0,
-            type: 'CHILLER' as const,
-          },
-        ] as TMachine[]);
-
-  return (
-    <div className="rounded-lg border bg-card p-4 space-y-4 shadow-sm">
-      <div className="flex items-start justify-between border-b pb-2">
-        <div>
-          <h3 className="font-semibold text-sm">
-            {param.name}
-            {param.unit ? ` (${param.unit})` : ''}
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Target: {formatLimit(param)}
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {targets.map(m => {
-          const machineIdValue = machines.length > 0 ? m.id : null;
-          const key = makeEntryKey(param.id, machineIdValue, 'VALUE');
-          const state = entryState[key];
-
-          return (
-            <div key={key} className="space-y-2">
-              {machines.length > 0 && (
-                <div className="text-xs font-medium text-muted-foreground">
-                  {m.type === 'CHILLER' ? 'Chiller' : 'CT'} #{m.unitNumber}
-                </div>
-              )}
-
-              {param.valueType === 'BOOLEAN' ? (
-                <div className="flex items-center gap-4">
-                  <Checkbox
-                    id={key}
-                    checked={state?.boolValue ?? false}
-                    onCheckedChange={value => {
-                      setEntryState(prev => ({
-                        ...prev,
-                        [key]: {
-                          valueType: 'BOOLEAN',
-                          boolValue: value === true,
-                        },
-                      }));
-                    }}
-                  />
-                  <label htmlFor={key} className="text-sm">
-                    {state?.boolValue === true
-                      ? 'Ya'
-                      : state?.boolValue === false
-                        ? 'Tidak'
-                        : 'Pilih...'}
-                  </label>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    className="h-7 text-xs ml-auto"
-                    onClick={() =>
-                      setEntryState(prev => ({
-                        ...prev,
-                        [key]: { valueType: 'BOOLEAN', boolValue: null },
-                      }))
-                    }
-                  >
-                    Kosongkan
-                  </Button>
-                </div>
-              ) : param.valueType === 'NUMBER' ? (
-                <div className="flex flex-col gap-2">
-                  <Input
-                    type="number"
-                    inputMode="decimal"
-                    placeholder="Nilai..."
-                    className={
-                      isOutOfRange(
-                        state?.numericValue,
-                        param.minValue,
-                        param.maxValue
-                      )
-                        ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
-                        : ''
-                    }
-                    value={
-                      state?.numericValue === null ||
-                      state?.numericValue === undefined
-                        ? ''
-                        : String(state.numericValue)
-                    }
-                    onChange={e => {
-                      const raw = e.target.value;
-                      setEntryState(prev => ({
-                        ...prev,
-                        [key]: {
-                          ...prev[key],
-                          valueType: 'NUMBER',
-                          numericValue: raw === '' ? null : Number(raw),
-                        },
-                      }));
-                    }}
-                  />
-                  {isWaterMeter?.(param.name) && (
-                    <CameraInput
-                      value={state?.fileUrl}
-                      onChange={(url, file) => {
-                        setEntryState(prev => ({
-                          ...prev,
-                          [key]: {
-                            ...prev[key],
-                            valueType: 'NUMBER',
-                            numericValue: prev[key]?.numericValue ?? null,
-                            fileUrl: url,
-                            pendingFile: file,
-                          },
-                        }));
-                      }}
-                    />
-                  )}
-                </div>
-              ) : (
-                <Input
-                  placeholder="Keterangan..."
-                  value={state?.textValue ?? ''}
-                  onChange={e => {
-                    const raw = e.target.value;
-                    setEntryState(prev => ({
-                      ...prev,
-                      [key]: { valueType: 'TEXT', textValue: raw },
-                    }));
-                  }}
-                />
-              )}
-            </div>
-          );
-        })}
-
-        {hasNotes && (
-          <div className="pt-2 border-t mt-2">
-            <div className="text-xs font-medium text-muted-foreground mb-1">
-              Catatan
-            </div>
-            {(() => {
-              const key = makeEntryKey(param.id, null, 'NOTE');
-              const state = entryState[key];
-              return (
-                <Input
-                  placeholder="Catatan tambahan..."
-                  value={state?.textValue ?? ''}
-                  onChange={e => {
-                    setEntryState(prev => ({
-                      ...prev,
-                      [key]: { valueType: 'TEXT', textValue: e.target.value },
-                    }));
-                  }}
-                />
-              );
-            })()}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+import { MobileEntryCard } from './components/mobile-entry-card';
+import {
+  formatDate,
+  formatLimit,
+  formatRawWaterLimit,
+  isOutOfRange,
+} from './utils';
 
 export default function LogSheetDetailPage() {
   const params = useParams<{ projectId: string; logSheetId: string }>();
@@ -399,362 +59,73 @@ export default function LogSheetDetailPage() {
   const projectId = params.projectId;
   const logSheetId = params.logSheetId;
 
-  const [detail, setDetail] = useState<TDetail | null>(null);
   const [mode, setMode] = useState<'input' | 'preview'>('input');
-  const [notes, setNotes] = useState('');
-  const [replacedByUserId, setReplacedByUserId] = useState<string | null>(null);
-  const [technicians, setTechnicians] = useState<TUserResponse[]>([]);
-  const [entryState, setEntryState] = useState<Record<string, TEntryState>>({});
-  const [chemicalState, setChemicalState] = useState<TChemicalUsageState>([]);
-  const [activeChillerIds, setActiveChillerIds] = useState<string[]>([]);
-  const [activeCTIds, setActiveCTIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isMobileView, setIsMobileView] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const result = await getLogSheetDetailAction(logSheetId);
-      if (!result.success || !result.data) {
-        toast.error('Gagal mengambil detail log sheet', {
-          description: result.error,
-        });
-        return;
-      }
-
-      const d = result.data as unknown as TDetail;
-      setDetail(d);
-      setNotes(d.logSheet.notes ?? '');
-      setReplacedByUserId(d.logSheet.replacedBy?.id ?? null);
-      setActiveChillerIds(d.activeMachineIds.chillers);
-      setActiveCTIds(d.activeMachineIds.coolingTowers);
-
-      const initial: Record<string, TEntryState> = {};
-      for (const entry of d.entries) {
-        initial[makeEntryKey(entry.parameterId, entry.machineId, entry.role)] =
-          {
-            valueType: entry.valueType,
-            numericValue: entry.numericValue,
-            boolValue: entry.boolValue,
-            textValue: entry.textValue,
-            fileUrl: entry.fileUrl,
-          };
-      }
-      setEntryState(initial);
-
-      const chemicals = d.chemicalUsages.map(u => ({
-        id: u.id,
-        chemicalId: u.chemicalId,
-        amount: u.amount,
-        chemicalName: u.chemicalName,
-        unit: u.chemicalUnit,
-      }));
-      setChemicalState(chemicals);
-    } catch {
-      toast.error('Terjadi kesalahan saat memuat data');
-    } finally {
-      setLoading(false);
-    }
-  }, [logSheetId]);
-
-  useEffect(() => {
-    fetchData();
-    getAllUsersAction().then(res => {
-      if (res.success && res.data) {
-        setTechnicians(res.data);
-      }
-    });
-  }, [fetchData]);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobileView(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const categories = useMemo(() => {
-    if (!detail) return [];
-    const unique = Array.from(new Set(detail.parameters.map(p => p.category)));
-    return unique.sort((a, b) => {
-      return CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b);
-    });
-  }, [detail]);
-
-  const parametersByCategory = useMemo(() => {
-    const map = new Map<string, TParameter[]>();
-    if (!detail) return map;
-    for (const p of detail.parameters) {
-      if (!map.has(p.category)) map.set(p.category, []);
-      map.get(p.category)!.push(p);
-    }
-    for (const [key, list] of map.entries()) {
-      map.set(
-        key,
-        [...list].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
-      );
-    }
-    return map;
-  }, [detail]);
-
-  const machinesForCategory = useCallback(
-    (category: TParameter['category']) => {
-      if (!detail) return { machines: [] as TMachine[], label: '' };
-      if (category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR') {
-        const filtered = detail.machines.chillers.filter(m =>
-          activeChillerIds.includes(m.id)
-        );
-        return { machines: filtered, label: 'Chiller' };
-      }
-      if (
-        category === 'COOLING_WATER_QUALITY' ||
-        category === 'GENERAL_CONDITION' ||
-        category === 'JOB_DESCRIPTION'
-      ) {
-        const filtered = detail.machines.coolingTowers.filter(m =>
-          activeCTIds.includes(m.id)
-        );
-        return {
-          machines: filtered,
-          label: 'Cooling Tower',
-        };
-      }
-      return { machines: [] as TMachine[], label: '' };
-    },
-    [detail, activeChillerIds, activeCTIds]
-  );
-
-  const activeMachines = useMemo(() => {
-    if (!detail) return { chillers: [], coolingTowers: [] };
-    return {
-      chillers: detail.machines.chillers.filter(m =>
-        activeChillerIds.includes(m.id)
-      ),
-      coolingTowers: detail.machines.coolingTowers.filter(m =>
-        activeCTIds.includes(m.id)
-      ),
-    };
-  }, [detail, activeChillerIds, activeCTIds]);
-
-  const replacedByName = useMemo(() => {
-    if (!replacedByUserId) return null;
-
-    const tech = technicians.find(t => t.id === replacedByUserId);
-    if (tech) return `${tech.firstName} ${tech.lastName || ''}`.trim();
-
-    if (detail?.logSheet.replacedBy?.id === replacedByUserId) {
-      return `${detail.logSheet.replacedBy.firstName} ${
-        detail.logSheet.replacedBy.lastName || ''
-      }`.trim();
-    }
-
-    return null;
-  }, [replacedByUserId, technicians, detail]);
-
-  const validateEntries = useCallback(() => {
-    if (!detail)
-      return { valid: false, errors: ['Detail log sheet tidak ditemukan'] };
-
-    const errors: string[] = [];
-    const missingFields: string[] = [];
-
-    // 1. Validasi Parameter Mesin yang Aktif
-    const unitCategories: TParameter['category'][] = [
-      'UNIT_CONDENSOR',
-      'UNIT_EVAPORATOR',
-      'GENERAL_CONDITION',
-      'JOB_DESCRIPTION',
-    ];
-
-    unitCategories.forEach(cat => {
-      const params = parametersByCategory.get(cat) ?? [];
-      const { machines, label } = machinesForCategory(cat);
-
-      params.forEach(param => {
-        machines.forEach(m => {
-          const key = makeEntryKey(param.id, m.id, 'VALUE');
-          const state = entryState[key];
-          const isEmpty =
-            state?.numericValue === null ||
-            state?.numericValue === undefined ||
-            state?.boolValue === null ||
-            state?.boolValue === undefined ||
-            (state?.valueType === 'TEXT' && !state?.textValue?.trim());
-
-          if (isEmpty) {
-            missingFields.push(
-              `${cat}: ${param.name} (${label} #${m.unitNumber})`
-            );
-          }
-        });
-      });
-    });
-
-    // 2. Validasi Cooling Water Quality (Unit Aktif + Raw Water)
-    const cwqParams = parametersByCategory.get('COOLING_WATER_QUALITY') ?? [];
-    const activeCTs = detail.machines.coolingTowers.filter(m =>
-      activeCTIds.includes(m.id)
-    );
-
-    cwqParams.forEach(param => {
-      // Per unit CT aktif
-      activeCTs.forEach(m => {
-        const key = makeEntryKey(param.id, m.id, 'VALUE');
-        const state = entryState[key];
-        if (state?.numericValue === null || state?.numericValue === undefined) {
-          missingFields.push(
-            `Cooling Water Quality: ${param.name} (CT #${m.unitNumber})`
-          );
-        }
-      });
-
-      // Raw Water
-      const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
-      const rawState = entryState[rawKey];
-      if (
-        rawState?.numericValue === null ||
-        rawState?.numericValue === undefined
-      ) {
-        missingFields.push(`Raw Water Quality: ${param.name}`);
-      }
-    });
-
-    // 3. Validasi Consumption (Water Meter)
-    const consumptionParams = parametersByCategory.get('CONSUMPTION') ?? [];
-    consumptionParams.forEach(param => {
-      const key = makeEntryKey(param.id, null, 'VALUE');
-      const state = entryState[key];
-      if (state?.numericValue === null || state?.numericValue === undefined) {
-        missingFields.push(`Consumption: ${param.name}`);
-      }
-    });
-
-    if (missingFields.length > 0) {
-      errors.push(`${missingFields.length} field wajib belum diisi.`);
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors,
-      missingFields,
-    };
-  }, [
+  const isMobileView = useIsMobile();
+  const { technicians } = useLogSheetTechnicians();
+  const {
     detail,
+    loading,
+    reload: fetchData,
+  } = useLogSheetDetailData(logSheetId);
+  const {
+    notes,
+    setNotes,
+    replacedByUserId,
+    setReplacedByUserId,
     entryState,
+    setEntryState,
+    chemicalState,
+    setChemicalState,
+    activeChillerIds,
+    setActiveChillerIds,
+    activeCTIds,
+    setActiveCTIds,
+  } = useLogSheetDraftState(detail);
+
+  const {
+    categories,
+    parametersByCategory,
+    machinesForCategory,
+    activeMachines,
+    replacedByName,
+  } = useLogSheetDerived({
+    detail,
     activeChillerIds,
     activeCTIds,
-    machinesForCategory,
+    technicians,
+    replacedByUserId,
+  });
+
+  const { validateEntries } = useLogSheetValidation({
+    detail,
+    entryState,
+    activeCTIds,
     parametersByCategory,
-  ]);
+    machinesForCategory,
+  });
 
-  const saveDraft = async (showToast: boolean) => {
-    if (!detail) return false;
-    const headerRes = await updateLogSheetAction({
-      id: logSheetId,
-      notes: notes.trim() ? notes.trim() : undefined,
-      replacedByUserId,
-    });
+  const { saveDraft } = useLogSheetDraftSaver({
+    projectId,
+    logSheetId,
+    notes,
+    replacedByUserId,
+    entryState,
+    chemicalState,
+    reload: fetchData,
+  });
 
-    if (!headerRes.success) {
-      toast.error('Gagal menyimpan header log sheet', {
-        description: headerRes.error,
-      });
-      return false;
-    }
-
-    const keys = Object.keys(entryState);
-    const uploadedUrls: Record<string, string> = {};
-
-    // Upload pending files
-    for (const key of keys) {
-      const entry = entryState[key];
-      if (entry.pendingFile) {
-        try {
-          const formData = new FormData();
-          formData.append('file', entry.pendingFile);
-          // Append context IDs for better file organization
-          if (projectId) formData.append('projectId', projectId);
-          if (logSheetId) formData.append('logSheetId', logSheetId);
-
-          const uploadRes = await uploadLogSheetImageAction(formData);
-
-          if (uploadRes.success && uploadRes.url) {
-            uploadedUrls[key] = uploadRes.url;
-          } else {
-            toast.error('Gagal mengupload foto', {
-              description: uploadRes.error,
-            });
-            // Don't return here, try to save other data
-          }
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.error('Upload error:', e);
-          toast.error('Gagal mengupload foto');
-        }
-      }
-    }
-
-    const entriesToSave = keys.map(key => {
-      const [parameterId, machineIdStr, roleStr] = key.split(':');
-      const machineId = machineIdStr === 'null' ? null : machineIdStr;
-      const role = roleStr as TEntryRole;
-      const state = entryState[key];
-
-      // Use uploaded URL if available, otherwise existing URL
-      const fileUrl = uploadedUrls[key] || state.fileUrl;
-
-      return {
-        parameterId,
-        machineId,
-        role,
-        valueType: state.valueType,
-        numericValue: state.numericValue,
-        boolValue: state.boolValue,
-        textValue: state.textValue,
-        fileUrl,
-      };
-    });
-
-    const entriesRes = await saveLogSheetEntriesAction({
+  const { handleToggleMachine, handleSelectAllMachines, handleClearMachines } =
+    useLogSheetActiveMachines({
+      detail,
       logSheetId,
-      entries: entriesToSave,
+      activeChillerIds,
+      setActiveChillerIds,
+      activeCTIds,
+      setActiveCTIds,
+      startTransition,
     });
-
-    const chemicalRes = await saveLogSheetChemicalsAction({
-      logSheetId,
-      usages: chemicalState
-        .filter(c => c.chemicalId && c.amount > 0)
-        .map(c => ({
-          id: c.id,
-          chemicalId: c.chemicalId,
-          amount: c.amount,
-        })),
-    });
-
-    if (entriesRes.success && chemicalRes.success) {
-      if (showToast) {
-        toast.success('Log sheet berhasil disimpan');
-      }
-    } else {
-      if (!entriesRes.success) {
-        toast.error('Gagal menyimpan entry log sheet', {
-          description: entriesRes.error,
-        });
-      }
-      if (!chemicalRes.success) {
-        toast.error('Gagal menyimpan data chemical', {
-          description: chemicalRes.error,
-        });
-      }
-    }
-    router.refresh();
-    // Reload data to ensure fresh state
-    fetchData();
-    return entriesRes.success && chemicalRes.success;
-  };
 
   const handleSave = () => {
     const { valid, missingFields } = validateEntries();
@@ -804,80 +175,6 @@ export default function LogSheetDetailPage() {
       }
       toast.success('Log sheet disetujui');
       await fetchData();
-    });
-  };
-
-  const handleToggleMachine = (
-    id: string,
-    type: 'CHILLER' | 'COOLING_TOWER'
-  ) => {
-    startTransition(async () => {
-      let newIds: string[] = [];
-      if (type === 'CHILLER') {
-        newIds = activeChillerIds.includes(id)
-          ? activeChillerIds.filter(i => i !== id)
-          : [...activeChillerIds, id];
-        setActiveChillerIds(newIds);
-      } else {
-        newIds = activeCTIds.includes(id)
-          ? activeCTIds.filter(i => i !== id)
-          : [...activeCTIds, id];
-        setActiveCTIds(newIds);
-      }
-
-      const res = await saveLogSheetMachinesAction({
-        logSheetId,
-        machineIds:
-          type === 'CHILLER'
-            ? [...newIds, ...activeCTIds]
-            : [...activeChillerIds, ...newIds],
-      });
-
-      if (!res.success) {
-        toast.error('Gagal menyimpan unit aktif', { description: res.error });
-        // Revert on failure
-        if (type === 'CHILLER') {
-          setActiveChillerIds(activeChillerIds);
-        } else {
-          setActiveCTIds(activeCTIds);
-        }
-      }
-    });
-  };
-
-  const handleSelectAllMachines = (type: 'CHILLER' | 'COOLING_TOWER') => {
-    if (!detail) return;
-    startTransition(async () => {
-      const allIds =
-        type === 'CHILLER'
-          ? detail.machines.chillers.map(m => m.id)
-          : detail.machines.coolingTowers.map(m => m.id);
-
-      if (type === 'CHILLER') setActiveChillerIds(allIds);
-      else setActiveCTIds(allIds);
-
-      const res = await saveLogSheetMachinesAction({
-        logSheetId,
-        machineIds:
-          type === 'CHILLER'
-            ? [...allIds, ...activeCTIds]
-            : [...activeChillerIds, ...allIds],
-      });
-      if (!res.success) toast.error('Gagal menyimpan unit aktif');
-    });
-  };
-
-  const handleClearMachines = (type: 'CHILLER' | 'COOLING_TOWER') => {
-    startTransition(async () => {
-      if (type === 'CHILLER') setActiveChillerIds([]);
-      else setActiveCTIds([]);
-
-      const res = await saveLogSheetMachinesAction({
-        logSheetId,
-        machineIds:
-          type === 'CHILLER' ? [...activeCTIds] : [...activeChillerIds],
-      });
-      if (!res.success) toast.error('Gagal menyimpan unit aktif');
     });
   };
 
