@@ -6,6 +6,7 @@ import type { TDetail, TEntryState, TParameter } from '../types';
 export function useLogSheetValidation(args: {
   detail: TDetail | null;
   entryState: Record<string, TEntryState>;
+  activeChillerIds: string[];
   activeCTIds: string[];
   parametersByCategory: Map<string, TParameter[]>;
   machinesForCategory: (category: TParameter['category']) => {
@@ -20,6 +21,7 @@ export function useLogSheetValidation(args: {
   const {
     detail,
     entryState,
+    activeChillerIds,
     activeCTIds,
     parametersByCategory,
     machinesForCategory,
@@ -37,68 +39,142 @@ export function useLogSheetValidation(args: {
     const errors: string[] = [];
     const missingFields: string[] = [];
 
-    const unitCategories: TParameter['category'][] = [
-      'UNIT_CONDENSOR',
-      'UNIT_EVAPORATOR',
-      'GENERAL_CONDITION',
-      'JOB_DESCRIPTION',
-    ];
+    const isEmpty = (state: TEntryState | undefined, param?: TParameter) => {
+      if (!state) return true;
+      if (state.fileUrl) return false;
 
-    unitCategories.forEach(cat => {
-      const params = parametersByCategory.get(cat) ?? [];
-      const { machines, label } = machinesForCategory(cat);
+      // TEXT parameters (like notes) are optional
+      if (state.valueType === 'TEXT' || param?.valueType === 'TEXT') {
+        return false;
+      }
 
-      params.forEach(param => {
-        machines.forEach(m => {
-          const key = makeEntryKey(param.id, m.id, 'VALUE');
-          const state = entryState[key];
-          const isEmpty =
-            state?.numericValue === null ||
-            state?.numericValue === undefined ||
-            state?.boolValue === null ||
-            state?.boolValue === undefined ||
-            (state?.valueType === 'TEXT' && !state?.textValue?.trim());
+      if (state.valueType === 'NUMBER') {
+        return state.numericValue === null || state.numericValue === undefined;
+      }
+      if (state.valueType === 'BOOLEAN') {
+        return state.boolValue === null || state.boolValue === undefined;
+      }
+      return true;
+    };
 
-          if (isEmpty) {
-            missingFields.push(
-              `${cat}: ${param.name} (${label} #${m.unitNumber})`
-            );
-          }
+    // 1. Chiller Validation (At least one complete chiller if any exist)
+    if (detail.machines.chillers.length > 0) {
+      const activeChillers = detail.machines.chillers.filter(m =>
+        activeChillerIds.includes(m.id)
+      );
+      const chillerCats: TParameter['category'][] = [
+        'UNIT_CONDENSOR',
+        'UNIT_EVAPORATOR',
+      ];
+
+      let completeChillerId: string | null = null;
+      const chillerMissingMap = new Map<string, string[]>();
+
+      activeChillers.forEach(m => {
+        const missing: string[] = [];
+        chillerCats.forEach(cat => {
+          const params = parametersByCategory.get(cat) ?? [];
+          params.forEach(param => {
+            const key = makeEntryKey(param.id, m.id, 'VALUE');
+            const state = entryState[key];
+            if (isEmpty(state, param)) {
+              missing.push(`${cat}: ${param.name} (Chiller #${m.unitNumber})`);
+            }
+          });
         });
-      });
-    });
 
-    const cwqParams = parametersByCategory.get('COOLING_WATER_QUALITY') ?? [];
-    const activeCTs = detail.machines.coolingTowers.filter(m =>
-      activeCTIds.includes(m.id)
-    );
-
-    cwqParams.forEach(param => {
-      activeCTs.forEach(m => {
-        const key = makeEntryKey(param.id, m.id, 'VALUE');
-        const state = entryState[key];
-        if (state?.numericValue === null || state?.numericValue === undefined) {
-          missingFields.push(
-            `Cooling Water Quality: ${param.name} (CT #${m.unitNumber})`
-          );
+        if (missing.length === 0) {
+          completeChillerId = m.id;
+        } else {
+          chillerMissingMap.set(m.id, missing);
+          // DEBUG
+          console.log(`[CPIS-VALIDATION] Chiller #${m.unitNumber} missing:`, missing);
         }
       });
 
+      if (!completeChillerId) {
+        if (activeChillers.length === 0) {
+          errors.push('Minimal satu Chiller harus dipilih dan diisi lengkap.');
+        } else {
+          // If none are complete, show missing fields for the first active chiller
+          const firstId = activeChillers[0].id;
+          const missing = chillerMissingMap.get(firstId) ?? [];
+          missingFields.push(...missing);
+          errors.push('Minimal satu Chiller harus diisi lengkap.');
+        }
+      }
+    }
+
+    // 2. Cooling Tower Validation (At least one complete CT if any exist)
+    if (detail.machines.coolingTowers.length > 0) {
+      const activeCTs = detail.machines.coolingTowers.filter(m =>
+        activeCTIds.includes(m.id)
+      );
+      const ctCats: TParameter['category'][] = [
+        'COOLING_WATER_QUALITY',
+        'GENERAL_CONDITION',
+        'JOB_DESCRIPTION',
+      ];
+
+      let completeCTId: string | null = null;
+      const ctMissingMap = new Map<string, string[]>();
+
+      activeCTs.forEach(m => {
+        const missing: string[] = [];
+        ctCats.forEach(cat => {
+          const params = parametersByCategory.get(cat) ?? [];
+          params.forEach(param => {
+            const key = makeEntryKey(param.id, m.id, 'VALUE');
+            const state = entryState[key];
+            if (isEmpty(state, param)) {
+              missing.push(
+                `${cat}: ${param.name} (Cooling Tower #${m.unitNumber})`
+              );
+            }
+          });
+        });
+
+        if (missing.length === 0) {
+          completeCTId = m.id;
+        } else {
+          ctMissingMap.set(m.id, missing);
+          // DEBUG
+          console.log(`[CPIS-VALIDATION] CT #${m.unitNumber} missing:`, missing);
+        }
+      });
+
+      if (!completeCTId) {
+        if (activeCTs.length === 0) {
+          errors.push(
+            'Minimal satu Cooling Tower harus dipilih dan diisi lengkap.'
+          );
+        } else {
+          // If none are complete, show missing fields for the first active CT
+          const firstId = activeCTs[0].id;
+          const missing = ctMissingMap.get(firstId) ?? [];
+          missingFields.push(...missing);
+          errors.push('Minimal satu Cooling Tower harus diisi lengkap.');
+        }
+      }
+    }
+
+    // 3. Global Quality (Raw Water)
+    const cwqParams = parametersByCategory.get('COOLING_WATER_QUALITY') ?? [];
+    cwqParams.forEach(param => {
+      // Skip Cycle for Raw Water as it's a ratio/COC
+      if (param.variableName.toLowerCase().includes('cycle')) return;
+
       const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
-      const rawState = entryState[rawKey];
-      if (
-        rawState?.numericValue === null ||
-        rawState?.numericValue === undefined
-      ) {
+      if (isEmpty(entryState[rawKey], param)) {
         missingFields.push(`Raw Water Quality: ${param.name}`);
       }
     });
 
+    // 4. Consumption
     const consumptionParams = parametersByCategory.get('CONSUMPTION') ?? [];
     consumptionParams.forEach(param => {
       const key = makeEntryKey(param.id, null, 'VALUE');
-      const state = entryState[key];
-      if (state?.numericValue === null || state?.numericValue === undefined) {
+      if (isEmpty(entryState[key], param)) {
         missingFields.push(`Consumption: ${param.name}`);
       }
     });
@@ -115,6 +191,7 @@ export function useLogSheetValidation(args: {
   }, [
     detail,
     entryState,
+    activeChillerIds,
     activeCTIds,
     machinesForCategory,
     parametersByCategory,

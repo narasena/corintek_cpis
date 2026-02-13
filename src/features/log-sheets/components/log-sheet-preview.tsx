@@ -131,7 +131,11 @@ export function LogSheetPreview({
   customerName,
   date,
   byName,
+  submittedAt,
   replacedByName,
+  corintekPicName,
+  approvedAt,
+  clientPicName,
   notes,
   machines,
   parameters,
@@ -142,7 +146,11 @@ export function LogSheetPreview({
   customerName: string;
   date: string | Date;
   byName: string;
+  submittedAt?: string | Date | null;
   replacedByName?: string | null;
+  corintekPicName?: string | null;
+  approvedAt?: string | Date | null;
+  clientPicName?: string | null;
   notes: string | null;
   machines: { chillers: TPreviewMachine[]; coolingTowers: TPreviewMachine[] };
   parameters: TPreviewParameter[];
@@ -154,6 +162,15 @@ export function LogSheetPreview({
     unit?: string;
   }>;
 }) {
+  const submittedAtText =
+    submittedAt && new Date(submittedAt).toString() !== 'Invalid Date'
+      ? new Date(submittedAt).toLocaleDateString('id-ID')
+      : '';
+  const approvedAtText =
+    approvedAt && new Date(approvedAt).toString() !== 'Invalid Date'
+      ? new Date(approvedAt).toLocaleDateString('id-ID')
+      : '';
+
   // Override category for Deposit parameter to ensure it appears in General Condition
   const displayParameters = parameters.map(p => {
     if (p.variableName.includes('deposit')) {
@@ -558,8 +575,11 @@ export function LogSheetPreview({
             <div className="text-center font-bold p-[2px] border-b border-black">
               PIC ( Corintek )
             </div>
-            <div className="h-28 flex items-center justify-center">
-              {/* Placeholder for Signature */}
+            <div className="h-28 flex flex-col items-center justify-end pb-2">
+              <div className="text-center text-[10px] font-semibold leading-tight">
+                <div>{corintekPicName ?? '-'}</div>
+                {approvedAtText ? <div>{approvedAtText}</div> : null}
+              </div>
             </div>
           </div>
           <div className="w-1/2 flex flex-col">
@@ -569,8 +589,11 @@ export function LogSheetPreview({
             <div className="text-center font-bold p-[2px] border-b border-black">
               Check By ( Client )
             </div>
-            <div className="h-28 flex items-center justify-center">
-              {/* Placeholder for Signature */}
+            <div className="h-28 flex flex-col items-center justify-end pb-2">
+              <div className="text-center text-[10px] font-semibold leading-tight">
+                <div>{clientPicName ?? '-'}</div>
+                {submittedAtText ? <div>{submittedAtText}</div> : null}
+              </div>
             </div>
           </div>
         </div>

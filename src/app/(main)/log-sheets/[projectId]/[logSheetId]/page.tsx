@@ -101,6 +101,7 @@ export default function LogSheetDetailPage() {
   const { validateEntries } = useLogSheetValidation({
     detail,
     entryState,
+    activeChillerIds,
     activeCTIds,
     parametersByCategory,
     machinesForCategory,
@@ -127,11 +128,22 @@ export default function LogSheetDetailPage() {
       startTransition,
     });
 
+  const isLocked = detail?.logSheet.status !== 'DRAFT';
+
   const handleSave = () => {
-    const { valid, missingFields } = validateEntries();
+    if (isLocked) {
+      toast.error('Tidak bisa menyimpan', {
+        description: 'Log sheet sudah dikirim dan tidak bisa diubah.',
+      });
+      return;
+    }
+
+    const { valid, missingFields, errors } = validateEntries();
     if (!valid) {
       toast.warning('Data belum lengkap', {
-        description: `${missingFields.length} field wajib belum diisi. Tetap menyimpan sebagai draft.`,
+        description:
+          errors[0] ||
+          `${missingFields.length} field wajib belum diisi. Tetap menyimpan sebagai draft.`,
       });
     }
     startTransition(async () => {
@@ -145,10 +157,12 @@ export default function LogSheetDetailPage() {
   };
 
   const handleSubmit = () => {
-    const { valid, missingFields } = validateEntries();
+    const { valid, missingFields, errors } = validateEntries();
     if (!valid) {
       toast.error('Gagal mengirim log sheet', {
-        description: `Ada ${missingFields.length} field wajib yang belum diisi. Lengkapi data sebelum mengirim.`,
+        description:
+          errors[0] ||
+          `Ada ${missingFields.length} field wajib yang belum diisi. Lengkapi data sebelum mengirim.`,
       });
       return;
     }
@@ -190,6 +204,33 @@ export default function LogSheetDetailPage() {
       </div>
     );
   }
+
+  const projectAssignments = detail.project.assignments ?? [];
+
+  const assignedProjectPic = projectAssignments.find(
+    a => a.role === 'PROJECT_PIC'
+  )?.user;
+  const assignedClientPic = projectAssignments.find(
+    a => a.role === 'CLIENT_PIC'
+  )?.user;
+
+  const assignedProjectPicName = assignedProjectPic
+    ? `${assignedProjectPic.firstName} ${assignedProjectPic.lastName ?? ''}`.trim()
+    : null;
+  const assignedClientPicName = assignedClientPic
+    ? `${assignedClientPic.firstName} ${assignedClientPic.lastName ?? ''}`.trim()
+    : null;
+
+  const submittedByName = detail.logSheet.submittedBy
+    ? `${detail.logSheet.submittedBy.firstName} ${detail.logSheet.submittedBy.lastName ?? ''}`.trim()
+    : '-';
+
+  const approvedByName = detail.logSheet.approvedBy
+    ? `${detail.logSheet.approvedBy.firstName} ${detail.logSheet.approvedBy.lastName ?? ''}`.trim()
+    : null;
+
+  const corintekPicName = approvedByName ?? assignedProjectPicName ?? '-';
+  const clientPicName = assignedClientPicName ?? '-';
 
   return (
     <div className="space-y-4 md:space-y-8 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
@@ -243,7 +284,7 @@ export default function LogSheetDetailPage() {
               Setujui
             </Button>
           )}
-          <Button onClick={handleSave} disabled={isPending}>
+          <Button onClick={handleSave} disabled={isPending || isLocked}>
             <Save className="mr-2 h-4 w-4" />{' '}
             {isPending ? 'Menyimpan...' : 'Simpan'}
           </Button>
@@ -259,7 +300,10 @@ export default function LogSheetDetailPage() {
       </div>
 
       {mode === 'input' && (
-        <div className="space-y-6 print:hidden">
+        <fieldset
+          disabled={isLocked || isPending}
+          className="space-y-6 print:hidden"
+        >
           <div className="grid gap-4 md:grid-cols-12">
             <div className="md:col-span-3 space-y-2">
               <label className="text-sm font-medium">Status</label>
@@ -1063,26 +1107,31 @@ export default function LogSheetDetailPage() {
             <ChemicalUsageSection
               usages={chemicalState}
               onChange={setChemicalState}
-              disabled={isPending}
+              disabled={isPending || isLocked}
             />
           </div>
           <div className="rounded-lg border bg-card p-6 shadow-sm">
             <label className="text-sm font-medium">Catatan</label>
             <Textarea
               placeholder="Catatan singkat..."
+              disabled={isLocked || isPending}
               value={notes}
               onChange={e => setNotes(e.target.value)}
             />
           </div>
-        </div>
+        </fieldset>
       )}
 
       {mode === 'preview' && (
         <LogSheetPreview
           customerName={detail.project.name}
           date={detail.logSheet.date}
-          byName="-"
+          byName={submittedByName}
+          submittedAt={detail.logSheet.submittedAt}
           replacedByName={replacedByName}
+          corintekPicName={corintekPicName}
+          approvedAt={detail.logSheet.approvedAt}
+          clientPicName={clientPicName}
           notes={notes.trim() ? notes.trim() : null}
           machines={activeMachines}
           parameters={detail.parameters}
