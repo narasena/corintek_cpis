@@ -30,6 +30,39 @@ export function useLogSheetDraftState(detail: TDetail | null) {
         fileUrl: entry.fileUrl,
       };
     }
+
+    const ctCategories = new Set([
+      'COOLING_WATER_QUALITY',
+      'GENERAL_CONDITION',
+      'JOB_DESCRIPTION',
+    ]);
+    const ctIds = detail.activeMachineIds.coolingTowers;
+
+    for (const param of detail.parameters) {
+      if (param.valueType !== 'BOOLEAN') continue;
+      if (!ctCategories.has(param.category)) continue;
+
+      if (param.category === 'COOLING_WATER_QUALITY') {
+        for (const ctId of ctIds) {
+          const key = makeEntryKey(param.id, ctId, 'VALUE');
+          if (!initial[key]) {
+            initial[key] = { valueType: 'BOOLEAN', boolValue: false };
+          }
+        }
+        const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
+        if (!initial[rawKey]) {
+          initial[rawKey] = { valueType: 'BOOLEAN', boolValue: false };
+        }
+        continue;
+      }
+
+      for (const ctId of ctIds) {
+        const key = makeEntryKey(param.id, ctId, 'VALUE');
+        if (!initial[key]) {
+          initial[key] = { valueType: 'BOOLEAN', boolValue: false };
+        }
+      }
+    }
     setEntryState(initial);
 
     const chemicals = detail.chemicalUsages.map(u => ({
