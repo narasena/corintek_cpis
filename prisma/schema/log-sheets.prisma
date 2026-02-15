@@ -40,6 +40,16 @@ model LogSheet {
   approvedByUserId String?
   approvedBy       User?     @relation("LogSheetApprovedBy", fields: [approvedByUserId], references: [id])
 
+  technicianSignatureUrl   String?
+  technicianSignedAt       DateTime?
+  technicianSignedByUserId String?
+  technicianSignedBy       User?   @relation("LogSheetTechnicianSignedBy", fields: [technicianSignedByUserId], references: [id])
+
+  clientPicSignatureUrl   String?
+  clientPicSignedAt       DateTime?
+  clientPicSignedByUserId String?
+  clientPicSignedBy       User?   @relation("LogSheetClientPicSignedBy", fields: [clientPicSignedByUserId], references: [id])
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?

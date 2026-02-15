@@ -136,6 +136,8 @@ export function LogSheetPreview({
   corintekPicName,
   approvedAt,
   clientPicName,
+  technicianSignatureUrl,
+  clientPicSignatureUrl,
   notes,
   machines,
   parameters,
@@ -151,6 +153,8 @@ export function LogSheetPreview({
   corintekPicName?: string | null;
   approvedAt?: string | Date | null;
   clientPicName?: string | null;
+  technicianSignatureUrl?: string | null;
+  clientPicSignatureUrl?: string | null;
   notes: string | null;
   machines: { chillers: TPreviewMachine[]; coolingTowers: TPreviewMachine[] };
   parameters: TPreviewParameter[];
@@ -575,8 +579,19 @@ export function LogSheetPreview({
             <div className="text-center font-bold p-[2px] border-b border-black">
               PIC ( Corintek )
             </div>
-            <div className="h-28 flex flex-col items-center justify-end pb-2">
-              <div className="text-center text-[10px] font-semibold leading-tight">
+            <div className="h-28 flex flex-col items-center justify-between py-2">
+              <div className="flex-1 flex items-center justify-center">
+                {technicianSignatureUrl && (
+                  <div className="border border-black px-2 py-1">
+                    <img
+                      src={technicianSignatureUrl}
+                      alt="Tanda tangan teknisi"
+                      className="max-h-16 max-w-[120px] object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="text-center text-[10px] font-semibold leading-tight pb-1">
                 <div>{corintekPicName ?? '-'}</div>
                 {approvedAtText ? <div>{approvedAtText}</div> : null}
               </div>
@@ -589,8 +604,19 @@ export function LogSheetPreview({
             <div className="text-center font-bold p-[2px] border-b border-black">
               Check By ( Client )
             </div>
-            <div className="h-28 flex flex-col items-center justify-end pb-2">
-              <div className="text-center text-[10px] font-semibold leading-tight">
+            <div className="h-28 flex flex-col items-center justify-between py-2">
+              <div className="flex-1 flex items-center justify-center">
+                {clientPicSignatureUrl && (
+                  <div className="border border-black px-2 py-1">
+                    <img
+                      src={clientPicSignatureUrl}
+                      alt="Tanda tangan klien"
+                      className="max-h-16 max-w-[120px] object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="text-center text-[10px] font-semibold leading-tight pb-1">
                 <div>{clientPicName ?? '-'}</div>
                 {submittedAtText ? <div>{submittedAtText}</div> : null}
               </div>

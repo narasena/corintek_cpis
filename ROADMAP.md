@@ -377,6 +377,8 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 - [ ] Add Admin-only "Unlock" capability.
 - [x] Status-based locking for `LogSheet` (disable edits on SUBMITTED/APPROVED)
 - [x] Admin override for `LogSheet` edits
+- [x] Store `submittedAt`/`submittedBy` and `approvedAt`/`approvedBy` on `LogSheet`.
+- [x] Display submission and approval info (PIC Corintek & PIC Klien) in log sheet preview/print.
 
 #### 3.2 Basic Dashboard (DB-01)
 

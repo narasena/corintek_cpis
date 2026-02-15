@@ -37,6 +37,12 @@ export type TDetail = {
     date: string | Date;
     notes: string | null;
     status: TLogSheetStatus;
+    technicianSignatureUrl: string | null;
+    technicianSignedAt: string | Date | null;
+    technicianSignedByUserId: string | null;
+    clientPicSignatureUrl: string | null;
+    clientPicSignedAt: string | Date | null;
+    clientPicSignedByUserId: string | null;
     submittedAt: string | Date | null;
     submittedByUserId: string | null;
     approvedAt: string | Date | null;
@@ -52,6 +58,16 @@ export type TDetail = {
       lastName: string | null;
     } | null;
     approvedBy?: {
+      id: string;
+      firstName: string;
+      lastName: string | null;
+    } | null;
+    technicianSignedBy?: {
+      id: string;
+      firstName: string;
+      lastName: string | null;
+    } | null;
+    clientPicSignedBy?: {
       id: string;
       firstName: string;
       lastName: string | null;

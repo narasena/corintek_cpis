@@ -98,6 +98,81 @@ async function assertLogSheetEditable(
   throw new Error('Log sheet sudah dikirim dan tidak bisa diubah');
 }
 
+type TSignatureRole = 'TECHNICIAN' | 'CLIENT_PIC';
+
+async function assertCanSignLogSheet(
+  actor: IJwtPayload,
+  logSheetId: string,
+  role: TSignatureRole
+) {
+  const row = await prisma.logSheet.findFirst({
+    where: { id: logSheetId, deletedAt: null },
+    select: { id: true, projectId: true, status: true },
+  });
+
+  if (!row) {
+    throw new Error('Log sheet tidak ditemukan');
+  }
+
+  await projectService.assertCanAccessProject(actor, row.projectId);
+
+  if (row.status !== 'DRAFT') {
+    throw new Error('Log sheet sudah dikirim dan tidak bisa ditandatangani');
+  }
+
+  if (actor.role === 'ADMIN') {
+    return row;
+  }
+
+  if (role === 'TECHNICIAN') {
+    const isTechnician =
+      actor.role === 'TECHNICIAN' &&
+      (await hasProjectAssignment(actor.id, row.projectId, 'TECHNICIAN'));
+    if (!isTechnician) {
+      throw new Error('Hanya teknisi proyek yang dapat menandatangani');
+    }
+  } else if (role === 'CLIENT_PIC') {
+    const isClientPic =
+      (actor.role === 'CLIENT_TECHNICIAN' ||
+        actor.role === 'CLIENT_SUPERVISOR') &&
+      (await hasProjectAssignment(actor.id, row.projectId, 'CLIENT_PIC'));
+    if (!isClientPic) {
+      throw new Error('Hanya PIC klien proyek yang dapat menandatangani');
+    }
+  }
+
+  return row;
+}
+
+export async function saveLogSheetSignature(
+  actor: IJwtPayload,
+  logSheetId: string,
+  role: TSignatureRole,
+  url: string
+): Promise<ILogSheet> {
+  const row = await assertCanSignLogSheet(actor, logSheetId, role);
+
+  const now = new Date();
+
+  const updated = await prisma.logSheet.update({
+    where: { id: row.id },
+    data:
+      role === 'TECHNICIAN'
+        ? ({
+            technicianSignatureUrl: url,
+            technicianSignedAt: now,
+            technicianSignedByUserId: actor.id,
+          } as any)
+        : ({
+            clientPicSignatureUrl: url,
+            clientPicSignedAt: now,
+            clientPicSignedByUserId: actor.id,
+          } as any),
+  });
+
+  return updated as unknown as ILogSheet;
+}
+
 export interface ILogSheetListItem {
   id: string;
   projectId: string;
@@ -417,7 +492,7 @@ export async function deleteLogSheet(id: string): Promise<ILogSheet> {
 export async function getLogSheetDetail(
   id: string
 ): Promise<ILogSheetDetailView> {
-  const logSheet = await prisma.logSheet.findFirst({
+  const logSheet = (await prisma.logSheet.findFirst({
     where: {
       id,
       deletedAt: null,
@@ -458,6 +533,20 @@ export async function getLogSheetDetail(
           lastName: true,
         },
       },
+      technicianSignedBy: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+      clientPicSignedBy: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
       entries: {
         where: { deletedAt: null },
         include: {
@@ -480,8 +569,8 @@ export async function getLogSheetDetail(
         },
       },
       activeMachines: true,
-    },
-  });
+    } as any,
+  })) as any;
 
   if (!logSheet) {
     throw new Error('Log sheet tidak ditemukan');
@@ -533,11 +622,11 @@ export async function getLogSheetDetail(
 
   // activeMachineIds logic
   let activeChillerIds = logSheet.activeMachines
-    .filter(am => chillers.some(c => c.id === am.machineId))
-    .map(am => am.machineId);
+    .filter((am: any) => chillers.some(c => c.id === am.machineId))
+    .map((am: any) => am.machineId);
   let activeCTIds = logSheet.activeMachines
-    .filter(am => coolingTowers.some(ct => ct.id === am.machineId))
-    .map(am => am.machineId);
+    .filter((am: any) => coolingTowers.some(ct => ct.id === am.machineId))
+    .map((am: any) => am.machineId);
 
   // Fallback: if no active machines recorded, assume all are active
   if (logSheet.activeMachines.length === 0) {
@@ -548,7 +637,7 @@ export async function getLogSheetDetail(
   // Apply project-specific parameter overrides
   const overrides = logSheet.project.parameterOverrides || [];
   const parametersWithOverrides = parameters.map(p => {
-    const override = overrides.find(o => o.parameterId === p.id);
+    const override = overrides.find((o: any) => o.parameterId === p.id);
     if (!override) return p;
 
     return {
@@ -567,6 +656,12 @@ export async function getLogSheetDetail(
       date: logSheet.date,
       notes: logSheet.notes,
       status: logSheet.status as unknown as ILogSheet['status'],
+      technicianSignatureUrl: logSheet.technicianSignatureUrl,
+      technicianSignedAt: logSheet.technicianSignedAt,
+      technicianSignedByUserId: logSheet.technicianSignedByUserId,
+      clientPicSignatureUrl: logSheet.clientPicSignatureUrl,
+      clientPicSignedAt: logSheet.clientPicSignedAt,
+      clientPicSignedByUserId: logSheet.clientPicSignedByUserId,
       submittedAt: logSheet.submittedAt,
       submittedByUserId: logSheet.submittedByUserId,
       approvedAt: logSheet.approvedAt,
@@ -578,12 +673,14 @@ export async function getLogSheetDetail(
       replacedBy: logSheet.replacedBy,
       submittedBy: logSheet.submittedBy,
       approvedBy: logSheet.approvedBy,
+      technicianSignedBy: logSheet.technicianSignedBy,
+      clientPicSignedBy: logSheet.clientPicSignedBy,
     },
     project: {
       id: logSheet.project.id,
       name: logSheet.project.name,
       clientName: logSheet.project.client?.name ?? null,
-      assignments: (logSheet.project.assignments ?? []).map(a => ({
+      assignments: (logSheet.project.assignments ?? []).map((a: any) => ({
         role: a.role as unknown as 'PROJECT_PIC' | 'TECHNICIAN' | 'CLIENT_PIC',
         user: a.user,
       })),
@@ -594,7 +691,7 @@ export async function getLogSheetDetail(
     },
     parameters:
       parametersWithOverrides as unknown as ILogSheetDetailView['parameters'],
-    entries: logSheet.entries.map(e => ({
+    entries: logSheet.entries.map((e: any) => ({
       id: e.id,
       logSheetId: e.logSheetId,
       parameterId: e.parameterId,
@@ -610,7 +707,7 @@ export async function getLogSheetDetail(
       updatedAt: e.updatedAt,
       deletedAt: e.deletedAt,
     })),
-    photos: logSheet.photos.map(photo => ({
+    photos: logSheet.photos.map((photo: any) => ({
       id: photo.id,
       logSheetId: photo.logSheetId,
       url: photo.url,
@@ -620,7 +717,7 @@ export async function getLogSheetDetail(
       updatedAt: photo.updatedAt,
       deletedAt: photo.deletedAt,
     })),
-    chemicalUsages: logSheet.chemicalUsages.map(usage => ({
+    chemicalUsages: logSheet.chemicalUsages.map((usage: any) => ({
       id: usage.id,
       logSheetId: usage.logSheetId,
       chemicalId: usage.chemicalId,
@@ -640,6 +737,13 @@ export async function getLogSheetDetail(
 export async function validateLogSheetForSubmission(id: string) {
   const detail = await getLogSheetDetail(id);
   const errors: string[] = [];
+
+  if (!detail.logSheet.technicianSignatureUrl) {
+    errors.push('Tanda tangan teknisi belum diisi');
+  }
+  if (!detail.logSheet.clientPicSignatureUrl) {
+    errors.push('Tanda tangan PIC klien belum diisi');
+  }
 
   for (const entry of detail.entries) {
     if (entry.valueType === 'NUMBER' && entry.numericValue !== null) {

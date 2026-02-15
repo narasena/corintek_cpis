@@ -21,6 +21,8 @@ model User {
   replacedLogSheets    LogSheet[]   @relation("LogSheetReplacedBy")
   submittedLogSheets   LogSheet[]   @relation("LogSheetSubmittedBy")
   approvedLogSheets    LogSheet[]   @relation("LogSheetApprovedBy")
+  technicianSignedLogSheets LogSheet[] @relation("LogSheetTechnicianSignedBy")
+  clientPicSignedLogSheets  LogSheet[] @relation("LogSheetClientPicSignedBy")
   approvedWorkReports  WorkReport[] @relation("WorkReportApprovedBy")
   attendances          Attendance[]
   projectAssignments   ProjectAssignment[]

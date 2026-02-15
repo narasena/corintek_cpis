@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-preview';
+import { SignatureSection } from '@/features/log-sheets/components/signature-section';
 import { CameraInput } from '@/components/camera-input';
 import { ChemicalUsageSection } from './components/chemical-usage-section';
 
@@ -234,6 +235,21 @@ export default function LogSheetDetailPage() {
 
   const corintekPicName = approvedByName ?? assignedProjectPicName ?? '-';
   const clientPicName = assignedClientPicName ?? '-';
+
+  const technicianSignedByName = detail.logSheet.technicianSignedBy
+    ? `${detail.logSheet.technicianSignedBy.firstName} ${detail.logSheet.technicianSignedBy.lastName ?? ''}`.trim()
+    : null;
+  const clientPicSignedByName = detail.logSheet.clientPicSignedBy
+    ? `${detail.logSheet.clientPicSignedBy.firstName} ${detail.logSheet.clientPicSignedBy.lastName ?? ''}`.trim()
+    : null;
+
+  const canSignTechnician =
+    detail.viewerRole === 'ADMIN' || detail.viewerRole === 'TECHNICIAN';
+  const canSignClientPic =
+    detail.viewerRole === 'ADMIN' ||
+    detail.viewerRole === 'CLIENT_TECHNICIAN' ||
+    detail.viewerRole === 'CLIENT_SUPERVISOR';
+
   const canAdminOverride =
     detail.viewerRole === 'ADMIN' && detail.logSheet.status !== 'DRAFT';
 
@@ -354,6 +370,40 @@ export default function LogSheetDetailPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-card p-4 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-semibold">Tanda Tangan</h3>
+                <p className="text-xs text-muted-foreground">
+                  Tanda tangan teknisi dan PIC klien diperlukan sebelum log
+                  sheet dapat dikirim.
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <SignatureSection
+                logSheetId={logSheetId}
+                role="TECHNICIAN"
+                canSign={canSignTechnician}
+                existingUrl={detail.logSheet.technicianSignatureUrl}
+                signedAt={detail.logSheet.technicianSignedAt}
+                signedByName={technicianSignedByName}
+                isLocked={isLocked}
+                onSigned={fetchData}
+              />
+              <SignatureSection
+                logSheetId={logSheetId}
+                role="CLIENT_PIC"
+                canSign={canSignClientPic}
+                existingUrl={detail.logSheet.clientPicSignatureUrl}
+                signedAt={detail.logSheet.clientPicSignedAt}
+                signedByName={clientPicSignedByName}
+                isLocked={isLocked}
+                onSigned={fetchData}
+              />
             </div>
           </div>
 
@@ -1157,6 +1207,8 @@ export default function LogSheetDetailPage() {
           corintekPicName={corintekPicName}
           approvedAt={detail.logSheet.approvedAt}
           clientPicName={clientPicName}
+          technicianSignatureUrl={detail.logSheet.technicianSignatureUrl}
+          clientPicSignatureUrl={detail.logSheet.clientPicSignatureUrl}
           notes={notes.trim() ? notes.trim() : null}
           machines={detail.machines}
           parameters={detail.parameters}

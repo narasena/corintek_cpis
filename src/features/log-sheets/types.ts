@@ -91,6 +91,12 @@ export interface ILogSheet {
   date: Date;
   notes: string | null;
   status: TLogSheetStatus;
+  technicianSignatureUrl: string | null;
+  technicianSignedAt: Date | null;
+  technicianSignedByUserId: string | null;
+  clientPicSignatureUrl: string | null;
+  clientPicSignedAt: Date | null;
+  clientPicSignedByUserId: string | null;
   submittedAt: Date | null;
   submittedByUserId: string | null;
   approvedAt: Date | null;
@@ -110,6 +116,16 @@ export interface ILogSheet {
     lastName: string | null;
   } | null;
   approvedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  } | null;
+  technicianSignedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  } | null;
+  clientPicSignedBy?: {
     id: string;
     firstName: string;
     lastName: string | null;

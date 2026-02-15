@@ -59,6 +59,18 @@ const SaveLogSheetMachinesSchema = z.object({
   machineIds: z.array(z.string().uuid('Machine ID tidak valid')),
 });
 
+const SaveLogSheetSignatureSchema = z.object({
+  logSheetId: z.string().uuid('Log sheet ID tidak valid'),
+  signatureRole: z.enum(['TECHNICIAN', 'CLIENT_PIC']),
+  dataUrl: z
+    .string()
+    .min(1, 'Data tanda tangan wajib diisi')
+    .regex(
+      /^data:image\/(png|jpeg|jpg|webp);base64,/,
+      'Format tanda tangan tidak valid'
+    ),
+});
+
 async function requireActor(): Promise<IJwtPayload> {
   const user = await getCurrentUserDetails();
   if (!user) throw new Error('Unauthorized');
@@ -437,6 +449,76 @@ export async function saveLogSheetMachinesAction(data: unknown) {
       success: false,
       error:
         error instanceof Error ? error.message : 'Gagal menyimpan pilihan unit',
+    };
+  }
+}
+
+export async function saveLogSheetSignatureAction(data: unknown) {
+  try {
+    const actor = await requireActor();
+    ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'update');
+
+    const validated = SaveLogSheetSignatureSchema.parse(data);
+    const { logSheetId, signatureRole, dataUrl } = validated;
+
+    const projectId = await logSheetService.getLogSheetProjectId(logSheetId);
+    if (!projectId) {
+      throw new Error('Log sheet tidak ditemukan');
+    }
+
+    const matches = dataUrl.match(
+      /^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/
+    );
+    if (!matches) {
+      throw new Error('Format tanda tangan tidak valid');
+    }
+
+    const mimeType = matches[1];
+    const base64 = matches[3];
+    const buffer = Buffer.from(base64, 'base64');
+
+    const workerUrl = process.env.R2_WORKER_URL;
+    const authSecret = process.env.R2_AUTH_SECRET;
+
+    if (!workerUrl || !authSecret) {
+      throw new Error('Server configuration error: Missing R2 credentials');
+    }
+
+    const key = `projects/${projectId}/log-sheets/${logSheetId}/signatures/${signatureRole.toLowerCase()}-${Date.now()}.webp`;
+
+    const response = await fetch(`${workerUrl}/${key}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${authSecret}`,
+        'Content-Type': mimeType,
+      },
+      body: buffer,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`);
+    }
+
+    const url = `${workerUrl}/${key}`;
+
+    const updated = await logSheetService.saveLogSheetSignature(
+      actor,
+      logSheetId,
+      signatureRole,
+      url
+    );
+
+    revalidatePath('/log-sheets');
+    revalidatePath(`/log-sheets/${projectId}`);
+    revalidatePath(`/log-sheets/${projectId}/${logSheetId}`);
+
+    return { success: true, url, data: updated };
+  } catch (error) {
+    console.error('[CPIS-ERROR] LogSheet.Signature:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'Gagal menyimpan tanda tangan',
     };
   }
 }
