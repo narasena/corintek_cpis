@@ -1158,7 +1158,7 @@ export default function LogSheetDetailPage() {
           approvedAt={detail.logSheet.approvedAt}
           clientPicName={clientPicName}
           notes={notes.trim() ? notes.trim() : null}
-          machines={activeMachines}
+          machines={detail.machines}
           parameters={detail.parameters}
           valuesByKey={entryState}
           photos={detail.photos}
