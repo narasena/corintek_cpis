@@ -575,7 +575,7 @@ Kebutuhan bisnis ini harus dipenuhi untuk memastikan bahwa Sistem Informasi Proy
 
 #### Form Pendaftaran / Edit User
 
-	|**Field**|**Field Type**|**Required**|
+  |**Field**|**Field Type**|**Required**|
 	|---|---|---|
 	|Akun|Select (Corintek; Client)|Yes|
 	|Perusahaan (Khusus Akun Klien)|Text|Yes|
@@ -623,7 +623,7 @@ Tampilkan data per nama kelompok mesin
   |Fax No|Number|No|
   |No|Text|Yes|
   |Tanggal|Date|Yes|
-  |---|---|---|
+  |---|
   |Parameter|Text|Yes|
   |Test Result|
 

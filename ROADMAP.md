@@ -1,8 +1,9 @@
 # CPIS Project Implementation Roadmap
 
 > **Project:** Corintek Project Information System (CPIS)
-> **Updated:** 2026-02-11
+> **Updated:** 2026-02-15
 > **Status:** MVP Phase Completed - Transitioning to Operational Phase
+> **WARNING:** DO NOT REMOVE ANYTHING FROM THIS DOCUMENT!!! Just update, append, or change. Removal need PERMISSION!!!
 
 #### 2.6 [NEW] RBAC & Project Scoping (Keamanan & Pembatasan Proyek)
 
@@ -228,8 +229,8 @@ These improve operations significantly but can be delayed a few days if necessar
 **Estimated Prompts:** 1
 **Tasks:**
 
-- [ ] Prevent editing log sheets after status = SUBMITTED/APPROVED
-- [ ] Allow Admin override
+- [x] Prevent editing log sheets after status = SUBMITTED/APPROVED
+- [x] Allow Admin override
 
 ---
 
@@ -374,6 +375,8 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 - [x] Implement Server Action logic to prevent updates on locked/approved `WorkReport`.
 - [x] Add Admin/PIC-only "Approve" capability for `WorkReport`.
 - [ ] Add Admin-only "Unlock" capability.
+- [x] Status-based locking for `LogSheet` (disable edits on SUBMITTED/APPROVED)
+- [x] Admin override for `LogSheet` edits
 
 #### 3.2 Basic Dashboard (DB-01)
 
