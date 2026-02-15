@@ -12,6 +12,7 @@ export function useLogSheetActiveMachines(args: {
   activeCTIds: string[];
   setActiveCTIds: Dispatch<SetStateAction<string[]>>;
   startTransition: TransitionStartFunction;
+  allowAdminOverride?: boolean;
 }) {
   const {
     detail,
@@ -21,6 +22,7 @@ export function useLogSheetActiveMachines(args: {
     activeCTIds,
     setActiveCTIds,
     startTransition,
+    allowAdminOverride,
   } = args;
 
   const handleToggleMachine = (
@@ -47,6 +49,7 @@ export function useLogSheetActiveMachines(args: {
           type === 'CHILLER'
             ? [...newIds, ...activeCTIds]
             : [...activeChillerIds, ...newIds],
+        adminOverride: allowAdminOverride,
       });
 
       if (!res.success) {
@@ -77,6 +80,7 @@ export function useLogSheetActiveMachines(args: {
           type === 'CHILLER'
             ? [...allIds, ...activeCTIds]
             : [...activeChillerIds, ...allIds],
+        adminOverride: allowAdminOverride,
       });
       if (!res.success) toast.error('Gagal menyimpan unit aktif');
     });
@@ -91,6 +95,7 @@ export function useLogSheetActiveMachines(args: {
         logSheetId,
         machineIds:
           type === 'CHILLER' ? [...activeCTIds] : [...activeChillerIds],
+        adminOverride: allowAdminOverride,
       });
       if (!res.success) toast.error('Gagal menyimpan unit aktif');
     });

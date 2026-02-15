@@ -271,7 +271,7 @@ export async function getLogSheetDetailAction(id: string) {
     const validatedId = z.string().uuid().parse(id);
     await assertCanAccessLogSheet(actor, validatedId);
     const detail = await logSheetService.getLogSheetDetail(validatedId);
-    return { success: true, data: detail };
+    return { success: true, data: { ...detail, viewerRole: actor.role } };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.GetDetail:', error);
     return {

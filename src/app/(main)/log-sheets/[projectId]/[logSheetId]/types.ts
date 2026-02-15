@@ -1,4 +1,5 @@
 import type { TLogSheetStatus } from '@/features/log-sheets/types';
+import type { TUserRole } from '@/@types/user.type';
 
 export type TMachine = {
   id: string;
@@ -29,6 +30,7 @@ export type TParameter = {
 };
 
 export type TDetail = {
+  viewerRole: TUserRole;
   logSheet: {
     id: string;
     projectId: string;

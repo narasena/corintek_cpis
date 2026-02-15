@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import {
   saveLogSheetChemicalsAction,
   saveLogSheetEntriesAction,
+  updateLogSheetAdminOverrideAction,
   updateLogSheetAction,
   uploadLogSheetImageAction,
 } from '@/features/log-sheets/actions';
@@ -19,6 +20,7 @@ export function useLogSheetDraftSaver(args: {
   entryState: Record<string, TEntryState>;
   chemicalState: TChemicalUsageState;
   reload: () => Promise<void>;
+  allowAdminOverride?: boolean;
 }) {
   const router = useRouter();
   const {
@@ -29,15 +31,22 @@ export function useLogSheetDraftSaver(args: {
     entryState,
     chemicalState,
     reload,
+    allowAdminOverride,
   } = args;
 
   const saveDraft = useCallback(
     async (showToast: boolean) => {
-      const headerRes = await updateLogSheetAction({
-        id: logSheetId,
-        notes: notes.trim() ? notes.trim() : undefined,
-        replacedByUserId,
-      });
+      const headerRes = allowAdminOverride
+        ? await updateLogSheetAdminOverrideAction({
+            id: logSheetId,
+            notes: notes.trim() ? notes.trim() : undefined,
+            replacedByUserId,
+          })
+        : await updateLogSheetAction({
+            id: logSheetId,
+            notes: notes.trim() ? notes.trim() : undefined,
+            replacedByUserId,
+          });
 
       if (!headerRes.success) {
         toast.error('Gagal menyimpan header log sheet', {
@@ -95,6 +104,7 @@ export function useLogSheetDraftSaver(args: {
       const entriesRes = await saveLogSheetEntriesAction({
         logSheetId,
         entries: entriesToSave,
+        adminOverride: allowAdminOverride,
       });
 
       const chemicalRes = await saveLogSheetChemicalsAction({
@@ -106,6 +116,7 @@ export function useLogSheetDraftSaver(args: {
             chemicalId: c.chemicalId,
             amount: c.amount,
           })),
+        adminOverride: allowAdminOverride,
       });
 
       if (entriesRes.success && chemicalRes.success) {
@@ -136,6 +147,7 @@ export function useLogSheetDraftSaver(args: {
       reload,
       replacedByUserId,
       router,
+      allowAdminOverride,
     ]
   );
 
