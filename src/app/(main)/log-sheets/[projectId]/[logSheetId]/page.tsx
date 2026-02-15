@@ -25,14 +25,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-preview';
 import { CameraInput } from '@/components/camera-input';
 import { ChemicalUsageSection } from './components/chemical-usage-section';
 
-import {
-  approveLogSheetAction,
-  submitLogSheetAction,
-} from '@/features/log-sheets/actions';
+import { submitLogSheetAction } from '@/features/log-sheets/actions';
 import { makeEntryKey } from '@/features/log-sheets/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -61,6 +68,8 @@ export default function LogSheetDetailPage() {
 
   const [mode, setMode] = useState<'input' | 'preview'>('input');
   const [isPending, startTransition] = useTransition();
+  const [isSubmitOpen, setIsSubmitOpen] = useState(false);
+  const [adminOverride, setAdminOverride] = useState(false);
 
   const isMobileView = useIsMobile();
   const { technicians } = useLogSheetTechnicians();
@@ -115,6 +124,7 @@ export default function LogSheetDetailPage() {
     entryState,
     chemicalState,
     reload: fetchData,
+    allowAdminOverride: adminOverride,
   });
 
   const { handleToggleMachine, handleSelectAllMachines, handleClearMachines } =
@@ -126,9 +136,10 @@ export default function LogSheetDetailPage() {
       activeCTIds,
       setActiveCTIds,
       startTransition,
+      allowAdminOverride: adminOverride,
     });
 
-  const isLocked = detail?.logSheet.status !== 'DRAFT';
+  const isLocked = detail?.logSheet.status !== 'DRAFT' && !adminOverride;
 
   const handleSave = () => {
     if (isLocked) {
@@ -156,7 +167,7 @@ export default function LogSheetDetailPage() {
     setTimeout(() => window.print(), 0);
   };
 
-  const handleSubmit = () => {
+  const handleSubmitRequest = () => {
     const { valid, missingFields, errors } = validateEntries();
     if (!valid) {
       toast.error('Gagal mengirim log sheet', {
@@ -166,7 +177,11 @@ export default function LogSheetDetailPage() {
       });
       return;
     }
+    setIsSubmitOpen(true);
+  };
 
+  const handleConfirmSubmit = () => {
+    setIsSubmitOpen(false);
     startTransition(async () => {
       const saved = await saveDraft(false);
       if (!saved) return;
@@ -176,18 +191,6 @@ export default function LogSheetDetailPage() {
         return;
       }
       toast.success('Log sheet berhasil dikirim');
-      await fetchData();
-    });
-  };
-
-  const handleApprove = () => {
-    startTransition(async () => {
-      const res = await approveLogSheetAction(logSheetId);
-      if (!res.success) {
-        toast.error('Gagal menyetujui log sheet', { description: res.error });
-        return;
-      }
-      toast.success('Log sheet disetujui');
       await fetchData();
     });
   };
@@ -231,6 +234,8 @@ export default function LogSheetDetailPage() {
 
   const corintekPicName = approvedByName ?? assignedProjectPicName ?? '-';
   const clientPicName = assignedClientPicName ?? '-';
+  const canAdminOverride =
+    detail.viewerRole === 'ADMIN' && detail.logSheet.status !== 'DRAFT';
 
   return (
     <div className="space-y-4 md:space-y-8 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
@@ -269,19 +274,19 @@ export default function LogSheetDetailPage() {
           {detail.logSheet.status === 'DRAFT' && (
             <Button
               variant="secondary"
-              onClick={handleSubmit}
+              onClick={handleSubmitRequest}
               disabled={isPending}
             >
               Kirim
             </Button>
           )}
-          {detail.logSheet.status === 'SUBMITTED' && (
+          {canAdminOverride && (
             <Button
-              variant="secondary"
-              onClick={handleApprove}
+              variant="outline"
+              onClick={() => setAdminOverride(value => !value)}
               disabled={isPending}
             >
-              Setujui
+              {adminOverride ? 'Kunci Kembali' : 'Buka Kunci'}
             </Button>
           )}
           <Button onClick={handleSave} disabled={isPending || isLocked}>
@@ -290,6 +295,26 @@ export default function LogSheetDetailPage() {
           </Button>
         </div>
       </div>
+      <AlertDialog open={isSubmitOpen} onOpenChange={setIsSubmitOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi pengiriman log sheet</AlertDialogTitle>
+            <AlertDialogDescription>
+              Setelah dikirim, log sheet terkunci dan tidak bisa diubah.
+              Pastikan semua data sudah benar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmSubmit}
+              disabled={isPending}
+            >
+              Kirim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
           Log Sheet: {detail.project.name}
@@ -1154,7 +1179,7 @@ export default function LogSheetDetailPage() {
           </Button>
           <Button
             className="flex-1"
-            onClick={handleSubmit}
+            onClick={handleSubmitRequest}
             disabled={isPending}
           >
             Kirim
