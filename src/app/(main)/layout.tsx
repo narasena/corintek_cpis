@@ -43,7 +43,7 @@ export default async function MainLayout({
             <HeaderTitle />
           </div>
         </header>
-        <div className="mt-16 flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8 print:p-0 pb-20 md:pb-6 mx-auto w-full print:w!">
+        <div className="mt-16 print:mt-0! flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8 print:p-0 pb-20 md:pb-6 mx-auto w-full print:w!">
           {children}
         </div>
         <MobileNav role={sidebarUser.role} />

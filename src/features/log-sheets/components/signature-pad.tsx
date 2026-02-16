@@ -24,7 +24,7 @@ export function SignaturePad({ disabled, onChange }: TSignaturePadProps) {
       const rect = container.getBoundingClientRect();
       const width = rect.width;
       const height = width / (16 / 9);
-      const ratio = window.devicePixelRatio || 1;
+      const ratio = Math.max(window.devicePixelRatio || 1, 2);
 
       const prev = canvas.toDataURL();
 
@@ -37,6 +37,8 @@ export function SignaturePad({ disabled, onChange }: TSignaturePadProps) {
       if (!ctx) return;
 
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, width, height);
 
