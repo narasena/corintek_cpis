@@ -6,6 +6,7 @@ import type {
 } from './types';
 import { ParameterCategory } from '@/generated/prisma/client';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
+import { applyProjectOverridesToParameters } from '@/features/parameters/limits-utils';
 
 export async function getSummaryReports(projectId: string) {
   return await prisma.summaryReport.findMany({
@@ -197,17 +198,7 @@ export async function getProjectLogSheetConfig(projectId: string) {
 
   const overrides = project?.parameterOverrides || [];
   const mapParameters = (params: typeof parameters) =>
-    params.map(p => {
-      const override = overrides.find(o => o.parameterId === p.id);
-      if (!override) return p;
-      return {
-        ...p,
-        minValue: override.minValue ?? p.minValue,
-        maxValue: override.maxValue ?? p.maxValue,
-        rawWaterMinValue: override.rawWaterMinValue ?? p.rawWaterMinValue,
-        rawWaterMaxValue: override.rawWaterMaxValue ?? p.rawWaterMaxValue,
-      };
-    });
+    applyProjectOverridesToParameters(params as any, overrides as any);
 
   return {
     machines: {

@@ -46,11 +46,38 @@ export const UpdateParameterSchema = CreateParameterSchema.partial().extend({
   id: z.string().uuid(),
 });
 
+export const ParameterLimitListInputSchema = z.object({
+  category: ParameterCategoryEnum.optional(),
+  valueType: ValueTypeEnum.optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const UpdateParameterLimitInputSchema = z.object({
+  parameterId: z.string().uuid(),
+  minValue: z.number().nullable().optional(),
+  maxValue: z.number().nullable().optional(),
+  rawWaterMinValue: z.number().nullable().optional(),
+  rawWaterMaxValue: z.number().nullable().optional(),
+});
+
+export const UpdateParameterLimitBatchInputSchema = z.object({
+  items: z.array(UpdateParameterLimitInputSchema),
+});
+
 export type TCreateParameter = z.infer<typeof CreateParameterSchema>;
 export type TUpdateParameter = z.infer<typeof UpdateParameterSchema>;
+export type TParameterLimitListInput = z.infer<
+  typeof ParameterLimitListInputSchema
+>;
+export type TUpdateParameterLimitInput = z.infer<
+  typeof UpdateParameterLimitInputSchema
+>;
+export type TUpdateParameterLimitBatchInput = z.infer<
+  typeof UpdateParameterLimitBatchInputSchema
+>;
 
 // =============================================================================
-// Parameter Interfaces
+// Parameter Interfaces & Contracts
 // =============================================================================
 
 export interface IParameter {
@@ -69,4 +96,50 @@ export interface IParameter {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
+}
+
+export interface IParameterLimitMasterItem {
+  parameterId: string;
+  name: string;
+  variableName: string;
+  category: TParameterCategory;
+  valueType: TValueType;
+  unit: string | null;
+  minValue: number | null;
+  maxValue: number | null;
+  rawWaterMinValue: number | null;
+  rawWaterMaxValue: number | null;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface IGetParameterLimitMasterResult {
+  parameters: IParameterLimitMasterItem[];
+  updatedAt: Date | null;
+}
+
+export const UpdateParameterLimitMasterInputSchema = z.object({
+  parameterId: z.string().uuid(),
+  minValue: z.number().nullable().optional(),
+  maxValue: z.number().nullable().optional(),
+  rawWaterMinValue: z.number().nullable().optional(),
+  rawWaterMaxValue: z.number().nullable().optional(),
+});
+
+export const UpdateParameterLimitMasterBatchInputSchema = z.object({
+  items: z.array(UpdateParameterLimitMasterInputSchema),
+});
+
+export type TUpdateParameterLimitMasterInput = z.infer<
+  typeof UpdateParameterLimitMasterInputSchema
+>;
+
+export type TUpdateParameterLimitMasterBatchInput = z.infer<
+  typeof UpdateParameterLimitMasterBatchInputSchema
+>;
+
+export interface IUpdateParameterLimitMasterResult {
+  success: boolean;
+  updatedIds: string[];
+  error?: string;
 }

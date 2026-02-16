@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { formatRawWaterLimit as formatRawWaterLimitCore } from '@/features/parameters/limits-format';
 
 import { Button } from '@/components/ui/button';
 import { LabAnalysisColumnKind, ValueType } from '@/generated/prisma/enums';
@@ -73,15 +74,7 @@ function formatRawWaterLimit(
   maxValue: number | null,
   unit: string | null
 ) {
-  const unitText = unit ? ` ${unit}` : '';
-  const min = minValue;
-  const max = maxValue;
-
-  if (min !== null && max !== null)
-    return `${min}${unitText} ~ ${max}${unitText}`;
-  if (max !== null) return `≤ ${max}${unitText}`;
-  if (min !== null) return `≥ ${min}${unitText}`;
-  return '-';
+  return formatRawWaterLimitCore(minValue, maxValue, unit);
 }
 
 function formatValue(entry?: {

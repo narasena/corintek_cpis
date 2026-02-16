@@ -5,6 +5,7 @@ import type { IMachine } from '@/features/machines/types';
 import type { TChemicalUsage } from '@/@types/chemical.type';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
+import { applyProjectOverridesToParameters } from '@/features/parameters/limits-utils';
 import * as projectService from '@/features/projects/service';
 import type {
   ILogSheet,
@@ -634,20 +635,11 @@ export async function getLogSheetDetail(
     activeCTIds = coolingTowers.map(ct => ct.id);
   }
 
-  // Apply project-specific parameter overrides
   const overrides = logSheet.project.parameterOverrides || [];
-  const parametersWithOverrides = parameters.map(p => {
-    const override = overrides.find((o: any) => o.parameterId === p.id);
-    if (!override) return p;
-
-    return {
-      ...p,
-      minValue: override.minValue ?? p.minValue,
-      maxValue: override.maxValue ?? p.maxValue,
-      rawWaterMinValue: override.rawWaterMinValue ?? p.rawWaterMinValue,
-      rawWaterMaxValue: override.rawWaterMaxValue ?? p.rawWaterMaxValue,
-    };
-  });
+  const parametersWithOverrides = applyProjectOverridesToParameters(
+    parameters as any,
+    overrides as any
+  );
 
   return {
     logSheet: {

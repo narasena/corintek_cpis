@@ -77,6 +77,11 @@ const navMain = [
     icon: SlidersHorizontal,
   },
   {
+    title: 'Parameter Limits',
+    url: '/parameters/limits',
+    icon: SlidersHorizontal,
+  },
+  {
     title: 'Users',
     url: '/users',
     icon: Users,

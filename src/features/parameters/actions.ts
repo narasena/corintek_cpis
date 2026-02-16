@@ -2,12 +2,19 @@
 
 import { revalidatePath } from 'next/cache';
 import * as parameterService from './service';
+import * as limitService from './limits-service';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import {
   CreateParameterSchema,
+  ParameterLimitListInputSchema,
   UpdateParameterSchema,
+  UpdateParameterLimitBatchInputSchema,
+  UpdateParameterLimitInputSchema,
   TCreateParameter,
+  TParameterLimitListInput,
   TUpdateParameter,
+  TUpdateParameterLimitBatchInput,
+  TUpdateParameterLimitInput,
 } from './types';
 
 // =============================================================================
@@ -130,6 +137,64 @@ export async function deleteParameterAction(id: string) {
     return {
       success: false,
       error: error.message || 'Gagal menghapus parameter',
+    };
+  }
+}
+
+export async function getParameterLimitsAction(
+  filters?: TParameterLimitListInput
+) {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+  try {
+    const validated = filters
+      ? ParameterLimitListInputSchema.parse(filters)
+      : undefined;
+    const data = await limitService.getParameterLimits(actor, validated);
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('[CPIS-ERROR] Parameters.LimitsList:', error);
+    return {
+      success: false,
+      error: error.message || 'Gagal mengambil batas parameter',
+    };
+  }
+}
+
+export async function updateParameterLimitAction(
+  input: TUpdateParameterLimitInput
+) {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+  try {
+    const validated = UpdateParameterLimitInputSchema.parse(input);
+    const data = await limitService.updateParameterLimit(actor, validated);
+    revalidatePath('/parameters/limits');
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('[CPIS-ERROR] Parameters.LimitsUpdate:', error);
+    return {
+      success: false,
+      error: error.message || 'Gagal memperbarui batas parameter',
+    };
+  }
+}
+
+export async function updateParameterLimitBatchAction(
+  input: TUpdateParameterLimitBatchInput
+) {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+  try {
+    const validated = UpdateParameterLimitBatchInputSchema.parse(input);
+    const data = await limitService.updateParameterLimitBatch(actor, validated);
+    revalidatePath('/parameters/limits');
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('[CPIS-ERROR] Parameters.LimitsBatchUpdate:', error);
+    return {
+      success: false,
+      error: error.message || 'Gagal memperbarui batas parameter',
     };
   }
 }

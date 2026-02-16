@@ -1,4 +1,8 @@
 import type { TParameter } from './types';
+import {
+  formatNumericLimit,
+  formatRawWaterLimit as formatRawLimitCore,
+} from '@/features/parameters/limits-format';
 
 export function formatDate(value: string | Date) {
   const date = typeof value === 'string' ? new Date(value) : value;
@@ -13,45 +17,21 @@ export function formatDate(value: string | Date) {
 export function formatLimit(
   parameter: Pick<TParameter, 'minValue' | 'maxValue' | 'unit'>
 ) {
-  const unit = parameter.unit ? ` ${parameter.unit}` : '';
-  const min = parameter.minValue;
-  const max = parameter.maxValue;
-
-  if (min !== null && min !== undefined && max !== null && max !== undefined) {
-    return `${min}${unit} ~ ${max}${unit}`;
-  }
-
-  if (max !== null && max !== undefined) {
-    return `≤ ${max}${unit}`;
-  }
-
-  if (min !== null && min !== undefined) {
-    return `≥ ${min}${unit}`;
-  }
-
-  return '-';
+  return formatNumericLimit(
+    parameter.minValue,
+    parameter.maxValue,
+    parameter.unit
+  );
 }
 
 export function formatRawWaterLimit(
   parameter: Pick<TParameter, 'rawWaterMinValue' | 'rawWaterMaxValue' | 'unit'>
 ) {
-  const unit = parameter.unit ? ` ${parameter.unit}` : '';
-  const min = parameter.rawWaterMinValue;
-  const max = parameter.rawWaterMaxValue;
-
-  if (min !== null && min !== undefined && max !== null && max !== undefined) {
-    return `${min}${unit} ~ ${max}${unit}`;
-  }
-
-  if (max !== null && max !== undefined) {
-    return `≤ ${max}${unit}`;
-  }
-
-  if (min !== null && min !== undefined) {
-    return `≥ ${min}${unit}`;
-  }
-
-  return '-';
+  return formatRawLimitCore(
+    parameter.rawWaterMinValue,
+    parameter.rawWaterMaxValue,
+    parameter.unit ?? null
+  );
 }
 
 export function isOutOfRange(
