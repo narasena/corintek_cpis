@@ -582,13 +582,11 @@ export function LogSheetPreview({
             <div className="h-28 flex flex-col items-center justify-between py-2">
               <div className="flex-1 flex items-center justify-center">
                 {technicianSignatureUrl && (
-                  <div className="border border-black px-2 py-1">
-                    <img
-                      src={technicianSignatureUrl}
-                      alt="Tanda tangan teknisi"
-                      className="max-h-16 max-w-[120px] object-contain"
-                    />
-                  </div>
+                  <img
+                    src={technicianSignatureUrl}
+                    alt="Tanda tangan teknisi"
+                    className="max-h-16 max-w-[120px] object-contain"
+                  />
                 )}
               </div>
               <div className="text-center text-[10px] font-semibold leading-tight pb-1">
@@ -607,13 +605,11 @@ export function LogSheetPreview({
             <div className="h-28 flex flex-col items-center justify-between py-2">
               <div className="flex-1 flex items-center justify-center">
                 {clientPicSignatureUrl && (
-                  <div className="border border-black px-2 py-1">
-                    <img
-                      src={clientPicSignatureUrl}
-                      alt="Tanda tangan klien"
-                      className="max-h-16 max-w-[120px] object-contain"
-                    />
-                  </div>
+                  <img
+                    src={clientPicSignatureUrl}
+                    alt="Tanda tangan klien"
+                    className="max-h-16 max-w-[120px] object-contain"
+                  />
                 )}
               </div>
               <div className="text-center text-[10px] font-semibold leading-tight pb-1">
