@@ -12,12 +12,18 @@ import { toast } from 'sonner';
 import { SignaturePad } from '@/features/log-sheets/components/signature-pad';
 import { saveWorkReportSignatureAction } from '@/features/work-reports/actions';
 import { SignaturePreview } from '@/components/signature/signature-preview';
+import {
+  signatureRoleLabel,
+  type TSignatureUiRole,
+} from '@/components/signature/signature-roles';
+import type { TUserRole } from '@/@types/user.type';
 
-type TSignatureRole = 'TECHNICIAN' | 'CLIENT_PIC';
+type TSignatureRole = TSignatureUiRole;
 
 type TWorkReportSignatureSectionProps = {
   projectId: string;
   workReportId: string;
+  viewerRole: TUserRole;
   isLocked: boolean;
   technicianSignatureUrl?: string | null;
   technicianSignedAt?: Date | string | null;
@@ -33,6 +39,100 @@ type TSignatureDialogProps = {
   onSigned?: () => Promise<void> | void;
 };
 
+type TSignatureVisibility = {
+  showSection: boolean;
+  showTechnicianButton: boolean;
+  showClientButton: boolean;
+};
+
+const technicianViewerRoles: readonly TUserRole[] = [
+  'TECHNICIAN',
+  'CLIENT_TECHNICIAN',
+];
+
+const clientViewerRoles: readonly TUserRole[] = ['CLIENT_SUPERVISOR'];
+
+const nonSigningViewerRoles: readonly TUserRole[] = [
+  'SUPERVISOR',
+  'REPORTING',
+  'DIRECTOR',
+];
+
+export function getSignatureVisibility(
+  viewerRole: TUserRole
+): TSignatureVisibility {
+  if (viewerRole === 'ADMIN') {
+    return {
+      showSection: true,
+      showTechnicianButton: true,
+      showClientButton: true,
+    };
+  }
+
+  if (technicianViewerRoles.includes(viewerRole)) {
+    return {
+      showSection: true,
+      showTechnicianButton: true,
+      showClientButton: false,
+    };
+  }
+
+  if (clientViewerRoles.includes(viewerRole)) {
+    return {
+      showSection: true,
+      showTechnicianButton: false,
+      showClientButton: true,
+    };
+  }
+
+  if (nonSigningViewerRoles.includes(viewerRole)) {
+    return {
+      showSection: false,
+      showTechnicianButton: false,
+      showClientButton: false,
+    };
+  }
+
+  return {
+    showSection: false,
+    showTechnicianButton: false,
+    showClientButton: false,
+  };
+}
+
+type TSignaturePreviewVisibility = {
+  showTechnicianPreview: boolean;
+  showClientPreview: boolean;
+};
+
+const previewVisibilityByRole: Record<TUserRole, TSignaturePreviewVisibility> =
+  {
+    ADMIN: { showTechnicianPreview: true, showClientPreview: true },
+    TECHNICIAN: { showTechnicianPreview: true, showClientPreview: false },
+    CLIENT_TECHNICIAN: {
+      showTechnicianPreview: true,
+      showClientPreview: false,
+    },
+    CLIENT_SUPERVISOR: {
+      showTechnicianPreview: false,
+      showClientPreview: true,
+    },
+    SUPERVISOR: { showTechnicianPreview: false, showClientPreview: false },
+    REPORTING: { showTechnicianPreview: false, showClientPreview: false },
+    DIRECTOR: { showTechnicianPreview: false, showClientPreview: false },
+  };
+
+export function getPreviewVisibility(
+  viewerRole: TUserRole
+): TSignaturePreviewVisibility {
+  return (
+    previewVisibilityByRole[viewerRole] ?? {
+      showTechnicianPreview: false,
+      showClientPreview: false,
+    }
+  );
+}
+
 function SignatureDialog({
   workReportId,
   role,
@@ -43,7 +143,7 @@ function SignatureDialog({
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const label = role === 'TECHNICIAN' ? 'Teknisi' : 'PIC Klien';
+  const label = signatureRoleLabel(role);
 
   const handleSave = async () => {
     if (!dataUrl) return;
@@ -150,6 +250,7 @@ export function SignaturePreviewInternal({
 
 export function WorkReportSignatureSection({
   workReportId,
+  viewerRole,
   isLocked,
   technicianSignatureUrl,
   technicianSignedAt,
@@ -157,6 +258,15 @@ export function WorkReportSignatureSection({
   clientPicSignedAt,
   onSigned,
 }: TWorkReportSignatureSectionProps) {
+  const { showSection, showTechnicianButton, showClientButton } =
+    getSignatureVisibility(viewerRole);
+  const { showTechnicianPreview, showClientPreview } =
+    getPreviewVisibility(viewerRole);
+
+  if (!showSection) {
+    return null;
+  }
+
   const disabled = isLocked;
 
   return (
@@ -171,30 +281,38 @@ export function WorkReportSignatureSection({
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
-        <SignatureDialog
-          workReportId={workReportId}
-          role="TECHNICIAN"
-          disabled={disabled}
-          onSigned={onSigned}
-        />
-        <SignatureDialog
-          workReportId={workReportId}
-          role="CLIENT_PIC"
-          disabled={disabled}
-          onSigned={onSigned}
-        />
+        {showTechnicianButton && (
+          <SignatureDialog
+            workReportId={workReportId}
+            role="TECHNICIAN"
+            disabled={disabled}
+            onSigned={onSigned}
+          />
+        )}
+        {showClientButton && (
+          <SignatureDialog
+            workReportId={workReportId}
+            role="CLIENT_PIC"
+            disabled={disabled}
+            onSigned={onSigned}
+          />
+        )}
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <SignaturePreviewInternal
-          label="Teknisi"
-          url={technicianSignatureUrl}
-          signedAt={technicianSignedAt}
-        />
-        <SignaturePreviewInternal
-          label="PIC Klien"
-          url={clientPicSignatureUrl}
-          signedAt={clientPicSignedAt}
-        />
+        {showTechnicianPreview && (
+          <SignaturePreviewInternal
+            label="Teknisi"
+            url={technicianSignatureUrl}
+            signedAt={technicianSignedAt}
+          />
+        )}
+        {showClientPreview && (
+          <SignaturePreviewInternal
+            label="PIC Klien"
+            url={clientPicSignatureUrl}
+            signedAt={clientPicSignedAt}
+          />
+        )}
       </div>
       {isLocked && (
         <p className="text-xs text-muted-foreground">

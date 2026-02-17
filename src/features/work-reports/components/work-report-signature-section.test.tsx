@@ -2,7 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { ReactElement } from 'react';
 import type { ReactNode } from 'react';
-import { SignaturePreviewInternal } from './work-report-signature-section';
+import type { TUserRole } from '@/@types/user.type';
+import {
+  SignaturePreviewInternal,
+  getSignatureVisibility,
+  getPreviewVisibility,
+} from './work-report-signature-section';
 
 function render(element: ReactElement): string {
   return renderToStaticMarkup(element as ReactNode as ReactElement);
@@ -78,5 +83,93 @@ describe('SignaturePreview', () => {
     );
     expect(html).toContain(`src="${url}"`);
     expect(html).toContain('Ditandatangani oleh: Jane Doe');
+  });
+});
+
+describe('getSignatureVisibility', () => {
+  it('returns full access for admin', () => {
+    const caps = getSignatureVisibility('ADMIN');
+    expect(caps).toEqual({
+      showSection: true,
+      showTechnicianButton: true,
+      showClientButton: true,
+    });
+  });
+
+  it('returns technician-only controls for technician roles', () => {
+    for (const role of ['TECHNICIAN', 'CLIENT_TECHNICIAN'] as TUserRole[]) {
+      const caps = getSignatureVisibility(role);
+      expect(caps).toEqual({
+        showSection: true,
+        showTechnicianButton: true,
+        showClientButton: false,
+      });
+    }
+  });
+
+  it('returns client-only controls for client supervisor', () => {
+    const caps = getSignatureVisibility('CLIENT_SUPERVISOR');
+    expect(caps).toEqual({
+      showSection: true,
+      showTechnicianButton: false,
+      showClientButton: true,
+    });
+  });
+
+  it('hides section and controls for unsupported roles', () => {
+    for (const role of ['SUPERVISOR', 'REPORTING', 'DIRECTOR'] as TUserRole[]) {
+      const caps = getSignatureVisibility(role);
+      expect(caps).toEqual({
+        showSection: false,
+        showTechnicianButton: false,
+        showClientButton: false,
+      });
+    }
+  });
+});
+
+describe('getPreviewVisibility', () => {
+  it('returns both previews for admin', () => {
+    const result = getPreviewVisibility('ADMIN');
+    expect(result).toEqual({
+      showTechnicianPreview: true,
+      showClientPreview: true,
+    });
+  });
+
+  it('returns only technician preview for technician roles', () => {
+    for (const role of ['TECHNICIAN', 'CLIENT_TECHNICIAN'] as TUserRole[]) {
+      const result = getPreviewVisibility(role);
+      expect(result).toEqual({
+        showTechnicianPreview: true,
+        showClientPreview: false,
+      });
+    }
+  });
+
+  it('returns only client preview for client supervisor', () => {
+    const result = getPreviewVisibility('CLIENT_SUPERVISOR');
+    expect(result).toEqual({
+      showTechnicianPreview: false,
+      showClientPreview: true,
+    });
+  });
+
+  it('hides previews for unsupported roles', () => {
+    for (const role of ['SUPERVISOR', 'REPORTING', 'DIRECTOR'] as TUserRole[]) {
+      const result = getPreviewVisibility(role);
+      expect(result).toEqual({
+        showTechnicianPreview: false,
+        showClientPreview: false,
+      });
+    }
+  });
+
+  it('hides previews for unknown role', () => {
+    const result = getPreviewVisibility('UNKNOWN' as unknown as TUserRole);
+    expect(result).toEqual({
+      showTechnicianPreview: false,
+      showClientPreview: false,
+    });
   });
 });

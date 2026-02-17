@@ -10,10 +10,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { SignaturePreview } from '@/components/signature/signature-preview';
+import {
+  signatureRoleLabel,
+  type TSignatureUiRole,
+} from '@/components/signature/signature-roles';
 import { saveLogSheetSignatureAction } from '@/features/log-sheets/actions';
 import { SignaturePad } from './signature-pad';
 
-type TSignatureRole = 'TECHNICIAN' | 'CLIENT_PIC';
+type TSignatureRole = TSignatureUiRole;
 
 type TSignatureSectionProps = {
   logSheetId: string;
@@ -40,7 +44,7 @@ export function SignatureSection({
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const label = role === 'TECHNICIAN' ? 'Teknisi' : 'PIC Klien';
+  const label = signatureRoleLabel(role);
 
   const handleSave = async () => {
     if (!dataUrl) return;
