@@ -1,7 +1,7 @@
 # CPIS Project Implementation Roadmap
 
 > **Project:** Corintek Project Information System (CPIS)
-> **Updated:** 2026-02-16
+> **Updated:** 2026-02-17
 > **Status:** MVP Phase Completed - Transitioning to Operational Phase
 > **WARNING:** DO NOT REMOVE ANYTHING FROM THIS DOCUMENT!!! Just update, append, or change. Removal need PERMISSION!!!
 
@@ -62,7 +62,7 @@
 | Chemicals       | ✅     | ✅      | ✅      | ✅  | Master CRUD + Usage in LS                   |
 | Attendance      | ✅     | ✅      | ✅      | ✅  | Clock in/out + Photo validation             |
 | Lab Analysis    | ✅     | ✅      | ✅      | ✅  | Results tracking per project                |
-| Work Reports    | ✅     | ✅      | ✅      | ✅  | Ad-hoc technician reports                   |
+| Work Reports    | ✅     | ✅      | ✅      | ✅  | Ad-hoc technician reports + signatures      |
 | Summary Reports | ✅     | ✅      | ✅      | ✅  | Monthly project sign-off                    |
 | Worker (R2)     | ✅     | ✅      | N/A     | N/A | Basic upload API ready                      |
 
@@ -360,13 +360,13 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 > **Priority Note:** This is intentionally the lowest-priority item in the roadmap. Only implement after all other P0/P1/P2 items are stable in production.
 
 **Scope ID:** `DS-EXT` (Work Reports & Summary Reports)
-**Status:** 🚧 Planned (Lowest Priority)
+**Status:** 🚧 Partially Implemented (Work Reports), Summary Reports pending
 **Tasks:**
 
-- [ ] Add optional technician signature capture and rendering to Work Reports (form + print).
+- [x] Add optional technician signature capture and rendering to Work Reports (form + print).
 - [ ] Add optional approval signatures for Summary Reports (e.g. Corintek PIC / Client PIC) on print views.
-- [ ] Reuse existing `SignaturePad` component and RBAC rules; no new libraries.
-- [ ] Ensure signatures remain optional and do not block current submission flows.
+- [x] Reuse existing `SignaturePad` component and RBAC rules; no new libraries.
+- [x] Ensure signatures remain optional and do not block current submission flows.
 
 ---
 
@@ -381,7 +381,7 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 3.  **Attendance/Absensi (AB-\*)**
     - Status: ✅ Implemented (`AB-01`–`AB-03` in section 4.1) including Admin view and export.
 4.  **Digital Signature (DS-\*)**
-    - Status: ✅ Implemented for Log Sheets (`DS-01`/`DS-02` in section 4.3).
+    - Status: ✅ Implemented for Log Sheets (`DS-01`/`DS-02` in section 4.3) and 🚧 partially implemented for Work Reports (`DS-EXT`, technician signature); Summary Report approval signatures still pending (`DS-EXT` in section 4.7).
 5.  **Notifications (NT-\*)**
     - Status: ⏳ Not implemented. Planned as `NT-01`–`NT-03` in section 4.2 (Phase 2 limit alerts + UI).
 6.  **Dashboard Charts & Photo Gallery** (FSD Dashboard section 1)
