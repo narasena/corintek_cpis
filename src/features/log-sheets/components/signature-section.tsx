@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { SignaturePreview } from '@/components/signature/signature-preview';
 import { saveLogSheetSignatureAction } from '@/features/log-sheets/actions';
 import { SignaturePad } from './signature-pad';
 
@@ -92,27 +93,12 @@ export function SignatureSection({
       </div>
 
       {existingUrl && (
-        <div className="flex items-center gap-4 border rounded-md p-2 bg-muted/40">
-          <div className="w-40 h-20 border bg-background flex items-center justify-center overflow-hidden">
-            <img
-              src={existingUrl}
-              alt={`Tanda tangan ${label}`}
-              className="max-w-full max-h-full object-contain"
-            />
-          </div>
-          <div className="text-xs text-muted-foreground space-y-1">
-            {signedByName && <p>Ditandatangani oleh: {signedByName}</p>}
-            {signedAt && (
-              <p>
-                Waktu:{' '}
-                {new Intl.DateTimeFormat('id-ID', {
-                  dateStyle: 'medium',
-                  timeStyle: 'short',
-                }).format(new Date(signedAt))}
-              </p>
-            )}
-          </div>
-        </div>
+        <SignaturePreview
+          label={label}
+          url={existingUrl}
+          signedAt={signedAt}
+          signedByName={signedByName}
+        />
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>

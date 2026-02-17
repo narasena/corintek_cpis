@@ -20,6 +20,14 @@ model WorkReport {
   approvedByUserId String?
   approvedBy       User?           @relation("WorkReportApprovedBy", fields: [approvedByUserId], references: [id])
 
+  technicianSignatureUrl   String?
+  technicianSignedAt       DateTime?
+  technicianSignedByUserId String?
+
+  clientPicSignatureUrl   String?
+  clientPicSignedAt       DateTime?
+  clientPicSignedByUserId String?
+
   // Relations
   machines Machine[] // Implicit Many-to-Many
 

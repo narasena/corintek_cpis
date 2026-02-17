@@ -2,8 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { CreateWorkReportInput, UpdateWorkReportInput } from './types';
 import { WorkReportPhotoType } from '@/generated/prisma/client';
 import type { IJwtPayload } from '@/@types/auth.type';
-import { ensureAccess, RbacResource } from '@/lib/rbac';
 import * as projectService from '@/features/projects/service';
+import { assertValidStatusTransition } from '@/features/work-reports/status-policy';
 
 export async function getWorkReportsByProject(projectId: string) {
   return await prisma.workReport.findMany({
@@ -68,8 +68,6 @@ export async function updateWorkReportStatus(
   id: string,
   status: 'DRAFT' | 'SUBMITTED' | 'APPROVED'
 ) {
-  ensureAccess(actor.role, RbacResource.WORK_REPORTS, 'update');
-
   const row = await prisma.workReport.findFirst({
     where: { id, deletedAt: null },
     select: { id: true, projectId: true, status: true },
@@ -99,21 +97,7 @@ export async function updateWorkReportStatus(
   if (status === current) {
     return await prisma.workReport.findFirst({ where: { id: row.id } });
   }
-
-  if (status === 'SUBMITTED') {
-    if (current !== 'DRAFT') {
-      throw new Error('Work report hanya bisa dikirim dari status DRAFT');
-    }
-  } else if (status === 'APPROVED') {
-    if (current !== 'SUBMITTED') {
-      throw new Error('Work report hanya bisa disetujui dari status SUBMITTED');
-    }
-    if (!isProjectPic) {
-      throw new Error('Unauthorized');
-    }
-  } else if (status === 'DRAFT') {
-    throw new Error('Tidak dapat mengubah status kembali ke DRAFT');
-  }
+  assertValidStatusTransition(current, status, { isProjectPic });
 
   return await prisma.workReport.update({
     where: { id: row.id },

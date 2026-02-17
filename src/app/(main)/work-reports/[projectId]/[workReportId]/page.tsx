@@ -1,5 +1,6 @@
 import { getWorkReportByIdAction } from '@/features/work-reports/actions';
 import { WorkReportPreview } from '@/features/work-reports/components/work-report-preview';
+import { WorkReportSignatureSection } from '@/features/work-reports/components/work-report-signature-section';
 import { PrintButton } from '@/components/print-button';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -34,6 +35,18 @@ export default async function WorkReportDetailPage({ params }: PageProps) {
           </Button>
         </div>
         <PrintButton />
+      </div>
+
+      <div className="max-w-[210mm] mx-auto mb-4 print:hidden">
+        <WorkReportSignatureSection
+          projectId={projectId}
+          workReportId={workReportId}
+          isLocked={data.status !== 'DRAFT'}
+          technicianSignatureUrl={data.technicianSignatureUrl}
+          technicianSignedAt={data.technicianSignedAt}
+          clientPicSignatureUrl={data.clientPicSignatureUrl}
+          clientPicSignedAt={data.clientPicSignedAt}
+        />
       </div>
 
       <WorkReportPreview data={data} />

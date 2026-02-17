@@ -51,20 +51,20 @@
 
 ### ✅ Completed Domains
 
-| Domain          | Schema | Service | Actions | UI  | Notes                           |
-| --------------- | ------ | ------- | ------- | --- | ------------------------------- |
-| Auth            | ✅     | ✅      | ✅      | ✅  | Login/session management        |
-| Clients         | ✅     | ✅      | ✅      | ✅  | Full CRUD with DataTable        |
-| Users           | ✅     | ✅      | ✅      | ✅  | Full CRUD, roles, soft delete   |
-| Parameters      | ✅     | ✅      | ✅      | ✅  | Master data with categories     |
-| Projects        | ✅     | ✅      | ✅      | ✅  | Full CRUD with status           |
-| Machines        | ✅     | ✅      | ✅      | ✅  | Nested in Projects form         |
-| Chemicals       | ✅     | ✅      | ✅      | ✅  | Master CRUD + Usage in LS       |
-| Attendance      | ✅     | ✅      | ✅      | ✅  | Clock in/out + Photo validation |
-| Lab Analysis    | ✅     | ✅      | ✅      | ✅  | Results tracking per project    |
-| Work Reports    | ✅     | ✅      | ✅      | ✅  | Ad-hoc technician reports       |
-| Summary Reports | ✅     | ✅      | ✅      | ✅  | Monthly project sign-off        |
-| Worker (R2)     | ✅     | ✅      | N/A     | N/A | Basic upload API ready          |
+| Domain          | Schema | Service | Actions | UI  | Notes                                       |
+| --------------- | ------ | ------- | ------- | --- | ------------------------------------------- |
+| Auth            | ✅     | ✅      | ✅      | ✅  | Login/session management                    |
+| Clients         | ✅     | ✅      | ✅      | ✅  | Full CRUD with DataTable                    |
+| Users           | ✅     | ✅      | ✅      | ✅  | Full CRUD, roles, soft delete               |
+| Parameters      | ✅     | ✅      | ✅      | ✅  | Master data with categories + global limits |
+| Projects        | ✅     | ✅      | ✅      | ✅  | Full CRUD with status                       |
+| Machines        | ✅     | ✅      | ✅      | ✅  | Nested in Projects form                     |
+| Chemicals       | ✅     | ✅      | ✅      | ✅  | Master CRUD + Usage in LS                   |
+| Attendance      | ✅     | ✅      | ✅      | ✅  | Clock in/out + Photo validation             |
+| Lab Analysis    | ✅     | ✅      | ✅      | ✅  | Results tracking per project                |
+| Work Reports    | ✅     | ✅      | ✅      | ✅  | Ad-hoc technician reports                   |
+| Summary Reports | ✅     | ✅      | ✅      | ✅  | Monthly project sign-off                    |
+| Worker (R2)     | ✅     | ✅      | N/A     | N/A | Basic upload API ready                      |
 
 ### ✅ Log Sheets Domain (Mostly Complete)
 
@@ -177,6 +177,14 @@ These tasks are absolutely critical for the system to be usable in production.
 - [x] Add schema for project-specific overrides (min/max)
 - [x] Add UI in Project form to edit overrides
 - [x] Apply overrides when rendering log sheet limits
+
+**Scope ID:** `PARAM-LIMIT-01` (Parameter Limits Master)
+**Status:** ✅ Done
+**Tasks:**
+
+- [x] Add global parameter limit management page (`/parameters/limits`) with filters.
+- [x] Validate numeric ranges for min/max and raw water limits.
+- [x] Support single and batch updates with transaction safety.
 
 **Scope ID:** `RP-01` (Unified Reports List)
 **Status:** ✅ Done

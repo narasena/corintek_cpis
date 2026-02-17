@@ -14,6 +14,31 @@ import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import * as projectService from '@/features/projects/service';
 import type { IJwtPayload } from '@/@types/auth.type';
+import { uploadWorkReportFile } from '@/features/work-reports/storage';
+import {
+  createWorkReportSignatureModule,
+  type TWorkReportSignatureRole,
+  type WorkReportSignatureModule,
+} from './signature';
+import { createPrismaWorkReportSignatureRepository } from './work-report-signature-repository-prisma';
+import { createPrismaProjectAssignmentRepository } from './project-assignment-repository-prisma';
+import { createR2WorkReportSignatureStorage } from './signature-storage-r2';
+
+const SaveWorkReportSignatureSchema = z.object({
+  workReportId: z.string().uuid('Work report ID tidak valid'),
+  signatureRole: z.enum(['TECHNICIAN', 'CLIENT_PIC']),
+  dataUrl: z
+    .string()
+    .min(1, 'Data tanda tangan wajib diisi')
+    .regex(
+      /^data:image\/(png|jpeg|jpg|webp);base64,/,
+      'Format tanda tangan tidak valid'
+    ),
+});
+
+type TSaveWorkReportSignatureActionResult =
+  | { success: true }
+  | { success: false; message: string };
 
 export async function getWorkReportsByProjectAction(projectId: string) {
   try {
@@ -58,56 +83,6 @@ export async function getWorkReportByIdAction(id: string) {
     console.error('[CPIS-ERROR] WorkReport.GetById:', error);
     return { success: false, message: 'Failed to fetch work report' };
   }
-}
-
-// Helper to upload file to R2
-async function uploadToR2(
-  file: File,
-  projectId: string,
-  workReportId: string
-): Promise<string> {
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const workerUrl = process.env.R2_WORKER_URL;
-  const authSecret = process.env.R2_AUTH_SECRET;
-
-  if (!workerUrl || !authSecret) {
-    throw new Error('Server configuration error: Missing R2 credentials');
-  }
-
-  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-  const key = projectId
-    ? `projects/${projectId}/work-reports/${workReportId}/${Date.now()}_${sanitizedName}`
-    : `work-reports/${workReportId}/${Date.now()}_${sanitizedName}`;
-
-  console.log('[WorkReport.Upload] Uploading to R2:', {
-    key,
-    size: file.size,
-    type: file.type,
-    workerUrl: workerUrl ? 'SET' : 'MISSING',
-  });
-
-  const response = await fetch(`${workerUrl}/${key}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${authSecret}`,
-      'Content-Type': file.type,
-    },
-    body: buffer,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[WorkReport.Upload] Worker Error:', {
-      status: response.status,
-      statusText: response.statusText,
-      body: errorText,
-    });
-    throw new Error(
-      `Upload failed: ${response.statusText} (${response.status})`
-    );
-  }
-
-  return `${workerUrl}/${key}`;
 }
 
 export async function createWorkReportAction(formData: FormData) {
@@ -172,7 +147,11 @@ export async function createWorkReportAction(formData: FormData) {
           // Skip invalid files (e.g. empty inputs)
           if (file.size === 0 || file.name === 'undefined') return;
 
-          const url = await uploadToR2(file, validated.projectId, report.id);
+          const url = await uploadWorkReportFile({
+            file,
+            projectId: validated.projectId,
+            workReportId: report.id,
+          });
           await service.addWorkReportPhoto(report.id, url, undefined, type);
         });
 
@@ -386,33 +365,11 @@ export async function uploadWorkReportPhotoAction(formData: FormData) {
 
     if (!file || !workReportId) throw new Error('Missing file or ID');
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const workerUrl = process.env.R2_WORKER_URL;
-    const authSecret = process.env.R2_AUTH_SECRET;
-
-    if (!workerUrl || !authSecret) {
-      throw new Error('Server configuration error: Missing R2 credentials');
-    }
-
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const key = projectId
-      ? `projects/${projectId}/work-reports/${workReportId}/${Date.now()}_${sanitizedName}`
-      : `work-reports/${workReportId}/${Date.now()}_${sanitizedName}`;
-
-    const response = await fetch(`${workerUrl}/${key}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authSecret}`,
-        'Content-Type': file.type,
-      },
-      body: buffer,
+    const url = await uploadWorkReportFile({
+      file,
+      projectId: projectId || null,
+      workReportId,
     });
-
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`);
-    }
-
-    const url = `${workerUrl}/${key}`;
 
     // Save to DB
     const photo = await service.addWorkReportPhoto(
@@ -468,4 +425,73 @@ export async function deleteWorkReportPhotoAction(formData: FormData) {
     revalidatePath(`/work-reports/${projectId}/${workReportId}`);
   }
   return { success: true };
+}
+
+let cachedWorkReportSignatureModule: WorkReportSignatureModule | null = null;
+
+function getWorkReportSignatureModule() {
+  if (!cachedWorkReportSignatureModule) {
+    const workReportRepository = createPrismaWorkReportSignatureRepository();
+    const projectAssignmentRepository =
+      createPrismaProjectAssignmentRepository();
+    const signatureStorage = createR2WorkReportSignatureStorage();
+
+    cachedWorkReportSignatureModule = createWorkReportSignatureModule({
+      workReportRepository,
+      projectAssignmentRepository,
+      signatureStorage,
+    });
+  }
+
+  return cachedWorkReportSignatureModule;
+}
+
+function mapActorToAuthContext(actor: IJwtPayload) {
+  return {
+    userId: actor.id,
+    role: actor.role,
+    email: actor.email,
+  };
+}
+
+export async function saveWorkReportSignatureAction(
+  data: unknown
+): Promise<TSaveWorkReportSignatureActionResult> {
+  try {
+    const actorDetails = await getCurrentUserDetails();
+    if (!actorDetails) return { success: false, message: 'Unauthorized' };
+    const actor: IJwtPayload = {
+      id: actorDetails.id,
+      email: actorDetails.email,
+      role: actorDetails.role,
+    };
+
+    ensureAccess(actor.role, RbacResource.WORK_REPORTS, 'update');
+    const validated = SaveWorkReportSignatureSchema.parse(data);
+
+    const module = getWorkReportSignatureModule();
+    const result = await module.signatureService.signWorkReport({
+      actor: mapActorToAuthContext(actor),
+      workReportId: validated.workReportId,
+      role: validated.signatureRole as TWorkReportSignatureRole,
+      dataUrl: validated.dataUrl,
+    });
+
+    const projectId = result.report.projectId;
+    revalidatePath(`/work-reports/${projectId}`);
+    revalidatePath(`/work-reports/${projectId}/${validated.workReportId}`);
+    revalidatePath(`/my-projects/${projectId}`);
+    revalidatePath(`/`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('[CPIS-ERROR] WorkReport.Signature:', error);
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Failed to save work report signature',
+    };
+  }
 }

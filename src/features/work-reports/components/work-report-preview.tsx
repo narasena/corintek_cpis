@@ -18,6 +18,8 @@ interface WorkReportPreviewProps {
       caption: string | null;
       type: WorkReportPhotoType;
     }[];
+    technicianSignatureUrl?: string | null;
+    clientPicSignatureUrl?: string | null;
   };
 }
 
@@ -59,17 +61,34 @@ export function WorkReportPreview({ data }: WorkReportPreviewProps) {
             <Section title="Hasil Pekerjaan" content={data.workResult} />
           </div>
 
-          {/* Signature Area - Positioned at bottom of first page content or fixed at bottom of page */}
           <div className="mt-auto pt-12 flex justify-between break-inside-avoid">
-            <div className="text-center w-40">
-              <p className="mb-24 font-semibold">Dikerjakan Oleh,</p>
-              <div className="border-t border-black pt-1">
+            <div className="text-center w-40 flex flex-col items-center">
+              <p className="font-semibold mb-2">Dikerjakan Oleh,</p>
+              <div className="h-20 w-full flex items-center justify-center mb-2">
+                {data.technicianSignatureUrl && (
+                  <img
+                    src={data.technicianSignatureUrl}
+                    alt="Tanda tangan teknisi"
+                    className="max-h-16 max-w-[120px] object-contain"
+                  />
+                )}
+              </div>
+              <div className="border-t border-black pt-1 w-full">
                 <p>Teknisi</p>
               </div>
             </div>
-            <div className="text-center w-40">
-              <p className="mb-24 font-semibold">Mengetahui,</p>
-              <div className="border-t border-black pt-1">
+            <div className="text-center w-40 flex flex-col items-center">
+              <p className="font-semibold mb-2">Mengetahui,</p>
+              <div className="h-20 w-full flex items-center justify-center mb-2">
+                {data.clientPicSignatureUrl && (
+                  <img
+                    src={data.clientPicSignatureUrl}
+                    alt="Tanda tangan klien"
+                    className="max-h-16 max-w-[120px] object-contain"
+                  />
+                )}
+              </div>
+              <div className="border-t border-black pt-1 w-full">
                 <p>{data.project.name}</p>
               </div>
             </div>

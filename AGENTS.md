@@ -101,7 +101,8 @@ npm run prisma:seed        # seed DB
 
 - Format: Conventional Commits (see `commitlint.config.js` for types: feat, fix, docs, build, style, refactor, test, chore, perf, ci, revert)
 - **Scope Separation:** Separate commits for different scopes (don't bundle unrelated changes)
-
+- **DO NOT COMMIT DIRECTLY ON `main`/`master`, `dev`/`development`, `stage`/`staging`, all commits must be created their own dedicated branches first.**
+- Create a dedicated branch first before excution / implementation (when you need to write access ) 
 ---
 
 # Repository Tour
