@@ -8,6 +8,7 @@ import {
 } from './types';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
+import { buildProjectAccessWhere, isProjectScopedRole } from './access-policy';
 
 // =============================================================================
 // Project Service - Business Logic
@@ -19,27 +20,8 @@ import { ensureAccess, RbacResource } from '@/lib/rbac';
 export async function getProjects(actor: IJwtPayload): Promise<IProject[]> {
   ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
 
-  const isScopedRole =
-    actor.role === 'SUPERVISOR' ||
-    actor.role === 'TECHNICIAN' ||
-    actor.role === 'CLIENT_SUPERVISOR' ||
-    actor.role === 'CLIENT_TECHNICIAN';
-
   const projects = await prisma.project.findMany({
-    where: {
-      deletedAt: null,
-      ...(isScopedRole
-        ? {
-            status: 'ONGOING',
-            assignments: {
-              some: {
-                userId: actor.id,
-                isActive: true,
-              },
-            },
-          }
-        : {}),
-    },
+    where: buildProjectAccessWhere(actor),
     include: {
       client: {
         select: {
@@ -78,27 +60,8 @@ export async function getDashboardProjects(
 ): Promise<IProjectDashboardCard[]> {
   ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
 
-  const isScopedRole =
-    actor.role === 'SUPERVISOR' ||
-    actor.role === 'TECHNICIAN' ||
-    actor.role === 'CLIENT_SUPERVISOR' ||
-    actor.role === 'CLIENT_TECHNICIAN';
-
   const projects = await prisma.project.findMany({
-    where: {
-      deletedAt: null,
-      ...(isScopedRole
-        ? {
-            status: 'ONGOING',
-            assignments: {
-              some: {
-                userId: actor.id,
-                isActive: true,
-              },
-            },
-          }
-        : {}),
-    },
+    where: buildProjectAccessWhere(actor),
     select: {
       id: true,
       name: true,
@@ -174,28 +137,8 @@ export async function getProjectById(
 ): Promise<IProject | null> {
   ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
 
-  const isScopedRole =
-    actor.role === 'SUPERVISOR' ||
-    actor.role === 'TECHNICIAN' ||
-    actor.role === 'CLIENT_SUPERVISOR' ||
-    actor.role === 'CLIENT_TECHNICIAN';
-
   const project = await prisma.project.findFirst({
-    where: {
-      id,
-      deletedAt: null,
-      ...(isScopedRole
-        ? {
-            status: 'ONGOING',
-            assignments: {
-              some: {
-                userId: actor.id,
-                isActive: true,
-              },
-            },
-          }
-        : {}),
-    },
+    where: buildProjectAccessWhere(actor, { id }),
     include: {
       client: {
         select: {
@@ -243,31 +186,30 @@ export async function assertCanAccessProject(
   actor: IJwtPayload,
   projectId: string
 ) {
-  const isScopedRole =
-    actor.role === 'SUPERVISOR' ||
-    actor.role === 'TECHNICIAN' ||
-    actor.role === 'CLIENT_SUPERVISOR' ||
-    actor.role === 'CLIENT_TECHNICIAN';
-
-  if (!isScopedRole) return;
-
-  const project = await prisma.project.findFirst({
-    where: {
-      id: projectId,
-      deletedAt: null,
-      status: 'ONGOING',
-      assignments: {
-        some: {
-          userId: actor.id,
-          isActive: true,
-        },
-      },
-    },
-    select: { id: true },
-  });
-
-  if (!project) {
+  const canAccess = await canActorAccessProject(actor, projectId);
+  if (!canAccess) {
     throw new Error('Unauthorized');
+  }
+}
+
+async function canActorAccessProject(
+  actor: IJwtPayload,
+  projectId: string
+): Promise<boolean> {
+  try {
+    if (!isProjectScopedRole(actor.role)) {
+      return true;
+    }
+
+    const project = await prisma.project.findFirst({
+      where: buildProjectAccessWhere(actor, { id: projectId }),
+      select: { id: true },
+    });
+
+    return !!project;
+  } catch (error) {
+    console.error('[CPIS-ERROR] Projects.CanAccessProject:', error);
+    throw error;
   }
 }
 
@@ -449,11 +391,11 @@ export async function createProject(
 ): Promise<IProject> {
   ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'create');
 
+  await assertValidAddendumOnCreate(data);
+
   const { machines, ...projectData } = data;
 
-  // Use transaction to ensure atomicity
   const project = await prisma.$transaction(async tx => {
-    // Create the project first
     const newProject = await tx.project.create({
       data: {
         name: projectData.name,
@@ -464,6 +406,8 @@ export async function createProject(
         endDate: projectData.endDate,
         status: projectData.status,
         clientId: projectData.clientId,
+        projectType: projectData.projectType,
+        parentProjId: projectData.parentProjId ?? null,
       },
       include: {
         client: {
@@ -507,14 +451,17 @@ export async function updateProject(
 ): Promise<IProject> {
   ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'update');
 
+  await assertValidAddendumOnUpdate(data);
+
   const { id, machines, ...updateData } = data;
 
-  // Use transaction to ensure atomicity
   const project = await prisma.$transaction(async tx => {
-    // 1. Update project details
     const updatedProject = await tx.project.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...updateData,
+        parentProjId: normalizeParentProjIdForUpdate(updateData.parentProjId),
+      },
       include: {
         client: {
           select: {
@@ -525,79 +472,173 @@ export async function updateProject(
       },
     });
 
-    // 2. Handle machines synchronization if machines array is provided
     if (machines) {
-      // Get existing machines from DB
-      const existingMachines = await tx.machine.findMany({
-        where: { projectId: id, deletedAt: null },
-        select: { id: true },
-      });
-
-      const existingMachineIds = existingMachines.map(m => m.id);
-
-      // Identify machines to delete (in DB but not in input)
-      const inputMachineIds = machines
-        .filter(m => m.id)
-        .map(m => m.id as string);
-
-      const machinesToDelete = existingMachineIds.filter(
-        dbId => !inputMachineIds.includes(dbId)
-      );
-
-      // Identify machines to create (no ID) and update (has ID)
-      const machinesToCreate = machines.filter(m => !m.id);
-      const machinesToUpdate = machines.filter(m => m.id);
-
-      // Execute Delete
-      if (machinesToDelete.length > 0) {
-        await tx.machine.updateMany({
-          where: { id: { in: machinesToDelete } },
-          data: { deletedAt: new Date() },
-        });
-      }
-
-      // Execute Create
-      if (machinesToCreate.length > 0) {
-        await tx.machine.createMany({
-          data: machinesToCreate.map(machine => ({
-            projectId: id,
-            unitNumber: machine.unitNumber,
-            type: machine.type,
-            ownership: machine.ownership,
-            status: machine.status,
-            capacity: machine.capacity ?? null,
-            brand: machine.brand ?? null,
-            model: machine.model ?? null,
-            serialNumber: machine.serialNumber ?? null,
-          })),
-        });
-      }
-
-      // Execute Update
-      // We iterate because we need to update each specific machine by ID
-      for (const machine of machinesToUpdate) {
-        if (!machine.id) continue;
-
-        await tx.machine.update({
-          where: { id: machine.id },
-          data: {
-            unitNumber: machine.unitNumber,
-            type: machine.type,
-            ownership: machine.ownership,
-            status: machine.status,
-            capacity: machine.capacity ?? null,
-            brand: machine.brand ?? null,
-            model: machine.model ?? null,
-            serialNumber: machine.serialNumber ?? null,
-          },
-        });
-      }
+      await syncProjectMachines(tx, id, machines);
     }
 
     return updatedProject;
   });
 
   return project as unknown as IProject;
+}
+
+type TUpdateMachines = NonNullable<TUpdateProject['machines']>;
+
+function normalizeParentProjIdForUpdate(
+  value: TUpdateProject['parentProjId']
+): string | null | undefined {
+  if (typeof value === 'undefined') return undefined;
+  return value ?? null;
+}
+
+async function assertValidAddendumOnCreate(data: TCreateProject) {
+  if (data.projectType !== 'ADDENDUM') return;
+  if (!data.parentProjId) {
+    throw new Error('Project addendum harus memiliki project utama');
+  }
+
+  try {
+    const parent = await prisma.project.findUnique({
+      where: { id: data.parentProjId },
+      select: { id: true, clientId: true, projectType: true },
+    });
+
+    if (!parent) {
+      throw new Error('Project utama tidak ditemukan');
+    }
+
+    if (parent.projectType !== 'UTAMA') {
+      throw new Error('Project addendum hanya boleh terkait ke project utama');
+    }
+
+    if (parent.clientId !== data.clientId) {
+      throw new Error('Project addendum harus memiliki client yang sama');
+    }
+  } catch (error) {
+    console.error('[CPIS-ERROR] Projects.ValidateAddendumOnCreate:', error);
+    throw error;
+  }
+}
+
+async function assertValidAddendumOnUpdate(data: TUpdateProject) {
+  if (data.projectType !== 'ADDENDUM' || !data.parentProjId) return;
+
+  try {
+    const parent = await prisma.project.findUnique({
+      where: { id: data.parentProjId },
+      select: { id: true, projectType: true },
+    });
+
+    if (!parent) {
+      throw new Error('Project utama tidak ditemukan');
+    }
+
+    if (parent.projectType !== 'UTAMA') {
+      throw new Error('Project addendum hanya boleh terkait ke project utama');
+    }
+  } catch (error) {
+    console.error('[CPIS-ERROR] Projects.ValidateAddendumOnUpdate:', error);
+    throw error;
+  }
+}
+
+async function syncProjectMachines(
+  tx: typeof prisma,
+  projectId: string,
+  machines: TUpdateMachines
+) {
+  try {
+    const existingIds = await getExistingMachineIds(tx, projectId);
+    const { toCreate, toUpdate, toDelete } = splitMachinesByAction(
+      machines,
+      existingIds
+    );
+
+    await applyMachineDeletions(tx, toDelete);
+    await applyMachineCreations(tx, projectId, toCreate);
+    await applyMachineUpdates(tx, toUpdate);
+  } catch (error) {
+    console.error('[CPIS-ERROR] Projects.SyncMachines:', error);
+    throw error;
+  }
+}
+
+async function getExistingMachineIds(
+  tx: typeof prisma,
+  projectId: string
+): Promise<string[]> {
+  const rows = await tx.machine.findMany({
+    where: { projectId, deletedAt: null },
+    select: { id: true },
+  });
+
+  return rows.map(m => m.id);
+}
+
+function splitMachinesByAction(
+  machines: TUpdateMachines,
+  existingIds: string[]
+) {
+  const inputIds = machines.filter(m => m.id).map(m => m.id as string);
+  const toDelete = existingIds.filter(id => !inputIds.includes(id));
+  const toCreate = machines.filter(m => !m.id);
+  const toUpdate = machines.filter(m => m.id);
+
+  return { toCreate, toUpdate, toDelete };
+}
+
+async function applyMachineDeletions(tx: typeof prisma, ids: string[]) {
+  if (!ids.length) return;
+
+  await tx.machine.updateMany({
+    where: { id: { in: ids } },
+    data: { deletedAt: new Date() },
+  });
+}
+
+async function applyMachineCreations(
+  tx: typeof prisma,
+  projectId: string,
+  machines: TUpdateMachines
+) {
+  if (!machines.length) return;
+
+  await tx.machine.createMany({
+    data: machines.map(machine => ({
+      projectId,
+      unitNumber: machine.unitNumber,
+      type: machine.type,
+      ownership: machine.ownership,
+      status: machine.status,
+      capacity: machine.capacity ?? null,
+      brand: machine.brand ?? null,
+      model: machine.model ?? null,
+      serialNumber: machine.serialNumber ?? null,
+    })),
+  });
+}
+
+async function applyMachineUpdates(
+  tx: typeof prisma,
+  machines: TUpdateMachines
+) {
+  for (const machine of machines) {
+    if (!machine.id) continue;
+
+    await tx.machine.update({
+      where: { id: machine.id },
+      data: {
+        unitNumber: machine.unitNumber,
+        type: machine.type,
+        ownership: machine.ownership,
+        status: machine.status,
+        capacity: machine.capacity ?? null,
+        brand: machine.brand ?? null,
+        model: machine.model ?? null,
+        serialNumber: machine.serialNumber ?? null,
+      },
+    });
+  }
 }
 
 /**

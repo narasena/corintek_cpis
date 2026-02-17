@@ -15,7 +15,12 @@ model Project {
   startDate DateTime
   endDate   DateTime?
 
-  status ProjectStatus @default(PENDING)
+  status       ProjectStatus @default(PENDING)
+  projectType  ProjectType   @default(UTAMA)
+  parentProjId String?
+
+  parentProject Project?  @relation("ProjectAddendumParent", fields: [parentProjId], references: [id])
+  addenda       Project[] @relation("ProjectAddendumParent")
 
   machines           Machine[]
   logSheets          LogSheet[]
@@ -39,6 +44,11 @@ enum ProjectStatus {
   PAUSED
   COMPLETED
   CANCELLED
+}
+
+enum ProjectType {
+  UTAMA
+  ADDENDUM
 }
 
 model ProjectAssignment {

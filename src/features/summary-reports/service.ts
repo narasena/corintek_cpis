@@ -135,78 +135,102 @@ export async function getMonthlyLogSheets(projectId: string, period: Date) {
 }
 
 export async function getProjectLogSheetConfig(projectId: string) {
-  const machines = await prisma.machine.findMany({
-    where: { projectId, deletedAt: null },
-    select: { id: true, unitNumber: true, type: true },
-    orderBy: [{ type: 'asc' }, { unitNumber: 'asc' }],
-  });
+  const { machines, parameters, labParameters, overrides } =
+    await loadProjectLogSheetConfigData(projectId);
 
-  const parameters = await prisma.parameter.findMany({
-    where: {
-      deletedAt: null,
-      isActive: true,
-      category: {
-        not: ParameterCategory.LAB_ANALYSIS,
-      },
-    },
-    select: {
-      id: true,
-      name: true,
-      variableName: true,
-      category: true,
-      valueType: true,
-      unit: true,
-      minValue: true,
-      maxValue: true,
-      rawWaterMinValue: true,
-      rawWaterMaxValue: true,
-      displayOrder: true,
-    },
-    orderBy: [
-      { category: 'asc' },
-      { displayOrder: 'asc' },
-      { createdAt: 'asc' },
-    ],
-  });
-
-  const labParameters = await prisma.parameter.findMany({
-    where: {
-      deletedAt: null,
-      isActive: true,
-      category: ParameterCategory.LAB_ANALYSIS,
-    },
-    select: {
-      id: true,
-      name: true,
-      variableName: true,
-      category: true,
-      valueType: true,
-      unit: true,
-      minValue: true,
-      maxValue: true,
-      rawWaterMinValue: true,
-      rawWaterMaxValue: true,
-      displayOrder: true,
-    },
-    orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
-  });
-
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-    include: { parameterOverrides: true },
-  });
-
-  const overrides = project?.parameterOverrides || [];
   const mapParameters = (params: typeof parameters) =>
     applyProjectOverridesToParameters(params as any, overrides as any);
 
   return {
-    machines: {
-      chillers: machines.filter(m => m.type === 'CHILLER'),
-      coolingTowers: machines.filter(m => m.type === 'COOLING_TOWER'),
-    },
+    machines: groupMachinesByType(machines),
     parameters: mapParameters(parameters),
     labParameters: mapParameters(labParameters),
+  };
+}
+
+async function loadProjectLogSheetConfigData(projectId: string) {
+  try {
+    const [machines, parameters, labParameters, project] = await Promise.all([
+      prisma.machine.findMany({
+        where: { projectId, deletedAt: null },
+        select: { id: true, unitNumber: true, type: true },
+        orderBy: [{ type: 'asc' }, { unitNumber: 'asc' }],
+      }),
+      prisma.parameter.findMany({
+        where: {
+          deletedAt: null,
+          isActive: true,
+          category: {
+            not: ParameterCategory.LAB_ANALYSIS,
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          variableName: true,
+          category: true,
+          valueType: true,
+          unit: true,
+          minValue: true,
+          maxValue: true,
+          rawWaterMinValue: true,
+          rawWaterMaxValue: true,
+          displayOrder: true,
+        },
+        orderBy: [
+          { category: 'asc' },
+          { displayOrder: 'asc' },
+          { createdAt: 'asc' },
+        ],
+      }),
+      prisma.parameter.findMany({
+        where: {
+          deletedAt: null,
+          isActive: true,
+          category: ParameterCategory.LAB_ANALYSIS,
+        },
+        select: {
+          id: true,
+          name: true,
+          variableName: true,
+          category: true,
+          valueType: true,
+          unit: true,
+          minValue: true,
+          maxValue: true,
+          rawWaterMinValue: true,
+          rawWaterMaxValue: true,
+          displayOrder: true,
+        },
+        orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
+      }),
+      prisma.project.findUnique({
+        where: { id: projectId },
+        include: { parameterOverrides: true },
+      }),
+    ]);
+
+    return {
+      machines,
+      parameters,
+      labParameters,
+      overrides: project?.parameterOverrides || [],
+    };
+  } catch (error) {
+    console.error(
+      '[CPIS-ERROR] SummaryReport.ProjectLogSheetConfig.LoadData:',
+      error
+    );
+    throw error;
+  }
+}
+
+function groupMachinesByType(
+  machines: Array<{ type: string; unitNumber: number; id: string }>
+) {
+  return {
+    chillers: machines.filter(m => m.type === 'CHILLER'),
+    coolingTowers: machines.filter(m => m.type === 'COOLING_TOWER'),
   };
 }
 

@@ -20,6 +20,10 @@ export const ProjectStatusEnum = z.enum([
 
 export type TProjectStatus = z.infer<typeof ProjectStatusEnum>;
 
+export const ProjectTypeEnum = z.enum(['UTAMA', 'ADDENDUM']);
+
+export type TProjectType = z.infer<typeof ProjectTypeEnum>;
+
 export const ProjectAssignmentRoleEnum = z.enum([
   'PROJECT_PIC',
   'TECHNICIAN',
@@ -41,6 +45,12 @@ export const CreateProjectSchema = z.object({
   startDate: z.coerce.date(),
   endDate: z.coerce.date().optional(),
   status: ProjectStatusEnum.default('PENDING'),
+  projectType: ProjectTypeEnum.default('UTAMA'),
+  parentProjId: z
+    .string()
+    .uuid('Project utama tidak valid')
+    .optional()
+    .nullable(),
   // Machines are optional at project creation
   machines: z
     .array(
