@@ -24,6 +24,10 @@ export const ProjectTypeEnum = z.enum(['UTAMA', 'ADDENDUM']);
 
 export type TProjectType = z.infer<typeof ProjectTypeEnum>;
 
+export const ProjectContractTypeEnum = z.enum(['DIRECT', 'SUBCONTRACT']);
+
+export type TProjectContractType = z.infer<typeof ProjectContractTypeEnum>;
+
 export const ProjectAssignmentRoleEnum = z.enum([
   'PROJECT_PIC',
   'TECHNICIAN',
@@ -46,6 +50,7 @@ export const CreateProjectSchema = z.object({
   endDate: z.coerce.date().optional(),
   status: ProjectStatusEnum.default('PENDING'),
   projectType: ProjectTypeEnum.default('UTAMA'),
+  contractType: ProjectContractTypeEnum.default('DIRECT'),
   parentProjId: z
     .string()
     .uuid('Project utama tidak valid')
@@ -89,6 +94,7 @@ export interface IProject {
   startDate: Date;
   endDate: Date | null;
   status: TProjectStatus;
+  contractType: TProjectContractType;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

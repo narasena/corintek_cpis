@@ -15,8 +15,9 @@ model Project {
   startDate DateTime
   endDate   DateTime?
 
-  status       ProjectStatus @default(PENDING)
-  projectType  ProjectType   @default(UTAMA)
+  status       ProjectStatus       @default(PENDING)
+  projectType  ProjectType         @default(UTAMA)
+  contractType ProjectContractType @default(DIRECT)
   parentProjId String?
 
   parentProject Project?  @relation("ProjectAddendumParent", fields: [parentProjId], references: [id])
@@ -49,6 +50,11 @@ enum ProjectStatus {
 enum ProjectType {
   UTAMA
   ADDENDUM
+}
+
+enum ProjectContractType {
+  DIRECT
+  SUBCONTRACT
 }
 
 model ProjectAssignment {

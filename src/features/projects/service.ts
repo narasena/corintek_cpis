@@ -14,9 +14,6 @@ import { buildProjectAccessWhere, isProjectScopedRole } from './access-policy';
 // Project Service - Business Logic
 // =============================================================================
 
-/**
- * Get all active projects with client details
- */
 export async function getProjects(actor: IJwtPayload): Promise<IProject[]> {
   ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
 
@@ -55,11 +52,38 @@ export async function getProjects(actor: IJwtPayload): Promise<IProject[]> {
   return projects as unknown as IProject[];
 }
 
+type TDashboardProjectRow = {
+  id: string;
+  name: string;
+  quoteNumber: string | null;
+  status: string;
+  client: { id: string; name: string } | null;
+  assignments: { role: string }[];
+};
+
+type TPendingCounts = {
+  logSheets: Map<string, number>;
+  workReports: Map<string, number>;
+};
+
 export async function getDashboardProjects(
   actor: IJwtPayload
 ): Promise<IProjectDashboardCard[]> {
   ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
 
+  try {
+    const projects = await getDashboardProjectsBase(actor);
+    const counts = await getPendingCountsForProjects(projects.map(p => p.id));
+    return mapProjectsToDashboardCards(projects, counts);
+  } catch (error) {
+    console.error('[CPIS-ERROR] Projects.GetDashboardProjects:', error);
+    throw error;
+  }
+}
+
+async function getDashboardProjectsBase(
+  actor: IJwtPayload
+): Promise<TDashboardProjectRow[]> {
   const projects = await prisma.project.findMany({
     where: buildProjectAccessWhere(actor),
     select: {
@@ -76,42 +100,54 @@ export async function getDashboardProjects(
     orderBy: { createdAt: 'desc' },
   });
 
-  const projectIds = projects.map(p => p.id);
+  return projects as TDashboardProjectRow[];
+}
 
-  const logSheetCounts =
-    projectIds.length === 0
-      ? []
-      : await prisma.logSheet.groupBy({
-          by: ['projectId'],
-          where: {
-            projectId: { in: projectIds },
-            deletedAt: null,
-            status: 'SUBMITTED',
-          },
-          _count: { _all: true },
-        });
+async function getPendingCountsForProjects(
+  projectIds: string[]
+): Promise<TPendingCounts> {
+  if (projectIds.length === 0) {
+    return {
+      logSheets: new Map(),
+      workReports: new Map(),
+    };
+  }
 
-  const logSheetsPendingByProjectId = new Map<string, number>(
-    logSheetCounts.map(row => [row.projectId, row._count._all])
-  );
+  const [logSheetCounts, workReportCounts] = await Promise.all([
+    prisma.logSheet.groupBy({
+      by: ['projectId'],
+      where: {
+        projectId: { in: projectIds },
+        deletedAt: null,
+        status: 'SUBMITTED',
+      },
+      _count: { _all: true },
+    }),
+    prisma.workReport.groupBy({
+      by: ['projectId'],
+      where: {
+        projectId: { in: projectIds },
+        deletedAt: null,
+        status: 'SUBMITTED',
+      },
+      _count: { _all: true },
+    }),
+  ]);
 
-  const workReportCounts =
-    projectIds.length === 0
-      ? []
-      : await prisma.workReport.groupBy({
-          by: ['projectId'],
-          where: {
-            projectId: { in: projectIds },
-            deletedAt: null,
-            status: 'SUBMITTED',
-          },
-          _count: { _all: true },
-        });
+  return {
+    logSheets: new Map(
+      logSheetCounts.map(row => [row.projectId, row._count._all])
+    ),
+    workReports: new Map(
+      workReportCounts.map(row => [row.projectId, row._count._all])
+    ),
+  };
+}
 
-  const workReportsPendingByProjectId = new Map<string, number>(
-    workReportCounts.map(row => [row.projectId, row._count._all])
-  );
-
+function mapProjectsToDashboardCards(
+  projects: TDashboardProjectRow[],
+  counts: TPendingCounts
+): IProjectDashboardCard[] {
   return projects.map(project => ({
     id: project.id,
     name: project.name,
@@ -120,10 +156,8 @@ export async function getDashboardProjects(
     client: project.client ?? undefined,
     myAssignmentRoles: project.assignments.map(a => a.role as any),
     taskCounts: {
-      logSheetsPendingApproval:
-        logSheetsPendingByProjectId.get(project.id) ?? 0,
-      workReportsPendingApproval:
-        workReportsPendingByProjectId.get(project.id) ?? 0,
+      logSheetsPendingApproval: counts.logSheets.get(project.id) ?? 0,
+      workReportsPendingApproval: counts.workReports.get(project.id) ?? 0,
     },
   }));
 }
@@ -421,6 +455,7 @@ export async function createProject(
         status: projectData.status,
         clientId: projectData.clientId,
         projectType: projectData.projectType,
+        contractType: projectData.contractType,
         parentProjId: projectData.parentProjId ?? null,
       },
       include: {
