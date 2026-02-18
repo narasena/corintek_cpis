@@ -91,6 +91,7 @@ export interface ILogSheet {
   date: Date;
   notes: string | null;
   status: TLogSheetStatus;
+  locked: boolean;
   technicianSignatureUrl: string | null;
   technicianSignedAt: Date | null;
   technicianSignedByUserId: string | null;

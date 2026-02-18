@@ -19,6 +19,7 @@ model LabAnalysis {
   reportNumber    String?
   remarks         String?
   recommendations String?
+  locked          Boolean   @default(false)
 
   columns LabAnalysisColumn[]
   entries LabAnalysisEntry[]

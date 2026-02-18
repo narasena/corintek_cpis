@@ -13,9 +13,13 @@ import type {
   ILogSheetPhoto,
   TCreateLogSheet,
   TCreateLogSheetEntry,
+  TLogSheetStatus,
   TUpdateLogSheet,
 } from './types';
 import { isLogSheetEntryEmpty, makeEntryKey } from './utils';
+import { validateLogSheetApprovalDetail } from './approval-validation';
+import { getLogSheetEditState } from './log-sheet-locking';
+import { decideLogSheetStatusTransition } from './log-sheet-status';
 
 function isEntryComplete(
   entry?: Pick<
@@ -75,7 +79,7 @@ async function assertLogSheetEditable(
 
   const row = await prisma.logSheet.findFirst({
     where: { id: logSheetId, deletedAt: null },
-    select: { id: true, projectId: true, status: true },
+    select: { id: true, projectId: true, status: true, locked: true },
   });
 
   if (!row) {
@@ -84,15 +88,19 @@ async function assertLogSheetEditable(
 
   await projectService.assertCanAccessProject(actor, row.projectId);
 
-  if (row.status === 'DRAFT') {
+  const state = getLogSheetEditState(
+    { status: row.status as TLogSheetStatus, locked: row.locked },
+    {
+      isAdmin: actor.role === 'ADMIN',
+      allowAdminOverride: options?.allowAdminOverride ?? false,
+    }
+  );
+
+  if (state === 'EDITABLE') {
     return row;
   }
 
-  if (actor.role === 'ADMIN' && options?.allowAdminOverride) {
-    return row;
-  }
-
-  if (row.status === 'APPROVED') {
+  if (state === 'LOCKED_APPROVED') {
     throw new Error('Log sheet sudah disetujui');
   }
 
@@ -445,23 +453,19 @@ export async function updateLogSheetStatus(
     return unchanged as unknown as ILogSheet;
   }
 
-  if (status === 'SUBMITTED') {
-    if (current !== 'DRAFT') {
-      throw new Error('Log sheet hanya bisa dikirim dari status DRAFT');
-    }
-    if (!isInternalTechnician && !isInternalPic) {
-      throw new Error('Unauthorized');
-    }
-  } else if (status === 'APPROVED') {
-    if (current !== 'SUBMITTED') {
-      throw new Error('Log sheet hanya bisa disetujui dari status SUBMITTED');
-    }
-    if (!isInternalPic) {
-      throw new Error('Unauthorized');
-    }
+  const decision = decideLogSheetStatusTransition({
+    current: current as TLogSheetStatus,
+    target: status as TLogSheetStatus,
+    isInternalPic,
+    isInternalTechnician,
+  });
+
+  if (!decision.ok) {
+    throw new Error(decision.error);
+  }
+
+  if (decision.requiresApprovalValidation) {
     await validateLogSheetForApproval(id);
-  } else if (status === 'DRAFT') {
-    throw new Error('Tidak dapat mengubah status kembali ke DRAFT');
   }
 
   const now = new Date();
@@ -770,128 +774,7 @@ export async function validateLogSheetForSubmission(id: string) {
 
 export async function validateLogSheetForApproval(id: string) {
   const detail = await getLogSheetDetail(id);
-  const parameterById = new Map(detail.parameters.map(p => [p.id, p]));
-  const entryByKey = new Map(
-    detail.entries.map(entry => [
-      makeEntryKey(
-        entry.parameterId,
-        entry.machineId,
-        entry.role as ILogSheetEntry['role']
-      ),
-      entry,
-    ])
-  );
-  const machineLabelById = new Map<string, string>();
-
-  for (const machine of detail.machines.chillers) {
-    machineLabelById.set(machine.id, `Chiller #${machine.unitNumber}`);
-  }
-  for (const machine of detail.machines.coolingTowers) {
-    machineLabelById.set(machine.id, `CT #${machine.unitNumber}`);
-  }
-
-  const errors: string[] = [];
-
-  for (const entry of detail.entries) {
-    if (entry.valueType === 'NUMBER' && entry.numericValue !== null) {
-      const param = parameterById.get(entry.parameterId);
-      if (!param) continue;
-
-      let min: number | null = param.minValue;
-      let max: number | null = param.maxValue;
-
-      if (entry.role === 'RAW_WATER') {
-        min = param.rawWaterMinValue ?? null;
-        max = param.rawWaterMaxValue ?? null;
-      }
-
-      if (min !== null && entry.numericValue < min) {
-        errors.push(
-          `${param.name}: Nilai ${entry.numericValue} di bawah minimum ${min}`
-        );
-      }
-      if (max !== null && entry.numericValue > max) {
-        errors.push(
-          `${param.name}: Nilai ${entry.numericValue} di atas maksimum ${max}`
-        );
-      }
-    }
-  }
-
-  for (const param of detail.parameters) {
-    const category = param.category;
-
-    if (category === 'COOLING_WATER_QUALITY') {
-      const activeCTs = detail.machines.coolingTowers.filter(m =>
-        detail.activeMachineIds.coolingTowers.includes(m.id)
-      );
-      for (const machine of activeCTs) {
-        const key = makeEntryKey(param.id, machine.id, 'VALUE');
-        const entry = entryByKey.get(key);
-        if (!isEntryComplete(entry)) {
-          const label = machineLabelById.get(machine.id) ?? 'Mesin';
-          errors.push(`${param.name} (${label}) wajib diisi`);
-        }
-      }
-
-      const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
-      const rawEntry = entryByKey.get(rawKey);
-      if (!isEntryComplete(rawEntry)) {
-        errors.push(`${param.name} (Raw Water) wajib diisi`);
-      }
-
-      continue;
-    }
-
-    const usesChillers =
-      category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR';
-    const usesCoolingTowers =
-      category === 'GENERAL_CONDITION' || category === 'JOB_DESCRIPTION';
-
-    const activeChillers = detail.machines.chillers.filter(m =>
-      detail.activeMachineIds.chillers.includes(m.id)
-    );
-    const activeCTs = detail.machines.coolingTowers.filter(m =>
-      detail.activeMachineIds.coolingTowers.includes(m.id)
-    );
-
-    const machines = usesChillers
-      ? activeChillers
-      : usesCoolingTowers
-        ? activeCTs
-        : [];
-
-    const targets =
-      machines.length > 0
-        ? machines.map(machine => ({ id: machine.id }))
-        : category === 'CONSUMPTION'
-          ? [{ id: null as string | null }]
-          : [];
-
-    for (const target of targets) {
-      const key = makeEntryKey(param.id, target.id, 'VALUE');
-      const entry = entryByKey.get(key);
-      if (!isEntryComplete(entry)) {
-        const label =
-          target.id === null
-            ? 'Nilai'
-            : (machineLabelById.get(target.id) ?? 'Mesin');
-        errors.push(`${param.name} (${label}) wajib diisi`);
-      }
-    }
-
-    if (usesCoolingTowers && activeCTs.length > 0) {
-      const noteKey = makeEntryKey(param.id, null, 'NOTE');
-      const noteEntry = entryByKey.get(noteKey);
-      if (!isEntryComplete(noteEntry)) {
-        errors.push(`${param.name} (Catatan) wajib diisi`);
-      }
-    }
-  }
-
-  if (errors.length > 0) {
-    throw new Error(`Validasi gagal:\n${errors.join('\n')}`);
-  }
+  validateLogSheetApprovalDetail(detail);
 }
 
 export async function upsertLogSheetEntries(
@@ -931,54 +814,73 @@ export async function upsertLogSheetEntries(
 
   await prisma.$transaction(async tx => {
     const now = new Date();
-
     for (const entry of entries) {
-      const role = (entry.role ?? 'VALUE') as ILogSheetEntry['role'];
-      const key = makeEntryKey(
-        entry.parameterId,
-        entry.machineId ?? null,
-        role
-      );
-      const existingEntry = existingByKey.get(key);
-      const empty = isLogSheetEntryEmpty(entry);
-
-      if (empty) {
-        if (existingEntry && existingEntry.deletedAt === null) {
-          await tx.logSheetEntry.update({
-            where: { id: existingEntry.id },
-            data: { deletedAt: now },
-          });
-        }
-        continue;
-      }
-
-      const normalized = {
+      await upsertSingleLogSheetEntry(
+        tx,
         logSheetId,
-        parameterId: entry.parameterId,
-        machineId: entry.machineId ?? null,
-        role,
-        valueType: entry.valueType,
-        numericValue:
-          entry.valueType === 'NUMBER' ? (entry.numericValue ?? null) : null,
-        boolValue:
-          entry.valueType === 'BOOLEAN' ? (entry.boolValue ?? null) : null,
-        textValue:
-          entry.valueType === 'TEXT' ? (entry.textValue ?? null) : null,
-        fileUrl: entry.fileUrl ?? null,
-        checkedAt: entry.checkedAt ?? null,
-      };
-
-      if (existingEntry) {
-        await tx.logSheetEntry.update({
-          where: { id: existingEntry.id },
-          data: { ...normalized, deletedAt: null },
-        });
-      } else {
-        await tx.logSheetEntry.create({
-          data: normalized,
-        });
-      }
+        entry,
+        existingByKey,
+        now
+      );
     }
+  });
+}
+
+async function upsertSingleLogSheetEntry(
+  tx: PrismaClient['$transaction'] extends (fn: infer F) => any
+    ? F extends (arg: infer A) => any
+      ? A
+      : never
+    : never,
+  logSheetId: string,
+  entry: TCreateLogSheetEntry & {
+    numericValue?: number | null;
+    boolValue?: boolean | null;
+    textValue?: string | null;
+    fileUrl?: string | null;
+  },
+  existingByKey: Map<string, { id: string; deletedAt: Date | null }>,
+  now: Date
+) {
+  const role = (entry.role ?? 'VALUE') as ILogSheetEntry['role'];
+  const key = makeEntryKey(entry.parameterId, entry.machineId ?? null, role);
+  const existingEntry = existingByKey.get(key);
+  const empty = isLogSheetEntryEmpty(entry);
+
+  if (empty) {
+    if (existingEntry && existingEntry.deletedAt === null) {
+      await tx.logSheetEntry.update({
+        where: { id: existingEntry.id },
+        data: { deletedAt: now },
+      });
+    }
+    return;
+  }
+
+  const normalized = {
+    logSheetId,
+    parameterId: entry.parameterId,
+    machineId: entry.machineId ?? null,
+    role,
+    valueType: entry.valueType,
+    numericValue:
+      entry.valueType === 'NUMBER' ? (entry.numericValue ?? null) : null,
+    boolValue: entry.valueType === 'BOOLEAN' ? (entry.boolValue ?? null) : null,
+    textValue: entry.valueType === 'TEXT' ? (entry.textValue ?? null) : null,
+    fileUrl: entry.fileUrl ?? null,
+    checkedAt: entry.checkedAt ?? null,
+  };
+
+  if (existingEntry) {
+    await tx.logSheetEntry.update({
+      where: { id: existingEntry.id },
+      data: { ...normalized, deletedAt: null },
+    });
+    return;
+  }
+
+  await tx.logSheetEntry.create({
+    data: normalized,
   });
 }
 

@@ -1,0 +1,199 @@
+import type { ILogSheetDetailView } from './service';
+import type { ILogSheetEntry } from './types';
+import { makeEntryKey } from './utils';
+
+function isEntryComplete(
+  entry?: Pick<
+    ILogSheetEntry,
+    'valueType' | 'numericValue' | 'boolValue' | 'textValue'
+  >
+) {
+  if (!entry) return false;
+
+  if (entry.valueType === 'NUMBER') {
+    return (
+      entry.numericValue !== null &&
+      entry.numericValue !== undefined &&
+      !Number.isNaN(entry.numericValue)
+    );
+  }
+
+  if (entry.valueType === 'BOOLEAN') {
+    return entry.boolValue !== null && entry.boolValue !== undefined;
+  }
+
+  if (entry.valueType === 'TEXT') {
+    return (
+      entry.textValue !== null &&
+      entry.textValue !== undefined &&
+      entry.textValue.trim() !== ''
+    );
+  }
+
+  return false;
+}
+
+type TApprovalContext = {
+  detail: ILogSheetDetailView;
+  parameterById: Map<string, (typeof detail.parameters)[number]>;
+  entryByKey: Map<string, ILogSheetEntry>;
+  machineLabelById: Map<string, string>;
+};
+
+function buildApprovalContext(detail: ILogSheetDetailView): TApprovalContext {
+  const parameterById = new Map(detail.parameters.map(p => [p.id, p]));
+  const entryByKey = new Map(
+    detail.entries.map(entry => [
+      makeEntryKey(
+        entry.parameterId,
+        entry.machineId,
+        entry.role as ILogSheetEntry['role']
+      ),
+      entry,
+    ])
+  );
+  const machineLabelById = new Map<string, string>();
+
+  for (const machine of detail.machines.chillers) {
+    machineLabelById.set(machine.id, `Chiller #${machine.unitNumber}`);
+  }
+  for (const machine of detail.machines.coolingTowers) {
+    machineLabelById.set(machine.id, `CT #${machine.unitNumber}`);
+  }
+
+  return { detail, parameterById, entryByKey, machineLabelById };
+}
+
+function collectApprovalRangeErrors(
+  context: TApprovalContext,
+  errors: string[]
+) {
+  for (const entry of context.detail.entries) {
+    if (entry.valueType !== 'NUMBER' || entry.numericValue === null) continue;
+    const param = context.parameterById.get(entry.parameterId);
+    if (!param) continue;
+
+    let min: number | null = param.minValue;
+    let max: number | null = param.maxValue;
+
+    if (entry.role === 'RAW_WATER') {
+      min = param.rawWaterMinValue ?? null;
+      max = param.rawWaterMaxValue ?? null;
+    }
+
+    if (min !== null && entry.numericValue < min) {
+      errors.push(
+        `${param.name}: Nilai ${entry.numericValue} di bawah minimum ${min}`
+      );
+    }
+    if (max !== null && entry.numericValue > max) {
+      errors.push(
+        `${param.name}: Nilai ${entry.numericValue} di atas maksimum ${max}`
+      );
+    }
+  }
+}
+
+function collectCoolingWaterRequiredErrors(
+  context: TApprovalContext,
+  parameterId: string,
+  errors: string[]
+) {
+  const param = context.parameterById.get(parameterId);
+  if (!param) return;
+
+  const activeCTs = context.detail.machines.coolingTowers.filter(m =>
+    context.detail.activeMachineIds.coolingTowers.includes(m.id)
+  );
+
+  for (const machine of activeCTs) {
+    const key = makeEntryKey(param.id, machine.id, 'VALUE');
+    const entry = context.entryByKey.get(key);
+    if (!isEntryComplete(entry)) {
+      const label = context.machineLabelById.get(machine.id) ?? 'Mesin';
+      errors.push(`${param.name} (${label}) wajib diisi`);
+    }
+  }
+
+  const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
+  const rawEntry = context.entryByKey.get(rawKey);
+  if (!isEntryComplete(rawEntry)) {
+    errors.push(`${param.name} (Raw Water) wajib diisi`);
+  }
+}
+
+function collectCategoryRequiredErrors(
+  context: TApprovalContext,
+  param: (typeof context.detail.parameters)[number],
+  errors: string[]
+) {
+  const category = param.category;
+  const usesChillers =
+    category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR';
+  const usesCoolingTowers =
+    category === 'GENERAL_CONDITION' || category === 'JOB_DESCRIPTION';
+
+  const activeChillers = context.detail.machines.chillers.filter(m =>
+    context.detail.activeMachineIds.chillers.includes(m.id)
+  );
+  const activeCTs = context.detail.machines.coolingTowers.filter(m =>
+    context.detail.activeMachineIds.coolingTowers.includes(m.id)
+  );
+
+  const machines = usesChillers ? activeChillers : usesCoolingTowers ? activeCTs : [];
+  const targets =
+    machines.length > 0
+      ? machines.map(machine => ({ id: machine.id }))
+      : category === 'CONSUMPTION'
+        ? [{ id: null as string | null }]
+        : [];
+
+  for (const target of targets) {
+    const key = makeEntryKey(param.id, target.id, 'VALUE');
+    const entry = context.entryByKey.get(key);
+    if (!isEntryComplete(entry)) {
+      const label =
+        target.id === null
+          ? 'Nilai'
+          : (context.machineLabelById.get(target.id) ?? 'Mesin');
+      errors.push(`${param.name} (${label}) wajib diisi`);
+    }
+  }
+
+  if (usesCoolingTowers && activeCTs.length > 0) {
+    const noteKey = makeEntryKey(param.id, null, 'NOTE');
+    const noteEntry = context.entryByKey.get(noteKey);
+    if (!isEntryComplete(noteEntry)) {
+      errors.push(`${param.name} (Catatan) wajib diisi`);
+    }
+  }
+}
+
+function collectApprovalRequiredFieldErrors(
+  context: TApprovalContext,
+  errors: string[]
+) {
+  for (const param of context.detail.parameters) {
+    if (param.category === 'COOLING_WATER_QUALITY') {
+      collectCoolingWaterRequiredErrors(context, param.id, errors);
+      continue;
+    }
+
+    collectCategoryRequiredErrors(context, param, errors);
+  }
+}
+
+export function validateLogSheetApprovalDetail(
+  detail: ILogSheetDetailView
+): void {
+  const context = buildApprovalContext(detail);
+  const errors: string[] = [];
+
+  collectApprovalRangeErrors(context, errors);
+  collectApprovalRequiredFieldErrors(context, errors);
+
+  if (errors.length > 0) {
+    throw new Error(`Validasi gagal:\n${errors.join('\n')}`);
+  }
+}
+

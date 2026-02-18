@@ -140,7 +140,9 @@ export default function LogSheetDetailPage() {
       allowAdminOverride: adminOverride,
     });
 
-  const isLocked = detail?.logSheet.status !== 'DRAFT' && !adminOverride;
+  const isStatusLocked = detail?.logSheet.status !== 'DRAFT';
+  const isHardLocked = detail?.logSheet.locked ?? false;
+  const isLocked = (isStatusLocked || isHardLocked) && !adminOverride;
 
   const handleSave = () => {
     if (isLocked) {

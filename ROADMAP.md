@@ -412,7 +412,7 @@ These fields are documented in the FSD and are now first-class fields in the cur
 
 #### 3.1 Submission Locking & Approval (LS-LOCK / WR-APP)
 
-- [ ] Add `locked` field to LogSheet/LabAnalysis schemas.
+- [x] Add `locked` field to LogSheet/LabAnalysis schemas.
 - [x] Implement `status` (DRAFT/SUBMITTED/APPROVED) for `WorkReport`.
 - [x] Implement Server Action logic to prevent updates on locked/approved `WorkReport`.
 - [x] Add Admin/PIC-only "Approve" capability for `WorkReport`.

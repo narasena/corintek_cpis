@@ -54,6 +54,7 @@ export type LabAnalysisRow = {
   date: Date;
   reportNumber: string | null;
   customer: string | null;
+  locked: boolean;
   createdAt: Date;
   updatedAt: Date;
 };

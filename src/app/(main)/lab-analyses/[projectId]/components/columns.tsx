@@ -82,6 +82,18 @@ export const getLabAnalysisColumns = ({
     ),
   },
   {
+    accessorKey: 'locked',
+    header: 'Status',
+    cell: ({ row }) =>
+      row.original.locked ? (
+        <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+          Terkunci
+        </span>
+      ) : (
+        <span className="text-xs text-muted-foreground">Dapat diubah</span>
+      ),
+  },
+  {
     id: 'actions',
     cell: ({ row }) => (
       <LabAnalysisActions
@@ -91,4 +103,3 @@ export const getLabAnalysisColumns = ({
     ),
   },
 ];
-

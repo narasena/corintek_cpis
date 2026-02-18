@@ -23,6 +23,7 @@ model LogSheet {
   date   DateTime
   notes  String?
   status LogSheetStatus @default(DRAFT)
+  locked Boolean        @default(false)
 
   entries        LogSheetEntry[]
   photos         LogSheetPhoto[]
