@@ -12,6 +12,10 @@ export function buildProjectFormDefaultValues(
     status: project?.status || 'PENDING',
     workCategory: project?.workCategory || 'OPERATIONAL',
     contractType: project?.contractType || 'DIRECT',
+    warrantyMonths:
+      typeof project?.warrantyMonths === 'number'
+        ? project.warrantyMonths
+        : undefined,
     startDate: project?.startDate
       ? new Date(project.startDate)
       : new Date(),

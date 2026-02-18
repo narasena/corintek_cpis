@@ -59,7 +59,8 @@ export const CreateProjectSchema = z.object({
   status: ProjectStatusEnum.default('PENDING'),
   projectType: ProjectTypeEnum.default('UTAMA'),
   contractType: ProjectContractTypeEnum.default('DIRECT'),
-   workCategory: ProjectWorkCategoryEnum.default('OPERATIONAL'),
+  workCategory: ProjectWorkCategoryEnum.default('OPERATIONAL'),
+  warrantyMonths: z.coerce.number().int().min(0).optional(),
   parentProjId: z
     .string()
     .uuid('Project utama tidak valid')
@@ -105,6 +106,7 @@ export interface IProject {
   status: TProjectStatus;
   workCategory: TProjectWorkCategory;
   contractType: TProjectContractType;
+  warrantyMonths?: number | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

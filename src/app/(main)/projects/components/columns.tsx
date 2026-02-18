@@ -17,6 +17,12 @@ interface GetColumnsProps {
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>;
 }
 
+const formatWarrantyMonths = (value?: number | null) => {
+  if (value == null) return '-';
+  if (Number.isNaN(value) || value < 0) return '-';
+  return `${value} bulan`;
+};
+
 export const getProjectColumns = ({
   onEdit,
   onDelete,
@@ -83,6 +89,12 @@ export const getProjectColumns = ({
         if (!date) return '-';
         return new Date(date as string).toLocaleDateString('id-ID');
       },
+    },
+    {
+      accessorKey: 'warrantyMonths',
+      header: 'Garansi',
+      cell: ({ row }) =>
+        formatWarrantyMonths(row.original.warrantyMonths ?? null),
     },
     {
       id: 'machineCount',

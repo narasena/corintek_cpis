@@ -163,6 +163,32 @@ export function ProjectMetaSection({ form, clients }: ProjectMetaSectionProps) {
 
       <FormField
         control={form.control}
+        name="warrantyMonths"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Garansi (bulan)</FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                min={0}
+                placeholder="Contoh: 12"
+                value={field.value ?? ''}
+                onChange={e =>
+                  field.onChange(
+                    e.target.value === ''
+                      ? undefined
+                      : Number(e.target.value)
+                  )
+                }
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
         name="status"
         render={({ field }) => (
           <FormItem>

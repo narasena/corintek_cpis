@@ -19,6 +19,7 @@ model Project {
   projectType  ProjectType         @default(UTAMA)
   contractType ProjectContractType @default(DIRECT)
   workCategory ProjectWorkCategory @default(OPERATIONAL)
+  warrantyMonths Int?
   parentProjId String?
 
   parentProject Project?  @relation("ProjectAddendumParent", fields: [parentProjId], references: [id])

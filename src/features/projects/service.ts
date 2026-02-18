@@ -457,6 +457,7 @@ export async function createProject(
         projectType: projectData.projectType,
         contractType: projectData.contractType,
         workCategory: projectData.workCategory,
+        warrantyMonths: projectData.warrantyMonths ?? null,
         parentProjId: projectData.parentProjId ?? null,
       },
       include: {
