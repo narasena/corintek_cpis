@@ -1,7 +1,7 @@
 # CPIS Project Implementation Roadmap
 
 > **Project:** Corintek Project Information System (CPIS)
-> **Updated:** 2026-02-17
+> **Updated:** 2026-02-18
 > **Status:** MVP Phase Completed - Transitioning to Operational Phase
 > **WARNING:** DO NOT REMOVE ANYTHING FROM THIS DOCUMENT!!! Just update, append, or change. Removal need PERMISSION!!!
 
@@ -397,12 +397,12 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 
 ### Project Fields in FSD but May Need Review:
 
-- **Tipe Project:** Utama vs Addendum (addendum continues from main project) — ✅ Implemented (project type + reporting scope logic)
-- **Jenis Project:** Langsung vs Subcon — ✅ Schema, Server, dan UI (ProjectContractType + Jenis Project select)
-- **Pekerjaan:** Operasional, Proyek/Konstruksi, Ad Hoc — ✅ Schema, Server, dan UI (ProjectWorkCategory + Pekerjaan select)
-- **Warranty:** X months warranty period
+- **Tipe Project:** Utama vs Addendum (addendum continues from main project) — ✅ Implemented (ProjectType + reporting scope logic)
+- **Jenis Project:** Langsung vs Subcon — ✅ Schema, Service, dan UI (ProjectContractType + Jenis Project select)
+- **Pekerjaan:** Operasional, Proyek/Konstruksi, Ad Hoc — ✅ Schema, Service, dan UI (ProjectWorkCategory + Pekerjaan select)
+- **Warranty:** X months warranty period — ✅ Schema, Service, dan UI (`warrantyMonths` field + warranty column in project list)
 
-These fields are documented in the FSD. Tipe Project, Jenis Project, and Pekerjaan are now first-class fields in the current schema/UI. Warranty may still require careful migration planning and confirmation with stakeholders that it is in scope for Phase 2.
+These fields are documented in the FSD and are now first-class fields in the current schema/UI (see `projects.prisma` and projects pages). Existing data from earlier phases may still need migration/backfill if required by operations.
 
 ---
 
@@ -416,7 +416,7 @@ These fields are documented in the FSD. Tipe Project, Jenis Project, and Pekerja
 - [x] Implement `status` (DRAFT/SUBMITTED/APPROVED) for `WorkReport`.
 - [x] Implement Server Action logic to prevent updates on locked/approved `WorkReport`.
 - [x] Add Admin/PIC-only "Approve" capability for `WorkReport`.
-- [ ] Add Admin-only "Unlock" capability.
+- [x] Add Admin-only "Unlock" capability (LogSheet override toggle in detail view).
 - [x] Status-based locking for `LogSheet` (disable edits on SUBMITTED/APPROVED)
 - [x] Admin override for `LogSheet` edits
 - [x] Store `submittedAt`/`submittedBy` and `approvedAt`/`approvedBy` on `LogSheet`.
@@ -447,7 +447,7 @@ These fields are documented in the FSD. Tipe Project, Jenis Project, and Pekerja
 This section summarizes the recommended execution order for remaining work, based on the gap between the current implementation and the FSD.
 
 1. **Finalize Submission Locking & Approval Flows (P0 Stabilization)**
-   - Complete remaining items under `LS-LOCK / WR-APP` in section 3.1 (e.g., explicit `locked` semantics and Admin-only unlock), and extend consistent locking rules to Lab Analysis if still required by operations.
+   - Complete remaining items under `LS-LOCK / WR-APP` in section 3.1 (e.g., decide on explicit `locked` semantics/field for LogSheet/LabAnalysis) and extend consistent locking rules to Lab Analysis if still required by operations.
 
 2. **Finish Basic Dashboard and Prepare for FSD Dashboard Features**
    - Close out `DB-01` (recent activity list, real stats) in sections 3.2/3.2.
@@ -468,9 +468,9 @@ This section summarizes the recommended execution order for remaining work, base
    - Map FSD Dashboard metrics (Approach/Ampere for Condenser/Evaporator) to concrete queries.
    - Implement charts and recent-photos gallery using the standard dashboard layout (section 4.4), ensuring no new charting packages are introduced without approval.
 
-7. **Decide on and Implement Remaining Project Fields from FSD (If In Scope)**
-   - For `Tipe Project`, `Jenis Project`, `Pekerjaan`, and `Warranty`, confirm with stakeholders whether these should become mandatory structured fields.
-   - If confirmed, design migrations and UI updates under a dedicated scope ID (e.g., `PRJ-FIELDS-01`) and schedule as a Phase 2 enhancement in line with rescue-mode constraints.
+7. **Refine Project Fields from FSD (If Needed Operationally)**
+   - All four FSD project fields (`Tipe Project`, `Jenis Project`, `Pekerjaan`, and `Warranty`) are now implemented as structured fields (see section “Project Fields in FSD but May Need Review”).
+   - If operations require stricter rules (e.g., making them mandatory or backfilling legacy data), design migrations and UI validation updates under a dedicated scope ID (e.g., `PRJ-FIELDS-02`) and schedule as a Phase 2 enhancement in line with rescue-mode constraints.
 
 ---
 
@@ -497,11 +497,11 @@ This section summarizes the recommended execution order for remaining work, base
 
 ### 6.4 Project Data Completeness (PRJ-FIELDS)
 
-- [ ] Add project type (Utama/Addendum) with continuity rules.
-- [ ] Add project kind (Langsung/Subcon).
-- [ ] Add job type (Operasional/Proyek-Konstruksi/Ad Hoc).
-- [ ] Add warranty duration (months).
-- [ ] Add multi-select jenis pekerjaan.
+- [x] Add project type (Utama/Addendum) with continuity rules (ProjectType + reporting scope).
+- [x] Add project kind (Langsung/Subcon) (ProjectContractType + select di form project).
+- [x] Add job type (Operasional/Proyek-Konstruksi/Ad Hoc) (`workCategory` + select + kolom di tabel).
+- [x] Add warranty duration (months) (`warrantyMonths` di schema + form + kolom list project).
+- [ ] Evaluate and, jika dibutuhkan, implement multi-select jenis pekerjaan (saat ini single-select `workCategory` sudah aktif).
 
 ### 6.5 Client & User Data Completeness (CLIENT/USER-FIELDS)
 
@@ -522,9 +522,9 @@ This section summarizes the recommended execution order for remaining work, base
 
 ### 6.8 Digital Signatures Expansion (DS-EXT, Lowest Priority)
 
-- [ ] Extend digital signatures to Work Reports (technician and approval signatures on print).
+- [x] Extend digital signatures to Work Reports (technician and approval signatures on print).
 - [ ] Extend digital signatures to Summary Reports (sign-off area on print).
-- [ ] Keep this as the lowest-priority item after all other roadmap gaps are closed.
+- Keep this as the lowest-priority item after all other roadmap gaps are closed.
 
 ### 6.9 Client Portal Read-Only UX (CP-01)
 
