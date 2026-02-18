@@ -10,6 +10,7 @@ export function buildProjectFormDefaultValues(
     quoteNumber: project?.quoteNumber || '',
     poNumber: project?.poNumber || '',
     status: project?.status || 'PENDING',
+    contractType: project?.contractType || 'DIRECT',
     startDate: project?.startDate
       ? new Date(project.startDate)
       : new Date(),
@@ -17,4 +18,3 @@ export function buildProjectFormDefaultValues(
     machines: project?.machines || [],
   };
 }
-

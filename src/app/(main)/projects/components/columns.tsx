@@ -1,7 +1,11 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { IProject, TProjectStatus } from '@/features/projects/types';
+import {
+  IProject,
+  TProjectStatus,
+  TProjectContractType,
+} from '@/features/projects/types';
 import { ProjectParameterOverridesDialog } from '@/features/projects/components/project-parameter-overrides-dialog';
 import { ActionCell } from '@/components/action-cell';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +28,24 @@ export const getProjectColumns = ({
     {
       accessorKey: 'client.name',
       header: 'Klien',
+    },
+    {
+      accessorKey: 'contractType',
+      header: 'Jenis',
+      cell: ({ row }) => {
+        const type = row.getValue('contractType') as TProjectContractType;
+
+        const labels: Record<TProjectContractType, string> = {
+          DIRECT: 'Langsung',
+          SUBCONTRACT: 'Subkon',
+        };
+
+        if (!type || !(type in labels)) {
+          return '-';
+        }
+
+        return <Badge variant="outline">{labels[type]}</Badge>;
+      },
     },
     {
       accessorKey: 'startDate',

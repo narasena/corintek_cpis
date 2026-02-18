@@ -17,6 +17,31 @@ import { getAllClientsAction } from '@/features/clients/actions';
 import { IProject } from '@/features/projects/types';
 import { TClientResponse } from '@/@types/client.type';
 
+type TProjectsResult = Awaited<ReturnType<typeof getProjectsAction>>;
+type TClientsResult = Awaited<ReturnType<typeof getAllClientsAction>>;
+
+function applyProjectsResponse(
+  result: TProjectsResult,
+  setProjects: (projects: IProject[]) => void
+) {
+  if (result.success && result.data) {
+    setProjects(result.data as IProject[]);
+  } else {
+    toast.error(result.error || 'Gagal mengambil data proyek');
+  }
+}
+
+function applyClientsResponse(
+  result: TClientsResult,
+  setClients: (clients: TClientResponse[]) => void
+) {
+  if (result.success && result.data) {
+    setClients(result.data as TClientResponse[]);
+  } else {
+    toast.error(result.error || 'Gagal mengambil data klien');
+  }
+}
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<IProject[]>([]);
   const [clients, setClients] = useState<TClientResponse[]>([]);
@@ -34,17 +59,8 @@ export default function ProjectsPage() {
         getAllClientsAction(),
       ]);
 
-      if (projectsRes.success && projectsRes.data) {
-        setProjects(projectsRes.data as IProject[]);
-      } else {
-        toast.error(projectsRes.error || 'Gagal mengambil data proyek');
-      }
-
-      if (clientsRes.success && clientsRes.data) {
-        setClients(clientsRes.data as TClientResponse[]);
-      } else {
-        toast.error(clientsRes.error || 'Gagal mengambil data klien');
-      }
+      applyProjectsResponse(projectsRes, setProjects);
+      applyClientsResponse(clientsRes, setClients);
     } catch {
       toast.error('Terjadi kesalahan saat memuat data');
     } finally {

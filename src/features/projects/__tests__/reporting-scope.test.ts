@@ -21,8 +21,9 @@ describe('getProjectReportingScope', () => {
   });
 
   it('returns null when project does not exist', async () => {
-    (prisma.project.findUnique as unknown as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce(null);
+    (
+      prisma.project.findUnique as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValueOnce(null);
 
     const result = await getProjectReportingScope('missing-id');
 
@@ -30,13 +31,14 @@ describe('getProjectReportingScope', () => {
   });
 
   it('returns null when project is soft-deleted', async () => {
-    (prisma.project.findUnique as unknown as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce({
-        id: 'p1',
-        projectType: 'UTAMA',
-        parentProjId: null,
-        deletedAt: new Date(),
-      });
+    (
+      prisma.project.findUnique as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValueOnce({
+      id: 'p1',
+      projectType: 'UTAMA',
+      parentProjId: null,
+      deletedAt: new Date(),
+    });
 
     const result = await getProjectReportingScope('p1');
 
@@ -44,29 +46,31 @@ describe('getProjectReportingScope', () => {
   });
 
   it('returns utama and its addenda when project is UTAMA', async () => {
-    (prisma.project.findUnique as unknown as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce({
-        id: 'utama-1',
-        projectType: 'UTAMA',
-        parentProjId: null,
-        deletedAt: null,
-      });
+    (
+      prisma.project.findUnique as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValueOnce({
+      id: 'utama-1',
+      projectType: 'UTAMA',
+      parentProjId: null,
+      deletedAt: null,
+    });
 
-    (prisma.project.findMany as unknown as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce([
-        {
-          id: 'add-1',
-          projectType: 'ADDENDUM',
-          parentProjId: 'utama-1',
-          deletedAt: null,
-        },
-        {
-          id: 'add-2',
-          projectType: 'ADDENDUM',
-          parentProjId: 'utama-1',
-          deletedAt: null,
-        },
-      ]);
+    (
+      prisma.project.findMany as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValueOnce([
+      {
+        id: 'add-1',
+        projectType: 'ADDENDUM',
+        parentProjId: 'utama-1',
+        deletedAt: null,
+      },
+      {
+        id: 'add-2',
+        projectType: 'ADDENDUM',
+        parentProjId: 'utama-1',
+        deletedAt: null,
+      },
+    ]);
 
     const result = await getProjectReportingScope('utama-1');
 
@@ -77,13 +81,14 @@ describe('getProjectReportingScope', () => {
   });
 
   it('returns only project when addendum has no parent', async () => {
-    (prisma.project.findUnique as unknown as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce({
-        id: 'add-orphan',
-        projectType: 'ADDENDUM',
-        parentProjId: null,
-        deletedAt: null,
-      });
+    (
+      prisma.project.findUnique as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValueOnce({
+      id: 'add-orphan',
+      projectType: 'ADDENDUM',
+      parentProjId: null,
+      deletedAt: null,
+    });
 
     const result = await getProjectReportingScope('add-orphan');
 
@@ -147,21 +152,22 @@ describe('getProjectReportingScope', () => {
         deletedAt: null,
       });
 
-    (prisma.project.findMany as unknown as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce([
-        {
-          id: 'add-1',
-          projectType: 'ADDENDUM',
-          parentProjId: 'utama-1',
-          deletedAt: null,
-        },
-        {
-          id: 'add-2',
-          projectType: 'ADDENDUM',
-          parentProjId: 'utama-1',
-          deletedAt: null,
-        },
-      ]);
+    (
+      prisma.project.findMany as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValueOnce([
+      {
+        id: 'add-1',
+        projectType: 'ADDENDUM',
+        parentProjId: 'utama-1',
+        deletedAt: null,
+      },
+      {
+        id: 'add-2',
+        projectType: 'ADDENDUM',
+        parentProjId: 'utama-1',
+        deletedAt: null,
+      },
+    ]);
 
     const result = await getProjectReportingScope('add-1');
 
@@ -173,8 +179,9 @@ describe('getProjectReportingScope', () => {
 
   it('logs and rethrows on unexpected error', async () => {
     const error = new Error('Unexpected failure');
-    (prisma.project.findUnique as unknown as ReturnType<typeof vi.fn>)
-      .mockRejectedValueOnce(error);
+    (
+      prisma.project.findUnique as unknown as ReturnType<typeof vi.fn>
+    ).mockRejectedValueOnce(error);
 
     const consoleSpy = vi
       .spyOn(console, 'error')
@@ -189,5 +196,4 @@ describe('getProjectReportingScope', () => {
 
     consoleSpy.mockRestore();
   });
-}
-
+});

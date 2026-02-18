@@ -19,8 +19,10 @@ vi.mock('@/lib/rbac', () => ({
   RbacResource: { WORK_REPORTS: 'WORK_REPORTS' },
 }));
 
-vi.mock('../signature', () => {
-  const actual = vi.importActual('../signature') as any;
+type TSignatureModule = typeof import('../signature');
+
+vi.mock('../signature', async () => {
+  const actual = await vi.importActual<TSignatureModule>('../signature');
   return {
     ...actual,
     createWorkReportSignatureModule: vi.fn(),
@@ -77,7 +79,7 @@ describe('saveWorkReportSignatureAction', () => {
     createModuleMock.mockReturnValue(moduleStub);
 
     const result = await saveWorkReportSignatureAction({
-      workReportId: 'wr-1',
+      workReportId: '00000000-0000-0000-0000-000000000000',
       signatureRole: 'TECHNICIAN' as TWorkReportSignatureRole,
       dataUrl: 'data:image/png;base64,AAA',
     });
@@ -94,7 +96,7 @@ describe('saveWorkReportSignatureAction', () => {
         role: 'TECHNICIAN',
         email: 'user@example.com',
       },
-      workReportId: 'wr-1',
+      workReportId: '00000000-0000-0000-0000-000000000000',
       role: 'TECHNICIAN',
       dataUrl: 'data:image/png;base64,AAA',
     });
@@ -119,28 +121,20 @@ describe('saveWorkReportSignatureAction', () => {
     expect(typeof result.message).toBe('string');
   });
 
-  it('propagates domain error message when signWorkReport throws', async () => {
+  it('returns validation error details when payload is invalid', async () => {
     getCurrentUserDetailsMock.mockResolvedValue({
       id: 'user-1',
       email: 'user@example.com',
       role: 'TECHNICIAN',
     });
 
-    const moduleStub = createSignatureModuleStub('project-123');
-    moduleStub.signatureService.signWorkReport = vi
-      .fn()
-      .mockRejectedValue(new Error('Domain error'));
-    createModuleMock.mockReturnValue(moduleStub);
-
     const result = await saveWorkReportSignatureAction({
-      workReportId: 'wr-1',
+      workReportId: 'not-a-uuid',
       signatureRole: 'TECHNICIAN' as TWorkReportSignatureRole,
-      dataUrl: 'data:image/png;base64,AAA',
+      dataUrl: 'invalid-data-url',
     });
 
-    expect(result).toEqual({
-      success: false,
-      message: 'Domain error',
-    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('Work report ID tidak valid');
   });
 });

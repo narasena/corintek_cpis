@@ -148,6 +148,12 @@ export interface IProjectParentSelectProps {
   disabled?: boolean;
 }
 
+export interface IProjectContractTypeSelectProps {
+  value: TProjectContractType;
+  onChange: (value: TProjectContractType) => void;
+  disabled?: boolean;
+}
+
 export const ProjectParameterOverrideSchema = z.object({
   id: z.string().uuid().optional(),
   projectId: z.string().uuid('Project ID tidak valid'),

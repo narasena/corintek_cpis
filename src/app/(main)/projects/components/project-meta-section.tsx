@@ -20,6 +20,7 @@ import { ProjectStatusEnum } from '@/features/projects/types';
 import type { TClientResponse } from '@/@types/client.type';
 import { ProjectTypeSelect } from './project-type-select';
 import { ProjectParentSelect } from './project-parent-select';
+import { ProjectContractTypeSelect } from './project-contract-type-select';
 
 interface ProjectMetaSectionProps {
   form: UseFormReturn<TCreateProject>;
@@ -190,6 +191,23 @@ export function ProjectMetaSection({ form, clients }: ProjectMetaSectionProps) {
             <FormControl>
               <ProjectTypeSelect
                 value={(field.value as string) || 'UTAMA'}
+                onChange={field.onChange}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="contractType"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Jenis Proyek</FormLabel>
+            <FormControl>
+              <ProjectContractTypeSelect
+                value={(field.value as string) || 'DIRECT'}
                 onChange={field.onChange}
               />
             </FormControl>
