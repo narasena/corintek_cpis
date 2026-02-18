@@ -5,29 +5,22 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { ActionCell } from '@/components/action-cell';
 import type { TLogSheetStatus } from '@/features/log-sheets/types';
+import { formatDate } from '../[logSheetId]/utils';
 
-type TLogSheetRow = {
+export type TLogSheetRow = {
   id: string;
   projectId: string;
   date: Date | string;
   notes: string | null;
   status: TLogSheetStatus;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 };
 
 interface IColumnsProps {
   onOpen: (logSheetId: string) => void;
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>;
 }
-
-const formatDate = (value: Date | string) => {
-  const date = typeof value === 'string' ? new Date(value) : value;
-  return date.toLocaleDateString('id-ID', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
 
 const statusVariant = (status: TLogSheetStatus) => {
   if (status === 'APPROVED') return 'default';

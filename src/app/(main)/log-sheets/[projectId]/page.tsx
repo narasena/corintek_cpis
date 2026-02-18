@@ -14,19 +14,8 @@ import {
   deleteLogSheetAction,
   getLogSheetsByProjectAction,
 } from '@/features/log-sheets/actions';
-import type { TLogSheetStatus } from '@/features/log-sheets/types';
-import { getLogSheetColumns } from './components/columns';
+import { getLogSheetColumns, type TLogSheetRow } from './components/columns';
 import { LogSheetDialog } from './components/log-sheet-dialog';
-
-type TLogSheetRow = {
-  id: string;
-  projectId: string;
-  date: Date | string;
-  notes: string | null;
-  status: TLogSheetStatus;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-};
 
 export default function ProjectLogSheetsPage() {
   const params = useParams<{ projectId: string }>();

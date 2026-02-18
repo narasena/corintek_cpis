@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition, useEffect, useState } from 'react';
+import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -25,8 +25,7 @@ import {
 } from '@/components/ui/form';
 import { CreateLogSheetSchema } from '@/features/log-sheets/types';
 import { createLogSheetAction } from '@/features/log-sheets/actions';
-import { getAllUsersAction } from '@/features/users/actions';
-import type { TUserResponse } from '@/@types/user.type';
+import { useLogSheetTechnicians } from '../[logSheetId]/hooks/use-log-sheet-technicians';
 
 const formatDateForInput = (date?: unknown) => {
   if (!date) return '';
@@ -59,15 +58,7 @@ export function LogSheetForm({
   onCreated,
 }: ILogSheetFormProps) {
   const [isPending, startTransition] = useTransition();
-  const [technicians, setTechnicians] = useState<TUserResponse[]>([]);
-
-  useEffect(() => {
-    getAllUsersAction().then(res => {
-      if (res.success && res.data) {
-        setTechnicians(res.data);
-      }
-    });
-  }, []);
+  const { technicians } = useLogSheetTechnicians();
 
   const form = useForm({
     resolver: zodResolver(CreateLogSheetSchema),
