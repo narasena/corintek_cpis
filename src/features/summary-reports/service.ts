@@ -7,6 +7,7 @@ import type {
 import { ParameterCategory } from '@/generated/prisma/client';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import { applyProjectOverridesToParameters } from '@/features/parameters/limits-utils';
+import { getProjectReportingScope } from '@/features/projects/reporting-scope';
 
 export async function getSummaryReports(projectId: string) {
   return await prisma.summaryReport.findMany({
@@ -101,9 +102,12 @@ function getMonthRange(period: Date) {
 
 export async function getMonthlyLogSheets(projectId: string, period: Date) {
   const { start, end } = getMonthRange(period);
+  const scope = await getProjectReportingScope(projectId);
+  const projectIds = scope?.projectIds ?? [projectId];
   return prisma.logSheet.findMany({
     where: {
-      projectId,
+      projectId:
+        projectIds.length === 1 ? projectIds[0] : { in: projectIds },
       date: { gte: start, lt: end },
       deletedAt: null,
     },
@@ -236,9 +240,12 @@ function groupMachinesByType(
 
 export async function getMonthlyWorkReports(projectId: string, period: Date) {
   const { start, end } = getMonthRange(period);
+  const scope = await getProjectReportingScope(projectId);
+  const projectIds = scope?.projectIds ?? [projectId];
   return prisma.workReport.findMany({
     where: {
-      projectId,
+      projectId:
+        projectIds.length === 1 ? projectIds[0] : { in: projectIds },
       date: { gte: start, lt: end },
       deletedAt: null,
     },
@@ -255,9 +262,12 @@ export async function getMonthlyWorkReports(projectId: string, period: Date) {
 
 export async function getMonthlyLabAnalyses(projectId: string, period: Date) {
   const { start, end } = getMonthRange(period);
+  const scope = await getProjectReportingScope(projectId);
+  const projectIds = scope?.projectIds ?? [projectId];
   return prisma.labAnalysis.findMany({
     where: {
-      projectId,
+      projectId:
+        projectIds.length === 1 ? projectIds[0] : { in: projectIds },
       date: { gte: start, lt: end },
       deletedAt: null,
     },

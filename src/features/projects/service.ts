@@ -216,28 +216,29 @@ async function canActorAccessProject(
 export async function getAccessibleProjectIds(
   actor: IJwtPayload
 ): Promise<string[] | null> {
-  const isScopedRole =
-    actor.role === 'SUPERVISOR' ||
-    actor.role === 'TECHNICIAN' ||
-    actor.role === 'CLIENT_SUPERVISOR' ||
-    actor.role === 'CLIENT_TECHNICIAN';
+  if (!isProjectScopedRole(actor.role)) {
+    return null;
+  }
 
-  if (!isScopedRole) return null;
-
-  const rows = await prisma.projectAssignment.findMany({
-    where: {
-      userId: actor.id,
-      isActive: true,
-      project: {
-        deletedAt: null,
-        status: 'ONGOING',
+  try {
+    const rows = await prisma.projectAssignment.findMany({
+      where: {
+        userId: actor.id,
+        isActive: true,
+        project: {
+          deletedAt: null,
+          status: 'ONGOING',
+        },
       },
-    },
-    select: { projectId: true },
-    distinct: ['projectId'],
-  });
+      select: { projectId: true },
+      distinct: ['projectId'],
+    });
 
-  return rows.map(r => r.projectId);
+    return rows.map(r => r.projectId);
+  } catch (error) {
+    console.error('[CPIS-ERROR] Projects.GetAccessibleProjectIds:', error);
+    throw error;
+  }
 }
 
 export async function getProjectAssignments(
@@ -275,77 +276,90 @@ export async function setProjectAssignments(
 ) {
   ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'update');
 
-  return prisma.$transaction(async tx => {
-    const existing = await tx.projectAssignment.findMany({
+  try {
+    return await prisma.$transaction(tx =>
+      applyProjectAssignmentsTransaction(tx, projectId, assignments)
+    );
+  } catch (error) {
+    console.error('[CPIS-ERROR] Projects.SetProjectAssignments:', error);
+    throw error;
+  }
+}
+
+async function applyProjectAssignmentsTransaction(
+  tx: typeof prisma,
+  projectId: string,
+  assignments: TProjectAssignmentInput[]
+) {
+  const existing = await tx.projectAssignment.findMany({
+    where: {
+      projectId,
+      isActive: true,
+    },
+    select: {
+      id: true,
+      userId: true,
+      role: true,
+    },
+  });
+
+  const incomingKeys = new Set(assignments.map(a => `${a.userId}:${a.role}`));
+
+  for (const assignment of assignments) {
+    await tx.projectAssignment.upsert({
       where: {
-        projectId,
-        isActive: true,
-      },
-      select: {
-        id: true,
-        userId: true,
-        role: true,
-      },
-    });
-
-    const incomingKeys = new Set(assignments.map(a => `${a.userId}:${a.role}`));
-
-    for (const assignment of assignments) {
-      await tx.projectAssignment.upsert({
-        where: {
-          projectId_userId_role: {
-            projectId,
-            userId: assignment.userId,
-            role: assignment.role,
-          },
-        },
-        create: {
+        projectId_userId_role: {
           projectId,
           userId: assignment.userId,
           role: assignment.role,
-          isActive: true,
-          startDate: new Date(),
         },
-        update: {
-          isActive: true,
-          endDate: null,
-        },
-      });
-    }
-
-    const now = new Date();
-    for (const row of existing) {
-      const key = `${row.userId}:${row.role}`;
-      if (incomingKeys.has(key)) continue;
-      await tx.projectAssignment.update({
-        where: { id: row.id },
-        data: {
-          isActive: false,
-          endDate: now,
-        },
-      });
-    }
-
-    return tx.projectAssignment.findMany({
-      where: {
+      },
+      create: {
         projectId,
+        userId: assignment.userId,
+        role: assignment.role,
         isActive: true,
+        startDate: new Date(),
       },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            role: true,
-            isActive: true,
-            isBlocked: true,
-            deletedAt: true,
-          },
+      update: {
+        isActive: true,
+        endDate: null,
+      },
+    });
+  }
+
+  const now = new Date();
+  for (const row of existing) {
+    const key = `${row.userId}:${row.role}`;
+    if (incomingKeys.has(key)) continue;
+    await tx.projectAssignment.update({
+      where: { id: row.id },
+      data: {
+        isActive: false,
+        endDate: now,
+      },
+    });
+  }
+
+  return tx.projectAssignment.findMany({
+    where: {
+      projectId,
+      isActive: true,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          isActive: true,
+          isBlocked: true,
+          deletedAt: true,
         },
       },
-      orderBy: [{ createdAt: 'asc' }],
-    });
+    },
+    orderBy: [{ createdAt: 'asc' }],
   });
 }
 

@@ -61,6 +61,13 @@ export const CreateProjectSchema = z.object({
     .optional(),
 });
 
+export const ProjectTypeMetaSchema = CreateProjectSchema.pick({
+  projectType: true,
+  parentProjId: true,
+});
+
+export type TProjectTypeMeta = z.infer<typeof ProjectTypeMetaSchema>;
+
 export const UpdateProjectSchema = CreateProjectSchema.partial().extend({
   id: z.string().uuid(),
 });
@@ -119,6 +126,20 @@ export interface IProjectDashboardCard {
     logSheetsPendingApproval: number;
     workReportsPendingApproval: number;
   };
+}
+
+export interface IProjectTypeSelectProps {
+  value: TProjectType;
+  onChange: (value: TProjectType) => void;
+  disabled?: boolean;
+}
+
+export interface IProjectParentSelectProps {
+  projectType: TProjectType;
+  clientId: string | null;
+  value: string | null;
+  onChange: (value: string | null) => void;
+  disabled?: boolean;
 }
 
 export const ProjectParameterOverrideSchema = z.object({

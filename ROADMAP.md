@@ -397,7 +397,7 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 
 ### Project Fields in FSD but May Need Review:
 
-- **Tipe Project:** Utama vs Addendum (addendum continues from main project)
+- **Tipe Project:** Utama vs Addendum (addendum continues from main project) — ✅ Implemented (project type + reporting scope logic)
 - **Jenis Project:** Langsung vs Subcon
 - **Pekerjaan:** Operasional, Proyek/Konstruksi, Ad Hoc
 - **Warranty:** X months warranty period
