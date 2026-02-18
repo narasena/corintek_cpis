@@ -28,6 +28,14 @@ export const ProjectContractTypeEnum = z.enum(['DIRECT', 'SUBCONTRACT']);
 
 export type TProjectContractType = z.infer<typeof ProjectContractTypeEnum>;
 
+export const ProjectWorkCategoryEnum = z.enum([
+  'OPERATIONAL',
+  'CONSTRUCTION',
+  'AD_HOC',
+]);
+
+export type TProjectWorkCategory = z.infer<typeof ProjectWorkCategoryEnum>;
+
 export const ProjectAssignmentRoleEnum = z.enum([
   'PROJECT_PIC',
   'TECHNICIAN',
@@ -51,6 +59,7 @@ export const CreateProjectSchema = z.object({
   status: ProjectStatusEnum.default('PENDING'),
   projectType: ProjectTypeEnum.default('UTAMA'),
   contractType: ProjectContractTypeEnum.default('DIRECT'),
+   workCategory: ProjectWorkCategoryEnum.default('OPERATIONAL'),
   parentProjId: z
     .string()
     .uuid('Project utama tidak valid')
@@ -94,6 +103,7 @@ export interface IProject {
   startDate: Date;
   endDate: Date | null;
   status: TProjectStatus;
+  workCategory: TProjectWorkCategory;
   contractType: TProjectContractType;
   createdAt: Date;
   updatedAt: Date;
@@ -151,6 +161,12 @@ export interface IProjectParentSelectProps {
 export interface IProjectContractTypeSelectProps {
   value: TProjectContractType;
   onChange: (value: TProjectContractType) => void;
+  disabled?: boolean;
+}
+
+export interface IProjectWorkCategorySelectProps {
+  value: TProjectWorkCategory;
+  onChange: (value: TProjectWorkCategory) => void;
   disabled?: boolean;
 }
 

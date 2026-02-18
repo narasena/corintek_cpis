@@ -10,6 +10,7 @@ export function buildProjectFormDefaultValues(
     quoteNumber: project?.quoteNumber || '',
     poNumber: project?.poNumber || '',
     status: project?.status || 'PENDING',
+    workCategory: project?.workCategory || 'OPERATIONAL',
     contractType: project?.contractType || 'DIRECT',
     startDate: project?.startDate
       ? new Date(project.startDate)

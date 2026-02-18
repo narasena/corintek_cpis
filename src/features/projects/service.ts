@@ -456,6 +456,7 @@ export async function createProject(
         clientId: projectData.clientId,
         projectType: projectData.projectType,
         contractType: projectData.contractType,
+        workCategory: projectData.workCategory,
         parentProjId: projectData.parentProjId ?? null,
       },
       include: {

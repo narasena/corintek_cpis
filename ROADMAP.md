@@ -399,10 +399,10 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 
 - **Tipe Project:** Utama vs Addendum (addendum continues from main project) — ✅ Implemented (project type + reporting scope logic)
 - **Jenis Project:** Langsung vs Subcon — ✅ Schema, Server, dan UI (ProjectContractType + Jenis Project select)
-- **Pekerjaan:** Operasional, Proyek/Konstruksi, Ad Hoc
+- **Pekerjaan:** Operasional, Proyek/Konstruksi, Ad Hoc — ✅ Schema, Server, dan UI (ProjectWorkCategory + Pekerjaan select)
 - **Warranty:** X months warranty period
 
-These fields are documented in the FSD but are not yet first-class entities in the current schema/UI. Any change here will require careful migration planning and confirmation with stakeholders that they are still in scope for Phase 2.
+These fields are documented in the FSD. Tipe Project, Jenis Project, and Pekerjaan are now first-class fields in the current schema/UI. Warranty may still require careful migration planning and confirmation with stakeholders that it is in scope for Phase 2.
 
 ---
 

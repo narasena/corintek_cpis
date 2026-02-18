@@ -15,12 +15,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { UseFormReturn } from 'react-hook-form';
-import type { TCreateProject, TProjectType } from '@/features/projects/types';
+import type {
+  TCreateProject,
+  TProjectType,
+} from '@/features/projects/types';
 import { ProjectStatusEnum } from '@/features/projects/types';
 import type { TClientResponse } from '@/@types/client.type';
 import { ProjectTypeSelect } from './project-type-select';
 import { ProjectParentSelect } from './project-parent-select';
 import { ProjectContractTypeSelect } from './project-contract-type-select';
+import { ProjectWorkCategorySelect } from './project-work-category-select';
 
 interface ProjectMetaSectionProps {
   form: UseFormReturn<TCreateProject>;
@@ -208,6 +212,23 @@ export function ProjectMetaSection({ form, clients }: ProjectMetaSectionProps) {
             <FormControl>
               <ProjectContractTypeSelect
                 value={(field.value as string) || 'DIRECT'}
+                onChange={field.onChange}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="workCategory"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Pekerjaan</FormLabel>
+            <FormControl>
+              <ProjectWorkCategorySelect
+                value={(field.value as string) || 'OPERATIONAL'}
                 onChange={field.onChange}
               />
             </FormControl>

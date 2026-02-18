@@ -5,6 +5,7 @@ import {
   IProject,
   TProjectStatus,
   TProjectContractType,
+  TProjectWorkCategory,
 } from '@/features/projects/types';
 import { ProjectParameterOverridesDialog } from '@/features/projects/components/project-parameter-overrides-dialog';
 import { ActionCell } from '@/components/action-cell';
@@ -45,6 +46,25 @@ export const getProjectColumns = ({
         }
 
         return <Badge variant="outline">{labels[type]}</Badge>;
+      },
+    },
+    {
+      accessorKey: 'workCategory',
+      header: 'Pekerjaan',
+      cell: ({ row }) => {
+        const category = row.getValue('workCategory') as TProjectWorkCategory;
+
+        const labels: Record<TProjectWorkCategory, string> = {
+          OPERATIONAL: 'Operasional',
+          CONSTRUCTION: 'Proyek/Konstruksi',
+          AD_HOC: 'Ad Hoc',
+        };
+
+        if (!category || !(category in labels)) {
+          return '-';
+        }
+
+        return <Badge variant="outline">{labels[category]}</Badge>;
       },
     },
     {

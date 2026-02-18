@@ -18,6 +18,7 @@ model Project {
   status       ProjectStatus       @default(PENDING)
   projectType  ProjectType         @default(UTAMA)
   contractType ProjectContractType @default(DIRECT)
+  workCategory ProjectWorkCategory @default(OPERATIONAL)
   parentProjId String?
 
   parentProject Project?  @relation("ProjectAddendumParent", fields: [parentProjId], references: [id])
@@ -55,6 +56,12 @@ enum ProjectType {
 enum ProjectContractType {
   DIRECT
   SUBCONTRACT
+}
+
+enum ProjectWorkCategory {
+  OPERATIONAL
+  CONSTRUCTION
+  AD_HOC
 }
 
 model ProjectAssignment {
