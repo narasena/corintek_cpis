@@ -126,8 +126,37 @@ export function createPrismaWorkReportSignatureRepository(): IWorkReportReposito
       });
     },
 
-    async updateStatus(): Promise<IWorkReportSnapshot> {
-      throw new Error('Work report status update not implemented yet');
+    async updateStatus(
+      id,
+      status,
+      _submittedByUserId,
+      approvedByUserId
+    ): Promise<IWorkReportSnapshot> {
+      const existing = await prisma.workReport.findFirst({
+        where: { id, deletedAt: null },
+        select: { id: true },
+      });
+
+      if (!existing) {
+        throw new Error('Work report tidak ditemukan');
+      }
+
+      const data: Record<string, unknown> = { status };
+      if (status === 'APPROVED' && approvedByUserId) {
+        data.approvedAt = new Date();
+        data.approvedByUserId = approvedByUserId;
+      }
+
+      const updated = await prisma.workReport.update({
+        where: { id },
+        data,
+        select: workReportSignatureSelect,
+      });
+
+      return mapRowToSnapshot({
+        ...(updated as WorkReportSignatureRow),
+        status: updated.status as TWorkReportStatus,
+      });
     },
   };
 }
