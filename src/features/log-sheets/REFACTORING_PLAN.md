@@ -4,6 +4,27 @@ Stabilize and de-risk the log-sheet codebase (~5,499 LOC, 24 files) without brea
 
 ---
 
+## Refactoring Priority Matrix
+
+Priority = f(Pain, Risk, Value)
+
+- **P1:** High pain + Medium risk + Critical value → Fix ASAP
+- **P2:** High pain + High risk + Critical value → Fix carefully
+- **P3:** Medium across the board → Fix when time permits
+- **P4:** Low impact → Don’t touch unless needed
+
+| Area | Pain Level | Risk Level | Business Value | Priority | Evidence |
+| ---- | ---------- | ---------- | -------------- | :------: | -------- |
+| Core Service (`features/log-sheets/service.ts`) | High | High | Critical | P2 | God module (1,008 LOC), central CRUD/status/locking/signatures, highest coupling/fan-out |
+| Actions Hub (`features/log-sheets/actions.ts`) | High | High | Critical | P2 | 590 LOC, 16+ actions, all app writes flow through here, auth/Zod/R2 upload |
+| Detail Page (`[logSheetId]/page.tsx`) | High | Medium | Critical | P1 | 1,245 LOC god component, controls all UX flows, many dependencies |
+| Shared Validation (`validation.ts`, `approval-validation.ts`, `log-sheet-status.ts`, `log-sheet-locking.ts`) | Medium | Medium | High | P3 | Central rules for submission/approval/editability; overlaps with service validation |
+| Preview + Derived Data (`log-sheet-preview.tsx`, `use-log-sheet-derived.ts`) | Medium | Medium | High | P3 | 734 LOC preview, cross-layer coupling via CATEGORY_ORDER, duplicated logic |
+| Draft Save Orchestration (`use-log-sheet-draft-saver.ts`) | Medium | Medium | High | P3 | Coordinates multi-action saves; partial save risk |
+| Shared Utilities (`features/log-sheets/utils.ts`, `[logSheetId]/utils.ts`) | Medium | Low | Medium | P3 | Small but high fan-out; formatters duplicated across files |
+| Signatures UI (`signature-section.tsx`, `signature-pad.tsx`) | Low | Low | Medium | P4 | Leaf UI modules; localized impact if changed |
+| List Pages + Columns (`/log-sheets` + `/[projectId]` list files) | Low | Low | Medium | P4 | CRUD tables and dialogs; low coupling, stable |
+
 ## Refactoring Order Rationale
 
 > **LOW risk → MEDIUM risk → HIGH risk**
