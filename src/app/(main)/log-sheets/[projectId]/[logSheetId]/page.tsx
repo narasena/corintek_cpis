@@ -1,6 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import {
+  useState,
+  useTransition,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -43,8 +48,7 @@ import { ChemicalUsageSection } from './components/chemical-usage-section';
 import { submitLogSheetAction } from '@/features/log-sheets/actions';
 import { makeEntryKey } from '@/features/log-sheets/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-import type { TMachine, TParameter } from './types';
+import type { TMachine, TParameter, TEntryState } from './types';
 import { useLogSheetDetailData } from './hooks/use-log-sheet-detail-data';
 import { useLogSheetDerived } from './hooks/use-log-sheet-derived';
 import { useLogSheetDraftState } from './hooks/use-log-sheet-draft-state';
@@ -522,7 +526,6 @@ export default function LogSheetDetailPage() {
             const { machines, label } = machinesForCategory(cat);
             if (params.length === 0) return null;
 
-            // Jika kategori ini butuh mesin tapi tidak ada mesin aktif, tampilkan pesan
             const isUnitCategory = [
               'UNIT_CONDENSOR',
               'UNIT_EVAPORATOR',
@@ -572,7 +575,6 @@ export default function LogSheetDetailPage() {
                           </div>
 
                           <div className="space-y-4">
-                            {/* CT Active Entries */}
                             {activeCTs.map(m => {
                               const key = makeEntryKey(param.id, m.id, 'VALUE');
                               const state = entryState[key];
@@ -607,7 +609,6 @@ export default function LogSheetDetailPage() {
                               );
                             })}
 
-                            {/* Raw Water Entry */}
                             {(() => {
                               const rawKey = makeEntryKey(
                                 param.id,
