@@ -4,6 +4,8 @@ import path from 'path';
 export default defineConfig({
   test: {
     globals: true,
+    // Default to node for fast unit tests. UI tests can opt into jsdom via:
+    //   /** @vitest-environment jsdom */
     environment: 'node',
     setupFiles: ['./src/__tests__/setup.ts'],
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
