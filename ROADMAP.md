@@ -311,15 +311,15 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 **Scope ID:** `DB-02` (Historical Charts)
 **Tasks:**
 
-- [ ] Install charting library
-- [ ] Query historical log sheet entries
-- [ ] Charts: Approach data (Condenser/Evaporator)
+- [x] Install charting library
+- [x] Query historical log sheet entries
+- [x] Charts: Approach data (Condenser/Evaporator)
 
 **Scope ID:** `DB-03` (Photo Gallery)
 **Tasks:**
 
-- [ ] Recent photos carousel
-- [ ] Sorted by date
+- [x] Recent photos carousel
+- [x] Sorted by date
 
 #### 4.5 Advanced Summary Reports
 
@@ -478,8 +478,8 @@ This section summarizes the recommended execution order for remaining work, base
 
 ### 6.1 Dashboard (DB-02/DB-03)
 
-- [ ] Historical charts for Approach/Ampere (Condenser & Evaporator).
-- [ ] Photo gallery of log sheet images sorted by latest.
+- [x] Historical charts for Approach/Ampere (Condenser & Evaporator).
+- [x] Photo gallery of log sheet images sorted by latest.
 - [ ] Parameter snapshot panel for active project.
 - [ ] Recent activity list (log sheet + work report + approvals).
 
