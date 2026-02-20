@@ -30,7 +30,11 @@ import {
   setProjectAssignmentsAction,
   updateProjectAction,
 } from '@/features/projects/actions';
-import { CreateProjectSchema, TCreateProject, IProject } from '@/features/projects/types';
+import {
+  CreateProjectSchema,
+  TCreateProject,
+  IProject,
+} from '@/features/projects/types';
 import { TClientResponse } from '@/@types/client.type';
 import { MachineFormSection } from '@/components/machine-form-section';
 import { ProjectMetaSection } from './project-meta-section';
@@ -54,7 +58,8 @@ export function ProjectForm({
 }: ProjectFormProps) {
   const [isProjectPending, startProjectTransition] = useTransition();
   const form = useForm<TCreateProject>({
-    resolver: zodResolver(CreateProjectSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(CreateProjectSchema) as any,
     defaultValues: buildProjectFormDefaultValues(defaultValues),
   });
 
