@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { getDashboardProjects } from '@/features/projects/service';
 import { DashboardScoped } from './components/dashboard-scoped';
+import { AnalyticsDashboard } from './_components/analytics-dashboard';
 
 export default async function Page() {
   const user = await getCurrentUserDetails();
@@ -24,7 +25,11 @@ export default async function Page() {
       role: user.role,
     });
 
-    return <DashboardScoped user={user} projects={projects} />;
+    return (
+      <DashboardScoped user={user} projects={projects}>
+        <AnalyticsDashboard />
+      </DashboardScoped>
+    );
   }
 
   // Default Dashboard for ADMIN, DIRECTOR, REPORTING
@@ -74,6 +79,9 @@ export default async function Page() {
           </div>
         </div>
       </div>
+
+      {/* Admin/Director global analytics view */}
+      <AnalyticsDashboard />
     </div>
   );
 }

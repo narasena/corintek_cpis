@@ -29,6 +29,7 @@ import { createLogSheetAction } from '@/features/log-sheets/actions';
 interface DashboardScopedProps {
   user: ICurrentUserDetails;
   projects: IProjectDashboardCard[];
+  children?: React.ReactNode;
 }
 
 function scopeLabel(role: string) {
@@ -49,6 +50,7 @@ function statusBadgeClass(status: string) {
 export function DashboardScoped({
   user,
   projects: initialProjects,
+  children,
 }: DashboardScopedProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -117,7 +119,9 @@ export function DashboardScoped({
               <ClipboardList className="h-6 w-6 text-muted-foreground/60" />
             </div>
             <div className="space-y-1">
-              <CardTitle className="text-base">Tidak ada proyek aktif</CardTitle>
+              <CardTitle className="text-base">
+                Tidak ada proyek aktif
+              </CardTitle>
               <CardDescription className="text-xs">
                 Anda saat ini tidak ditugaskan ke proyek aktif mana pun.
               </CardDescription>
@@ -267,6 +271,8 @@ export function DashboardScoped({
           })
         )}
       </div>
+
+      {children}
     </div>
   );
 }
