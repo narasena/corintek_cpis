@@ -37,8 +37,24 @@ export default defineConfig({
       },
     },
     {
+      name: 'log-sheet:full-workflow',
+      testMatch: /full-workflow\.spec\.ts/,
+      dependencies: ['setup:technician'],
+      use: {
+        storageState: '.auth/technician.json',
+      },
+    },
+    {
       name: 'log-sheet:draft-flow',
       testMatch: /draft-flow\.spec\.ts/,
+      dependencies: ['setup:technician'],
+      use: {
+        storageState: '.auth/technician.json',
+      },
+    },
+    {
+      name: 'log-sheet:user-flows',
+      testMatch: /user-flows\.spec\.ts/,
       dependencies: ['setup:technician'],
       use: {
         storageState: '.auth/technician.json',
@@ -55,6 +71,14 @@ export default defineConfig({
     {
       name: 'log-sheet:admin',
       testMatch: /admin-override\.spec\.ts/,
+      dependencies: ['setup:admin'],
+      use: {
+        storageState: '.auth/admin.json',
+      },
+    },
+    {
+      name: 'log-sheet:approval',
+      testMatch: /approval\.spec\.ts/,
       dependencies: ['setup:admin'],
       use: {
         storageState: '.auth/admin.json',
