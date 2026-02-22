@@ -13,17 +13,17 @@ Priority = f(Pain, Risk, Value)
 - **P3:** Medium across the board → Fix when time permits
 - **P4:** Low impact → Don’t touch unless needed
 
-| Area | Pain Level | Risk Level | Business Value | Priority | Evidence |
-| ---- | ---------- | ---------- | -------------- | :------: | -------- |
-| Core Service (`features/log-sheets/service.ts`) | High | High | Critical | P2 | God module (1,008 LOC), central CRUD/status/locking/signatures, highest coupling/fan-out |
-| Actions Hub (`features/log-sheets/actions.ts`) | High | High | Critical | P2 | 590 LOC, 16+ actions, all app writes flow through here, auth/Zod/R2 upload |
-| Detail Page (`[logSheetId]/page.tsx`) | High | Medium | Critical | P1 | 1,245 LOC god component, controls all UX flows, many dependencies |
-| Shared Validation (`validation.ts`, `approval-validation.ts`, `log-sheet-status.ts`, `log-sheet-locking.ts`) | Medium | Medium | High | P3 | Central rules for submission/approval/editability; overlaps with service validation |
-| Preview + Derived Data (`log-sheet-preview.tsx`, `use-log-sheet-derived.ts`) | Medium | Medium | High | P3 | 734 LOC preview, cross-layer coupling via CATEGORY_ORDER, duplicated logic |
-| Draft Save Orchestration (`use-log-sheet-draft-saver.ts`) | Medium | Medium | High | P3 | Coordinates multi-action saves; partial save risk |
-| Shared Utilities (`features/log-sheets/utils.ts`, `[logSheetId]/utils.ts`) | Medium | Low | Medium | P3 | Small but high fan-out; formatters duplicated across files |
-| Signatures UI (`signature-section.tsx`, `signature-pad.tsx`) | Low | Low | Medium | P4 | Leaf UI modules; localized impact if changed |
-| List Pages + Columns (`/log-sheets` + `/[projectId]` list files) | Low | Low | Medium | P4 | CRUD tables and dialogs; low coupling, stable |
+| Area                                                                                                         | Pain Level | Risk Level | Business Value | Priority | Evidence                                                                                 |
+| ------------------------------------------------------------------------------------------------------------ | ---------- | ---------- | -------------- | :------: | ---------------------------------------------------------------------------------------- |
+| Core Service (`features/log-sheets/service.ts`)                                                              | High       | High       | Critical       |    P2    | God module (1,008 LOC), central CRUD/status/locking/signatures, highest coupling/fan-out |
+| Actions Hub (`features/log-sheets/actions.ts`)                                                               | High       | High       | Critical       |    P2    | 590 LOC, 16+ actions, all app writes flow through here, auth/Zod/R2 upload               |
+| Detail Page (`[logSheetId]/page.tsx`)                                                                        | High       | Medium     | Critical       |    P1    | 1,245 LOC god component, controls all UX flows, many dependencies                        |
+| Shared Validation (`validation.ts`, `approval-validation.ts`, `log-sheet-status.ts`, `log-sheet-locking.ts`) | Medium     | Medium     | High           |    P3    | Central rules for submission/approval/editability; overlaps with service validation      |
+| Preview + Derived Data (`log-sheet-preview.tsx`, `use-log-sheet-derived.ts`)                                 | Medium     | Medium     | High           |    P3    | 734 LOC preview, cross-layer coupling via CATEGORY_ORDER, duplicated logic               |
+| Draft Save Orchestration (`use-log-sheet-draft-saver.ts`)                                                    | Medium     | Medium     | High           |    P3    | Coordinates multi-action saves; partial save risk                                        |
+| Shared Utilities (`features/log-sheets/utils.ts`, `[logSheetId]/utils.ts`)                                   | Medium     | Low        | Medium         |    P3    | Small but high fan-out; formatters duplicated across files                               |
+| Signatures UI (`signature-section.tsx`, `signature-pad.tsx`)                                                 | Low        | Low        | Medium         |    P4    | Leaf UI modules; localized impact if changed                                             |
+| List Pages + Columns (`/log-sheets` + `/[projectId]` list files)                                             | Low        | Low        | Medium         |    P4    | CRUD tables and dialogs; low coupling, stable                                            |
 
 ## Refactoring Order Rationale
 
@@ -31,10 +31,10 @@ Priority = f(Pain, Risk, Value)
 >
 > Start with leaf modules that have zero or few dependents. Each successful step builds confidence and reduces the surface area before touching god files.
 
-  1. Start with LOW RISK modules (isolated, few dependents)
-  2. Build confidence and learn patterns
-  3. Graduate to MEDIUM RISK modules
-  4. Finally tackle HIGH RISK core logic
+1. Start with LOW RISK modules (isolated, few dependents)
+2. Build confidence and learn patterns
+3. Graduate to MEDIUM RISK modules
+4. Finally tackle HIGH RISK core logic
 
 - Emphasize starting with low-risk, isolated modules to build confidence before tackling high-risk core logic.
 - This mitigates the risk of breaking production during a large refactor.
@@ -200,46 +200,51 @@ The 1,166-line page.tsx. Strategy: **extract sections into child components** wi
 
 ---
 
-## Phase 4: Split `service.ts` God Module (est. ~45 min)
+## Phase 4: Split `service.ts` God Module (est. ~45 min) ✅ COMPLETED 2026-02-22
 
 1,011 lines → split into focused sub-modules. Strategy: **group by domain concern**.
 
-### Step 4.1: Extract `log-sheet-entries.service.ts` (15 min)
+### Step 4.1: Extract `log-sheet-entries.service.ts` ✅ DONE
 
 - Move `upsertLogSheetEntries` (L801–887)
-- **[NEW]** [log-sheet-entries.service.ts](file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis/src/features/log-sheets/log-sheet-entries.service.ts)
-- **[MODIFY]** `service.ts` — remove function, re-export from new file
-- **[MODIFY]** `actions.ts` — if importing directly, update path
+- **[NEW]** [log-sheet-entries.service.ts](file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis/src/features/log-sheets/log-sheet-entries.service.ts) — 157 lines
+- **[MODIFY]** `service.ts` — remove function, re-export from new file (facade pattern)
 
-### Step 4.2: Extract `log-sheet-photos.service.ts` (10 min)
+### Step 4.2: Extract `log-sheet-photos.service.ts` ✅ DONE
 
 - Move `upsertLogSheetPhotos` (L889–949)
-- **[NEW]** [log-sheet-photos.service.ts](file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis/src/features/log-sheets/log-sheet-photos.service.ts)
+- **[NEW]** [log-sheet-photos.service.ts](file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis/src/features/log-sheets/log-sheet-photos.service.ts) — 110 lines
 
-### Step 4.3: Extract `log-sheet-chemicals.service.ts` (10 min)
+### Step 4.3: Extract `log-sheet-chemicals.service.ts` ✅ DONE
 
 - Move `upsertLogSheetChemicalUsages` (L951–1010)
-- **[NEW]** [log-sheet-chemicals.service.ts](file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis/src/features/log-sheets/log-sheet-chemicals.service.ts)
+- **[NEW]** [log-sheet-chemicals.service.ts](file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis/src/features/log-sheets/log-sheet-chemicals.service.ts) — 108 lines
 
-### Step 4.4: Extract `log-sheet-validation.service.ts` (10 min)
+### Step 4.4: Extract `log-sheet-validation.service.ts` ⏸️ DEFERRED
 
-- Move `validateLogSheetForSubmission` (L640–673) and `validateLogSheetForApproval` (L675–799)
-- **[NEW]** [log-sheet-validation.service.ts](file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis/src/features/log-sheets/log-sheet-validation.service.ts)
-- Move shared helpers: `isEntryComplete` (L19–44)
+- ~~Move `validateLogSheetForSubmission` (L640–673) and `validateLogSheetForApproval` (L675–799)~~
+- **DECISION:** Deferred to avoid circular dependency with `getLogSheetDetail`. Validation functions remain in `service.ts`.
+- Move shared helpers: `isEntryComplete` (L19–44) — exists in both `service.ts` and `approval-validation.ts` (DUP-11)
 
-### Expected result after Phase 4
+### Result after Phase 4
 
-`service.ts` shrinks from **1,011** to **~450 lines** — CRUD + detail fetching only.
+`service.ts` shrinks from **1,011** to **753 lines** — **-25%** (CRUD + detail fetching + validation).
 
-### Facade pattern (preserve imports)
+### Facade pattern (preserve imports) ✅ IMPLEMENTED
 
-In `service.ts`, add re-exports so existing imports don't break:
+In `service.ts`, re-exports added so existing imports don't break:
 
 ```ts
 export { upsertLogSheetEntries } from './log-sheet-entries.service';
 export { upsertLogSheetPhotos } from './log-sheet-photos.service';
-// ...
+export { upsertLogSheetChemicalUsages } from './log-sheet-chemicals.service';
 ```
+
+### Tests
+
+- **371 tests pass** (14 test files)
+- Zero behavioral regressions
+- Zero import breakage
 
 ---
 
