@@ -31,6 +31,16 @@ Priority = f(Pain, Risk, Value)
 >
 > Start with leaf modules that have zero or few dependents. Each successful step builds confidence and reduces the surface area before touching god files.
 
+  1. Start with LOW RISK modules (isolated, few dependents)
+  2. Build confidence and learn patterns
+  3. Graduate to MEDIUM RISK modules
+  4. Finally tackle HIGH RISK core logic
+
+- Emphasize starting with low-risk, isolated modules to build confidence before tackling high-risk core logic.
+- This mitigates the risk of breaking production during a large refactor.
+
+**Never refactor high-risk code first. That's how you break production.**
+
 ---
 
 ## Testing Strategy
