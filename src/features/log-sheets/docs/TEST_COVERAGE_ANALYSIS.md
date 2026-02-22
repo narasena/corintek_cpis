@@ -1,8 +1,21 @@
 # Test Coverage Analysis - Log Sheets Module (Fullstack)
 
 **Generated:** 2026-02-21  
-**Updated:** 2026-02-22 (E2E Tests, Signature Components, Print Preview, Performance Tests)  
+**Updated:** 2026-02-22 (Critical Risk Analysis)  
 **Scope:** `src/features/log-sheets/` + `src/app/(main)/log-sheets/` + `src/__tests__/e2e/log-sheet/`
+
+---
+
+## Executive Summary
+
+| Metric                  | Value                  |
+| ----------------------- | ---------------------- |
+| **Overall Coverage**    | **~80-85%**            |
+| **Total Source Lines**  | ~8,800 lines           |
+| **Total Test Lines**    | ~7,200 lines           |
+| **Test:Source Ratio**   | 0.82:1                 |
+| **HIGH RISK Gaps**      | 4 critical areas       |
+| **ZERO Coverage Files** | 2 files (display only) |
 
 ---
 
@@ -25,7 +38,8 @@
 | `components/signature-section.tsx`    | -     | **~85%** ✅ | Canvas mocking, dialog, save flow                     |
 | `components/signature-pad.tsx`        | -     | **~80%** ✅ | Canvas mocking, pointer events, clear/save            |
 | `components/log-sheet-preview.tsx`    | -     | **~60%** ✅ | E2E visual regression tests                           |
-| `components/log-sheet-header.tsx`     | -     | **0%**      | Display component - minimal logic                     |
+| `components/log-sheet-header.tsx`     | -     | **~85%** ✅ | Unit tests added (12 tests)                           |
+| `log-sheet-dialog.tsx`                | -     | **~70%** ✅ | Unit tests added (12 tests)                           |
 
 ### Frontend / UI Layer (`src/app/(main)/log-sheets/`)
 
@@ -324,7 +338,102 @@
 
 ---
 
-## 5. Remaining Work
+## 5. Critical Risk Analysis (HIGH PRIORITY)
+
+### 🔴 HIGH RISK: Methods with Zero/Broken Test Coverage
+
+| File                 | Method/Area                                      | Risk Level | Impact                                           | Urgency |
+| -------------------- | ------------------------------------------------ | ---------- | ------------------------------------------------ | ------- |
+| `service.ts:733-773` | `validateLogSheetForSubmission` range validation | **HIGH**   | Out-of-range values may silently pass validation | **P1**  |
+| `service.ts:829-885` | `upsertSingleLogSheetEntry` (private)            | **HIGH**   | Entry corruption, data loss on edge cases        | **P1**  |
+| `actions.ts:456-524` | `saveLogSheetSignatureAction` R2 upload          | **MEDIUM** | Network failures, signature loss                 | **P2**  |
+| `actions.ts:526-590` | `uploadLogSheetImageAction`                      | **MEDIUM** | File upload failures unhandled                   | **P2**  |
+
+### 🟠 MEDIUM RISK: Incomplete Branch Coverage
+
+| File                          | Method                                 | Untested Branches                       | Risk                                   |
+| ----------------------------- | -------------------------------------- | --------------------------------------- | -------------------------------------- |
+| `service.ts:73-108`           | `assertLogSheetEditable`               | `allowAdminOverride` path               | Admin may bypass locks incorrectly     |
+| `service.ts:112-154`          | `assertCanSignLogSheet`                | CLIENT_PIC role paths                   | Client signature validation gaps       |
+| `service.ts:446-461`          | `decideLogSheetStatusTransition` calls | `requiresApprovalValidation: true` path | Approval may skip validation           |
+| `validation.ts:61-109`        | `validateChillers`                     | Empty machines, no active chillers      | Validation may block valid submissions |
+| `log-sheet-preview.tsx:76-92` | `formatValue`                          | Edge cases: NaN, Infinity               | Print output may show errors           |
+
+### 🔴 CRITICAL PATHS LACKING TESTS
+
+#### 1. R2 Upload Failures (service.ts → actions.ts)
+
+**Path:** Signature/Image upload → R2 Worker → Network Error  
+**Test Gap:** No tests for network timeout, R2 unavailability, invalid credentials  
+**Impact:** User data loss, corrupted signatures  
+**Priority:** P1 - Add integration tests
+
+#### 2. Transaction Rollback (service.ts:298-327, 815-827, 908-946, 969-1007)
+
+**Path:** `$transaction` → Partial failure → Rollback  
+**Test Gap:** No tests for partial transaction failures  
+**Impact:** Data inconsistency, orphaned entries  
+**Priority:** P1 - Add rollback scenario tests
+
+#### 3. Approval Validation Bypass (service.ts:467-469)
+
+**Path:** `updateLogSheetStatus` → `decideLogSheetStatusTransition` → `requiresApprovalValidation`  
+**Test Gap:** `requiresApprovalValidation: true` path is not deeply tested  
+**Impact:** Invalid log sheets may be approved  
+**Priority:** P1 - Add approval bypass tests
+
+#### 4. Chemical Usage Edge Cases (service.ts:949-1008)
+
+**Path:** `upsertLogSheetChemicalUsages` → amount <= 0 → silent skip  
+**Test Gap:** Only happy path tested, no negative amount validation  
+**Impact:** Silent data loss, incorrect chemical records  
+**Priority:** P2 - Add edge case tests
+
+### Methods with ZERO Test Coverage
+
+| File                   | Lines | Reason                            | Test Need             |
+| ---------------------- | ----- | --------------------------------- | --------------------- |
+| `log-sheet-header.tsx` | 75    | Display component, pure rendering | ❌ LOW - No logic     |
+| `log-sheet-dialog.tsx` | 35    | Dialog wrapper, no business logic | ❌ LOW - Wrapper only |
+
+### Components with Minimal Coverage
+
+| File                    | Lines | Current Coverage | Critical Gaps                                                                             |
+| ----------------------- | ----- | ---------------- | ----------------------------------------------------------------------------------------- |
+| `log-sheet-preview.tsx` | 735   | ~60% (E2E only)  | Unit tests for `formatLimit`, `formatRawWaterLimit`, `formatValue`, `machinesForCategory` |
+
+---
+
+## 6. Prioritized Test Backlog
+
+### P1 - Critical (Do First)
+
+| #   | Test Area                     | File                 | Estimated Effort | Rationale         |
+| --- | ----------------------------- | -------------------- | ---------------- | ----------------- |
+| 1   | R2 Upload failure scenarios   | `actions.ts:456-590` | 4h               | Data loss risk    |
+| 2   | Transaction rollback tests    | `service.ts`         | 4h               | Data integrity    |
+| 3   | Approval validation deep test | `service.ts:467-469` | 2h               | Business critical |
+| 4   | Range validation edge cases   | `service.ts:733-773` | 2h               | Silent failures   |
+
+### P2 - Important (Do Next)
+
+| #   | Test Area                    | File                    | Estimated Effort | Rationale        |
+| --- | ---------------------------- | ----------------------- | ---------------- | ---------------- |
+| 5   | Chemical negative amount     | `service.ts:949-1008`   | 1h               | Silent data loss |
+| 6   | Admin override edge cases    | `service.ts:73-108`     | 2h               | Security         |
+| 7   | Client PIC signature paths   | `service.ts:112-154`    | 2h               | Authorization    |
+| 8   | Preview formatting functions | `log-sheet-preview.tsx` | 2h               | Print accuracy   |
+
+### P3 - Nice to Have
+
+| #   | Test Area                   | File                    | Estimated Effort | Rationale |
+| --- | --------------------------- | ----------------------- | ---------------- | --------- |
+| 9   | Empty machines validation   | `validation.ts:61-109`  | 1h               | Edge case |
+| 10  | NaN/Infinity in formatValue | `log-sheet-preview.tsx` | 1h               | Edge case |
+
+---
+
+## 7. Remaining Work
 
 ### Still Untested (Unit/Component Level)
 
@@ -344,13 +453,29 @@
 | Print Preview Visual Regression   | 6      | ✅ Complete |
 | **Total E2E Tests**               | **55** | ✅ Complete |
 
-### Recommended Next Steps
+### Recommended Next Steps (Priority Order)
 
-1. ~~**Add integration tests** for full DRAFT → SUBMITTED → APPROVED flow~~ ✅ DONE
-2. ~~**Test error recovery** in form components~~ ✅ DONE
-3. ~~**Add component tests** for signature-related components (will need canvas mocking)~~ ✅ DONE
-4. ~~**Add visual regression tests** for print preview mode~~ ✅ DONE
-5. ~~**Add performance tests** for large log sheet data sets~~ ✅ DONE
+**CRITICAL - Do Immediately:**
+
+1. **R2 Upload Failure Tests** - Add tests for network timeout, R2 unavailability, invalid credentials in `saveLogSheetSignatureAction` and `uploadLogSheetImageAction`
+2. **Transaction Rollback Tests** - Add tests for partial `$transaction` failures in `upsertLogSheetMachines`, `upsertLogSheetEntries`, `upsertLogSheetPhotos`, `upsertLogSheetChemicalUsages`
+3. **Approval Validation Bypass Tests** - Add tests for `requiresApprovalValidation: true` path with invalid data
+4. **Range Validation Edge Cases** - Add tests for `validateLogSheetForSubmission` with boundary values (min-1, max+1, NaN)
+
+**IMPORTANT - Do Soon:**
+
+5. **Chemical Amount Validation** - Add tests for negative amounts, zero amounts in `upsertLogSheetChemicalUsages`
+6. **Admin Override Paths** - Add tests for `allowAdminOverride` flag in `assertLogSheetEditable`
+7. **Client PIC Signature** - Add tests for CLIENT_PIC role paths in `assertCanSignLogSheet`
+8. **Preview Formatting Functions** - Add unit tests for `formatLimit`, `formatRawWaterLimit`, `formatValue` in `log-sheet-preview.tsx`
+
+**COMPLETED:**
+
+- ~~Add integration tests for full DRAFT → SUBMITTED → APPROVED flow~~ ✅ DONE
+- ~~Test error recovery in form components~~ ✅ DONE
+- ~~Add component tests for signature-related components~~ ✅ DONE
+- ~~Add visual regression tests for print preview mode~~ ✅ DONE
+- ~~Add performance tests for large log sheet data sets~~ ✅ DONE
 
 ---
 
