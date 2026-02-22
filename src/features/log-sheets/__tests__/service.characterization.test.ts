@@ -116,10 +116,7 @@ import {
 } from '@/features/log-sheets/service';
 
 import { ensureAccess } from '@/lib/rbac';
-import {
-  assertCanAccessProject,
-  getAccessibleProjectIds,
-} from '@/features/projects/service';
+import { assertCanAccessProject } from '@/features/projects/service';
 import { getLogSheetEditState } from '@/features/log-sheets/log-sheet-locking';
 import { decideLogSheetStatusTransition } from '@/features/log-sheets/log-sheet-status';
 import { validateLogSheetApprovalDetail } from '@/features/log-sheets/approval-validation';
@@ -560,7 +557,7 @@ describe('updateLogSheetStatus (characterization)', () => {
     mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
     vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
 
-    const result = await updateLogSheetStatus(actor, validUUID, 'DRAFT');
+    await updateLogSheetStatus(actor, validUUID, 'DRAFT');
 
     expect(decideLogSheetStatusTransition).not.toHaveBeenCalled();
     expect(mockPrisma.logSheet.update).not.toHaveBeenCalled();
@@ -1706,7 +1703,7 @@ describe('validateLogSheetForApproval (characterization)', () => {
 
     try {
       await validateLogSheetForApproval(validUUID);
-    } catch (e) {
+    } catch {
       // Expected to fail validation, but we're testing the call flow
     }
 
@@ -2045,6 +2042,487 @@ describe('Transaction Rollback (P1 Critical)', () => {
           { chemicalId: validUUID, amount: 10 },
         ])
       ).rejects.toThrow('Cannot remove old usage');
+    });
+  });
+});
+
+describe('P2 - Important Tests', () => {
+  describe('upsertLogSheetChemicalUsages - chemical amount validation (P2-5)', () => {
+    it('filters out negative amounts silently (no error thrown)', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.chemicalUsage.findMany.mockResolvedValue([]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      const txMock = {
+        chemicalUsage: {
+          update: vi.fn().mockResolvedValue({}),
+          create: vi.fn().mockResolvedValue({ id: 'new-usage' }),
+        },
+      };
+      mockPrisma.$transaction.mockImplementation(async fn => fn(txMock));
+
+      await upsertLogSheetChemicalUsages(actor, validUUID, [
+        { chemicalId: validUUID, amount: -10 },
+      ]);
+
+      expect(txMock.chemicalUsage.create).not.toHaveBeenCalled();
+    });
+
+    it('filters out zero amounts silently (no error thrown)', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.chemicalUsage.findMany.mockResolvedValue([]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      const txMock = {
+        chemicalUsage: {
+          update: vi.fn().mockResolvedValue({}),
+          create: vi.fn().mockResolvedValue({ id: 'new-usage' }),
+        },
+      };
+      mockPrisma.$transaction.mockImplementation(async fn => fn(txMock));
+
+      await upsertLogSheetChemicalUsages(actor, validUUID, [
+        { chemicalId: validUUID, amount: 0 },
+      ]);
+
+      expect(txMock.chemicalUsage.create).not.toHaveBeenCalled();
+    });
+
+    it('processes positive amounts correctly', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.chemicalUsage.findMany.mockResolvedValue([]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      const txMock = {
+        chemicalUsage: {
+          update: vi.fn().mockResolvedValue({}),
+          create: vi.fn().mockResolvedValue({ id: 'new-usage' }),
+        },
+      };
+      mockPrisma.$transaction.mockImplementation(async fn => fn(txMock));
+
+      await upsertLogSheetChemicalUsages(actor, validUUID, [
+        { chemicalId: validUUID, amount: 10 },
+      ]);
+
+      expect(txMock.chemicalUsage.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ amount: 10 }),
+        })
+      );
+    });
+
+    it('processes mixed inputs (filters negatives and zero, keeps positives)', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.chemicalUsage.findMany.mockResolvedValue([]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      const txMock = {
+        chemicalUsage: {
+          update: vi.fn().mockResolvedValue({}),
+          create: vi.fn().mockResolvedValue({ id: 'new-usage' }),
+        },
+      };
+      mockPrisma.$transaction.mockImplementation(async fn => fn(txMock));
+
+      await upsertLogSheetChemicalUsages(actor, validUUID, [
+        { chemicalId: 'chem-1', amount: -5 },
+        { chemicalId: 'chem-2', amount: 0 },
+        { chemicalId: 'chem-3', amount: 10 },
+        { chemicalId: 'chem-4', amount: 20 },
+      ]);
+
+      expect(txMock.chemicalUsage.create).toHaveBeenCalledTimes(2);
+      expect(txMock.chemicalUsage.create).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          data: expect.objectContaining({ chemicalId: 'chem-3', amount: 10 }),
+        })
+      );
+      expect(txMock.chemicalUsage.create).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          data: expect.objectContaining({ chemicalId: 'chem-4', amount: 20 }),
+        })
+      );
+    });
+
+    it('handles very small positive amounts (0.001)', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.chemicalUsage.findMany.mockResolvedValue([]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      const txMock = {
+        chemicalUsage: {
+          update: vi.fn().mockResolvedValue({}),
+          create: vi.fn().mockResolvedValue({ id: 'new-usage' }),
+        },
+      };
+      mockPrisma.$transaction.mockImplementation(async fn => fn(txMock));
+
+      await upsertLogSheetChemicalUsages(actor, validUUID, [
+        { chemicalId: validUUID, amount: 0.001 },
+      ]);
+
+      expect(txMock.chemicalUsage.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ amount: 0.001 }),
+        })
+      );
+    });
+  });
+
+  describe('assertLogSheetEditable - admin override edge cases (P2-6)', () => {
+    it('allows ADMIN with allowAdminOverride on SUBMITTED log sheet', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'SUBMITTED',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      await updateLogSheet(
+        actor,
+        { id: validUUID, notes: 'test' },
+        { allowAdminOverride: true }
+      );
+
+      expect(mockPrisma.logSheet.update).toHaveBeenCalled();
+    });
+
+    it('rejects ADMIN without allowAdminOverride on SUBMITTED log sheet', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'SUBMITTED',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('LOCKED_SUBMITTED');
+
+      await expect(
+        updateLogSheet(
+          actor,
+          { id: validUUID, notes: 'test' },
+          { allowAdminOverride: false }
+        )
+      ).rejects.toThrow('Log sheet sudah dikirim dan tidak bisa diubah');
+    });
+
+    it('rejects TECHNICIAN even with allowAdminOverride on SUBMITTED', async () => {
+      const actor = createMockActor({ role: 'TECHNICIAN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'SUBMITTED',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      mockPrisma.projectAssignment.findFirst.mockResolvedValue({
+        id: validUUID,
+      });
+      vi.mocked(getLogSheetEditState).mockReturnValue('LOCKED_SUBMITTED');
+
+      await expect(
+        updateLogSheet(
+          actor,
+          { id: validUUID, notes: 'test' },
+          { allowAdminOverride: true }
+        )
+      ).rejects.toThrow('Log sheet sudah dikirim dan tidak bisa diubah');
+    });
+
+    it('allows ADMIN with allowAdminOverride on APPROVED log sheet', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'APPROVED',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      await updateLogSheet(
+        actor,
+        { id: validUUID, notes: 'test' },
+        { allowAdminOverride: true }
+      );
+
+      expect(mockPrisma.logSheet.update).toHaveBeenCalled();
+    });
+
+    it('rejects edit on locked log sheet regardless of override', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: true,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('LOCKED_APPROVED');
+
+      await expect(
+        updateLogSheet(
+          actor,
+          { id: validUUID, notes: 'test' },
+          { allowAdminOverride: true }
+        )
+      ).rejects.toThrow('Log sheet sudah disetujui');
+    });
+
+    it('defaults allowAdminOverride to false when not provided', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'SUBMITTED',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('LOCKED_SUBMITTED');
+
+      await expect(
+        updateLogSheet(actor, { id: validUUID, notes: 'test' })
+      ).rejects.toThrow('Log sheet sudah dikirim dan tidak bisa diubah');
+    });
+  });
+
+  describe('assertCanSignLogSheet - CLIENT_PIC paths (P2-7)', () => {
+    it('allows CLIENT_TECHNICIAN with CLIENT_PIC assignment to sign as CLIENT_PIC', async () => {
+      const actor = createMockActor({ role: 'CLIENT_TECHNICIAN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.logSheet.update.mockResolvedValue({});
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      mockPrisma.projectAssignment.findFirst.mockResolvedValue({
+        id: validUUID,
+      });
+
+      await saveLogSheetSignature(
+        actor,
+        validUUID,
+        'CLIENT_PIC',
+        'https://example.com/sig.webp'
+      );
+
+      expect(mockPrisma.logSheet.update).toHaveBeenCalledWith({
+        where: { id: validUUID },
+        data: {
+          clientPicSignatureUrl: 'https://example.com/sig.webp',
+          clientPicSignedAt: expect.any(Date),
+          clientPicSignedByUserId: actor.id,
+        },
+      });
+    });
+
+    it('allows CLIENT_SUPERVISOR with CLIENT_PIC assignment to sign as CLIENT_PIC', async () => {
+      const actor = createMockActor({ role: 'CLIENT_SUPERVISOR' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.logSheet.update.mockResolvedValue({});
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      mockPrisma.projectAssignment.findFirst.mockResolvedValue({
+        id: validUUID,
+      });
+
+      await saveLogSheetSignature(
+        actor,
+        validUUID,
+        'CLIENT_PIC',
+        'https://example.com/sig.webp'
+      );
+
+      expect(mockPrisma.logSheet.update).toHaveBeenCalledWith({
+        where: { id: validUUID },
+        data: {
+          clientPicSignatureUrl: 'https://example.com/sig.webp',
+          clientPicSignedAt: expect.any(Date),
+          clientPicSignedByUserId: actor.id,
+        },
+      });
+    });
+
+    it('rejects CLIENT_TECHNICIAN without CLIENT_PIC assignment', async () => {
+      const actor = createMockActor({ role: 'CLIENT_TECHNICIAN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      mockPrisma.projectAssignment.findFirst.mockResolvedValue(null);
+
+      await expect(
+        saveLogSheetSignature(
+          actor,
+          validUUID,
+          'CLIENT_PIC',
+          'https://example.com/sig.webp'
+        )
+      ).rejects.toThrow('Hanya PIC klien proyek yang dapat menandatangani');
+    });
+
+    it('rejects CLIENT_SUPERVISOR without CLIENT_PIC assignment', async () => {
+      const actor = createMockActor({ role: 'CLIENT_SUPERVISOR' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      mockPrisma.projectAssignment.findFirst.mockResolvedValue(null);
+
+      await expect(
+        saveLogSheetSignature(
+          actor,
+          validUUID,
+          'CLIENT_PIC',
+          'https://example.com/sig.webp'
+        )
+      ).rejects.toThrow('Hanya PIC klien proyek yang dapat menandatangani');
+    });
+
+    it('rejects TECHNICIAN trying to sign as CLIENT_PIC', async () => {
+      const actor = createMockActor({ role: 'TECHNICIAN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+
+      await expect(
+        saveLogSheetSignature(
+          actor,
+          validUUID,
+          'CLIENT_PIC',
+          'https://example.com/sig.webp'
+        )
+      ).rejects.toThrow('Hanya PIC klien proyek yang dapat menandatangani');
+    });
+
+    it('rejects SUPERVISOR trying to sign as CLIENT_PIC', async () => {
+      const actor = createMockActor({ role: 'SUPERVISOR' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+
+      await expect(
+        saveLogSheetSignature(
+          actor,
+          validUUID,
+          'CLIENT_PIC',
+          'https://example.com/sig.webp'
+        )
+      ).rejects.toThrow('Hanya PIC klien proyek yang dapat menandatangani');
+    });
+
+    it('allows ADMIN to sign as CLIENT_PIC without project assignment check', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.logSheet.update.mockResolvedValue({});
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+
+      await expect(
+        saveLogSheetSignature(
+          actor,
+          validUUID,
+          'CLIENT_PIC',
+          'https://example.com/sig.webp'
+        )
+      ).resolves.not.toThrow();
+
+      expect(mockPrisma.projectAssignment.findFirst).not.toHaveBeenCalled();
     });
   });
 });
