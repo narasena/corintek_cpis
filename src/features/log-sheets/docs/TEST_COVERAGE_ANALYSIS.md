@@ -1,7 +1,7 @@
 # Test Coverage Analysis - Log Sheets Module (Fullstack)
 
 **Generated:** 2026-02-21  
-**Updated:** 2026-02-21 (Frontend Characterization Tests Added)  
+**Updated:** 2026-02-22 (Page & Component Characterization Tests Added)  
 **Scope:** `src/features/log-sheets/` + `src/app/(main)/log-sheets/`
 
 ---
@@ -29,27 +29,27 @@
 
 ### Frontend / UI Layer (`src/app/(main)/log-sheets/`)
 
-| File                                                              | Lines | Coverage    | Notes                                      |
-| ----------------------------------------------------------------- | ----- | ----------- | ------------------------------------------ |
-| `page.tsx` (root)                                                 | 63    | **0%** ❌   | Project list page - component test issue   |
-| `[projectId]/page.tsx`                                            | 125   | **0%** ❌   | Log sheet list page - component test issue |
-| `[projectId]/[logSheetId]/page.tsx`                               | ~1300 | **~30%**    | Characterization tests for UI flow         |
-| `[projectId]/[logSheetId]/utils.ts`                               | 47    | **~90%** ✅ | formatDate, formatLimit, isOutOfRange      |
-| `[projectId]/[logSheetId]/types.ts`                               | -     | **0%**      | Type definitions only                      |
-| `[projectId]/[logSheetId]/hooks/use-log-sheet-active-machines.ts` | 110   | **~80%** ✅ | Toggle, select all, clear tested           |
-| `[projectId]/[logSheetId]/hooks/use-log-sheet-derived.ts`         | 108   | **~90%** ✅ | Categories, params, machines derived       |
-| `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-state.ts`     | 93    | **~85%** ✅ | State initialization tested                |
-| `[projectId]/[logSheetId]/hooks/use-log-sheet-validation.ts`      | 80    | **~70%**    | Wrapper around validation.ts               |
-| `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-saver.ts`     | 156   | **~85%** ✅ | Save flow, error handling tested           |
-| `[projectId]/[logSheetId]/hooks/use-log-sheet-detail-data.ts`     | 35    | **~90%** ✅ | Data fetching, reload, error states        |
-| `[projectId]/[logSheetId]/hooks/use-log-sheet-technicians.ts`     | 40    | **~90%** ✅ | Technician loading, error handling         |
-| `[projectId]/[logSheetId]/hooks/use-mobile-unit-view-model.ts`    | -     | **~80%** ✅ | Mobile adapter tested                      |
-| `[projectId]/components/columns.tsx`                              | 68    | **~80%** ✅ | Column definitions tested                  |
-| `[projectId]/components/log-sheet-form.tsx`                       | 186   | **0%** ❌   | Form component - needs RTL setup           |
-| `[projectId]/components/log-sheet-dialog.tsx`                     | 35    | **0%** ❌   | Dialog wrapper                             |
-| `[projectId]/[logSheetId]/components/chemical-usage-section.tsx`  | 211   | **0%** ❌   | Chemical input - needs RTL setup           |
-| `[projectId]/[logSheetId]/components/mobile-entry-card.tsx`       | 201   | **0%** ❌   | Mobile card - needs RTL setup              |
-| `components/project-columns.tsx`                                  | 29    | **~80%** ✅ | Project list columns tested                |
+| File                                                              | Lines | Coverage    | Notes                                       |
+| ----------------------------------------------------------------- | ----- | ----------- | ------------------------------------------- |
+| `page.tsx` (root)                                                 | 63    | **~85%** ✅ | Project list page - loading, data, errors   |
+| `[projectId]/page.tsx`                                            | 125   | **~80%** ✅ | Log sheet list page - CRUD, navigation      |
+| `[projectId]/[logSheetId]/page.tsx`                               | ~1300 | **~30%**    | Characterization tests for UI flow          |
+| `[projectId]/[logSheetId]/utils.ts`                               | 47    | **~90%** ✅ | formatDate, formatLimit, isOutOfRange       |
+| `[projectId]/[logSheetId]/types.ts`                               | -     | **0%**      | Type definitions only                       |
+| `[projectId]/[logSheetId]/hooks/use-log-sheet-active-machines.ts` | 110   | **~80%** ✅ | Toggle, select all, clear tested            |
+| `[projectId]/[logSheetId]/hooks/use-log-sheet-derived.ts`         | 108   | **~90%** ✅ | Categories, params, machines derived        |
+| `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-state.ts`     | 93    | **~85%** ✅ | State initialization tested                 |
+| `[projectId]/[logSheetId]/hooks/use-log-sheet-validation.ts`      | 80    | **~70%**    | Wrapper around validation.ts                |
+| `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-saver.ts`     | 156   | **~85%** ✅ | Save flow, error handling tested            |
+| `[projectId]/[logSheetId]/hooks/use-log-sheet-detail-data.ts`     | 35    | **~90%** ✅ | Data fetching, reload, error states         |
+| `[projectId]/[logSheetId]/hooks/use-log-sheet-technicians.ts`     | 40    | **~90%** ✅ | Technician loading, error handling          |
+| `[projectId]/[logSheetId]/hooks/use-mobile-unit-view-model.ts`    | -     | **~80%** ✅ | Mobile adapter tested                       |
+| `[projectId]/components/columns.tsx`                              | 68    | **~80%** ✅ | Column definitions tested                   |
+| `[projectId]/components/log-sheet-form.tsx`                       | 186   | **~75%** ✅ | Form submission, validation, error handling |
+| `[projectId]/components/log-sheet-dialog.tsx`                     | 35    | **0%** ❌   | Dialog wrapper                              |
+| `[projectId]/[logSheetId]/components/chemical-usage-section.tsx`  | 211   | **~70%** ✅ | Chemical add/remove, validation, disabled   |
+| `[projectId]/[logSheetId]/components/mobile-entry-card.tsx`       | 201   | **~65%** ✅ | NUMBER/BOOLEAN/TEXT inputs, camera, notes   |
+| `components/project-columns.tsx`                                  | 29    | **~80%** ✅ | Project list columns tested                 |
 
 ### Overall Estimate
 
@@ -58,12 +58,25 @@
 | Backend (service/actions) | **~65%**           | **~65%**          |
 | Backend (pure functions)  | **~95%**           | **~95%**          |
 | Frontend Hooks            | **~50%**           | **~85%**          |
-| Frontend Components       | **~5%**            | **~15%**          |
-| **OVERALL**               | **~55-60%**        | **~65-70%**       |
+| Frontend Components       | **~5%**            | **~60%**          |
+| **OVERALL**               | **~55-60%**        | **~70-75%**       |
 
 ---
 
 ## 2. New Characterization Tests Added (This Update)
+
+### Test Files Created (2026-02-22 - Page & Component Tests)
+
+| Test File                                                                                                                  | Lines | Target                       | Tests | Type             |
+| -------------------------------------------------------------------------------------------------------------------------- | ----- | ---------------------------- | ----- | ---------------- |
+| `src/app/(main)/log-sheets/__tests__/page.characterization.test.tsx`                                                       | ~140  | `page.tsx` (root)            | 14    | Characterization |
+| `src/app/(main)/log-sheets/[projectId]/__tests__/page.characterization.test.tsx`                                           | ~310  | `[projectId]/page.tsx`       | 17    | Characterization |
+| `src/app/(main)/log-sheets/[projectId]/components/__tests__/log-sheet-form.characterization.test.tsx`                      | ~400  | `log-sheet-form.tsx`         | 27    | Characterization |
+| `src/app/(main)/log-sheets/[projectId]/[logSheetId]/components/__tests__/chemical-usage-section.characterization.test.tsx` | ~470  | `chemical-usage-section.tsx` | 29    | Characterization |
+| `src/app/(main)/log-sheets/[projectId]/[logSheetId]/components/__tests__/mobile-entry-card.characterization.test.tsx`      | ~500  | `mobile-entry-card.tsx`      | 33    | Characterization |
+
+**New test lines added this update: ~1,820**  
+**New tests added this update: 120**
 
 ### Test Files Created (2026-02-21 - Frontend Hooks)
 
@@ -205,24 +218,19 @@
 
 ### Still Untested
 
-| Priority | Area                         | Reason                                 |
-| -------- | ---------------------------- | -------------------------------------- |
-| HIGH     | `page.tsx` (root)            | Component test setup issues with mocks |
-| HIGH     | `[projectId]/page.tsx`       | Component test setup issues with mocks |
-| MEDIUM   | `log-sheet-form.tsx`         | Complex form with react-hook-form      |
-| MEDIUM   | `chemical-usage-section.tsx` | Complex component with async state     |
-| MEDIUM   | `mobile-entry-card.tsx`      | Complex component with multiple inputs |
-| LOW      | `signature-section.tsx`      | Needs canvas/WebRTC mocking            |
-| LOW      | `signature-pad.tsx`          | Needs canvas/WebRTC mocking            |
-| LOW      | `log-sheet-preview.tsx`      | Print-focused component                |
-| LOW      | `log-sheet-header.tsx`       | Display component                      |
+| Priority | Area                    | Reason                         |
+| -------- | ----------------------- | ------------------------------ |
+| LOW      | `log-sheet-dialog.tsx`  | Dialog wrapper - minimal logic |
+| LOW      | `signature-section.tsx` | Needs canvas/WebRTC mocking    |
+| LOW      | `signature-pad.tsx`     | Needs canvas/WebRTC mocking    |
+| LOW      | `log-sheet-preview.tsx` | Print-focused component        |
+| LOW      | `log-sheet-header.tsx`  | Display component              |
 
 ### Recommended Next Steps
 
-1. **Fix component test setup** - Investigate why `vi.mock` isn't properly hoisting for page components
-2. **Add integration tests** for full DRAFT → SUBMITTED → APPROVED flow
-3. **Test error recovery** in form components
-4. **Add component tests** for signature-related components (will need canvas mocking)
+1. **Add integration tests** for full DRAFT → SUBMITTED → APPROVED flow
+2. **Test error recovery** in form components
+3. **Add component tests** for signature-related components (will need canvas mocking)
 
 ---
 
@@ -268,4 +276,4 @@ vi.mock('../hooks/use-log-sheet-technicians', () => ({
 | Server actions      | ~70%   | ~70%  | 60%    |
 | Frontend hooks      | ~50%   | ~85%  | 80%    |
 | Pure functions      | ~95%   | ~95%  | 95%    |
-| Frontend components | ~5%    | ~15%  | 60%    |
+| Frontend components | ~5%    | ~60%  | 60%    |
