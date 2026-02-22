@@ -61,6 +61,8 @@ vi.mock('@/features/log-sheets/utils', () => ({
   }),
 }));
 
+const originalFetch = global.fetch;
+
 import { revalidatePath } from 'next/cache';
 import * as logSheetService from '@/features/log-sheets/service';
 import * as projectService from '@/features/projects/service';
@@ -118,6 +120,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks();
+  global.fetch = originalFetch;
 });
 
 describe('getLogSheetsByProjectAction (characterization)', () => {
@@ -698,5 +701,268 @@ describe('Error handling pattern (characterization)', () => {
     );
 
     consoleSpy.mockRestore();
+  });
+});
+
+describe('R2 Upload Failure Tests (P1 Critical)', () => {
+  describe('saveLogSheetSignatureAction R2 failures', () => {
+    beforeEach(() => {
+      vi.stubEnv('R2_WORKER_URL', 'https://r2-worker.example.com');
+      vi.stubEnv('R2_AUTH_SECRET', 'test-secret');
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('returns error when R2 fetch fails with network error', async () => {
+      mockUser('TECHNICIAN');
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      global.fetch = vi.fn().mockRejectedValue(new Error('Network timeout'));
+
+      const result = await saveLogSheetSignatureAction({
+        logSheetId: validUUID,
+        signatureRole: 'TECHNICIAN',
+        dataUrl: 'data:image/png;base64,abc123',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Network timeout');
+    });
+
+    it('returns error when R2 returns non-OK status (500)', async () => {
+      mockUser('TECHNICIAN');
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        statusText: 'Internal Server Error',
+      });
+
+      const result = await saveLogSheetSignatureAction({
+        logSheetId: validUUID,
+        signatureRole: 'TECHNICIAN',
+        dataUrl: 'data:image/png;base64,abc123',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Upload failed');
+    });
+
+    it('returns error when R2 returns 403 Forbidden', async () => {
+      mockUser('TECHNICIAN');
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        statusText: 'Forbidden',
+      });
+
+      const result = await saveLogSheetSignatureAction({
+        logSheetId: validUUID,
+        signatureRole: 'TECHNICIAN',
+        dataUrl: 'data:image/png;base64,abc123',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Upload failed');
+    });
+
+    it('returns error when R2_WORKER_URL is missing', async () => {
+      vi.unstubAllEnvs();
+      mockUser('TECHNICIAN');
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      const result = await saveLogSheetSignatureAction({
+        logSheetId: validUUID,
+        signatureRole: 'TECHNICIAN',
+        dataUrl: 'data:image/png;base64,abc123',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Missing R2 credentials');
+    });
+
+    it('returns error when R2_AUTH_SECRET is missing', async () => {
+      vi.stubEnv('R2_WORKER_URL', 'https://r2-worker.example.com');
+      vi.stubEnv('R2_AUTH_SECRET', '');
+      mockUser('TECHNICIAN');
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      const result = await saveLogSheetSignatureAction({
+        logSheetId: validUUID,
+        signatureRole: 'TECHNICIAN',
+        dataUrl: 'data:image/png;base64,abc123',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Missing R2 credentials');
+    });
+
+    it('saves signature successfully when R2 upload succeeds', async () => {
+      mockUser('TECHNICIAN');
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+      mockLogSheetService.saveLogSheetSignature.mockResolvedValue({
+        id: validUUID,
+      });
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      global.fetch = vi.fn().mockResolvedValue({ ok: true });
+
+      const result = await saveLogSheetSignatureAction({
+        logSheetId: validUUID,
+        signatureRole: 'TECHNICIAN',
+        dataUrl: 'data:image/png;base64,abc123',
+      });
+
+      expect(result.success).toBe(true);
+      expect((result as any).url).toContain('r2-worker.example.com');
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('r2-worker.example.com'),
+        expect.objectContaining({
+          method: 'PUT',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer test-secret',
+          }),
+        })
+      );
+    });
+
+    it('returns error when log sheet not found', async () => {
+      mockUser('TECHNICIAN');
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(null);
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      const result = await saveLogSheetSignatureAction({
+        logSheetId: validUUID,
+        signatureRole: 'TECHNICIAN',
+        dataUrl: 'data:image/png;base64,abc123',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Log sheet tidak ditemukan');
+    });
+  });
+
+  describe('uploadLogSheetImageAction R2 failures', () => {
+    beforeEach(() => {
+      vi.stubEnv('R2_WORKER_URL', 'https://r2-worker.example.com');
+      vi.stubEnv('R2_AUTH_SECRET', 'test-secret');
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('returns error when R2 fetch fails with network error', async () => {
+      mockUser('TECHNICIAN');
+      mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      global.fetch = vi.fn().mockRejectedValue(new Error('Connection refused'));
+
+      const formData = new FormData();
+      const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+      formData.append('file', file);
+      formData.append('projectId', anotherUUID);
+      formData.append('logSheetId', validUUID);
+
+      const result = await uploadLogSheetImageAction(formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Connection refused');
+    });
+
+    it('returns error when R2 returns 503 Service Unavailable', async () => {
+      mockUser('TECHNICIAN');
+      mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        statusText: 'Service Unavailable',
+      });
+
+      const formData = new FormData();
+      const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+      formData.append('file', file);
+      formData.append('projectId', anotherUUID);
+      formData.append('logSheetId', validUUID);
+
+      const result = await uploadLogSheetImageAction(formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Upload failed');
+    });
+
+    it('returns error when R2 credentials are missing', async () => {
+      vi.unstubAllEnvs();
+      mockUser('TECHNICIAN');
+      mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      const formData = new FormData();
+      const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+      formData.append('file', file);
+      formData.append('projectId', anotherUUID);
+      formData.append('logSheetId', validUUID);
+
+      const result = await uploadLogSheetImageAction(formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Missing R2 credentials');
+    });
+
+    it('uploads image successfully when R2 succeeds', async () => {
+      mockUser('TECHNICIAN');
+      mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      global.fetch = vi.fn().mockResolvedValue({ ok: true });
+
+      const formData = new FormData();
+      const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+      formData.append('file', file);
+      formData.append('projectId', anotherUUID);
+      formData.append('logSheetId', validUUID);
+
+      const result = await uploadLogSheetImageAction(formData);
+
+      expect(result.success).toBe(true);
+      expect((result as any).url).toContain('r2-worker.example.com');
+    });
+
+    it('sanitizes filename to prevent path traversal', async () => {
+      mockUser('TECHNICIAN');
+      mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
+      mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+      vi.mocked(ensureAccess).mockImplementation(() => {});
+
+      global.fetch = vi.fn().mockResolvedValue({ ok: true });
+
+      const formData = new FormData();
+      const file = new File(['test'], '../../../malicious.jpg', {
+        type: 'image/jpeg',
+      });
+      formData.append('file', file);
+      formData.append('projectId', anotherUUID);
+      formData.append('logSheetId', validUUID);
+
+      const result = await uploadLogSheetImageAction(formData);
+
+      expect(result.success).toBe(true);
+      const fetchCall = (global.fetch as any).mock.calls[0];
+      expect(fetchCall[0]).not.toContain('../');
+    });
   });
 });

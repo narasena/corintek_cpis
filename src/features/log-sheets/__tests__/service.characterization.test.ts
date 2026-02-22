@@ -625,25 +625,88 @@ describe('updateLogSheetStatus (characterization)', () => {
       status: 'SUBMITTED',
     };
 
-    mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+    const mockLogSheetWithRelations = {
+      id: validUUID,
+      projectId: anotherUUID,
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst
+      .mockResolvedValueOnce(logSheetRow)
+      .mockResolvedValueOnce(mockLogSheetWithRelations);
     mockPrisma.logSheet.update.mockResolvedValue({
       ...logSheetRow,
       status: 'APPROVED',
     });
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([]);
     vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
     vi.mocked(decideLogSheetStatusTransition).mockReturnValue({
       ok: true,
-      requiresApprovalValidation: false,
+      requiresApprovalValidation: true,
     });
     vi.mocked(ensureAccess).mockImplementation(() => {});
+    vi.mocked(validateLogSheetApprovalDetail).mockImplementation(() => {});
 
     await updateLogSheetStatus(actor, validUUID, 'APPROVED');
 
-    expect(decideLogSheetStatusTransition).toHaveBeenCalledWith(
-      expect.objectContaining({
-        target: 'APPROVED',
-      })
-    );
+    expect(validateLogSheetApprovalDetail).toHaveBeenCalled();
+  });
+
+  it('throws when validateLogSheetForApproval finds errors (requiresApprovalValidation: true path)', async () => {
+    const actor = createMockActor({ role: 'ADMIN' });
+    const logSheetRow = {
+      id: validUUID,
+      projectId: anotherUUID,
+      status: 'SUBMITTED',
+    };
+
+    const mockLogSheetWithRelations = {
+      id: validUUID,
+      projectId: anotherUUID,
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst
+      .mockResolvedValueOnce(logSheetRow)
+      .mockResolvedValueOnce(mockLogSheetWithRelations);
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([]);
+    vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+    vi.mocked(decideLogSheetStatusTransition).mockReturnValue({
+      ok: true,
+      requiresApprovalValidation: true,
+    });
+    vi.mocked(ensureAccess).mockImplementation(() => {});
+    vi.mocked(validateLogSheetApprovalDetail).mockImplementation(() => {
+      throw new Error('Validasi approval gagal: Missing required entries');
+    });
+
+    await expect(
+      updateLogSheetStatus(actor, validUUID, 'APPROVED')
+    ).rejects.toThrow('Validasi approval gagal: Missing required entries');
+
+    expect(mockPrisma.logSheet.update).not.toHaveBeenCalled();
   });
 
   it('sets submittedAt and submittedByUserId when transitioning to SUBMITTED', async () => {
@@ -714,6 +777,50 @@ describe('updateLogSheetStatus (characterization)', () => {
     await expect(
       updateLogSheetStatus(actor, validUUID, 'SUBMITTED')
     ).rejects.toThrow('Log sheet tidak ditemukan');
+  });
+
+  it('validates approval even when requiresApprovalValidation is true and data is invalid', async () => {
+    const actor = createMockActor({ role: 'ADMIN' });
+    const logSheetRow = {
+      id: validUUID,
+      projectId: anotherUUID,
+      status: 'SUBMITTED',
+    };
+
+    const mockLogSheetWithRelations = {
+      id: validUUID,
+      projectId: anotherUUID,
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst
+      .mockResolvedValueOnce(logSheetRow)
+      .mockResolvedValueOnce(mockLogSheetWithRelations);
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([]);
+    vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+    vi.mocked(decideLogSheetStatusTransition).mockReturnValue({
+      ok: true,
+      requiresApprovalValidation: true,
+    });
+    vi.mocked(ensureAccess).mockImplementation(() => {});
+    vi.mocked(validateLogSheetApprovalDetail).mockImplementation(() => {
+      throw new Error('Entry untuk parameter pH belum diisi');
+    });
+
+    await expect(
+      updateLogSheetStatus(actor, validUUID, 'APPROVED')
+    ).rejects.toThrow('Entry untuk parameter pH belum diisi');
   });
 });
 
@@ -1027,6 +1134,552 @@ describe('validateLogSheetForSubmission (characterization)', () => {
       'Tanda tangan teknisi belum diisi'
     );
   });
+
+  it('rejects entry value below minValue (boundary: min - 1)', async () => {
+    const mockLogSheet = {
+      id: validUUID,
+      projectId: anotherUUID,
+      technicianSignatureUrl: 'https://example.com/signature.webp',
+      clientPicSignatureUrl: 'https://example.com/signature.webp',
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [
+        {
+          id: 'entry-1',
+          logSheetId: validUUID,
+          parameterId: 'param-1',
+          machineId: null,
+          role: 'VALUE',
+          valueType: 'NUMBER',
+          numericValue: 5,
+          boolValue: null,
+          textValue: null,
+          fileUrl: null,
+          checkedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+      ],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst.mockResolvedValue(mockLogSheet);
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([
+      {
+        id: 'param-1',
+        name: 'Temperature',
+        variableName: 'TEMP',
+        category: 'COOLING_WATER',
+        valueType: 'NUMBER',
+        unit: 'C',
+        minValue: 10,
+        maxValue: 100,
+        rawWaterMinValue: null,
+        rawWaterMaxValue: null,
+        displayOrder: 1,
+      },
+    ]);
+
+    await expect(validateLogSheetForSubmission(validUUID)).rejects.toThrow(
+      'di bawah minimum'
+    );
+  });
+
+  it('rejects entry value above maxValue (boundary: max + 1)', async () => {
+    const mockLogSheet = {
+      id: validUUID,
+      projectId: anotherUUID,
+      technicianSignatureUrl: 'https://example.com/signature.webp',
+      clientPicSignatureUrl: 'https://example.com/signature.webp',
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [
+        {
+          id: 'entry-1',
+          logSheetId: validUUID,
+          parameterId: 'param-1',
+          machineId: null,
+          role: 'VALUE',
+          valueType: 'NUMBER',
+          numericValue: 101,
+          boolValue: null,
+          textValue: null,
+          fileUrl: null,
+          checkedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+      ],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst.mockResolvedValue(mockLogSheet);
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([
+      {
+        id: 'param-1',
+        name: 'Temperature',
+        variableName: 'TEMP',
+        category: 'COOLING_WATER',
+        valueType: 'NUMBER',
+        unit: 'C',
+        minValue: 10,
+        maxValue: 100,
+        rawWaterMinValue: null,
+        rawWaterMaxValue: null,
+        displayOrder: 1,
+      },
+    ]);
+
+    await expect(validateLogSheetForSubmission(validUUID)).rejects.toThrow(
+      'di atas maksimum'
+    );
+  });
+
+  it('accepts entry value at exact minValue boundary', async () => {
+    const mockLogSheet = {
+      id: validUUID,
+      projectId: anotherUUID,
+      technicianSignatureUrl: 'https://example.com/signature.webp',
+      clientPicSignatureUrl: 'https://example.com/signature.webp',
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [
+        {
+          id: 'entry-1',
+          logSheetId: validUUID,
+          parameterId: 'param-1',
+          machineId: null,
+          role: 'VALUE',
+          valueType: 'NUMBER',
+          numericValue: 10,
+          boolValue: null,
+          textValue: null,
+          fileUrl: null,
+          checkedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+      ],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst.mockResolvedValue(mockLogSheet);
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([
+      {
+        id: 'param-1',
+        name: 'Temperature',
+        variableName: 'TEMP',
+        category: 'COOLING_WATER',
+        valueType: 'NUMBER',
+        unit: 'C',
+        minValue: 10,
+        maxValue: 100,
+        rawWaterMinValue: null,
+        rawWaterMaxValue: null,
+        displayOrder: 1,
+      },
+    ]);
+
+    await expect(
+      validateLogSheetForSubmission(validUUID)
+    ).resolves.not.toThrow();
+  });
+
+  it('accepts entry value at exact maxValue boundary', async () => {
+    const mockLogSheet = {
+      id: validUUID,
+      projectId: anotherUUID,
+      technicianSignatureUrl: 'https://example.com/signature.webp',
+      clientPicSignatureUrl: 'https://example.com/signature.webp',
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [
+        {
+          id: 'entry-1',
+          logSheetId: validUUID,
+          parameterId: 'param-1',
+          machineId: null,
+          role: 'VALUE',
+          valueType: 'NUMBER',
+          numericValue: 100,
+          boolValue: null,
+          textValue: null,
+          fileUrl: null,
+          checkedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+      ],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst.mockResolvedValue(mockLogSheet);
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([
+      {
+        id: 'param-1',
+        name: 'Temperature',
+        variableName: 'TEMP',
+        category: 'COOLING_WATER',
+        valueType: 'NUMBER',
+        unit: 'C',
+        minValue: 10,
+        maxValue: 100,
+        rawWaterMinValue: null,
+        rawWaterMaxValue: null,
+        displayOrder: 1,
+      },
+    ]);
+
+    await expect(
+      validateLogSheetForSubmission(validUUID)
+    ).resolves.not.toThrow();
+  });
+
+  it('uses rawWaterMinValue/rawWaterMaxValue for RAW_WATER role entries', async () => {
+    const mockLogSheet = {
+      id: validUUID,
+      projectId: anotherUUID,
+      technicianSignatureUrl: 'https://example.com/signature.webp',
+      clientPicSignatureUrl: 'https://example.com/signature.webp',
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [
+        {
+          id: 'entry-1',
+          logSheetId: validUUID,
+          parameterId: 'param-1',
+          machineId: null,
+          role: 'RAW_WATER',
+          valueType: 'NUMBER',
+          numericValue: 5,
+          boolValue: null,
+          textValue: null,
+          fileUrl: null,
+          checkedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+      ],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst.mockResolvedValue(mockLogSheet);
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([
+      {
+        id: 'param-1',
+        name: 'pH',
+        variableName: 'PH',
+        category: 'COOLING_WATER',
+        valueType: 'NUMBER',
+        unit: '',
+        minValue: 7,
+        maxValue: 9,
+        rawWaterMinValue: 6,
+        rawWaterMaxValue: 8,
+        displayOrder: 1,
+      },
+    ]);
+
+    await expect(validateLogSheetForSubmission(validUUID)).rejects.toThrow(
+      'di bawah minimum 6'
+    );
+  });
+
+  it('silently skips validation when parameter not found in lookup (SURPRISING BEHAVIOR)', async () => {
+    const mockLogSheet = {
+      id: validUUID,
+      projectId: anotherUUID,
+      technicianSignatureUrl: 'https://example.com/signature.webp',
+      clientPicSignatureUrl: 'https://example.com/signature.webp',
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [
+        {
+          id: 'entry-1',
+          logSheetId: validUUID,
+          parameterId: 'non-existent-param',
+          machineId: null,
+          role: 'VALUE',
+          valueType: 'NUMBER',
+          numericValue: 999999,
+          boolValue: null,
+          textValue: null,
+          fileUrl: null,
+          checkedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+      ],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst.mockResolvedValue(mockLogSheet);
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([]);
+
+    await expect(
+      validateLogSheetForSubmission(validUUID)
+    ).resolves.not.toThrow();
+  });
+
+  it('silently skips NaN numeric values in range validation (SURPRISING BEHAVIOR)', async () => {
+    const mockLogSheet = {
+      id: validUUID,
+      projectId: anotherUUID,
+      technicianSignatureUrl: 'https://example.com/signature.webp',
+      clientPicSignatureUrl: 'https://example.com/signature.webp',
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [
+        {
+          id: 'entry-1',
+          logSheetId: validUUID,
+          parameterId: 'param-1',
+          machineId: null,
+          role: 'VALUE',
+          valueType: 'NUMBER',
+          numericValue: NaN,
+          boolValue: null,
+          textValue: null,
+          fileUrl: null,
+          checkedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+      ],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst.mockResolvedValue(mockLogSheet);
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([
+      {
+        id: 'param-1',
+        name: 'Temperature',
+        variableName: 'TEMP',
+        category: 'COOLING_WATER',
+        valueType: 'NUMBER',
+        unit: 'C',
+        minValue: 10,
+        maxValue: 100,
+        rawWaterMinValue: null,
+        rawWaterMaxValue: null,
+        displayOrder: 1,
+      },
+    ]);
+
+    await expect(
+      validateLogSheetForSubmission(validUUID)
+    ).resolves.not.toThrow();
+  });
+
+  it('skips validation for null numericValue', async () => {
+    const mockLogSheet = {
+      id: validUUID,
+      projectId: anotherUUID,
+      technicianSignatureUrl: 'https://example.com/signature.webp',
+      clientPicSignatureUrl: 'https://example.com/signature.webp',
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [
+        {
+          id: 'entry-1',
+          logSheetId: validUUID,
+          parameterId: 'param-1',
+          machineId: null,
+          role: 'VALUE',
+          valueType: 'NUMBER',
+          numericValue: null,
+          boolValue: null,
+          textValue: null,
+          fileUrl: null,
+          checkedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+      ],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst.mockResolvedValue(mockLogSheet);
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([
+      {
+        id: 'param-1',
+        name: 'Temperature',
+        variableName: 'TEMP',
+        category: 'COOLING_WATER',
+        valueType: 'NUMBER',
+        unit: 'C',
+        minValue: 10,
+        maxValue: 100,
+        rawWaterMinValue: null,
+        rawWaterMaxValue: null,
+        displayOrder: 1,
+      },
+    ]);
+
+    await expect(
+      validateLogSheetForSubmission(validUUID)
+    ).resolves.not.toThrow();
+  });
+
+  it('skips validation for non-NUMBER valueTypes (BOOLEAN, TEXT)', async () => {
+    const mockLogSheet = {
+      id: validUUID,
+      projectId: anotherUUID,
+      technicianSignatureUrl: 'https://example.com/signature.webp',
+      clientPicSignatureUrl: 'https://example.com/signature.webp',
+      activeMachines: [],
+      project: {
+        id: anotherUUID,
+        name: 'Project',
+        client: { name: 'Client' },
+        parameterOverrides: [],
+        assignments: [],
+      },
+      entries: [
+        {
+          id: 'entry-1',
+          logSheetId: validUUID,
+          parameterId: 'param-1',
+          machineId: null,
+          role: 'VALUE',
+          valueType: 'BOOLEAN',
+          numericValue: null,
+          boolValue: true,
+          textValue: null,
+          fileUrl: null,
+          checkedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+        {
+          id: 'entry-2',
+          logSheetId: validUUID,
+          parameterId: 'param-2',
+          machineId: null,
+          role: 'VALUE',
+          valueType: 'TEXT',
+          numericValue: null,
+          boolValue: null,
+          textValue: 'Some text',
+          fileUrl: null,
+          checkedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+      ],
+      photos: [],
+      chemicalUsages: [],
+    };
+
+    mockPrisma.logSheet.findFirst.mockResolvedValue(mockLogSheet);
+    mockPrisma.machine.findMany.mockResolvedValue([]);
+    mockPrisma.parameter.findMany.mockResolvedValue([
+      {
+        id: 'param-1',
+        name: 'Is Running',
+        variableName: 'IS_RUNNING',
+        category: 'GENERAL_CONDITION',
+        valueType: 'BOOLEAN',
+        unit: null,
+        minValue: null,
+        maxValue: null,
+        rawWaterMinValue: null,
+        rawWaterMaxValue: null,
+        displayOrder: 1,
+      },
+      {
+        id: 'param-2',
+        name: 'Notes',
+        variableName: 'NOTES',
+        category: 'GENERAL_CONDITION',
+        valueType: 'TEXT',
+        unit: null,
+        minValue: null,
+        maxValue: null,
+        rawWaterMinValue: null,
+        rawWaterMaxValue: null,
+        displayOrder: 2,
+      },
+    ]);
+
+    await expect(
+      validateLogSheetForSubmission(validUUID)
+    ).resolves.not.toThrow();
+  });
 });
 
 describe('validateLogSheetForApproval (characterization)', () => {
@@ -1100,5 +1753,298 @@ describe('getLogSheetDetail (characterization)', () => {
 
     expect(result.activeMachineIds.chillers).toEqual(['chiller-1']);
     expect(result.activeMachineIds.coolingTowers).toEqual(['ct-1']);
+  });
+});
+
+describe('Transaction Rollback (P1 Critical)', () => {
+  describe('upsertLogSheetMachines rollback', () => {
+    it('rolls back machine deletion when createMany fails', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.logSheetMachine.findMany.mockResolvedValue([
+        { machineId: 'old-machine' },
+      ]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      const txMock = {
+        logSheetMachine: {
+          deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
+          createMany: vi.fn().mockRejectedValue(new Error('Database error')),
+        },
+        logSheetEntry: {
+          updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        },
+      };
+
+      mockPrisma.$transaction.mockImplementation(async fn => {
+        return fn(txMock);
+      });
+
+      await expect(
+        upsertLogSheetMachines(actor, validUUID, ['new-machine'])
+      ).rejects.toThrow('Database error');
+
+      expect(txMock.logSheetMachine.deleteMany).toHaveBeenCalled();
+      expect(txMock.logSheetMachine.createMany).toHaveBeenCalled();
+    });
+
+    it('rolls back when entry soft-delete fails', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.logSheetMachine.findMany.mockResolvedValue([
+        { machineId: 'to-remove-1' },
+      ]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      const txMock = {
+        logSheetMachine: {
+          deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
+          createMany: vi.fn().mockResolvedValue({}),
+        },
+        logSheetEntry: {
+          updateMany: vi
+            .fn()
+            .mockRejectedValue(new Error('Entry update failed')),
+        },
+      };
+
+      mockPrisma.$transaction.mockImplementation(async fn => fn(txMock));
+
+      await expect(
+        upsertLogSheetMachines(actor, validUUID, [])
+      ).rejects.toThrow('Entry update failed');
+    });
+  });
+
+  describe('upsertLogSheetEntries rollback', () => {
+    it('rolls back partial entry updates on failure', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.logSheetEntry.findMany.mockResolvedValue([]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      let createCallCount = 0;
+      const txMock = {
+        logSheetEntry: {
+          update: vi.fn().mockResolvedValue({}),
+          create: vi.fn().mockImplementation(() => {
+            createCallCount++;
+            if (createCallCount === 1) {
+              return Promise.resolve({ id: 'entry-1' });
+            }
+            return Promise.reject(new Error('Second entry failed'));
+          }),
+        },
+      };
+
+      mockPrisma.$transaction.mockImplementation(async fn => fn(txMock));
+
+      const entries = [
+        {
+          parameterId: 'param-1',
+          machineId: null,
+          role: 'VALUE',
+          valueType: 'NUMBER',
+          numericValue: 10,
+        },
+        {
+          parameterId: 'param-2',
+          machineId: null,
+          role: 'VALUE',
+          valueType: 'NUMBER',
+          numericValue: 20,
+        },
+      ];
+
+      await expect(
+        upsertLogSheetEntries(actor, validUUID, entries as any)
+      ).rejects.toThrow('Second entry failed');
+
+      expect(txMock.logSheetEntry.create).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('upsertLogSheetPhotos rollback', () => {
+    it('rolls back photo creation on partial failure', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.logSheetPhoto.findMany.mockResolvedValue([]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      let createCallCount = 0;
+      const txMock = {
+        logSheetPhoto: {
+          update: vi.fn().mockResolvedValue({}),
+          create: vi.fn().mockImplementation(() => {
+            createCallCount++;
+            if (createCallCount <= 2) {
+              return Promise.resolve({ id: `photo-${createCallCount}` });
+            }
+            return Promise.reject(new Error('Photo creation failed'));
+          }),
+        },
+      };
+
+      mockPrisma.$transaction.mockImplementation(async fn => fn(txMock));
+
+      const photos = [
+        { type: 'BEFORE', url: 'https://example.com/1.jpg' },
+        { type: 'BEFORE', url: 'https://example.com/2.jpg' },
+        { type: 'AFTER', url: 'https://example.com/3.jpg' },
+      ];
+
+      await expect(
+        upsertLogSheetPhotos(actor, validUUID, photos as any)
+      ).rejects.toThrow('Photo creation failed');
+    });
+
+    it('rolls back when soft-delete of removed photos fails', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.logSheetPhoto.findMany.mockResolvedValue([
+        { id: 'photo-1', deletedAt: null },
+        { id: 'photo-2', deletedAt: null },
+      ]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      const txMock = {
+        logSheetPhoto: {
+          update: vi.fn().mockImplementation(({ data }) => {
+            if (data.deletedAt) {
+              return Promise.reject(new Error('Soft delete failed'));
+            }
+            return Promise.resolve({});
+          }),
+          create: vi.fn().mockResolvedValue({ id: 'new-photo' }),
+        },
+      };
+
+      mockPrisma.$transaction.mockImplementation(async fn => fn(txMock));
+
+      await expect(
+        upsertLogSheetPhotos(actor, validUUID, [
+          { type: 'BEFORE', url: 'https://example.com/new.jpg' },
+        ])
+      ).rejects.toThrow('Soft delete failed');
+    });
+  });
+
+  describe('upsertLogSheetChemicalUsages rollback', () => {
+    it('rolls back chemical usage creation on failure', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.chemicalUsage.findMany.mockResolvedValue([]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      let createCallCount = 0;
+      const txMock = {
+        chemicalUsage: {
+          update: vi.fn().mockResolvedValue({}),
+          create: vi.fn().mockImplementation(() => {
+            createCallCount++;
+            if (createCallCount === 1) {
+              return Promise.resolve({ id: 'usage-1' });
+            }
+            return Promise.reject(new Error('Chemical creation failed'));
+          }),
+        },
+      };
+
+      mockPrisma.$transaction.mockImplementation(async fn => fn(txMock));
+
+      const usages = [
+        { chemicalId: validUUID, amount: 10 },
+        { chemicalId: validUUID, amount: 20 },
+      ];
+
+      await expect(
+        upsertLogSheetChemicalUsages(actor, validUUID, usages)
+      ).rejects.toThrow('Chemical creation failed');
+    });
+
+    it('rolls back when removing old chemical usages fails', async () => {
+      const actor = createMockActor({ role: 'ADMIN' });
+      const logSheetRow = {
+        id: validUUID,
+        projectId: anotherUUID,
+        status: 'DRAFT',
+        locked: false,
+      };
+
+      mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.chemicalUsage.findMany.mockResolvedValue([
+        { id: 'old-usage', deletedAt: null },
+      ]);
+      vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
+      vi.mocked(getLogSheetEditState).mockReturnValue('EDITABLE');
+
+      const txMock = {
+        chemicalUsage: {
+          update: vi.fn().mockImplementation(({ data }) => {
+            if (data.deletedAt) {
+              return Promise.reject(new Error('Cannot remove old usage'));
+            }
+            return Promise.resolve({});
+          }),
+          create: vi.fn().mockResolvedValue({ id: 'new-usage' }),
+        },
+      };
+
+      mockPrisma.$transaction.mockImplementation(async fn => fn(txMock));
+
+      await expect(
+        upsertLogSheetChemicalUsages(actor, validUUID, [
+          { chemicalId: validUUID, amount: 10 },
+        ])
+      ).rejects.toThrow('Cannot remove old usage');
+    });
   });
 });
