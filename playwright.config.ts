@@ -84,6 +84,14 @@ export default defineConfig({
         storageState: '.auth/admin.json',
       },
     },
+    {
+      name: 'log-sheet:print-preview',
+      testMatch: /print-preview\.spec\.ts/,
+      dependencies: ['setup:technician'],
+      use: {
+        storageState: '.auth/technician.json',
+      },
+    },
   ],
   webServer: {
     command: 'npm run dev',
