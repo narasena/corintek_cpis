@@ -1,7 +1,7 @@
 # Test Coverage Analysis - Log Sheets Module (Fullstack)
 
 **Generated:** 2026-02-21  
-**Updated:** 2026-02-22 (Critical Risk Analysis)  
+**Updated:** 2026-02-22 (Critical Risk Analysis + P1 Tests Added)  
 **Scope:** `src/features/log-sheets/` + `src/app/(main)/log-sheets/` + `src/__tests__/e2e/log-sheet/`
 
 ---
@@ -23,23 +23,23 @@
 
 ### Backend / Feature Layer (`src/features/log-sheets/`)
 
-| File                                  | Lines | Coverage    | Notes                                                 |
-| ------------------------------------- | ----- | ----------- | ----------------------------------------------------- |
-| `log-sheet-locking.ts`                | 40    | **100%** ✅ | Pure function, fully tested                           |
-| `log-sheet-status.ts`                 | 55    | **100%** ✅ | State machine, fully tested                           |
-| `validation.ts`                       | 222   | **~80%**    | `validateLogSheetEntries` + internal functions tested |
-| `approval-validation.ts`              | 200   | **~90%** ✅ | All functions characterized                           |
-| `utils.ts`                            | 38    | **100%** ✅ | `makeEntryKey`, `isLogSheetEntryEmpty` fully tested   |
-| `types.ts`                            | 203   | **~95%** ✅ | All Zod schemas tested                                |
-| `service.ts`                          | 1009  | **~60%**    | Core functions characterized with mocks               |
-| `actions.ts`                          | 591   | **~70%**    | All server actions characterized                      |
-| `option-a/unit-view-model-builder.ts` | -     | **100%** ✅ | Fully tested                                          |
-| `option-a/mobile-view-adapter.ts`     | -     | **~80%**    | Tested via builder tests                              |
-| `components/signature-section.tsx`    | -     | **~85%** ✅ | Canvas mocking, dialog, save flow                     |
-| `components/signature-pad.tsx`        | -     | **~80%** ✅ | Canvas mocking, pointer events, clear/save            |
-| `components/log-sheet-preview.tsx`    | -     | **~60%** ✅ | E2E visual regression tests                           |
-| `components/log-sheet-header.tsx`     | -     | **~85%** ✅ | Unit tests added (12 tests)                           |
-| `log-sheet-dialog.tsx`                | -     | **~70%** ✅ | Unit tests added (12 tests)                           |
+| File                                  | Lines | Coverage    | Notes                                                    |
+| ------------------------------------- | ----- | ----------- | -------------------------------------------------------- |
+| `log-sheet-locking.ts`                | 40    | **100%** ✅ | Pure function, fully tested                              |
+| `log-sheet-status.ts`                 | 55    | **100%** ✅ | State machine, fully tested                              |
+| `validation.ts`                       | 222   | **~80%**    | `validateLogSheetEntries` + internal functions tested    |
+| `approval-validation.ts`              | 200   | **~90%** ✅ | All functions characterized                              |
+| `utils.ts`                            | 38    | **100%** ✅ | `makeEntryKey`, `isLogSheetEntryEmpty` fully tested      |
+| `types.ts`                            | 203   | **~95%** ✅ | All Zod schemas tested                                   |
+| `service.ts`                          | 1009  | **~75%**    | Core functions characterized with mocks + P1 tests added |
+| `actions.ts`                          | 591   | **~85%**    | All server actions characterized + R2 failure tests      |
+| `option-a/unit-view-model-builder.ts` | -     | **100%** ✅ | Fully tested                                             |
+| `option-a/mobile-view-adapter.ts`     | -     | **~80%**    | Tested via builder tests                                 |
+| `components/signature-section.tsx`    | -     | **~85%** ✅ | Canvas mocking, dialog, save flow                        |
+| `components/signature-pad.tsx`        | -     | **~80%** ✅ | Canvas mocking, pointer events, clear/save               |
+| `components/log-sheet-preview.tsx`    | -     | **~60%** ✅ | E2E visual regression tests                              |
+| `components/log-sheet-header.tsx`     | -     | **~85%** ✅ | Unit tests added (12 tests)                              |
+| `log-sheet-dialog.tsx`                | -     | **~70%** ✅ | Unit tests added (12 tests)                              |
 
 ### Frontend / UI Layer (`src/app/(main)/log-sheets/`)
 
@@ -67,19 +67,72 @@
 
 ### Overall Estimate
 
-| Layer                     | Before E2E Update | After All Updates |
-| ------------------------- | ----------------- | ----------------- |
-| Backend (service/actions) | **~65%**          | **~65%**          |
-| Backend (pure functions)  | **~95%**          | **~95%**          |
-| Frontend Hooks            | **~50%**          | **~85%**          |
-| Frontend Components       | **~5%**           | **~70%**          |
-| E2E Integration           | **~20%**          | **~90%**          |
-| Performance Tests         | **0%**            | **100%**          |
-| **OVERALL**               | **~55-60%**       | **~80-85%**       |
+| Layer                     | Before E2E Update | After All Updates | After P1 Tests |
+| ------------------------- | ----------------- | ----------------- | -------------- |
+| Backend (service/actions) | **~65%**          | **~65%**          | **~80%**       |
+| Backend (pure functions)  | **~95%**          | **~95%**          | **~95%**       |
+| Frontend Hooks            | **~50%**          | **~85%**          | **~85%**       |
+| Frontend Components       | **~5%**           | **~70%**          | **~70%**       |
+| E2E Integration           | **~20%**          | **~90%**          | **~90%**       |
+| Performance Tests         | **0%**            | **100%**          | **100%**       |
+| **OVERALL**               | **~55-60%**       | **~80-85%**       | **~85-90%**    |
 
 ---
 
 ## 2. New Characterization Tests Added (This Update)
+
+### Test Files Created (2026-02-22 - P1 Critical Tests)
+
+| Test File                                         | Lines | Target                     | Tests | Type          |
+| ------------------------------------------------- | ----- | -------------------------- | ----- | ------------- |
+| `service.characterization.test.ts` (P1 additions) | ~700  | Range validation, rollback | 18    | Unit/Critical |
+| `actions.characterization.test.ts` (P1 additions) | ~280  | R2 upload failures         | 15    | Unit/Critical |
+
+**P1 test lines added: ~980**  
+**P1 tests added: 33**
+
+### P1 Test Coverage Details
+
+#### 1. Range Validation Edge Cases (service.ts:733-773)
+
+- Entry value below minValue (min - 1)
+- Entry value above maxValue (max + 1)
+- Entry value at exact boundary (min, max)
+- RAW_WATER role uses rawWaterMinValue/rawWaterMaxValue
+- Parameter not found in lookup (silent skip)
+- NaN numeric values (silent skip)
+- Null numericValue
+- Non-NUMBER valueTypes (BOOLEAN, TEXT)
+
+#### 2. Approval Validation Deep Tests (service.ts:467-469)
+
+- `requiresApprovalValidation: true` path triggers validation
+- Validation errors prevent status update
+- `validateLogSheetApprovalDetail` called before approval
+
+#### 3. Transaction Rollback Tests (service.ts)
+
+- `upsertLogSheetMachines`: Machine deletion rollback on createMany failure
+- `upsertLogSheetMachines`: Entry soft-delete rollback
+- `upsertLogSheetEntries`: Partial entry updates rollback
+- `upsertLogSheetPhotos`: Photo creation rollback on partial failure
+- `upsertLogSheetPhotos`: Soft-delete rollback failure
+- `upsertLogSheetChemicalUsages`: Chemical creation rollback
+- `upsertLogSheetChemicalUsages`: Old usage removal rollback
+
+#### 4. R2 Upload Failure Tests (actions.ts:456-590)
+
+- `saveLogSheetSignatureAction`: Network timeout/error
+- `saveLogSheetSignatureAction`: R2 returns 500/403 status
+- `saveLogSheetSignatureAction`: Missing R2_WORKER_URL
+- `saveLogSheetSignatureAction`: Missing R2_AUTH_SECRET
+- `saveLogSheetSignatureAction`: Successful upload path
+- `saveLogSheetSignatureAction`: Log sheet not found
+- `uploadLogSheetImageAction`: Network failure
+- `uploadLogSheetImageAction`: R2 returns 503
+- `uploadLogSheetImageAction`: Missing credentials
+- `uploadLogSheetImageAction`: Successful upload
+- `uploadLogSheetImageAction`: Filename sanitization
 
 ### Test Files Created (2026-02-22 - Signature Components)
 
@@ -342,12 +395,12 @@
 
 ### 🔴 HIGH RISK: Methods with Zero/Broken Test Coverage
 
-| File                 | Method/Area                                      | Risk Level | Impact                                           | Urgency |
-| -------------------- | ------------------------------------------------ | ---------- | ------------------------------------------------ | ------- |
-| `service.ts:733-773` | `validateLogSheetForSubmission` range validation | **HIGH**   | Out-of-range values may silently pass validation | **P1**  |
-| `service.ts:829-885` | `upsertSingleLogSheetEntry` (private)            | **HIGH**   | Entry corruption, data loss on edge cases        | **P1**  |
-| `actions.ts:456-524` | `saveLogSheetSignatureAction` R2 upload          | **MEDIUM** | Network failures, signature loss                 | **P2**  |
-| `actions.ts:526-590` | `uploadLogSheetImageAction`                      | **MEDIUM** | File upload failures unhandled                   | **P2**  |
+| File                 | Method/Area                                      | Risk Level | Impact                                           | Status    |
+| -------------------- | ------------------------------------------------ | ---------- | ------------------------------------------------ | --------- |
+| `service.ts:733-773` | `validateLogSheetForSubmission` range validation | **HIGH**   | Out-of-range values may silently pass validation | ✅ TESTED |
+| `service.ts:829-885` | `upsertSingleLogSheetEntry` (private)            | **HIGH**   | Entry corruption, data loss on edge cases        | ✅ TESTED |
+| `actions.ts:456-524` | `saveLogSheetSignatureAction` R2 upload          | **MEDIUM** | Network failures, signature loss                 | ✅ TESTED |
+| `actions.ts:526-590` | `uploadLogSheetImageAction`                      | **MEDIUM** | File upload failures unhandled                   | ✅ TESTED |
 
 ### 🟠 MEDIUM RISK: Incomplete Branch Coverage
 
@@ -406,14 +459,14 @@
 
 ## 6. Prioritized Test Backlog
 
-### P1 - Critical (Do First)
+### P1 - Critical (Do First) - ✅ COMPLETED
 
-| #   | Test Area                     | File                 | Estimated Effort | Rationale         |
-| --- | ----------------------------- | -------------------- | ---------------- | ----------------- |
-| 1   | R2 Upload failure scenarios   | `actions.ts:456-590` | 4h               | Data loss risk    |
-| 2   | Transaction rollback tests    | `service.ts`         | 4h               | Data integrity    |
-| 3   | Approval validation deep test | `service.ts:467-469` | 2h               | Business critical |
-| 4   | Range validation edge cases   | `service.ts:733-773` | 2h               | Silent failures   |
+| #   | Test Area                     | File                 | Estimated Effort | Status  |
+| --- | ----------------------------- | -------------------- | ---------------- | ------- |
+| 1   | R2 Upload failure scenarios   | `actions.ts:456-590` | 4h               | ✅ DONE |
+| 2   | Transaction rollback tests    | `service.ts`         | 4h               | ✅ DONE |
+| 3   | Approval validation deep test | `service.ts:467-469` | 2h               | ✅ DONE |
+| 4   | Range validation edge cases   | `service.ts:733-773` | 2h               | ✅ DONE |
 
 ### P2 - Important (Do Next)
 
@@ -455,14 +508,14 @@
 
 ### Recommended Next Steps (Priority Order)
 
-**CRITICAL - Do Immediately:**
+**✅ P1 CRITICAL - COMPLETED:**
 
-1. **R2 Upload Failure Tests** - Add tests for network timeout, R2 unavailability, invalid credentials in `saveLogSheetSignatureAction` and `uploadLogSheetImageAction`
-2. **Transaction Rollback Tests** - Add tests for partial `$transaction` failures in `upsertLogSheetMachines`, `upsertLogSheetEntries`, `upsertLogSheetPhotos`, `upsertLogSheetChemicalUsages`
-3. **Approval Validation Bypass Tests** - Add tests for `requiresApprovalValidation: true` path with invalid data
-4. **Range Validation Edge Cases** - Add tests for `validateLogSheetForSubmission` with boundary values (min-1, max+1, NaN)
+1. ~~**R2 Upload Failure Tests**~~ ✅ DONE - Tests for network timeout, R2 unavailability, invalid credentials
+2. ~~**Transaction Rollback Tests**~~ ✅ DONE - Tests for partial `$transaction` failures
+3. ~~**Approval Validation Bypass Tests**~~ ✅ DONE - Tests for `requiresApprovalValidation: true` path
+4. ~~**Range Validation Edge Cases**~~ ✅ DONE - Tests for boundary values (min-1, max+1, NaN)
 
-**IMPORTANT - Do Soon:**
+**P2 - IMPORTANT (Next Priority):**
 
 5. **Chemical Amount Validation** - Add tests for negative amounts, zero amounts in `upsertLogSheetChemicalUsages`
 6. **Admin Override Paths** - Add tests for `allowAdminOverride` flag in `assertLogSheetEditable`
@@ -515,17 +568,17 @@ vi.mock('../hooks/use-log-sheet-technicians', () => ({
 
 ### Coverage Targets
 
-| Layer                | Before | After All Updates | Target |
-| -------------------- | ------ | ----------------- | ------ |
-| Service functions    | ~60%   | ~60%              | 80%    |
-| Server actions       | ~70%   | ~70%              | 60%    |
-| Frontend hooks       | ~50%   | ~85%              | 80%    |
-| Pure functions       | ~95%   | ~95%              | 95%    |
-| Frontend components  | ~5%    | ~70%              | 60%    |
-| E2E Integration      | ~20%   | **90%**           | 80%    |
-| Signature Components | 0%     | **85%**           | 70%    |
-| Performance Tests    | 0%     | **100%**          | 100%   |
-| **OVERALL**          | ~55%   | **~80-85%**       | 75%    |
+| Layer                | Before | After P1 Tests | Target | Status    |
+| -------------------- | ------ | -------------- | ------ | --------- |
+| Service functions    | ~60%   | **~75%**       | 80%    | 🟡 Close  |
+| Server actions       | ~70%   | **~85%**       | 60%    | ✅ Exceed |
+| Frontend hooks       | ~50%   | ~85%           | 80%    | ✅ Exceed |
+| Pure functions       | ~95%   | ~95%           | 95%    | ✅ Met    |
+| Frontend components  | ~5%    | ~70%           | 60%    | ✅ Exceed |
+| E2E Integration      | ~20%   | **90%**        | 80%    | ✅ Exceed |
+| Signature Components | 0%     | **85%**        | 70%    | ✅ Exceed |
+| Performance Tests    | 0%     | **100%**       | 100%   | ✅ Met    |
+| **OVERALL**          | ~55%   | **~85-90%**    | 75%    | ✅ Exceed |
 
 ### E2E Test Fixtures
 
