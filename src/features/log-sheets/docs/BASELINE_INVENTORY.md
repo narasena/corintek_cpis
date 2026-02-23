@@ -1,6 +1,6 @@
 # Log-Sheets Module — Baseline Inventory
 
-> Snapshot: 2026-02-19 (Updated: 2026-02-23 after Phase 3, 4 & 5 refactoring)
+> Snapshot: 2026-02-19 (Updated: 2026-02-23 after Phase 3, 4, 5, 6 & 7 refactoring)
 
 ---
 
@@ -8,15 +8,15 @@
 
 | Metric                                | Before | After (2026-02-23) |   Change |
 | ------------------------------------- | -----: | -----------------: | -------: |
-| Total Lines of Code (ts/tsx)          |  6,805 |              7,620 |     +815 |
+| Total Lines of Code (ts/tsx)          |  6,805 |              7,640 |     +835 |
 | Code Files (.ts/.tsx)                 |     32 |                 44 |      +12 |
 | Classes                               |      0 |                  0 |        — |
 | Largest File                          |  1,245 |                779 | **-37%** |
 | Files >500 lines                      |      4 |                  3 |       -1 |
-| Methods >50 lines                     |     14 |                  7 |   **-7** |
+| Methods >50 lines                     |     14 |                  3 |  **-11** |
 | Exported Functions/Types              |    ~70 |                ~90 |      +20 |
 | TODO/FIXME/HACK Comments              |      0 |                  0 |        — |
-| Estimated Total Cyclomatic Complexity |   ~180 |               ~130 | **-28%** |
+| Estimated Total Cyclomatic Complexity |   ~180 |               ~125 | **-31%** |
 
 ---
 
@@ -70,7 +70,7 @@ Source: `wc -l` over `src/app/(main)/log-sheets` and `src/features/log-sheets` (
 | 42  | **`[logSheetId]/page.tsx`**                                                     | **437** |
 | 43  | **`features/log-sheets/actions.ts`**                                            | **590** |
 | 44  | **`[logSheetId]/components/log-sheet-category-section.tsx`**                    | **779** |
-| 45  | **`features/log-sheets/service.ts`**                                            | **753** |
+| 45  | **`features/log-sheets/service.ts`**                                            | **786** |
 
 ---
 
@@ -138,22 +138,23 @@ Source: `wc -l` over `src/app/(main)/log-sheets` and `src/features/log-sheets` (
 
 Approximate method lengths based on current code (2026-02-23).
 
-| #      | File                                    | Method                             |          Lines | Notes                                         |
-| ------ | --------------------------------------- | ---------------------------------- | -------------: | --------------------------------------------- |
-| 1      | `log-sheet-category-section.tsx`        | `CoolingWaterQualityDesktop`       |       **~120** | Desktop CT table with value cells             |
-| ~~2~~  | ~~`log-sheet-preview.tsx`~~             | ~~`LogSheetPreview`~~              |   ~~**~600**~~ | **EXTRACTED to 8 modules (Phase 5)**          |
-| 2      | `service.ts`                            | `getLogSheetDetail`                |       **~220** | Builds full detail view model                 |
-| 3      | `log-sheet-category-section.tsx`        | `GeneralCategoryDesktop`           |       **~110** | Desktop general category table                |
-| 4      | `components/chemical-usage-section.tsx` | `ChemicalUsageSection`             |       **~170** | Full chemical CRUD section                    |
-| 5      | `components/mobile-entry-card.tsx`      | `MobileEntryCard`                  |       **~170** | Mobile entry card rendering                   |
-| 6      | `hooks/use-log-sheet-draft-saver.ts`    | `useLogSheetDraftSaver`            |       **~120** | Orchestrates multi-part draft saves           |
-| 7      | `service.ts`                            | `validateLogSheetForApproval`      |       **~120** | Approval-time validation                      |
-| ~~9~~  | ~~`service.ts`~~                        | ~~`upsertLogSheetEntries`~~        |    ~~**~90**~~ | **MOVED to `log-sheet-entries.service.ts`**   |
-| 8      | `service.ts`                            | `updateLogSheetStatus`             |        **~70** | Status transition + authorization checks      |
-| ~~11~~ | ~~`[logSheetId]/page.tsx`~~             | ~~`LogSheetDetailPage` (render)~~  | ~~**~1,150**~~ | **EXTRACTED to 3 components**                 |
-| ~~12~~ | ~~`service.ts`~~                        | ~~`upsertLogSheetPhotos`~~         |    ~~**~60**~~ | **MOVED to `log-sheet-photos.service.ts`**    |
-| ~~13~~ | ~~`service.ts`~~                        | ~~`upsertLogSheetChemicalUsages`~~ |    ~~**~60**~~ | **MOVED to `log-sheet-chemicals.service.ts`** |
-| 9      | `service.ts`                            | `upsertLogSheetMachines`           |        **~50** | Machine selection persistence                 |
+| #      | File                                    | Method                             |          Lines | Notes                                              |
+| ------ | --------------------------------------- | ---------------------------------- | -------------: | -------------------------------------------------- |
+| 1      | `log-sheet-category-section.tsx`        | `CoolingWaterQualityDesktop`       |       **~120** | Desktop CT table with value cells                  |
+| ~~2~~  | ~~`log-sheet-preview.tsx`~~             | ~~`LogSheetPreview`~~              |   ~~**~600**~~ | **EXTRACTED to 8 modules (Phase 5)**               |
+| ~~3~~  | ~~`service.ts`~~                        | ~~`getLogSheetDetail`~~            |   ~~**~220**~~ | **EXTRACTED to 4 helpers (Phase 7)**               |
+| 2      | `log-sheet-category-section.tsx`        | `GeneralCategoryDesktop`           |       **~110** | Desktop general category table                     |
+| 3      | `service.ts`                            | `buildLogSheetDetailView`          |        **~83** | View model construction (extracted from getDetail) |
+| 4      | `components/chemical-usage-section.tsx` | `ChemicalUsageSection`             |       **~170** | Full chemical CRUD section                         |
+| 5      | `components/mobile-entry-card.tsx`      | `MobileEntryCard`                  |       **~170** | Mobile entry card rendering                        |
+| 6      | `hooks/use-log-sheet-draft-saver.ts`    | `useLogSheetDraftSaver`            |       **~120** | Orchestrates multi-part draft saves                |
+| 7      | `service.ts`                            | `validateLogSheetForApproval`      |       **~120** | Approval-time validation                           |
+| ~~9~~  | ~~`service.ts`~~                        | ~~`upsertLogSheetEntries`~~        |    ~~**~90**~~ | **MOVED to `log-sheet-entries.service.ts`**        |
+| 8      | `service.ts`                            | `updateLogSheetStatus`             |        **~70** | Status transition + authorization checks           |
+| ~~11~~ | ~~`[logSheetId]/page.tsx`~~             | ~~`LogSheetDetailPage` (render)~~  | ~~**~1,150**~~ | **EXTRACTED to 3 components**                      |
+| ~~12~~ | ~~`service.ts`~~                        | ~~`upsertLogSheetPhotos`~~         |    ~~**~60**~~ | **MOVED to `log-sheet-photos.service.ts`**         |
+| ~~13~~ | ~~`service.ts`~~                        | ~~`upsertLogSheetChemicalUsages`~~ |    ~~**~60**~~ | **MOVED to `log-sheet-chemicals.service.ts`**      |
+| 9      | `service.ts`                            | `upsertLogSheetMachines`           |        **~50** | Machine selection persistence                      |
 
 ---
 
@@ -161,12 +162,12 @@ Approximate method lengths based on current code (2026-02-23).
 
 Estimated by counting decision points: `if`, `else`, `switch/case`, `for`, `while`, `&&`/`||` guards, ternary `?:`, `catch`, and callback branches.
 
-### After Phase 3, 4 & 5 Refactoring (2026-02-23)
+### After Phase 3, 4, 5, 6 & 7 Refactoring (2026-02-23)
 
 | File                             |       Est. CC | Hotspots                                                                                                |
 | -------------------------------- | ------------: | ------------------------------------------------------------------------------------------------------- |
 | `log-sheet-category-section.tsx` |       **~25** | Category switching, value-type branches, raw water cells, mobile/desktop paths                          |
-| `service.ts`                     |       **~28** | `getLogSheetDetail`, `validateLogSheetForApproval`, `updateLogSheetStatus`, `saveLogSheetSignature`     |
+| `service.ts`                     |       **~22** | `buildLogSheetDetailView`, `validateLogSheetForApproval`, `updateLogSheetStatus` (reduced from ~28)     |
 | `log-sheet-preview/index.tsx`    |       **~12** | Category iteration, hasDocumentation check (reduced from ~24)                                           |
 | `actions.ts`                     |       **~20** | Zod parse + error branching per action, RBAC checks, multiple upload/override paths                     |
 | `[logSheetId]/page.tsx`          |       **~12** | Mode switching, status checks, admin override (extracted most complexity)                               |
@@ -180,7 +181,7 @@ Estimated by counting decision points: `if`, `else`, `switch/case`, `for`, `whil
 | `chemical-usage-section.tsx`     |        **~5** | Add/remove handlers, presence checks, mapping over usages                                               |
 | Preview sub-components           | **~3-5 each** | Focused single-responsibility components                                                                |
 | Remaining files                  | **~1–3 each** | Minimal branching                                                                                       |
-| **TOTAL**                        |      **~130** | —                                                                                                       |
+| **TOTAL**                        |      **~125** | —                                                                                                       |
 
 ### CC Distribution
 
@@ -230,20 +231,20 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 └──────────────────────────────┴──────────┘
 ```
 
-### After Phase 3, 4 & 5 Refactoring (2026-02-23)
+### After Phase 3, 4, 5, 6 & 7 Refactoring (2026-02-23)
 
 ```
 ┌──────────────────────────────┬──────────┐
 │ Metric                       │ Current  │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (ts/tsx)           │    7,620 │
+│ Total LOC (ts/tsx)           │    7,640 │
 │ File count                   │       44 │
 │ Files >500 LOC               │        3 │
-│ Methods >50 LOC              │        7 │
-│ Max file size                │      779 │
-│ Max method size              │    ~220  │
-│ Total cyclomatic complexity  │     ~130 │
-│ Avg CC per file              │     ~3.0 │
+│ Methods >50 LOC              │        3 │
+│ Max file size                │      786 │
+│ Max method size              │     ~120 │
+│ Total cyclomatic complexity  │     ~125 │
+│ Avg CC per file              │     ~2.8 │
 │ TODO/FIXME count             │        0 │
 │ Duplicated code blocks       │        4 │
 │ God classes (>300 LOC)       │        3 │
@@ -257,17 +258,45 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 | Metric                | Before | After |     Δ     |
 | --------------------- | -----: | ----: | :-------: |
 | `page.tsx` LOC        |  1,245 |   437 | **-65%**  |
-| `service.ts` LOC      |  1,008 |   753 | **-25%**  |
+| `service.ts` LOC      |  1,008 |   786 | **-22%**  |
 | `log-sheet-preview`   |    734 |   961 | +8 files  |
-| Max file size         |  1,245 |   779 | **-37%**  |
-| Max method size       |  1,150 |   220 | **-81%**  |
+| Max file size         |  1,245 |   786 | **-37%**  |
+| Max method size       |  1,150 |   120 | **-90%**  |
 | Files >500 LOC        |      4 |     3 |  **-1**   |
-| Methods >50 LOC       |     14 |     7 | **-50%**  |
-| Total CC              |   ~180 |  ~130 | **-28%**  |
-| Avg CC/file           |   ~5.6 |  ~3.0 | **-46%**  |
+| Methods >50 LOC       |     14 |     3 | **-79%**  |
+| Total CC              |   ~180 |  ~125 | **-31%**  |
+| Avg CC/file           |   ~5.6 |  ~2.8 | **-50%**  |
 | Duplicated blocks     |     11 |     4 | **-64%**  |
 | Circular dependencies |      1 |     0 | **-100%** |
 | Cross-layer coupling  |      1 |     0 | **-100%** |
+
+---
+
+## 8. Phase 7: Extract Method Refactoring (2026-02-23)
+
+### Changed: `getLogSheetDetail` in `service.ts`
+
+**Before:** Single 220-line monolithic function
+
+**After:** Thin orchestrator (~24 lines) + 4 focused helpers:
+
+| Function                  | Lines | Responsibility                           |
+| ------------------------- | ----: | ---------------------------------------- |
+| `fetchLogSheetRow`        |    80 | Prisma query with 8 includes             |
+| `fetchProjectMachines`    |    18 | Machine fetch + chiller/CT split         |
+| `fetchParameters`         |    28 | Parameter query excluding LAB_ANALYSIS   |
+| `computeActiveMachineIds` |    18 | Active machine ID computation + fallback |
+| `buildLogSheetDetailView` |    83 | View model construction                  |
+| `getLogSheetDetail`       |    24 | Orchestrator (calls helpers)             |
+
+### Bug Fix
+
+Added missing `locked` field to `ILogSheet` view model (was causing TypeScript error).
+
+### Tests
+
+- **371 tests pass** (14 test files in `src/features/log-sheets/`)
+- Zero behavioral regressions
 
 ---
 

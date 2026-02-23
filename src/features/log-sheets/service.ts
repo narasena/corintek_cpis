@@ -465,9 +465,7 @@ export async function deleteLogSheet(id: string): Promise<ILogSheet> {
   return logSheet as unknown as ILogSheet;
 }
 
-export async function getLogSheetDetail(
-  id: string
-): Promise<ILogSheetDetailView> {
+async function fetchLogSheetRow(id: string) {
   const logSheet = (await prisma.logSheet.findFirst({
     where: {
       id,
@@ -552,9 +550,13 @@ export async function getLogSheetDetail(
     throw new Error('Log sheet tidak ditemukan');
   }
 
+  return logSheet;
+}
+
+async function fetchProjectMachines(projectId: string) {
   const machines = await prisma.machine.findMany({
     where: {
-      projectId: logSheet.projectId,
+      projectId,
       deletedAt: null,
     },
     select: {
@@ -565,7 +567,14 @@ export async function getLogSheetDetail(
     orderBy: [{ type: 'asc' }, { unitNumber: 'asc' }],
   });
 
-  const parameters = await prisma.parameter.findMany({
+  const chillers = machines.filter(m => m.type === 'CHILLER');
+  const coolingTowers = machines.filter(m => m.type === 'COOLING_TOWER');
+
+  return { chillers, coolingTowers };
+}
+
+async function fetchParameters() {
+  return prisma.parameter.findMany({
     where: {
       deletedAt: null,
       isActive: true,
@@ -592,11 +601,13 @@ export async function getLogSheetDetail(
       { createdAt: 'asc' },
     ],
   });
+}
 
-  const chillers = machines.filter(m => m.type === 'CHILLER');
-  const coolingTowers = machines.filter(m => m.type === 'COOLING_TOWER');
-
-  // activeMachineIds logic
+function computeActiveMachineIds(
+  logSheet: any,
+  chillers: { id: string }[],
+  coolingTowers: { id: string }[]
+) {
   let activeChillerIds = logSheet.activeMachines
     .filter((am: any) => chillers.some(c => c.id === am.machineId))
     .map((am: any) => am.machineId);
@@ -604,18 +615,20 @@ export async function getLogSheetDetail(
     .filter((am: any) => coolingTowers.some(ct => ct.id === am.machineId))
     .map((am: any) => am.machineId);
 
-  // Fallback: if no active machines recorded, assume all are active
   if (logSheet.activeMachines.length === 0) {
     activeChillerIds = chillers.map(c => c.id);
     activeCTIds = coolingTowers.map(ct => ct.id);
   }
 
-  const overrides = logSheet.project.parameterOverrides || [];
-  const parametersWithOverrides = applyProjectOverridesToParameters(
-    parameters as any,
-    overrides as any
-  );
+  return { chillers: activeChillerIds, coolingTowers: activeCTIds };
+}
 
+function buildLogSheetDetailView(
+  logSheet: any,
+  machines: { chillers: any[]; coolingTowers: any[] },
+  parameters: any[],
+  activeMachineIds: { chillers: string[]; coolingTowers: string[] }
+): ILogSheetDetailView {
   return {
     logSheet: {
       id: logSheet.id,
@@ -623,6 +636,7 @@ export async function getLogSheetDetail(
       date: logSheet.date,
       notes: logSheet.notes,
       status: logSheet.status as unknown as ILogSheet['status'],
+      locked: logSheet.locked ?? false,
       technicianSignatureUrl: logSheet.technicianSignatureUrl,
       technicianSignedAt: logSheet.technicianSignedAt,
       technicianSignedByUserId: logSheet.technicianSignedByUserId,
@@ -652,12 +666,8 @@ export async function getLogSheetDetail(
         user: a.user,
       })),
     },
-    machines: {
-      chillers,
-      coolingTowers,
-    },
-    parameters:
-      parametersWithOverrides as unknown as ILogSheetDetailView['parameters'],
+    machines,
+    parameters: parameters as unknown as ILogSheetDetailView['parameters'],
     entries: logSheet.entries.map((e: any) => ({
       id: e.id,
       logSheetId: e.logSheetId,
@@ -694,11 +704,34 @@ export async function getLogSheetDetail(
       createdAt: usage.createdAt,
       updatedAt: usage.updatedAt,
     })),
-    activeMachineIds: {
-      chillers: activeChillerIds,
-      coolingTowers: activeCTIds,
-    },
+    activeMachineIds,
   };
+}
+
+export async function getLogSheetDetail(
+  id: string
+): Promise<ILogSheetDetailView> {
+  const logSheet = await fetchLogSheetRow(id);
+  const machines = await fetchProjectMachines(logSheet.projectId);
+  const parameters = await fetchParameters();
+  const activeMachineIds = computeActiveMachineIds(
+    logSheet,
+    machines.chillers,
+    machines.coolingTowers
+  );
+
+  const overrides = logSheet.project.parameterOverrides || [];
+  const parametersWithOverrides = applyProjectOverridesToParameters(
+    parameters as any,
+    overrides as any
+  );
+
+  return buildLogSheetDetailView(
+    logSheet,
+    machines,
+    parametersWithOverrides,
+    activeMachineIds
+  );
 }
 
 export async function validateLogSheetForSubmission(id: string) {
