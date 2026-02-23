@@ -203,9 +203,48 @@ The 1,245-line page.tsx. Strategy: **extract sections into child components** wi
 
 ### Tests
 
-- **652 tests pass** (32 test files)
+- **371 tests pass** (14 test files)
 - Zero behavioral regressions
 - Zero import breakage
+
+---
+
+## Phase 8: Extract Function — `assertLogSheetEditable` (est. ~10 min) ✅ COMPLETED 2026-02-24
+
+### Problem
+
+`assertLogSheetEditable` was duplicated in 4 files with identical logic (~36 lines each):
+
+| File                             |         Lines |
+| -------------------------------- | ------------: |
+| `service.ts`                     |            36 |
+| `log-sheet-entries.service.ts`   |            36 |
+| `log-sheet-photos.service.ts`    |            36 |
+| `log-sheet-chemicals.service.ts` |            36 |
+| **Total duplicate**              | **144 lines** |
+
+### Solution
+
+Extract to shared module `internal/edit-permission.ts`.
+
+### Files Changed
+
+| File                             | Action                       | Δ Lines |
+| -------------------------------- | ---------------------------- | ------- |
+| `internal/edit-permission.ts`    | NEW                          | +47     |
+| `service.ts`                     | Remove duplicate, add import | -39     |
+| `log-sheet-entries.service.ts`   | Remove duplicate, add import | -42     |
+| `log-sheet-photos.service.ts`    | Remove duplicate, add import | -42     |
+| `log-sheet-chemicals.service.ts` | Remove duplicate, add import | -42     |
+
+### Tests
+
+- **371 tests pass** (14 test files)
+- Zero behavioral regressions
+
+### Result
+
+~118 lines of duplicate code eliminated. Single source of truth for edit authorization.
 
 ---
 
@@ -289,31 +328,32 @@ Manual verification checklist:
 
 ## Summary
 
-|   Phase   | What                              |       Files Changed       |  Est. Time   |  Risk  |  Status  |
-| :-------: | --------------------------------- | :-----------------------: | :----------: | :----: | :------: |
-|     1     | Tests + quick wins                |    +4 new, 1 modified     |    45 min    | 🟢 LOW |    ✅    |
-|     2     | Deduplicate code                  |    +2 new, 6 modified     |    40 min    | 🟢 LOW |    ✅    |
-|     3     | Split god component (A7)          |    +3 new, 1 modified     |    50 min    | 🟡 MED |    ✅    |
-|     4     | Split god module (F2)             |    +3 new, 1 modified     |    45 min    | 🟡 MED |    ✅    |
-|     5     | Type cleanup + verify             |        2 modified         |    20 min    | 🟢 LOW |    ✅    |
-|     6     | Split preview component           |    +8 new, 2 modified     |    30 min    | 🟡 MED |    ✅    |
-|     7     | Extract Method: getLogSheetDetail |        1 modified         |    15 min    | 🟢 LOW |    ✅    |
-| **Total** |                                   | **+20 new, ~15 modified** | **~4.5 hrs** |        | **100%** |
+|   Phase   | What                                     |       Files Changed       |  Est. Time   |  Risk  |  Status  |
+| :-------: | ---------------------------------------- | :-----------------------: | :----------: | :----: | :------: |
+|     1     | Tests + quick wins                       |    +4 new, 1 modified     |    45 min    | 🟢 LOW |    ✅    |
+|     2     | Deduplicate code                         |    +2 new, 6 modified     |    40 min    | 🟢 LOW |    ✅    |
+|     3     | Split god component (A7)                 |    +3 new, 1 modified     |    50 min    | 🟡 MED |    ✅    |
+|     4     | Split god module (F2)                    |    +3 new, 1 modified     |    45 min    | 🟡 MED |    ✅    |
+|     5     | Type cleanup + verify                    |        2 modified         |    20 min    | 🟢 LOW |    ✅    |
+|     6     | Split preview component                  |    +8 new, 2 modified     |    30 min    | 🟡 MED |    ✅    |
+|     7     | Extract Method: getLogSheetDetail        |        1 modified         |    15 min    | 🟢 LOW |    ✅    |
+|     8     | Extract Function: assertLogSheetEditable |    +1 new, 4 modified     |    10 min    | 🟢 LOW |    ✅    |
+| **Total** |                                          | **+21 new, ~19 modified** | **~4.7 hrs** |        | **100%** |
 
-### Actual post-refactor metrics (2026-02-23)
+### Actual post-refactor metrics (2026-02-24)
 
 | Metric               | Before | After |          Δ          |
 | -------------------- | -----: | ----: | :-----------------: |
-| Max file LOC         |  1,245 |   786 |      **-37%**       |
+| Max file LOC         |  1,245 |   748 |      **-40%**       |
 | `page.tsx` LOC       |  1,245 |   437 |      **-65%**       |
-| `service.ts` LOC     |  1,008 |   786 |      **-22%**       |
+| `service.ts` LOC     |  1,008 |   748 |      **-26%**       |
 | `preview` (total)    |    734 |   961 | +8 files (avg 120L) |
 | Files >500 LOC       |      4 |     3 |       **-1**        |
 | Methods >50 LOC      |     14 |     3 |      **-79%**       |
-| Duplicated blocks    |     11 |     4 |      **-64%**       |
+| Duplicated blocks    |     11 |     3 |      **-73%**       |
 | Cross-layer coupling |      1 |     0 |      **-100%**      |
-| Total files          |     32 |    44 | +12 (smaller each)  |
-| Total CC             |   ~180 |  ~125 |      **-31%**       |
+| Total files          |     32 |    45 | +13 (smaller each)  |
+| Total CC             |   ~180 |  ~120 |      **-33%**       |
 
 ---
 

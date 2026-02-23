@@ -1,22 +1,22 @@
 # Log-Sheets Module — Baseline Inventory
 
-> Snapshot: 2026-02-19 (Updated: 2026-02-23 after Phase 3, 4, 5, 6 & 7 refactoring)
+> Snapshot: 2026-02-19 (Updated: 2026-02-24 after Phase 3, 4, 5, 6, 7 & 8 refactoring)
 
 ---
 
 ## 1. Summary Dashboard
 
-| Metric                                | Before | After (2026-02-23) |   Change |
+| Metric                                | Before | After (2026-02-24) |   Change |
 | ------------------------------------- | -----: | -----------------: | -------: |
-| Total Lines of Code (ts/tsx)          |  6,805 |              7,640 |     +835 |
-| Code Files (.ts/.tsx)                 |     32 |                 44 |      +12 |
+| Total Lines of Code (ts/tsx)          |  6,805 |              7,522 |     +717 |
+| Code Files (.ts/.tsx)                 |     32 |                 45 |      +13 |
 | Classes                               |      0 |                  0 |        — |
-| Largest File                          |  1,245 |                779 | **-37%** |
+| Largest File                          |  1,245 |                748 | **-40%** |
 | Files >500 lines                      |      4 |                  3 |       -1 |
 | Methods >50 lines                     |     14 |                  3 |  **-11** |
 | Exported Functions/Types              |    ~70 |                ~90 |      +20 |
 | TODO/FIXME/HACK Comments              |      0 |                  0 |        — |
-| Estimated Total Cyclomatic Complexity |   ~180 |               ~125 | **-31%** |
+| Estimated Total Cyclomatic Complexity |   ~180 |               ~120 | **-33%** |
 
 ---
 
@@ -70,7 +70,8 @@ Source: `wc -l` over `src/app/(main)/log-sheets` and `src/features/log-sheets` (
 | 42  | **`[logSheetId]/page.tsx`**                                                     | **437** |
 | 43  | **`features/log-sheets/actions.ts`**                                            | **590** |
 | 44  | **`[logSheetId]/components/log-sheet-category-section.tsx`**                    | **779** |
-| 45  | **`features/log-sheets/service.ts`**                                            | **786** |
+| 45  | **`features/log-sheets/service.ts`**                                            | **748** |
+| 46  | `features/log-sheets/internal/edit-permission.ts`                               |      47 |
 
 ---
 
@@ -87,15 +88,15 @@ Source: `wc -l` over `src/app/(main)/log-sheets` and `src/features/log-sheets` (
 
 **These 4 files = 3,577 lines (~53% of ts/tsx LOC in this slice)**
 
-### After Phase 3, 4 & 5 Refactoring (2026-02-23)
+### After Phase 3, 4, 5, 6, 7 & 8 Refactoring (2026-02-24)
 
 | File                             | Lines | Functions | Description                                                |
 | -------------------------------- | ----: | :-------: | ---------------------------------------------------------- |
 | `log-sheet-category-section.tsx` |   779 |    11     | Category tables with value cells (extracted from page.tsx) |
-| `service.ts`                     |   753 |    17     | Core CRUD, status, signatures (extracted 3 services)       |
+| `service.ts`                     |   748 |    17     | Core CRUD, status, signatures (extracted 3 services)       |
 | `actions.ts`                     |   590 |    17     | Server action hub — create/update/save/status/upload flows |
 
-**These 3 files = 2,122 lines (~28% of ts/tsx LOC)**
+**These 3 files = 2,117 lines (~28% of ts/tsx LOC)**
 
 ### New Extracted Components (Phase 3)
 
@@ -107,15 +108,16 @@ Source: `wc -l` over `src/app/(main)/log-sheets` and `src/features/log-sheets` (
 
 **Total extracted from page.tsx: 1,000 lines**
 
-### New Extracted Services (Phase 4)
+### New Extracted Services (Phase 4, updated Phase 8)
 
 | File                             | Lines | Functions | Responsibility                 |
 | -------------------------------- | ----: | :-------: | ------------------------------ |
-| `log-sheet-entries.service.ts`   |   157 |     2     | `upsertLogSheetEntries`        |
-| `log-sheet-photos.service.ts`    |   128 |     1     | `upsertLogSheetPhotos`         |
-| `log-sheet-chemicals.service.ts` |   126 |     1     | `upsertLogSheetChemicalUsages` |
+| `log-sheet-entries.service.ts`   |   116 |     2     | `upsertLogSheetEntries`        |
+| `log-sheet-photos.service.ts`    |    69 |     1     | `upsertLogSheetPhotos`         |
+| `log-sheet-chemicals.service.ts` |    67 |     1     | `upsertLogSheetChemicalUsages` |
+| `internal/edit-permission.ts`    |    47 |     1     | `assertLogSheetEditable`       |
 
-**Total extracted from service.ts: 411 lines**
+**Total extracted from service.ts: 299 lines**
 
 ### New Extracted Preview Components (Phase 5)
 
@@ -162,26 +164,27 @@ Approximate method lengths based on current code (2026-02-23).
 
 Estimated by counting decision points: `if`, `else`, `switch/case`, `for`, `while`, `&&`/`||` guards, ternary `?:`, `catch`, and callback branches.
 
-### After Phase 3, 4, 5, 6 & 7 Refactoring (2026-02-23)
+### After Phase 3, 4, 5, 6, 7 & 8 Refactoring (2026-02-24)
 
 | File                             |       Est. CC | Hotspots                                                                                                |
 | -------------------------------- | ------------: | ------------------------------------------------------------------------------------------------------- |
 | `log-sheet-category-section.tsx` |       **~25** | Category switching, value-type branches, raw water cells, mobile/desktop paths                          |
-| `service.ts`                     |       **~22** | `buildLogSheetDetailView`, `validateLogSheetForApproval`, `updateLogSheetStatus` (reduced from ~28)     |
+| `service.ts`                     |       **~20** | `buildLogSheetDetailView`, `validateLogSheetForApproval`, `updateLogSheetStatus` (reduced from ~28)     |
 | `log-sheet-preview/index.tsx`    |       **~12** | Category iteration, hasDocumentation check (reduced from ~24)                                           |
 | `actions.ts`                     |       **~20** | Zod parse + error branching per action, RBAC checks, multiple upload/override paths                     |
 | `[logSheetId]/page.tsx`          |       **~12** | Mode switching, status checks, admin override (extracted most complexity)                               |
 | `validation.ts`                  |       **~18** | Chiller/CT loops with per-parameter emptiness checks, raw water and consumption completeness rules      |
 | `approval-validation.ts`         |       **~18** | Range checks, category-specific required fields, machine label mapping, raw water and note requirements |
-| `log-sheet-entries.service.ts`   |        **~8** | Entry upsert loop with create/update/delete branching                                                   |
+| `internal/edit-permission.ts`    |        **~6** | Edit state checks, admin override, RBAC                                                                 |
+| `log-sheet-entries.service.ts`   |        **~6** | Entry upsert loop with create/update/delete branching                                                   |
 | `use-log-sheet-draft-saver.ts`   |        **~8** | Sequential action calls with error branching                                                            |
-| `log-sheet-photos.service.ts`    |        **~5** | Photo upsert with soft-delete branching                                                                 |
-| `log-sheet-chemicals.service.ts` |        **~5** | Chemical usage upsert with soft-delete branching                                                        |
+| `log-sheet-photos.service.ts`    |        **~4** | Photo upsert with soft-delete branching                                                                 |
+| `log-sheet-chemicals.service.ts` |        **~4** | Chemical usage upsert with soft-delete branching                                                        |
 | `mobile-entry-card.tsx`          |        **~6** | Value-type ternary (BOOLEAN/NUMBER/TEXT), per-machine entry layout                                      |
 | `chemical-usage-section.tsx`     |        **~5** | Add/remove handlers, presence checks, mapping over usages                                               |
 | Preview sub-components           | **~3-5 each** | Focused single-responsibility components                                                                |
 | Remaining files                  | **~1–3 each** | Minimal branching                                                                                       |
-| **TOTAL**                        |      **~125** | —                                                                                                       |
+| **TOTAL**                        |      **~120** | —                                                                                                       |
 
 ### CC Distribution
 
@@ -231,22 +234,22 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 └──────────────────────────────┴──────────┘
 ```
 
-### After Phase 3, 4, 5, 6 & 7 Refactoring (2026-02-23)
+### After Phase 3, 4, 5, 6, 7 & 8 Refactoring (2026-02-24)
 
 ```
 ┌──────────────────────────────┬──────────┐
 │ Metric                       │ Current  │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (ts/tsx)           │    7,640 │
-│ File count                   │       44 │
+│ Total LOC (ts/tsx)           │    7,522 │
+│ File count                   │       45 │
 │ Files >500 LOC               │        3 │
 │ Methods >50 LOC              │        3 │
-│ Max file size                │      786 │
+│ Max file size                │      748 │
 │ Max method size              │     ~120 │
-│ Total cyclomatic complexity  │     ~125 │
-│ Avg CC per file              │     ~2.8 │
+│ Total cyclomatic complexity  │     ~120 │
+│ Avg CC per file              │     ~2.7 │
 │ TODO/FIXME count             │        0 │
-│ Duplicated code blocks       │        4 │
+│ Duplicated code blocks       │        3 │
 │ God classes (>300 LOC)       │        3 │
 │ Circular dependencies        │        0 │
 │ Cross-layer coupling         │        0 │
@@ -258,15 +261,15 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 | Metric                | Before | After |     Δ     |
 | --------------------- | -----: | ----: | :-------: |
 | `page.tsx` LOC        |  1,245 |   437 | **-65%**  |
-| `service.ts` LOC      |  1,008 |   786 | **-22%**  |
+| `service.ts` LOC      |  1,008 |   748 | **-26%**  |
 | `log-sheet-preview`   |    734 |   961 | +8 files  |
-| Max file size         |  1,245 |   786 | **-37%**  |
+| Max file size         |  1,245 |   748 | **-40%**  |
 | Max method size       |  1,150 |   120 | **-90%**  |
 | Files >500 LOC        |      4 |     3 |  **-1**   |
 | Methods >50 LOC       |     14 |     3 | **-79%**  |
-| Total CC              |   ~180 |  ~125 | **-31%**  |
-| Avg CC/file           |   ~5.6 |  ~2.8 | **-50%**  |
-| Duplicated blocks     |     11 |     4 | **-64%**  |
+| Total CC              |   ~180 |  ~120 | **-33%**  |
+| Avg CC/file           |   ~5.6 |  ~2.7 | **-52%**  |
+| Duplicated blocks     |     11 |     3 | **-73%**  |
 | Circular dependencies |      1 |     0 | **-100%** |
 | Cross-layer coupling  |      1 |     0 | **-100%** |
 
@@ -292,6 +295,31 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 ### Bug Fix
 
 Added missing `locked` field to `ILogSheet` view model (was causing TypeScript error).
+
+### Tests
+
+- **371 tests pass** (14 test files in `src/features/log-sheets/`)
+- Zero behavioral regressions
+
+---
+
+## 9. Phase 8: Extract Function Refactoring (2026-02-24)
+
+### Changed: `assertLogSheetEditable` duplicated in 4 files
+
+**Before:** Same function duplicated in service.ts, log-sheet-entries.service.ts, log-sheet-photos.service.ts, log-sheet-chemicals.service.ts (~36 lines each)
+
+**After:** Single source of truth in `internal/edit-permission.ts`
+
+| File                             | Before | After |
+| -------------------------------- | -----: | ----: |
+| `internal/edit-permission.ts`    |      — |    47 |
+| `service.ts`                     |    787 |   748 |
+| `log-sheet-entries.service.ts`   |    158 |   116 |
+| `log-sheet-photos.service.ts`    |    111 |    69 |
+| `log-sheet-chemicals.service.ts` |    109 |    67 |
+
+**Net reduction:** ~118 lines of duplicate code eliminated.
 
 ### Tests
 
