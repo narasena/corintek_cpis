@@ -63,7 +63,7 @@ Source: `wc -l` over `src/app/(main)/log-sheets` and `src/features/log-sheets` (
 | 35  | `components/mobile-entry-card.tsx`                                              |     200 |
 | 36  | `features/log-sheets/types.ts`                                                  |     202 |
 | 37  | `components/chemical-usage-section.tsx`                                         |     210 |
-| 38  | `features/log-sheets/validation.ts`                                             |     221 |
+| 38  | `features/log-sheets/validation.ts`                                             |     205 |
 | 39  | `features/log-sheets/service.test.ts`                                           |     245 |
 | 40  | `features/log-sheets/components/log-sheet-preview/signatures-section.tsx`       |      70 |
 | 41  | **`features/log-sheets/components/log-sheet-preview/index.tsx`**                | **262** |
@@ -166,25 +166,25 @@ Estimated by counting decision points: `if`, `else`, `switch/case`, `for`, `whil
 
 ### After Phase 3, 4, 5, 6, 7 & 8 Refactoring (2026-02-24)
 
-| File                             |       Est. CC | Hotspots                                                                                                |
-| -------------------------------- | ------------: | ------------------------------------------------------------------------------------------------------- |
-| `log-sheet-category-section.tsx` |       **~25** | Category switching, value-type branches, raw water cells, mobile/desktop paths                          |
-| `service.ts`                     |       **~20** | `buildLogSheetDetailView`, `validateLogSheetForApproval`, `updateLogSheetStatus` (reduced from ~28)     |
-| `log-sheet-preview/index.tsx`    |       **~12** | Category iteration, hasDocumentation check (reduced from ~24)                                           |
-| `actions.ts`                     |       **~20** | Zod parse + error branching per action, RBAC checks, multiple upload/override paths                     |
-| `[logSheetId]/page.tsx`          |       **~12** | Mode switching, status checks, admin override (extracted most complexity)                               |
-| `validation.ts`                  |       **~18** | Chiller/CT loops with per-parameter emptiness checks, raw water and consumption completeness rules      |
-| `approval-validation.ts`         |       **~18** | Range checks, category-specific required fields, machine label mapping, raw water and note requirements |
-| `internal/edit-permission.ts`    |        **~6** | Edit state checks, admin override, RBAC                                                                 |
-| `log-sheet-entries.service.ts`   |        **~6** | Entry upsert loop with create/update/delete branching                                                   |
-| `use-log-sheet-draft-saver.ts`   |        **~8** | Sequential action calls with error branching                                                            |
-| `log-sheet-photos.service.ts`    |        **~4** | Photo upsert with soft-delete branching                                                                 |
-| `log-sheet-chemicals.service.ts` |        **~4** | Chemical usage upsert with soft-delete branching                                                        |
-| `mobile-entry-card.tsx`          |        **~6** | Value-type ternary (BOOLEAN/NUMBER/TEXT), per-machine entry layout                                      |
-| `chemical-usage-section.tsx`     |        **~5** | Add/remove handlers, presence checks, mapping over usages                                               |
-| Preview sub-components           | **~3-5 each** | Focused single-responsibility components                                                                |
-| Remaining files                  | **~1–3 each** | Minimal branching                                                                                       |
-| **TOTAL**                        |      **~120** | —                                                                                                       |
+| File                             |       Est. CC | Hotspots                                                                                                   |
+| -------------------------------- | ------------: | ---------------------------------------------------------------------------------------------------------- |
+| `log-sheet-category-section.tsx` |       **~25** | Category switching, value-type branches, raw water cells, mobile/desktop paths                             |
+| `service.ts`                     |       **~20** | `buildLogSheetDetailView`, `validateLogSheetForApproval`, `updateLogSheetStatus` (reduced from ~28)        |
+| `log-sheet-preview/index.tsx`    |       **~12** | Category iteration, hasDocumentation check (reduced from ~24)                                              |
+| `actions.ts`                     |       **~20** | Zod parse + error branching per action, RBAC checks, multiple upload/override paths                        |
+| `[logSheetId]/page.tsx`          |       **~12** | Mode switching, status checks, admin override (extracted most complexity)                                  |
+| `validation.ts`                  |       **~14** | Chiller/CT loops consolidated into `validateMachineCategory`, raw water and consumption completeness rules |
+| `approval-validation.ts`         |       **~18** | Range checks, category-specific required fields, machine label mapping, raw water and note requirements    |
+| `internal/edit-permission.ts`    |        **~6** | Edit state checks, admin override, RBAC                                                                    |
+| `log-sheet-entries.service.ts`   |        **~6** | Entry upsert loop with create/update/delete branching                                                      |
+| `use-log-sheet-draft-saver.ts`   |        **~8** | Sequential action calls with error branching                                                               |
+| `log-sheet-photos.service.ts`    |        **~4** | Photo upsert with soft-delete branching                                                                    |
+| `log-sheet-chemicals.service.ts` |        **~4** | Chemical usage upsert with soft-delete branching                                                           |
+| `mobile-entry-card.tsx`          |        **~6** | Value-type ternary (BOOLEAN/NUMBER/TEXT), per-machine entry layout                                         |
+| `chemical-usage-section.tsx`     |        **~5** | Add/remove handlers, presence checks, mapping over usages                                                  |
+| Preview sub-components           | **~3-5 each** | Focused single-responsibility components                                                                   |
+| Remaining files                  | **~1–3 each** | Minimal branching                                                                                          |
+| **TOTAL**                        |      **~116** | —                                                                                                          |
 
 ### CC Distribution
 
@@ -249,7 +249,7 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 │ Total cyclomatic complexity  │     ~120 │
 │ Avg CC per file              │     ~2.7 │
 │ TODO/FIXME count             │        0 │
-│ Duplicated code blocks       │        3 │
+│ Duplicated code blocks       │        2 │
 │ God classes (>300 LOC)       │        3 │
 │ Circular dependencies        │        0 │
 │ Cross-layer coupling         │        0 │
@@ -269,7 +269,7 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 | Methods >50 LOC       |     14 |     3 | **-79%**  |
 | Total CC              |   ~180 |  ~120 | **-33%**  |
 | Avg CC/file           |   ~5.6 |  ~2.7 | **-52%**  |
-| Duplicated blocks     |     11 |     3 | **-73%**  |
+| Duplicated blocks     |     11 |     2 | **-82%**  |
 | Circular dependencies |      1 |     0 | **-100%** |
 | Cross-layer coupling  |      1 |     0 | **-100%** |
 
@@ -320,6 +320,36 @@ Added missing `locked` field to `ILogSheet` view model (was causing TypeScript e
 | `log-sheet-chemicals.service.ts` |    109 |    67 |
 
 **Net reduction:** ~118 lines of duplicate code eliminated.
+
+### Tests
+
+- **371 tests pass** (14 test files in `src/features/log-sheets/`)
+- Zero behavioral regressions
+
+---
+
+## 9. Phase 9: Extract Method — `validateMachineCategory` (2026-02-24)
+
+### Changed: `validation.ts`
+
+**Before:** Two duplicate functions (~101 lines total):
+
+- `validateChillers()` — 49 lines
+- `validateCoolingTowers()` — 52 lines
+
+**After:** Single parameterized helper + thin wrappers:
+
+- `validateMachineCategory()` — 44 lines (new generic helper)
+- `validateChillers()` — 13 lines (delegates to helper)
+- `validateCoolingTowers()` — 17 lines (delegates to helper)
+
+| Metric            | Before | After |    Δ    |
+| ----------------- | -----: | ----: | :-----: |
+| Total lines       |    222 |   205 | **-17** |
+| Duplicate blocks  |      1 |     0 | **-1**  |
+| Functions >20 LOC |      2 |     1 | **-1**  |
+
+**Net reduction:** ~17 lines eliminated. Single source of truth for machine validation logic.
 
 ### Tests
 
