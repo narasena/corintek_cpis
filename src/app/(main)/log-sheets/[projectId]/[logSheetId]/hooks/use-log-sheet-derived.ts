@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
-import { CATEGORY_ORDER } from '@/features/log-sheets/components/log-sheet-preview';
+import { CATEGORY_ORDER } from '@/features/log-sheets/components/log-sheet-preview/category-helpers';
 import type { TUserResponse } from '@/@types/user.type';
 import type { TDetail, TMachine, TParameter } from '../types';
 

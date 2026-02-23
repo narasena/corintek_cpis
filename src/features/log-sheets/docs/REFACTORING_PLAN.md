@@ -289,28 +289,30 @@ Manual verification checklist:
 
 ## Summary
 
-|   Phase   | What                     |       Files Changed       |  Est. Time   |  Risk  | Status  |
-| :-------: | ------------------------ | :-----------------------: | :----------: | :----: | :-----: |
-|     1     | Tests + quick wins       |    +4 new, 1 modified     |    45 min    | 🟢 LOW |   ✅    |
-|     2     | Deduplicate code         |    +2 new, 6 modified     |    40 min    | 🟢 LOW |   ✅    |
-|     3     | Split god component (A7) |    +3 new, 1 modified     |    50 min    | 🟡 MED |   ✅    |
-|     4     | Split god module (F2)    |    +3 new, 1 modified     |    45 min    | 🟡 MED |   ✅    |
-|     5     | Type cleanup + verify    |        2 modified         |    20 min    | 🟢 LOW |   ⏸️    |
-| **Total** |                          | **+12 new, ~11 modified** | **~3.3 hrs** |        | **80%** |
+|   Phase   | What                     |       Files Changed       |  Est. Time   |  Risk  |  Status  |
+| :-------: | ------------------------ | :-----------------------: | :----------: | :----: | :------: |
+|     1     | Tests + quick wins       |    +4 new, 1 modified     |    45 min    | 🟢 LOW |    ✅    |
+|     2     | Deduplicate code         |    +2 new, 6 modified     |    40 min    | 🟢 LOW |    ✅    |
+|     3     | Split god component (A7) |    +3 new, 1 modified     |    50 min    | 🟡 MED |    ✅    |
+|     4     | Split god module (F2)    |    +3 new, 1 modified     |    45 min    | 🟡 MED |    ✅    |
+|     5     | Type cleanup + verify    |        2 modified         |    20 min    | 🟢 LOW |    ✅    |
+|     6     | Split preview component  |    +8 new, 2 modified     |    30 min    | 🟡 MED |    ✅    |
+| **Total** |                          | **+20 new, ~14 modified** | **~4.5 hrs** |        | **100%** |
 
 ### Actual post-refactor metrics (2026-02-23)
 
-| Metric               | Before | After |         Δ         |
-| -------------------- | -----: | ----: | :---------------: |
-| Max file LOC         |  1,245 |   779 |     **-37%**      |
-| `page.tsx` LOC       |  1,245 |   437 |     **-65%**      |
-| `service.ts` LOC     |  1,008 |   753 |     **-25%**      |
-| Files >500 LOC       |      4 |     4 |         —         |
-| Methods >50 LOC      |     14 |     8 |     **-43%**      |
-| Duplicated blocks    |     11 |     5 |     **-55%**      |
-| Cross-layer coupling |      1 |     0 |     **-100%**     |
-| Total files          |     32 |    38 | +6 (smaller each) |
-| Total CC             |   ~180 |  ~140 |     **-22%**      |
+| Metric               | Before | After |          Δ          |
+| -------------------- | -----: | ----: | :-----------------: |
+| Max file LOC         |  1,245 |   779 |      **-37%**       |
+| `page.tsx` LOC       |  1,245 |   437 |      **-65%**       |
+| `service.ts` LOC     |  1,008 |   753 |      **-25%**       |
+| `preview` (total)    |    734 |   961 | +8 files (avg 120L) |
+| Files >500 LOC       |      4 |     3 |       **-1**        |
+| Methods >50 LOC      |     14 |     7 |      **-50%**       |
+| Duplicated blocks    |     11 |     4 |      **-64%**       |
+| Cross-layer coupling |      1 |     0 |      **-100%**      |
+| Total files          |     32 |    44 | +12 (smaller each)  |
+| Total CC             |   ~180 |  ~130 |      **-28%**       |
 
 ---
 

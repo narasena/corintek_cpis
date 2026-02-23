@@ -1,53 +1,64 @@
 # Log-Sheets Module — Dependency Map
 
-> Generated: 2026-02-19 | Updated: 2026-02-22 (Phase 4 refactoring)
+> Generated: 2026-02-19 | Updated: 2026-02-23 (Phase 3, 4 & 5 refactoring)
 
 ---
 
-## 1. File Inventory (30 runtime modules + tests/docs)
+## 1. File Inventory (38 runtime modules + tests/docs)
 
 ### App Layer (`src/app/(main)/log-sheets/`)
 
-| #   | File                                                              |     Lines | Role                                     |
-| --- | ----------------------------------------------------------------- | --------: | ---------------------------------------- |
-| A1  | `page.tsx`                                                        |        63 | Root page — project list                 |
-| A2  | `components/project-columns.tsx`                                  |        29 | Column defs for project table            |
-| A3  | `[projectId]/page.tsx`                                            |       136 | Log-sheet list per project               |
-| A4  | `[projectId]/components/columns.tsx`                              |        75 | Column defs for log-sheet table          |
-| A5  | `[projectId]/components/log-sheet-dialog.tsx`                     |        35 | CrudDialog wrapper for create            |
-| A6  | `[projectId]/components/log-sheet-form.tsx`                       |       160 | Create log-sheet form                    |
-| A7  | `[projectId]/[logSheetId]/page.tsx`                               | **1200+** | Detail page (input + preview + signing)  |
-| A8  | `[projectId]/[logSheetId]/types.ts`                               |       106 | Local types for detail page              |
-| A9  | `[projectId]/[logSheetId]/utils.ts`                               |        67 | Local formatters/helpers                 |
-| A10 | `[projectId]/[logSheetId]/components/chemical-usage-section.tsx`  |       211 | Chemical usage CRUD section              |
-| A11 | `[projectId]/[logSheetId]/components/mobile-entry-card.tsx`       |       201 | Mobile-responsive entry card             |
-| A12 | `[projectId]/[logSheetId]/hooks/use-log-sheet-active-machines.ts` |       105 | Toggle/select/clear machines             |
-| A13 | `[projectId]/[logSheetId]/hooks/use-log-sheet-derived.ts`         |       108 | Categories, machines, computed           |
-| A14 | `[projectId]/[logSheetId]/hooks/use-log-sheet-detail-data.ts`     |        35 | Fetch log-sheet detail                   |
-| A15 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-saver.ts`     |       144 | Save draft (entries, chemicals, uploads) |
-| A16 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-state.ts`     |        93 | Initialize draft state from detail       |
-| A17 | `[projectId]/[logSheetId]/hooks/use-log-sheet-technicians.ts`     |        19 | Fetch all users as technicians           |
-| A18 | `[projectId]/[logSheetId]/hooks/use-log-sheet-validation.ts`      |        79 | Client-side validation wrapper           |
+| #   | File                                                                 |   Lines | Role                                     |
+| --- | -------------------------------------------------------------------- | ------: | ---------------------------------------- |
+| A1  | `page.tsx`                                                           |      63 | Root page — project list                 |
+| A2  | `components/project-columns.tsx`                                     |      29 | Column defs for project table            |
+| A3  | `[projectId]/page.tsx`                                               |     136 | Log-sheet list per project               |
+| A4  | `[projectId]/components/columns.tsx`                                 |      75 | Column defs for log-sheet table          |
+| A5  | `[projectId]/components/log-sheet-dialog.tsx`                        |      35 | CrudDialog wrapper for create            |
+| A6  | `[projectId]/components/log-sheet-form.tsx`                          |     160 | Create log-sheet form                    |
+| A7  | `[projectId]/[logSheetId]/page.tsx`                                  | **437** | Detail page (input + preview + signing)  |
+| A8  | `[projectId]/[logSheetId]/types.ts`                                  |     106 | Local types for detail page              |
+| A9  | `[projectId]/[logSheetId]/utils.ts`                                  |      67 | Local formatters/helpers                 |
+| A10 | `[projectId]/[logSheetId]/components/chemical-usage-section.tsx`     |     211 | Chemical usage CRUD section              |
+| A11 | `[projectId]/[logSheetId]/components/mobile-entry-card.tsx`          |     201 | Mobile-responsive entry card             |
+| A12 | `[projectId]/[logSheetId]/components/log-sheet-toolbar.tsx`          |      89 | Toolbar with mode/save/print             |
+| A13 | `[projectId]/[logSheetId]/components/machine-selection-panel.tsx`    |     132 | Chiller/CT selection UI                  |
+| A14 | `[projectId]/[logSheetId]/components/log-sheet-category-section.tsx` | **779** | Category tables rendering                |
+| A15 | `[projectId]/[logSheetId]/hooks/use-log-sheet-active-machines.ts`    |     105 | Toggle/select/clear machines             |
+| A16 | `[projectId]/[logSheetId]/hooks/use-log-sheet-derived.ts`            |     107 | Categories, machines, computed           |
+| A17 | `[projectId]/[logSheetId]/hooks/use-log-sheet-detail-data.ts`        |      35 | Fetch log-sheet detail                   |
+| A18 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-saver.ts`        |     144 | Save draft (entries, chemicals, uploads) |
+| A19 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-state.ts`        |      93 | Initialize draft state from detail       |
+| A20 | `[projectId]/[logSheetId]/hooks/use-log-sheet-technicians.ts`        |      19 | Fetch all users as technicians           |
+| A21 | `[projectId]/[logSheetId]/hooks/use-log-sheet-validation.ts`         |      79 | Client-side validation wrapper           |
 
 ### Features Layer — Runtime (`src/features/log-sheets/`)
 
-| #   | File                               |    Lines | Role                                              |
-| --- | ---------------------------------- | -------: | ------------------------------------------------- |
-| F1  | `actions.ts`                       | **520+** | Server actions (CRUD, status, signatures, upload) |
-| F2  | `service.ts`                       |  **753** | Prisma service layer + auth/locking (reduced 25%) |
-| F2a | `log-sheet-entries.service.ts`     |  **157** | `upsertLogSheetEntries` (extracted)               |
-| F2b | `log-sheet-photos.service.ts`      |  **110** | `upsertLogSheetPhotos` (extracted)                |
-| F2c | `log-sheet-chemicals.service.ts`   |  **108** | `upsertLogSheetChemicalUsages` (extracted)        |
-| F3  | `types.ts`                         |      200 | Zod schemas + interfaces                          |
-| F4  | `utils.ts`                         |       38 | `makeEntryKey`, `isLogSheetEntryEmpty`            |
-| F5  | `components/log-sheet-header.tsx`  |       75 | Print header component                            |
-| F6  | `components/log-sheet-preview.tsx` |  **713** | Full print preview component                      |
-| F7  | `components/signature-section.tsx` |      144 | Signature UI for technician / client PIC          |
-| F8  | `components/signature-pad.tsx`     |      197 | Canvas-based signature drawing component          |
-| F9  | `validation.ts`                    |      220 | Shared client/server entry completeness checks    |
-| F10 | `approval-validation.ts`           |      198 | Server-side approval validation on detail view    |
-| F11 | `log-sheet-status.ts`              |       53 | Status transition rules                           |
-| F12 | `log-sheet-locking.ts`             |       39 | Status/lock → editability decision                |
+| #   | File                                        |   Lines | Role                                                    |
+| --- | ------------------------------------------- | ------: | ------------------------------------------------------- |
+| F1  | `actions.ts`                                | **590** | Server actions (CRUD, status, signatures, upload)       |
+| F2  | `service.ts`                                | **753** | Prisma service layer + auth/locking (reduced 25%)       |
+| F2a | `log-sheet-entries.service.ts`              |     157 | `upsertLogSheetEntries` (extracted)                     |
+| F2b | `log-sheet-photos.service.ts`               |     128 | `upsertLogSheetPhotos` (extracted)                      |
+| F2c | `log-sheet-chemicals.service.ts`            |     126 | `upsertLogSheetChemicalUsages` (extracted)              |
+| F3  | `types.ts`                                  |     200 | Zod schemas + interfaces                                |
+| F4  | `utils.ts`                                  |      38 | `makeEntryKey`, `isLogSheetEntryEmpty`                  |
+| F5  | `components/log-sheet-header.tsx`           |      75 | Print header component                                  |
+| F6  | `components/log-sheet-preview/` (directory) |     961 | Print preview modules (Phase 5 extraction)              |
+| F6a | `  index.tsx`                               |     262 | Main preview orchestrator                               |
+| F6b | `  category-helpers.ts`                     |      37 | `CATEGORY_ORDER`, `sectionTitle`, `machinesForCategory` |
+| F6c | `  format-helpers.ts`                       |      82 | `formatLimit`, `formatRawWaterLimit`, `formatValue`     |
+| F6d | `  consumption-section.tsx`                 |     108 | Water meter + chemicals table                           |
+| F6e | `  cooling-water-section.tsx`               |     117 | Cooling water table with raw water columns              |
+| F6f | `  general-category-section.tsx`            |     155 | General category table render                           |
+| F6g | `  signatures-section.tsx`                  |      70 | Signature panels                                        |
+| F6h | `  documentation-section.tsx`               |     130 | Photo documentation grid                                |
+| F7  | `components/signature-section.tsx`          |     144 | Signature UI for technician / client PIC                |
+| F8  | `components/signature-pad.tsx`              |     197 | Canvas-based signature drawing component                |
+| F9  | `validation.ts`                             |     220 | Shared client/server entry completeness checks          |
+| F10 | `approval-validation.ts`                    |     198 | Server-side approval validation on detail view          |
+| F11 | `log-sheet-status.ts`                       |      53 | Status transition rules                                 |
+| F12 | `log-sheet-locking.ts`                      |      39 | Status/lock → editability decision                      |
 
 ### Features Layer — Supporting Artifacts
 
@@ -85,17 +96,17 @@ A6  → F3 (types), F1 (actions),
        @/features/users/actions, @/@types/user.type
 A7  → F1 (actions), F4 (utils), F6 (log-sheet-preview),
        F7 (signature-section),
-       A8 (types), A9 (utils), A10, A11,
-       A12, A13, A14, A15, A16, A17, A18,
+       A8 (types), A9 (utils), A10, A11, A12, A13, A14,
+       A15, A16, A17, A18, A19, A20, A21,
        @/hooks/use-mobile
 A8  → F3 (types: TLogSheetStatus)
 A9  → A8 (types)
 A10 → @/features/chemicals/actions, @/@types/chemical.type
 A11 → F4 (utils), A9 (utils), A8 (types)
 A12 → F1 (actions), A8 (types)
-A13 → F6 (CATEGORY_ORDER export), @/@types/user.type, A8 (types)
+A13 → F6b (category-helpers), @/@types/user.type, A8 (types)
 A14 → F1 (actions), A8 (types)
-A15 → F1 (actions), A10 (TChemicalUsageState type), A8 (types)
+A15 → F1 (actions), A8 (types)
 A16 → F4 (utils), A10 (TChemicalUsageState type), A8 (types)
 A17 → @/features/users/actions, @/@types/user.type
 A18 → F4 (utils), F9 (validation), A8 (types)
@@ -130,7 +141,16 @@ F2c → F12 (log-sheet-locking),
 F3 → @/features/parameters/types
 F4 → F3 (types)
 F5 → (no local deps, uses next/image)
-F6 → F4 (utils), F3 (types), F5 (log-sheet-header)
+F6a → F4 (utils), F3 (types), F5 (log-sheet-header),
+        F6b (category-helpers), F6c (format-helpers),
+        F6d, F6e, F6f, F6g, F6h
+F6b → F3 (types) — pure helper module
+F6c → F3 (types) — pure helper module
+F6d → F4 (utils), F6c (format-helpers), F3 (types)
+F6e → F4 (utils), F6b (category-helpers), F6c (format-helpers), F3 (types)
+F6f → F4 (utils), F6b (category-helpers), F6c (format-helpers), F3 (types)
+F6g → (no local deps)
+F6h → F4 (utils), F5 (log-sheet-header), F3 (types)
 F7 → F1 (actions), F8 (signature-pad),
        @/components/signature/signature-preview,
        @/components/signature/signature-roles
@@ -141,7 +161,11 @@ F11 → F3 (types)
 F12 → F3 (types)
 ```
 
-**Note:** F2a, F2b, F2c export functions that are re-exported by F2 via facade pattern. F1 imports from F2, not directly from extracted services.
+**Note:**
+
+- F2a, F2b, F2c export functions that are re-exported by F2 via facade pattern. F1 imports from F2, not directly from extracted services.
+- F6 (log-sheet-preview) is now a directory with F6a-F6h sub-modules.
+- **Cross-layer coupling resolved:** A13 now imports from F6b (pure helper module) instead of F6a (UI component).
 
 ### Cross-Module External Dependencies
 
@@ -182,11 +206,14 @@ Previously: F2 `service.ts` imported `validateLogSheetApprovalDetail` from F10, 
 
 **Resolution (2026-02-22):** The `isEntryComplete` helper was removed from F2 `service.ts` during Phase 4 refactoring, reducing coupling. The type-only cycle still exists but is now documented as acceptable (type imports don't create runtime cycles).
 
-There is also an ongoing **cross-layer coupling concern**:
+### ~~Cross-layer coupling: A13 → F6~~ ✅ RESOLVED (2026-02-23)
 
-> **A13 (`use-log-sheet-derived.ts`) imports `CATEGORY_ORDER` from F6 (`log-sheet-preview.tsx`).**
->
-> A constant used for data logic is exported from a UI component file. This creates an implicit coupling where the app-layer hook depends on a features-layer UI component.
+**Previous issue:**
+
+> A13 (`use-log-sheet-derived.ts`) imported `CATEGORY_ORDER` from F6 (`log-sheet-preview.tsx`).
+> A constant used for data logic was exported from a UI component file.
+
+**Resolution:** `CATEGORY_ORDER`, `sectionTitle`, and `machinesForCategory` were extracted to `F6b` (`category-helpers.ts`) — a pure helper module with no UI dependencies. A13 now imports from F6b instead of F6a.
 
 ---
 
@@ -194,23 +221,29 @@ There is also an ongoing **cross-layer coupling concern**:
 
 Threshold: >300 lines or >10 exported functions/methods.
 
-| File                           |     Lines |         Functions/Exports          | Verdict                                                                                                                                                          |
-| ------------------------------ | --------: | :--------------------------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **A7** `[logSheetId]/page.tsx` | **1200+** |      1 component, 7+ handlers      | 🔴 **GOD COMPONENT** — massive render function with inline table rendering for 3+ category types, mobile/desktop branching, signatures UI, and ~900 lines of JSX |
-| ~~**F2** `service.ts`~~        | ~~1011+~~ |     ~~17+ exported functions~~     | ~~🔴 **GOD MODULE**~~ → 🟡 **LARGE** (753 lines after Phase 4 extraction)                                                                                        |
-| **F6** `log-sheet-preview.tsx` |   **713** |      1 component + 4 helpers       | 🟡 **LARGE** — complex print layout, but single responsibility                                                                                                   |
-| **F1** `actions.ts`            |  **520+** | **16+ exported actions** + helpers | 🟡 **LARGE** — many actions but each is thin wrapper around service                                                                                              |
+| File                                     |     Lines |         Functions/Exports         | Verdict                                                                                 |
+| ---------------------------------------- | --------: | :-------------------------------: | --------------------------------------------------------------------------------------- |
+| **A14** `log-sheet-category-section.tsx` |   **779** |      11 components + helpers      | 🟡 **LARGE** — Category tables with mobile/desktop branching                            |
+| **F2** `service.ts`                      |   **753** |       17 exported functions       | 🟡 **LARGE** — Core CRUD, status, signatures (reduced from 1,008)                       |
+| **F1** `actions.ts`                      |   **590** | **17 exported actions** + helpers | 🟡 **LARGE** — Many actions but each is thin wrapper around service                     |
+| ~~**A7** `[logSheetId]/page.tsx`~~       | ~~1,245~~ |   ~~1 component, 7+ handlers~~    | ~~🔴 **GOD COMPONENT**~~ → 🟢 **NORMAL** (437 lines after Phase 3 extraction)           |
+| ~~**F6** `log-sheet-preview.tsx`~~       |   ~~734~~ |    ~~1 component + 4 helpers~~    | ~~🟡 **LARGE**~~ → 🟢 **NORMAL** (extracted to 8 focused modules, largest is 262 lines) |
 
-### Phase 4 Extraction Summary (2026-02-22)
+### Phase 5 Extraction Summary (2026-02-23)
 
-| Extracted File                   |   Lines | Functions Extracted            |
-| -------------------------------- | ------: | ------------------------------ |
-| `log-sheet-entries.service.ts`   |     157 | `upsertLogSheetEntries`        |
-| `log-sheet-photos.service.ts`    |     110 | `upsertLogSheetPhotos`         |
-| `log-sheet-chemicals.service.ts` |     108 | `upsertLogSheetChemicalUsages` |
-| **Total extracted**              | **375** | **3 functions**                |
+| Extracted File                                   |   Lines | Functions/Exports                                       |
+| ------------------------------------------------ | ------: | ------------------------------------------------------- |
+| `log-sheet-preview/index.tsx`                    |     262 | `LogSheetPreview` (orchestrator)                        |
+| `log-sheet-preview/general-category-section.tsx` |     155 | `GeneralCategorySection`                                |
+| `log-sheet-preview/documentation-section.tsx`    |     130 | `DocumentationSection`                                  |
+| `log-sheet-preview/cooling-water-section.tsx`    |     117 | `CoolingWaterSection`                                   |
+| `log-sheet-preview/consumption-section.tsx`      |     108 | `ConsumptionSection`                                    |
+| `log-sheet-preview/format-helpers.ts`            |      82 | `formatLimit`, `formatRawWaterLimit`, `formatValue`     |
+| `log-sheet-preview/signatures-section.tsx`       |      70 | `SignaturesSection`                                     |
+| `log-sheet-preview/category-helpers.ts`          |      37 | `CATEGORY_ORDER`, `sectionTitle`, `machinesForCategory` |
+| **Total**                                        | **961** | **12 exports**                                          |
 
-`service.ts` reduced from 1,009 to 753 lines (**-25%**). Functions remain accessible via facade re-exports.
+Original `log-sheet-preview.tsx` (734 lines) → 8 focused modules (avg 120 lines each).
 
 ### Detail: A7 `[logSheetId]/page.tsx` breakdown
 
@@ -251,17 +284,19 @@ Selected exported functions (not exhaustive):
 - **A4** `[projectId]/components/columns.tsx` L22-30 — `formatDate(value: Date | string)`
 - Identical implementation with `id-ID` locale and same options.
 
-### DUP-3: `formatLimit()` function — 3 variants
+### ~~DUP-3: `formatLimit()` function~~ ✅ RESOLVED
 
-- **A9** `[logSheetId]/utils.ts` L13-33 — uses `min/max` fields, appends unit
-- **F6** `log-sheet-preview.tsx` L13-49 — similar but adds BOOLEAN-specific labels, no unit
-- **A11** `mobile-entry-card.tsx` — imports from A9 (not duplicated, but depends on local utils)
+- ~~**A9** `[logSheetId]/utils.ts`~~ — ~~uses `min/max` fields, appends unit~~
+- ~~**F6** `log-sheet-preview.tsx`~~ — ~~similar but adds BOOLEAN-specific labels~~
 
-### DUP-4: `formatRawWaterLimit()` function
+**Resolution:** `formatLimit`, `formatRawWaterLimit`, `formatValue` consolidated in `F6c` (`format-helpers.ts`). Preview components import from single source.
 
-- **A9** `[logSheetId]/utils.ts` L35-55
-- **F6** `log-sheet-preview.tsx` L51-74
-- Near-identical implementations.
+### ~~DUP-4: `formatRawWaterLimit()` function~~ ✅ RESOLVED
+
+- ~~**A9** `[logSheetId]/utils.ts`~~
+- ~~**F6** `log-sheet-preview.tsx`~~
+
+**Resolution:** Moved to `F6c` (`format-helpers.ts`).
 
 ### DUP-5: `TEntryState` type
 
@@ -275,15 +310,16 @@ Selected exported functions (not exhaustive):
 - **F3** `types.ts` defines `TPreviewParameter`, `TPreviewMachine`
 - Structurally identical types with different names in different files.
 
-### DUP-7: `machinesForCategory()` logic
+### ~~DUP-7: `machinesForCategory()` logic~~ ✅ RESOLVED
 
-- **A13** `use-log-sheet-derived.ts` L46-71 — `machinesForCategory` callback
-- **F6** `log-sheet-preview.tsx` L112-128 — `machinesForCategory` helper
-- Same category-to-machine-type mapping logic duplicated.
+- ~~**A13** `use-log-sheet-derived.ts`~~ — ~~`machinesForCategory` callback~~
+- ~~**F6** `log-sheet-preview.tsx`~~ — ~~`machinesForCategory` helper~~
+
+**Resolution:** Extracted to `F6b` (`category-helpers.ts`). Both A13 and F6 now import from single source.
 
 ### DUP-8: Inline `setEntryState` handlers
 
-- **A7** `page.tsx` — ~15 occurrences of nearly identical `setEntryState(prev => ({ ...prev, [key]: { valueType: '...', ... } }))` patterns
+- **A14** `log-sheet-category-section.tsx` — ~15 occurrences of nearly identical `setEntryState(prev => ({ ...prev, [key]: { valueType: '...', ... } }))` patterns
 - **A11** `mobile-entry-card.tsx` — ~5 occurrences of the same pattern
 - **A10** (indirectly via chemical state)
 - No shared handler abstraction exists.
@@ -297,15 +333,9 @@ Selected exported functions (not exhaustive):
 ### DUP-10: Validation logic overlap
 
 - **F9** `validation.ts` — centralised entry completeness validation (`validateLogSheetEntries`)
-- **A18** `use-log-sheet-validation.ts` — maps page state into `TLogSheetValidationInput` and calls F9
+- **A21** `use-log-sheet-validation.ts` — maps page state into `TLogSheetValidationInput` and calls F9
 - **F2** `service.ts` — `validateLogSheetForSubmission` and `validateLogSheetForApproval` perform additional checks that partially overlap with F9
 - Same business rules (required fields, machine selection, raw water/consumption) are enforced in multiple places with overlapping but not identical logic.
-
-### DUP-11: `isEntryComplete` helper
-
-- **F2** `service.ts` L24-48 — `function isEntryComplete(...)`
-- **F10** `approval-validation.ts` L5-34 — `function isEntryComplete(...)`
-- Same signature and behaviour (NUMBER/BOOLEAN/TEXT completeness), implemented twice in different modules.
 
 ---
 
@@ -425,25 +455,38 @@ graph TD
 
 ## 7. Summary of Key Findings
 
-### After Phase 4 Refactoring (2026-02-22)
+### After Phase 3, 4 & 5 Refactoring (2026-02-23)
 
 | Category                      |                              Count                              | Severity |
 | ----------------------------- | :-------------------------------------------------------------: | :------: |
-| Total files                   |                               28                                |    —     |
-| Total LOC                     |                             ~5,500                              |    —     |
+| Total files                   |                               44                                |    —     |
+| Total LOC                     |                             ~7,620                              |    —     |
 | Circular dependencies         |                              **0**                              |    ✅    |
-| God classes (>300L)           |             **1** (A7: 1167L) — F2 reduced to 753L              |    🟡    |
-| Large files (>500L)           |              **3** (A7: 1167L, F6: 713L, F1: 520L)              |    🟡    |
-| Duplicated code blocks        |                     **8** (reduced from 11)                     |    🟡    |
-| Cross-layer coupling concerns |                     **1** (A13→F6 constant)                     |    🟡    |
+| God classes (>300L)           |              **3** (A14: 779L, F2: 753L, F1: 590L)              |    🟡    |
+| Large files (>500L)           |              **3** (A14: 779L, F2: 753L, F1: 590L)              |    🟡    |
+| Duplicated code blocks        |                     **4** (reduced from 11)                     |    🟡    |
+| Cross-layer coupling concerns |                     **0** (resolved A13→F6)                     |    ✅    |
 | Type duplication              | **3** (TEntryState, TParameter/TPreviewParameter, TLogSheetRow) |    🟡    |
 
-### Improvements from Phase 4
+### Improvements from Phase 5 (Preview Extraction)
 
-- `service.ts` reduced from 1,009 to 753 lines (**-25%**)
-- `isEntryComplete` helper removed from `service.ts` (DUP-11 partially addressed)
-- 3 new focused service modules created
-- Facade pattern preserves API compatibility
+- `log-sheet-preview.tsx` (734L monolith) → 8 focused modules (avg 120L each)
+- `CATEGORY_ORDER` moved to pure helper module (resolves cross-layer coupling)
+- `machinesForCategory` consolidated (resolves DUP-7)
+- `formatLimit`, `formatRawWaterLimit`, `formatValue` consolidated (resolves DUP-3, DUP-4)
+- Max method size reduced from ~600 lines to ~220 lines
+
+### Remaining Technical Debt
+
+| ID     | Issue                            | Recommendation                          |
+| ------ | -------------------------------- | --------------------------------------- |
+| DUP-1  | `TLogSheetRow` duplicated        | Move to shared types file               |
+| DUP-2  | `formatDate` duplicated          | Consolidate to single utils file        |
+| DUP-5  | `TEntryState` variants           | Extend base type in app layer           |
+| DUP-6  | `TParameter`/`TPreviewParameter` | Unify to single type                    |
+| DUP-8  | Inline `setEntryState` handlers  | Create shared handler factory           |
+| DUP-9  | Technician fetch pattern         | Reuse hook in form component            |
+| DUP-10 | Validation logic overlap         | Consolidate to single validation module |
 
 ---
 
