@@ -162,41 +162,50 @@ Eliminate the 10 identified duplication blocks. LOW risk — each is a leaf chan
 
 ---
 
-## Phase 3: Extract from God Component — `[logSheetId]/page.tsx` (est. ~60 min)
+## Phase 3: Extract from God Component — `[logSheetId]/page.tsx` (est. ~60 min) ✅ COMPLETED 2026-02-23
 
-The 1,166-line page.tsx. Strategy: **extract sections into child components** without changing behavior.
+The 1,245-line page.tsx. Strategy: **extract sections into child components** without changing behavior.
 
-### Step 3.1: Extract `LogSheetToolbar` component (15 min)
+### Step 3.1: Extract `LogSheetToolbar` component ✅ DONE (15 min)
 
 - Lines ~235–290 (header bar with back button, title, mode toggle, save/print/submit/approve buttons)
-- **[NEW]** [log-sheet-toolbar.tsx](<file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis/src/app/(main)/log-sheets/[projectId]/[logSheetId]/components/log-sheet-toolbar.tsx>)
-- Props: `mode`, `status`, `isPending`, `onSave`, `onPrint`, `onSubmit`, `onApprove`, `onModeToggle`, `projectId`, `projectName`, `logSheetDate`
+- **[NEW]** [log-sheet-toolbar.tsx](<file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis-logsheet-refactor/src/app/(main)/log-sheets/[projectId]/[logSheetId]/components/log-sheet-toolbar.tsx>) — 89 lines
+- Props: `mode`, `status`, `isPending`, `isLocked`, `canAdminOverride`, `adminOverride`, `onSave`, `onPrint`, `onSubmit`, `onModeChange`, `onAdminOverrideToggle`, `onBack`, `projectId`
 - **[MODIFY]** A7 `page.tsx` — replace toolbar JSX with `<LogSheetToolbar ... />`
 
-### Step 3.2: Extract `MachineSelectionPanel` component (15 min)
+### Step 3.2: Extract `MachineSelectionPanel` component ✅ DONE (15 min)
 
 - Lines ~300–400 (chiller/CT toggle sections)
-- **[NEW]** [machine-selection-panel.tsx](<file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis/src/app/(main)/log-sheets/[projectId]/[logSheetId]/components/machine-selection-panel.tsx>)
-- Props: `machines`, `activeChillerIds`, `activeCTIds`, `onToggle`, `onSelectAll`, `onClear`, `disabled`
+- **[NEW]** [machine-selection-panel.tsx](<file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis-logsheet-refactor/src/app/(main)/log-sheets/[projectId]/[logSheetId]/components/machine-selection-panel.tsx>) — 132 lines
+- Props: `chillers`, `coolingTowers`, `activeChillerIds`, `activeCTIds`, `onToggleMachine`, `onSelectAllMachines`, `onClearMachines`
 - **[MODIFY]** A7 `page.tsx` — replace machine selection JSX
 
-### Step 3.3: Extract `DesktopEntryTable` component (20 min)
+### Step 3.3: Extract `LogSheetCategorySection` component ✅ DONE (20 min)
 
-- Lines ~450–900 (the category loop with 3 rendering paths)
-- **[NEW]** [desktop-entry-table.tsx](<file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis/src/app/(main)/log-sheets/[projectId]/[logSheetId]/components/desktop-entry-table.tsx>)
-- Props: `parametersByCategory`, `machinesForCategory`, `entryState`, `setEntryState`, `disabled`
-- Contains the 3 rendering paths (COOLING_WATER_QUALITY, general with machines, general without)
-- **[MODIFY]** A7 `page.tsx` — replace desktop table JSX
+- Lines ~450–1045 (the category loop with 3 rendering paths)
+- **[NEW]** [log-sheet-category-section.tsx](<file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis-logsheet-refactor/src/app/(main)/log-sheets/[projectId]/[logSheetId]/components/log-sheet-category-section.tsx>) — 779 lines
+- Contains:
+  - `LogSheetCategorySection` (main export)
+  - `CoolingWaterQualityDesktop` / `CoolingWaterQualityMobile`
+  - `GeneralCategoryDesktop` / `GeneralCategoryMobile`
+  - Helper cells: `BooleanCell`, `NumberCell`, `TextCell`, `RawWaterCell`, `NoteCell`
+- Props: `categories`, `parametersByCategory`, `entryState`, `setEntryState`, `machinesForCategory`, `activeCTIds`, `coolingTowers`, `isMobileView`
+- **[MODIFY]** A7 `page.tsx` — replace category loop JSX
 
-### Step 3.4: Extract `MobileStickyBar` component (10 min)
+### Step 3.4: Mobile sticky bar ⏭️ SKIPPED
 
 - Lines ~1140–1164 (bottom action bar on mobile)
-- **[NEW]** [mobile-sticky-bar.tsx](<file:///home/cursemaker/02_Projects/02_Freelance/01_corintek_cpis/src/app/(main)/log-sheets/[projectId]/[logSheetId]/components/mobile-sticky-bar.tsx>)
-- **[MODIFY]** A7 `page.tsx` — replace sticky bar JSX
+- **DECISION:** Kept inline — only 18 lines, tightly coupled to page state
 
-### Expected result after Phase 3
+### Result after Phase 3 ✅ VERIFIED
 
-`page.tsx` should shrink from **1,166** to **~250–300 lines** — pure orchestration of hooks + child components.
+`page.tsx` shrank from **1,245** to **437 lines** — **-65%** (orchestration of hooks + child components).
+
+### Tests
+
+- **652 tests pass** (32 test files)
+- Zero behavioral regressions
+- Zero import breakage
 
 ---
 
@@ -280,26 +289,28 @@ Manual verification checklist:
 
 ## Summary
 
-|   Phase   | What                     |       Files Changed       |  Est. Time   |  Risk  |
-| :-------: | ------------------------ | :-----------------------: | :----------: | :----: |
-|     1     | Tests + quick wins       |    +4 new, 1 modified     |    45 min    | 🟢 LOW |
-|     2     | Deduplicate code         |    +2 new, 6 modified     |    40 min    | 🟢 LOW |
-|     3     | Split god component (A7) |    +4 new, 1 modified     |    60 min    | 🟡 MED |
-|     4     | Split god module (F2)    |    +4 new, 2 modified     |    45 min    | 🟡 MED |
-|     5     | Type cleanup + verify    |        2 modified         |    20 min    | 🟢 LOW |
-| **Total** |                          | **+14 new, ~12 modified** | **~3.5 hrs** |        |
+|   Phase   | What                     |       Files Changed       |  Est. Time   |  Risk  | Status  |
+| :-------: | ------------------------ | :-----------------------: | :----------: | :----: | :-----: |
+|     1     | Tests + quick wins       |    +4 new, 1 modified     |    45 min    | 🟢 LOW |   ✅    |
+|     2     | Deduplicate code         |    +2 new, 6 modified     |    40 min    | 🟢 LOW |   ✅    |
+|     3     | Split god component (A7) |    +3 new, 1 modified     |    50 min    | 🟡 MED |   ✅    |
+|     4     | Split god module (F2)    |    +3 new, 1 modified     |    45 min    | 🟡 MED |   ✅    |
+|     5     | Type cleanup + verify    |        2 modified         |    20 min    | 🟢 LOW |   ⏸️    |
+| **Total** |                          | **+12 new, ~11 modified** | **~3.3 hrs** |        | **80%** |
 
-### Expected post-refactor metrics
+### Actual post-refactor metrics (2026-02-23)
 
-| Metric               | Before | After (est.) |         Δ          |
-| -------------------- | -----: | -----------: | :----------------: |
-| Max file LOC         |  1,166 |         ~300 |      **-74%**      |
-| Files >500 LOC       |      4 |  1 (preview) |      **-75%**      |
-| Methods >50 LOC      |     14 |           ~6 |      **-57%**      |
-| Duplicated blocks    |     10 |           ~2 |      **-80%**      |
-| Cross-layer coupling |      1 |            0 |     **-100%**      |
-| Total files          |     24 |          ~38 | +14 (smaller each) |
-| Total LOC            |  5,499 |       ~5,300 |    -4% (dedup)     |
+| Metric               | Before | After |         Δ         |
+| -------------------- | -----: | ----: | :---------------: |
+| Max file LOC         |  1,245 |   779 |     **-37%**      |
+| `page.tsx` LOC       |  1,245 |   437 |     **-65%**      |
+| `service.ts` LOC     |  1,008 |   753 |     **-25%**      |
+| Files >500 LOC       |      4 |     4 |         —         |
+| Methods >50 LOC      |     14 |     8 |     **-43%**      |
+| Duplicated blocks    |     11 |     5 |     **-55%**      |
+| Cross-layer coupling |      1 |     0 |     **-100%**     |
+| Total files          |     32 |    38 | +6 (smaller each) |
+| Total CC             |   ~180 |  ~140 |     **-22%**      |
 
 ---
 
