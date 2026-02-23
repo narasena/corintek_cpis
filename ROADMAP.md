@@ -385,7 +385,7 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 5.  **Notifications (NT-\*)**
     - Status: ⏳ Not implemented. Planned as `NT-01`–`NT-03` in section 4.2 (Phase 2 limit alerts + UI).
 6.  **Dashboard Charts & Photo Gallery** (FSD Dashboard section 1)
-    - Status: ⏳ Partially implemented. Basic dashboard (`DB-01`) exists; historical charts and gallery planned as `DB-02`/`DB-03` in section 4.4.
+    - Status: ✅ Completed. `AnalyticsDashboard` with historical charts and gallery is active.
 7.  **My Profile**
     - Status: ⏳ Not implemented. Planned as `MP-01` in section 4.6.
 8.  **Client-Facing Read-Only Dashboard / Portal**
@@ -449,9 +449,10 @@ This section summarizes the recommended execution order for remaining work, base
 1. **Finalize Submission Locking & Approval Flows (P0 Stabilization)**
    - Complete remaining items under `LS-LOCK / WR-APP` in section 3.1 (e.g., decide on explicit `locked` semantics/field for LogSheet/LabAnalysis) and extend consistent locking rules to Lab Analysis if still required by operations.
 
-2. **Finish Basic Dashboard and Prepare for FSD Dashboard Features**
-   - Close out `DB-01` (recent activity list, real stats) in sections 3.2/3.2.
-   - Prepare data access patterns needed for historical charts and gallery so `DB-02`/`DB-03` can be implemented without heavy refactors.
+2. **Finalize Dashboard & Summary Analytics (SR-02 / DB-01)**
+   - Close out residual items in `DB-01` (recent activity list).
+   - Implement `SR-02` (Executive Summary analytics with avg/min/max) in Summary Reports.
+   - Prepare data access patterns needed for more complex reporting if required.
 
 3. **Implement Notifications (NT-\*) as the First Major Phase-2 Feature**
    - Deliver `NT-01`–`NT-03` in section 4.2 to satisfy the FSD requirement for limit alerts and approvals notifications.

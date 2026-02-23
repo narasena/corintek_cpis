@@ -29,12 +29,12 @@ Per `ROADMAP.md` and `FSD_CPIS.md`:
 - MVP domains are implemented:
   - Auth, Clients, Users, Projects, Machines, Parameters, Chemicals
   - Log Sheets, Work Reports, Lab Analyses, Attendance
-  - Basic Dashboard, Summary Reports (structure + PDF uploads)
+  - Dashboard Graphics (Charts & Photos), Summary Reports (structure + PDF uploads)
   - RBAC + project scoping
 - Remaining work is primarily:
-  - Phase‑2 analytics/UX (dashboard charts, gallery, executive summary)
   - Notifications (limit alerts, approvals)
   - My Profile and client‑facing read‑only experience
+  - Summary Reports Extended Analytics (SR-02)
   - Digital signature expansion for Summary Reports
   - Data completeness enhancements (project/client/user fields)
   - Targeted stabilization of the Log‑sheets module, which contains god modules/components.
@@ -103,8 +103,8 @@ This section enumerates all remaining items derived from:
 **P1 – High Business Value**
 
 - NT‑01/02/03: Notifications system, limit alerts, and UI bell.
-- DB‑02/03: Dashboard historical charts and photo gallery.
 - SR‑02: Executive Summary analytics (Summary Reports).
+- DB‑01 (residual): Recent activity list.
 
 **P2 – UX & Data Completeness**
 
@@ -546,13 +546,13 @@ For each major area (Notifications, Dashboard Analytics, Summary Reports, My Pro
 
 Example matrix (excerpt):
 
-| Area          | Scenario                                      | Expected Result                                     |
-| ------------- | --------------------------------------------- | -------------------------------------------------- |
-| Notifications | Out‑of‑range log‑sheet value saved           | Notification created for supervisor/PIC            |
-| Dashboard     | Open with 1 year of data                     | Charts render under 3s without errors             |
-| My Profile    | Update phone number and avatar               | Persisted and visible after page reload           |
-| Client Portal | CLIENT user visits dashboard                 | Only assigned projects, all UI read‑only          |
-| Log‑sheets    | Draft → Submit → Approve → Unlock (Admin)    | Status transitions valid, locking rules enforced  |
+| Area          | Scenario                                  | Expected Result                                  |
+| ------------- | ----------------------------------------- | ------------------------------------------------ |
+| Notifications | Out‑of‑range log‑sheet value saved        | Notification created for supervisor/PIC          |
+| Dashboard     | Open with 1 year of data                  | Charts render under 3s without errors            |
+| My Profile    | Update phone number and avatar            | Persisted and visible after page reload          |
+| Client Portal | CLIENT user visits dashboard              | Only assigned projects, all UI read‑only         |
+| Log‑sheets    | Draft → Submit → Approve → Unlock (Admin) | Status transitions valid, locking rules enforced |
 
 ### 7.2 Automated Tests
 
@@ -674,4 +674,3 @@ This document should be treated as the canonical implementation guide for comple
 2. Notifications
 3. Dashboard + Summary analytics
 4. Profile/Portal/Data completeness + signature expansion
-
