@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { makeEntryKey } from '@/features/log-sheets/utils';
-import type { TChemicalUsageState } from '../components/chemical-usage-section';
+import type { TChemicalUsageState } from '@/features/log-sheets/components/chemical-usage-section';
 import type { TDetail, TEntryState } from '../types';
 
 export function useLogSheetDraftState(detail: TDetail | null) {

@@ -9,7 +9,7 @@ import {
   updateLogSheetAction,
   uploadLogSheetImageAction,
 } from '@/features/log-sheets/actions';
-import type { TChemicalUsageState } from '../components/chemical-usage-section';
+import type { TChemicalUsageState } from '@/features/log-sheets/components/chemical-usage-section';
 import type { TEntryRole, TEntryState } from '../types';
 
 export function useLogSheetDraftSaver(args: {

@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-preview';
 import { SignatureSection } from '@/features/log-sheets/components/signature-section';
-import { ChemicalUsageSection } from './components/chemical-usage-section';
+import { ChemicalUsageSection } from '@/features/log-sheets/components/chemical-usage-section';
 
 import { submitLogSheetAction } from '@/features/log-sheets/actions';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -36,12 +36,12 @@ import { useLogSheetDerived } from './hooks/use-log-sheet-derived';
 import { useLogSheetDraftState } from './hooks/use-log-sheet-draft-state';
 import { useLogSheetDraftSaver } from './hooks/use-log-sheet-draft-saver';
 import { useLogSheetActiveMachines } from './hooks/use-log-sheet-active-machines';
-import { useLogSheetTechnicians } from './hooks/use-log-sheet-technicians';
+import { useLogSheetTechnicians } from '@/features/log-sheets/hooks/use-log-sheet-technicians';
 import { useLogSheetValidation } from './hooks/use-log-sheet-validation';
 
-import { LogSheetToolbar } from './components/log-sheet-toolbar';
-import { MachineSelectionPanel } from './components/machine-selection-panel';
-import { LogSheetCategorySection } from './components/log-sheet-category-section';
+import { LogSheetToolbar } from '@/features/log-sheets/components/log-sheet-toolbar';
+import { MachineSelectionPanel } from '@/features/log-sheets/components/machine-selection-panel';
+import { LogSheetCategorySection } from '@/features/log-sheets/components/log-sheet-category-section';
 import { formatDate } from './utils';
 
 export default function LogSheetDetailPage() {

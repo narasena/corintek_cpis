@@ -15,7 +15,7 @@ import {
   getLogSheetsByProjectAction,
 } from '@/features/log-sheets/actions';
 import { getLogSheetColumns, type TLogSheetRow } from './components/columns';
-import { LogSheetDialog } from './components/log-sheet-dialog';
+import { LogSheetDialog } from '@/features/log-sheets/components/log-sheet-dialog';
 
 export default function ProjectLogSheetsPage() {
   const params = useParams<{ projectId: string }>();

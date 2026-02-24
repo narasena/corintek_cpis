@@ -9,7 +9,7 @@ import { TClientResponse } from '@/@types/client.type';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
 import { getClientColumns } from './components/client-columns';
-import { ClientDialog } from './components/client-dialog';
+import { ClientDialog } from '@/features/clients/components/client-dialog';
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<TClientResponse[]>([]);
