@@ -278,6 +278,55 @@ Extract to shared module `internal/edit-permission.ts`.
 
 `service.ts` shrinks from **1,011** to **753 lines** — **-25%** (CRUD + detail fetching + validation).
 
+---
+
+## Phase 9: Extract Service Module — Status & Validation (est. ~15 min) ✅ COMPLETED 2026-02-24
+
+### Problem
+
+`service.ts` remained a god module at 749 lines, handling 6+ distinct responsibilities including status management and validation.
+
+### Solution
+
+Extract status-related operations into dedicated `log-sheet-status.service.ts`.
+
+### Files Changed
+
+| File                          | Action   | Δ Lines |
+| ----------------------------- | -------- | ------- |
+| `log-sheet-status.service.ts` | NEW      | +123    |
+| `service.ts`                  | Modified | -115    |
+
+### Functions Extracted
+
+| Function                        | Lines | Responsibility                            |
+| ------------------------------- | ----: | ----------------------------------------- |
+| `updateLogSheetStatus`          |    66 | Status transitions with RBAC + validation |
+| `validateLogSheetForSubmission` |    40 | Pre-submission signature/range checks     |
+| `validateLogSheetForApproval`   |     4 | Approval validation wrapper               |
+
+### Dependency Analysis
+
+- New file imports from existing modules only (no new external deps)
+- Circular dependency avoided: status service imports `getLogSheetDetail` from `service.ts` (one-way)
+- Facade pattern: `service.ts` re-exports extracted functions for backward compatibility
+
+### Tests
+
+- **371 tests pass** (14 test files)
+- Zero behavioral regressions
+- Zero import breakage
+
+### Result
+
+| Metric        | Before | After |    Δ     |
+| ------------- | -----: | ----: | :------: |
+| `service.ts`  |    749 |   634 | **-15%** |
+| Status module |      - |   123 |   +NEW   |
+| Total LOC     |    749 |   757 |    +8    |
+
+~115 lines extracted into focused domain module. Single responsibility per file improved.
+
 ### Facade pattern (preserve imports) ✅ IMPLEMENTED
 
 In `service.ts`, re-exports added so existing imports don't break:
@@ -338,22 +387,23 @@ Manual verification checklist:
 |     6     | Split preview component                  |    +8 new, 2 modified     |    30 min    | 🟡 MED |    ✅    |
 |     7     | Extract Method: getLogSheetDetail        |        1 modified         |    15 min    | 🟢 LOW |    ✅    |
 |     8     | Extract Function: assertLogSheetEditable |    +1 new, 4 modified     |    10 min    | 🟢 LOW |    ✅    |
-| **Total** |                                          | **+21 new, ~19 modified** | **~4.7 hrs** |        | **100%** |
+|     9     | Extract Module: status service           |    +1 new, 1 modified     |    15 min    | 🟢 LOW |    ✅    |
+| **Total** |                                          | **+22 new, ~20 modified** | **~5.0 hrs** |        | **100%** |
 
 ### Actual post-refactor metrics (2026-02-24)
 
 | Metric               | Before | After |          Δ          |
 | -------------------- | -----: | ----: | :-----------------: |
-| Max file LOC         |  1,245 |   748 |      **-40%**       |
+| Max file LOC         |  1,245 |   634 |      **-49%**       |
 | `page.tsx` LOC       |  1,245 |   437 |      **-65%**       |
-| `service.ts` LOC     |  1,008 |   748 |      **-26%**       |
+| `service.ts` LOC     |  1,008 |   634 |      **-37%**       |
 | `preview` (total)    |    734 |   961 | +8 files (avg 120L) |
-| Files >500 LOC       |      4 |     3 |       **-1**        |
-| Methods >50 LOC      |     14 |     3 |      **-79%**       |
+| Files >500 LOC       |      4 |     2 |       **-2**        |
+| Methods >50 LOC      |     14 |     2 |      **-86%**       |
 | Duplicated blocks    |     11 |     3 |      **-73%**       |
 | Cross-layer coupling |      1 |     0 |      **-100%**      |
-| Total files          |     32 |    45 | +13 (smaller each)  |
-| Total CC             |   ~180 |  ~120 |      **-33%**       |
+| Total files          |     32 |    46 | +14 (smaller each)  |
+| Total CC             |   ~180 |  ~115 |      **-36%**       |
 
 ---
 
