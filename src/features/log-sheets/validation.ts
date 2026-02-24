@@ -1,12 +1,12 @@
 import { makeEntryKey } from '@/features/log-sheets/utils';
-import type { TPreviewParameter } from '@/features/log-sheets/types';
+import type { TParameter } from '@/features/log-sheets/types';
 
 export type TValidationParameter = {
   id: string;
   name: string;
   variableName: string;
-  category: TPreviewParameter['category'];
-  valueType: TPreviewParameter['valueType'];
+  category: TParameter['category'];
+  valueType: TParameter['valueType'];
 };
 
 export type TValidationEntryState = {

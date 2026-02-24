@@ -1,11 +1,7 @@
 import React from 'react';
 import { LogSheetHeader } from '../log-sheet-header';
 import { makeEntryKey } from '../../utils';
-import type {
-  TPreviewParameter,
-  TLogSheetPhoto,
-  TEntryState,
-} from '../../types';
+import type { TParameter, TLogSheetPhoto, TEntryState } from '../../types';
 
 export function DocumentationSection({
   customerName,
@@ -20,7 +16,7 @@ export function DocumentationSection({
   date: string | Date;
   byName: string;
   replacedByName?: string | null;
-  displayParameters: TPreviewParameter[];
+  displayParameters: TParameter[];
   valuesByKey: Record<string, TEntryState | undefined>;
   photos: TLogSheetPhoto[];
 }) {

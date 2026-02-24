@@ -1,8 +1,8 @@
-import type { TPreviewParameter, TEntryState } from '../../types';
+import type { TParameter, TEntryState } from '../../types';
 
 export function formatLimit(
   parameter: Pick<
-    TPreviewParameter,
+    TParameter,
     'minValue' | 'maxValue' | 'unit' | 'valueType' | 'category' | 'variableName'
   >
 ) {
@@ -39,10 +39,7 @@ export function formatLimit(
 }
 
 export function formatRawWaterLimit(
-  parameter: Pick<
-    TPreviewParameter,
-    'rawWaterMinValue' | 'rawWaterMaxValue' | 'unit'
-  >
+  parameter: Pick<TParameter, 'rawWaterMinValue' | 'rawWaterMaxValue' | 'unit'>
 ) {
   const unit = parameter.unit ? ` ${parameter.unit}` : '';
   const min = parameter.rawWaterMinValue;

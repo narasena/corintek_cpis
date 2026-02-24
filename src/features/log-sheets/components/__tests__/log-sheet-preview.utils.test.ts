@@ -6,7 +6,7 @@ import {
   formatValue,
 } from '../log-sheet-preview/format-helpers';
 import { machinesForCategory } from '../log-sheet-preview/category-helpers';
-import type { TPreviewParameter, TEntryState } from '../../types';
+import type { TParameter, TEntryState } from '../../types';
 
 type FormatLimitParam = Parameters<typeof formatLimit>[0];
 type FormatRawWaterLimitParam = Parameters<typeof formatRawWaterLimit>[0];

@@ -249,7 +249,7 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 │ Total cyclomatic complexity  │     ~120 │
 │ Avg CC per file              │     ~2.7 │
 │ TODO/FIXME count             │        0 │
-│ Duplicated code blocks       │        1 │
+│ Duplicated code blocks       │        0 │
 │ God classes (>300 LOC)       │        3 │
 │ Circular dependencies        │        0 │
 │ Cross-layer coupling         │        0 │
@@ -269,7 +269,7 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 | Methods >50 LOC       |     14 |     3 | **-79%**  |
 | Total CC              |   ~180 |  ~120 | **-33%**  |
 | Avg CC/file           |   ~5.6 |  ~2.7 | **-52%**  |
-| Duplicated blocks     |     11 |     1 | **-91%**  |
+| Duplicated blocks     |     11 |     0 | **-100%** |
 | Circular dependencies |      1 |     0 | **-100%** |
 | Cross-layer coupling  |      1 |     0 | **-100%** |
 
@@ -386,6 +386,50 @@ Added missing `locked` field to `ILogSheet` view model (was causing TypeScript e
 ### Tests
 
 - **652 tests pass** (32 test files across features/log-sheets and app/log-sheets)
+- Zero behavioral regressions
+
+---
+
+## 11. Phase 11: Consolidate Type Definitions (2026-02-24)
+
+### Changed: Duplicate type definitions in 2 files
+
+**Before:** Identical types defined in two locations:
+
+- `features/log-sheets/types.ts`: `TPreviewParameter` (14 fields), `TPreviewMachine` (3 fields)
+- `app/.../types.ts`: `TParameter` (14 fields), `TMachine` (3 fields)
+
+**After:** Single source of truth in `features/log-sheets/types.ts`:
+
+- `TParameter` — canonical type (renamed from `TPreviewParameter`)
+- `TMachine` — canonical type (renamed from `TPreviewMachine`)
+- `TPreviewParameter` / `TPreviewMachine` — type aliases for backward compatibility
+- App-layer `types.ts` re-exports from features layer
+
+| File                           | Before | After |    Δ    |
+| ------------------------------ | -----: | ----: | :-----: |
+| `features/log-sheets/types.ts` |    203 |   208 |   +5    |
+| `app/.../types.ts`             |    124 |   106 | **-18** |
+| **Net**                        |    327 |   314 | **-13** |
+
+**Net reduction:** ~13 lines eliminated. Single source of truth for Parameter and Machine types.
+
+### Files Updated
+
+- `validation.ts` — uses `TParameter` instead of `TPreviewParameter`
+- `log-sheet-preview/index.tsx` — uses `TParameter`, `TMachine`
+- `log-sheet-preview/category-helpers.ts` — uses `TParameter`, `TMachine`
+- `log-sheet-preview/format-helpers.ts` — uses `TParameter`
+- `log-sheet-preview/consumption-section.tsx` — uses `TParameter`
+- `log-sheet-preview/cooling-water-section.tsx` — uses `TParameter`, `TMachine`
+- `log-sheet-preview/general-category-section.tsx` — uses `TParameter`, `TMachine`
+- `log-sheet-preview/documentation-section.tsx` — uses `TParameter`
+- `__tests__/log-sheet-preview.utils.test.ts` — uses `TParameter`
+- `summary-reports/.../print/page.tsx` — uses `TParameter`
+
+### Tests
+
+- **652 tests pass** (32 test files)
 - Zero behavioral regressions
 
 ---

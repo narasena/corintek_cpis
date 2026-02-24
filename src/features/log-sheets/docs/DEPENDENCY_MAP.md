@@ -272,17 +272,19 @@ Selected exported functions (not exhaustive):
 
 ## 5. Duplicated Code Blocks
 
-### DUP-1: `TLogSheetRow` type definition
+### ~~DUP-1: `TLogSheetRow` type definition~~ ✅ RESOLVED
 
-- **A3** `[projectId]/page.tsx` L21-29 — inline type `TLogSheetRow`
-- **A4** `[projectId]/components/columns.tsx` L9-15 — identical type `TLogSheetRow`
-- Neither imports from the other; both define the same shape independently.
+- ~~**A3** `[projectId]/page.tsx` L21-29 — inline type `TLogSheetRow`~~
+- **A4** `[projectId]/components/columns.tsx` L10-18 — exports `TLogSheetRow`
 
-### DUP-2: `formatDate()` function
+**Resolution:** `page.tsx` imports `TLogSheetRow` from `columns.tsx` (single source of truth).
 
-- **A9** `[logSheetId]/utils.ts` L3-11 — `formatDate(value: string | Date)`
-- **A4** `[projectId]/components/columns.tsx` L22-30 — `formatDate(value: Date | string)`
-- Identical implementation with `id-ID` locale and same options.
+### ~~DUP-2: `formatDate()` function~~ ✅ RESOLVED
+
+- **A9** `[logSheetId]/utils.ts` L7-15 — `formatDate(value: string | Date)`
+- ~~**A4** `[projectId]/components/columns.tsx` L22-30 — `formatDate(value: Date | string)`~~
+
+**Resolution:** `columns.tsx` imports `formatDate` from `../[logSheetId]/utils` (single source of truth).
 
 ### ~~DUP-3: `formatLimit()` function~~ ✅ RESOLVED
 
@@ -304,11 +306,18 @@ Selected exported functions (not exhaustive):
 - **F3** `features/log-sheets/types.ts` L179-185 — omits `pendingFile`
 - Two variants of the same concept, the app-layer version extends with client-only field.
 
-### DUP-6: `TPreviewParameter` / `TParameter` / `TPreviewMachine` / `TMachine`
+### ~~DUP-6: `TPreviewParameter` / `TParameter` / `TPreviewMachine` / `TMachine`~~ ✅ RESOLVED
 
-- **A8** `types.ts` defines `TParameter`, `TMachine`
-- **F3** `types.ts` defines `TPreviewParameter`, `TPreviewMachine`
-- Structurally identical types with different names in different files.
+- ~~**A8** `types.ts` defines `TParameter`, `TMachine`~~
+- ~~**F3** `types.ts` defines `TPreviewParameter`, `TPreviewMachine`~~
+- ~~Structurally identical types with different names in different files.~~
+
+**Resolution:** Consolidated in `features/log-sheets/types.ts`:
+
+- `TParameter` is now the canonical type
+- `TMachine` is now the canonical type
+- `TPreviewParameter` and `TPreviewMachine` are now type aliases for backward compatibility
+- App-layer types re-export from features layer
 
 ### ~~DUP-7: `machinesForCategory()` logic~~ ✅ RESOLVED
 
@@ -331,11 +340,12 @@ Selected exported functions (not exhaustive):
 
 Both A14 and A11 now import and use these helpers.
 
-### DUP-9: Technician fetch pattern
+### ~~DUP-9: Technician fetch pattern~~ ✅ RESOLVED
 
-- **A6** `log-sheet-form.tsx` L64-70 — `getAllUsersAction().then(...)` in useEffect
-- **A17** `use-log-sheet-technicians.ts` L9-15 — identical pattern
-- Both fetch all users; form could reuse the hook.
+- ~~**A6** `log-sheet-form.tsx` L64-70 — `getAllUsersAction().then(...)` in useEffect~~
+- **A17** `use-log-sheet-technicians.ts` — reusable hook
+
+**Resolution:** `log-sheet-form.tsx` imports and uses `useLogSheetTechnicians` hook (single source of truth).
 
 ### DUP-10: Validation logic overlap
 

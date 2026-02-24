@@ -2,11 +2,7 @@ import React from 'react';
 import { makeEntryKey } from '../../utils';
 import { formatLimit, formatValue } from './format-helpers';
 import { sectionTitle } from './category-helpers';
-import type {
-  TPreviewParameter,
-  TPreviewMachine,
-  TEntryState,
-} from '../../types';
+import type { TParameter, TMachine, TEntryState } from '../../types';
 
 export function GeneralCategorySection({
   category,
@@ -15,9 +11,9 @@ export function GeneralCategorySection({
   valuesByKey,
   isFirst,
 }: {
-  category: TPreviewParameter['category'];
-  params: TPreviewParameter[];
-  sectionMachines: TPreviewMachine[];
+  category: TParameter['category'];
+  params: TParameter[];
+  sectionMachines: TMachine[];
   valuesByKey: Record<string, TEntryState | undefined>;
   isFirst: boolean;
 }) {

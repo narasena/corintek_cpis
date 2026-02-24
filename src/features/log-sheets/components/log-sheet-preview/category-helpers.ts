@@ -1,6 +1,6 @@
-import type { TPreviewParameter, TPreviewMachine } from '../../types';
+import type { TParameter, TMachine } from '../../types';
 
-export const CATEGORY_ORDER: TPreviewParameter['category'][] = [
+export const CATEGORY_ORDER: TParameter['category'][] = [
   'UNIT_CONDENSOR',
   'UNIT_EVAPORATOR',
   'COOLING_WATER_QUALITY',
@@ -9,7 +9,7 @@ export const CATEGORY_ORDER: TPreviewParameter['category'][] = [
   'CONSUMPTION',
 ];
 
-export const sectionTitle: Record<TPreviewParameter['category'], string> = {
+export const sectionTitle: Record<TParameter['category'], string> = {
   UNIT_CONDENSOR: 'Unit Condensor',
   UNIT_EVAPORATOR: 'Unit Evaporator',
   COOLING_WATER_QUALITY: 'Check Water Quality',
@@ -19,8 +19,8 @@ export const sectionTitle: Record<TPreviewParameter['category'], string> = {
 };
 
 export function machinesForCategory(
-  category: TPreviewParameter['category'],
-  machines: { chillers: TPreviewMachine[]; coolingTowers: TPreviewMachine[] }
+  category: TParameter['category'],
+  machines: { chillers: TMachine[]; coolingTowers: TMachine[] }
 ) {
   if (!machines) return [];
   if (category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR') {

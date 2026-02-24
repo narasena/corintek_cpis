@@ -1,14 +1,14 @@
 import React, { ReactNode } from 'react';
 import { makeEntryKey } from '../../utils';
 import { formatValue } from './format-helpers';
-import type { TPreviewParameter, TEntryState } from '../../types';
+import type { TParameter, TEntryState } from '../../types';
 
 export function ConsumptionSection({
   params,
   valuesByKey,
   chemicalUsages,
 }: {
-  params: TPreviewParameter[];
+  params: TParameter[];
   valuesByKey: Record<string, TEntryState | undefined>;
   chemicalUsages?: Array<{
     chemicalName?: string;

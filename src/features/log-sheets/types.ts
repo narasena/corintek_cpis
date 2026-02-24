@@ -160,7 +160,7 @@ export interface ILogSheetPhoto {
   updatedAt: Date;
 }
 
-export type TPreviewParameter = {
+export type TParameter = {
   id: string;
   name: string;
   variableName: string;
@@ -180,11 +180,14 @@ export type TPreviewParameter = {
   displayOrder: number;
 };
 
-export type TPreviewMachine = {
+export type TMachine = {
   id: string;
   unitNumber: number;
   type: 'CHILLER' | 'COOLING_TOWER';
 };
+
+export type TPreviewParameter = TParameter;
+export type TPreviewMachine = TMachine;
 
 export type TLogSheetPhoto = {
   id: string;

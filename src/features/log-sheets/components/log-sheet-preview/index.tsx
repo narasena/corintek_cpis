@@ -10,8 +10,8 @@ import { GeneralCategorySection } from './general-category-section';
 import { SignaturesSection } from './signatures-section';
 import { DocumentationSection } from './documentation-section';
 import type {
-  TPreviewParameter,
-  TPreviewMachine,
+  TParameter,
+  TMachine,
   TLogSheetPhoto,
   TEntryState,
 } from '../../types';
@@ -47,8 +47,8 @@ export function LogSheetPreview({
   technicianSignatureUrl?: string | null;
   clientPicSignatureUrl?: string | null;
   notes: string | null;
-  machines: { chillers: TPreviewMachine[]; coolingTowers: TPreviewMachine[] };
-  parameters: TPreviewParameter[];
+  machines: { chillers: TMachine[]; coolingTowers: TMachine[] };
+  parameters: TParameter[];
   valuesByKey: Record<string, TEntryState | undefined>;
   photos: TLogSheetPhoto[];
   chemicalUsages?: Array<{
@@ -81,10 +81,7 @@ export function LogSheetPreview({
     );
   });
 
-  const paramsByCategory = new Map<
-    TPreviewParameter['category'],
-    TPreviewParameter[]
-  >();
+  const paramsByCategory = new Map<TParameter['category'], TParameter[]>();
   for (const p of displayParameters) {
     if (!paramsByCategory.has(p.category)) paramsByCategory.set(p.category, []);
     paramsByCategory.get(p.category)!.push(p);
@@ -92,7 +89,7 @@ export function LogSheetPreview({
   for (const [key, list] of paramsByCategory.entries()) {
     if (key === 'GENERAL_CONDITION') {
       const order = ['running', 'algae', 'deposit'];
-      const getOrder = (p: TPreviewParameter) => {
+      const getOrder = (p: TParameter) => {
         const idx = order.findIndex(k =>
           p.variableName.toLowerCase().includes(k)
         );
@@ -154,11 +151,10 @@ export function LogSheetPreview({
       <div className="flex flex-col border border-black border-t-0">
         {categories.map((category, index) => {
           const params =
-            paramsByCategory.get(category as TPreviewParameter['category']) ??
-            [];
+            paramsByCategory.get(category as TParameter['category']) ?? [];
           if (params.length === 0) return null;
 
-          const cat = category as TPreviewParameter['category'];
+          const cat = category as TParameter['category'];
           const sectionMachines = machinesForCategory(cat, machines);
 
           if (cat === 'CONSUMPTION') {

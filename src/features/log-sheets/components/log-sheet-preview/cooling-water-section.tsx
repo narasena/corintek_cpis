@@ -6,11 +6,7 @@ import {
   formatValue,
 } from './format-helpers';
 import { sectionTitle, machinesForCategory } from './category-helpers';
-import type {
-  TPreviewParameter,
-  TPreviewMachine,
-  TEntryState,
-} from '../../types';
+import type { TParameter, TMachine, TEntryState } from '../../types';
 
 export function CoolingWaterSection({
   category,
@@ -18,9 +14,9 @@ export function CoolingWaterSection({
   sectionMachines,
   valuesByKey,
 }: {
-  category: TPreviewParameter['category'];
-  params: TPreviewParameter[];
-  sectionMachines: TPreviewMachine[];
+  category: TParameter['category'];
+  params: TParameter[];
+  sectionMachines: TMachine[];
   valuesByKey: Record<string, TEntryState | undefined>;
 }) {
   return (
