@@ -1,27 +1,18 @@
 'use client';
 
-import type { Dispatch, SetStateAction } from 'react';
-
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { CameraInput } from '@/components/camera-input';
 import { makeEntryKey } from '@/features/log-sheets/utils';
+import { useEntryStateContext } from '@/features/log-sheets/context';
 
 import { formatLimit, isOutOfRange } from '../utils';
-import type { TEntryState, TMachine, TParameter } from '../types';
-import {
-  createBooleanEntryUpdater,
-  createNumberEntryUpdater,
-  createTextEntryUpdater,
-  createCameraEntryUpdater,
-} from '../entry-state-helpers';
+import type { TMachine, TParameter } from '../types';
 
 export interface MobileEntryCardProps {
   param: TParameter;
   machines: TMachine[];
-  entryState: Record<string, TEntryState>;
-  setEntryState: Dispatch<SetStateAction<Record<string, TEntryState>>>;
   hasNotes?: boolean;
   isWaterMeter?: (paramName: string) => boolean;
 }
@@ -29,11 +20,11 @@ export interface MobileEntryCardProps {
 export function MobileEntryCard({
   param,
   machines,
-  entryState,
-  setEntryState,
   hasNotes,
   isWaterMeter,
 }: MobileEntryCardProps) {
+  const { entryState, updateBoolean, updateNumber, updateText, updateCamera } =
+    useEntryStateContext();
   const targets =
     machines.length > 0
       ? machines
@@ -79,9 +70,7 @@ export function MobileEntryCard({
                     id={key}
                     checked={state?.boolValue ?? false}
                     onCheckedChange={value => {
-                      setEntryState(
-                        createBooleanEntryUpdater(key, value === true)
-                      );
+                      updateBoolean(key, value === true);
                     }}
                   />
                   <label htmlFor={key} className="text-sm">
@@ -95,9 +84,7 @@ export function MobileEntryCard({
                     variant="ghost"
                     size="xs"
                     className="h-7 text-xs ml-auto"
-                    onClick={() =>
-                      setEntryState(createBooleanEntryUpdater(key, null))
-                    }
+                    onClick={() => updateBoolean(key, null)}
                   >
                     Kosongkan
                   </Button>
@@ -124,18 +111,14 @@ export function MobileEntryCard({
                         : String(state.numericValue)
                     }
                     onChange={e => {
-                      setEntryState(
-                        createNumberEntryUpdater(key, e.target.value)
-                      );
+                      updateNumber(key, e.target.value);
                     }}
                   />
                   {isWaterMeter?.(param.name) && (
                     <CameraInput
                       value={state?.fileUrl}
                       onChange={(url, file) => {
-                        setEntryState(
-                          createCameraEntryUpdater(key, url, file ?? null)
-                        );
+                        updateCamera(key, url, file ?? null);
                       }}
                     />
                   )}
@@ -145,7 +128,7 @@ export function MobileEntryCard({
                   placeholder="Keterangan..."
                   value={state?.textValue ?? ''}
                   onChange={e => {
-                    setEntryState(createTextEntryUpdater(key, e.target.value));
+                    updateText(key, e.target.value);
                   }}
                 />
               )}
@@ -166,7 +149,7 @@ export function MobileEntryCard({
                   placeholder="Catatan tambahan..."
                   value={state?.textValue ?? ''}
                   onChange={e => {
-                    setEntryState(createTextEntryUpdater(key, e.target.value));
+                    updateText(key, e.target.value);
                   }}
                 />
               );

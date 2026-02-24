@@ -1,34 +1,26 @@
 'use client';
 
-import type { Dispatch, SetStateAction } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableCell } from '@/components/ui/table';
 import { CameraInput } from '@/components/camera-input';
 import { makeEntryKey } from '@/features/log-sheets/utils';
+import { useEntryStateContext } from '@/features/log-sheets/context';
 import { formatRawWaterLimit, isOutOfRange } from '../utils';
-import type { TParameter, TEntryState } from '../types';
-import {
-  createBooleanEntryUpdater,
-  createNumberEntryUpdater,
-  createTextEntryUpdater,
-  createCameraEntryUpdater,
-} from '../entry-state-helpers';
+import type { TParameter } from '../types';
 
 interface IBooleanCellProps {
-  state: TEntryState | undefined;
   entryKey: string;
-  setEntryState: Dispatch<SetStateAction<Record<string, TEntryState>>>;
   showClearButton?: boolean;
 }
 
 export function BooleanCell({
-  state,
   entryKey,
-  setEntryState,
   showClearButton = false,
 }: IBooleanCellProps) {
+  const { getEntry, updateBoolean } = useEntryStateContext();
+  const state = getEntry(entryKey);
   const checked = state?.boolValue ?? false;
   const isIndeterminate =
     state?.boolValue === null || state?.boolValue === undefined;
@@ -39,7 +31,7 @@ export function BooleanCell({
         <Checkbox
           checked={isIndeterminate ? false : checked}
           onCheckedChange={value => {
-            setEntryState(createBooleanEntryUpdater(entryKey, value === true));
+            updateBoolean(entryKey, value === true);
           }}
         />
         {showClearButton && (
@@ -47,9 +39,7 @@ export function BooleanCell({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() =>
-              setEntryState(createBooleanEntryUpdater(entryKey, null))
-            }
+            onClick={() => updateBoolean(entryKey, null)}
           >
             Kosongkan
           </Button>
@@ -60,22 +50,20 @@ export function BooleanCell({
 }
 
 interface INumberCellProps {
-  state: TEntryState | undefined;
   entryKey: string;
-  setEntryState: Dispatch<SetStateAction<Record<string, TEntryState>>>;
   minValue: number | null;
   maxValue: number | null;
   isWaterMeter?: boolean;
 }
 
 export function NumberCell({
-  state,
   entryKey,
-  setEntryState,
   minValue,
   maxValue,
   isWaterMeter = false,
 }: INumberCellProps) {
+  const { getEntry, updateNumber, updateCamera } = useEntryStateContext();
+  const state = getEntry(entryKey);
   const isError = isOutOfRange(state?.numericValue, minValue, maxValue);
 
   return (
@@ -93,16 +81,14 @@ export function NumberCell({
               : String(state.numericValue)
           }
           onChange={e => {
-            setEntryState(createNumberEntryUpdater(entryKey, e.target.value));
+            updateNumber(entryKey, e.target.value);
           }}
         />
         {isWaterMeter && (
           <CameraInput
             value={state?.fileUrl}
             onChange={(url, file) => {
-              setEntryState(
-                createCameraEntryUpdater(entryKey, url, file ?? null)
-              );
+              updateCamera(entryKey, url, file ?? null);
             }}
           />
         )}
@@ -112,18 +98,18 @@ export function NumberCell({
 }
 
 interface ITextCellProps {
-  state: TEntryState | undefined;
   entryKey: string;
-  setEntryState: Dispatch<SetStateAction<Record<string, TEntryState>>>;
 }
 
-export function TextCell({ state, entryKey, setEntryState }: ITextCellProps) {
+export function TextCell({ entryKey }: ITextCellProps) {
+  const { getEntry, updateText } = useEntryStateContext();
+  const state = getEntry(entryKey);
   return (
     <TableCell>
       <Input
         value={state?.textValue ?? ''}
         onChange={e => {
-          setEntryState(createTextEntryUpdater(entryKey, e.target.value));
+          updateText(entryKey, e.target.value);
         }}
       />
     </TableCell>
@@ -132,63 +118,36 @@ export function TextCell({ state, entryKey, setEntryState }: ITextCellProps) {
 
 interface IRawWaterCellProps {
   param: TParameter;
-  entryState: Record<string, TEntryState>;
-  setEntryState: Dispatch<SetStateAction<Record<string, TEntryState>>>;
 }
 
-export function RawWaterCell({
-  param,
-  entryState,
-  setEntryState,
-}: IRawWaterCellProps) {
+export function RawWaterCell({ param }: IRawWaterCellProps) {
   const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
-  const rawState = entryState[rawKey];
 
   if (param.valueType === 'BOOLEAN') {
-    return (
-      <BooleanCell
-        state={rawState}
-        entryKey={rawKey}
-        setEntryState={setEntryState}
-        showClearButton
-      />
-    );
+    return <BooleanCell entryKey={rawKey} showClearButton />;
   }
 
   if (param.valueType === 'NUMBER') {
     return (
       <NumberCell
-        state={rawState}
         entryKey={rawKey}
-        setEntryState={setEntryState}
         minValue={param.rawWaterMinValue ?? null}
         maxValue={param.rawWaterMaxValue ?? null}
       />
     );
   }
 
-  return (
-    <TextCell
-      state={rawState}
-      entryKey={rawKey}
-      setEntryState={setEntryState}
-    />
-  );
+  return <TextCell entryKey={rawKey} />;
 }
 
 interface IRawWaterInputMobileProps {
   param: TParameter;
-  entryState: Record<string, TEntryState>;
-  setEntryState: Dispatch<SetStateAction<Record<string, TEntryState>>>;
 }
 
-export function RawWaterInputMobile({
-  param,
-  entryState,
-  setEntryState,
-}: IRawWaterInputMobileProps) {
+export function RawWaterInputMobile({ param }: IRawWaterInputMobileProps) {
+  const { getEntry, updateNumber } = useEntryStateContext();
   const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
-  const rawState = entryState[rawKey];
+  const rawState = getEntry(rawKey);
 
   return (
     <div className="space-y-2 pt-2 border-t">
@@ -211,7 +170,7 @@ export function RawWaterInputMobile({
             : String(rawState.numericValue)
         }
         onChange={e => {
-          setEntryState(createNumberEntryUpdater(rawKey, e.target.value));
+          updateNumber(rawKey, e.target.value);
         }}
       />
     </div>
@@ -220,23 +179,18 @@ export function RawWaterInputMobile({
 
 interface INoteCellProps {
   paramId: string;
-  entryState: Record<string, TEntryState>;
-  setEntryState: Dispatch<SetStateAction<Record<string, TEntryState>>>;
 }
 
-export function NoteCell({
-  paramId,
-  entryState,
-  setEntryState,
-}: INoteCellProps) {
+export function NoteCell({ paramId }: INoteCellProps) {
+  const { getEntry, updateText } = useEntryStateContext();
   const key = makeEntryKey(paramId, null, 'NOTE');
-  const state = entryState[key];
+  const state = getEntry(key);
 
   return (
     <Input
       value={state?.textValue ?? ''}
       onChange={e => {
-        setEntryState(createTextEntryUpdater(key, e.target.value));
+        updateText(key, e.target.value);
       }}
     />
   );
