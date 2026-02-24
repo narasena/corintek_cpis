@@ -35,11 +35,11 @@ vi.mock('@/features/log-sheets/components/signature-section', () => ({
   SignatureSection: () => <div data-testid="signature-section">Signature</div>,
 }));
 
-vi.mock('../components/chemical-usage-section', () => ({
+vi.mock('@/features/log-sheets/components/chemical-usage-section', () => ({
   ChemicalUsageSection: () => <div data-testid="chemical-usage">Chemicals</div>,
 }));
 
-vi.mock('../components/mobile-entry-card', () => ({
+vi.mock('./components/mobile-entry-card', () => ({
   MobileEntryCard: () => (
     <div data-testid="mobile-entry-card">Mobile Entry</div>
   ),
@@ -183,31 +183,31 @@ function createTestMocks(
 }
 
 async function renderPageWithMocks(mocks: ReturnType<typeof createTestMocks>) {
-  vi.doMock('../hooks/use-log-sheet-detail-data', () => ({
+  vi.doMock('./hooks/use-log-sheet-detail-data', () => ({
     useLogSheetDetailData: mocks.mockUseLogSheetDetailData,
   }));
-  vi.doMock('../hooks/use-log-sheet-draft-state', () => ({
+  vi.doMock('./hooks/use-log-sheet-draft-state', () => ({
     useLogSheetDraftState: mocks.mockUseLogSheetDraftState,
   }));
-  vi.doMock('../hooks/use-log-sheet-derived', () => ({
+  vi.doMock('./hooks/use-log-sheet-derived', () => ({
     useLogSheetDerived: mocks.mockUseLogSheetDerived,
   }));
-  vi.doMock('../hooks/use-log-sheet-validation', () => ({
+  vi.doMock('./hooks/use-log-sheet-validation', () => ({
     useLogSheetValidation: mocks.mockUseLogSheetValidation,
   }));
-  vi.doMock('../hooks/use-log-sheet-draft-saver', () => ({
+  vi.doMock('./hooks/use-log-sheet-draft-saver', () => ({
     useLogSheetDraftSaver: mocks.mockUseLogSheetDraftSaver,
   }));
-  vi.doMock('../hooks/use-log-sheet-active-machines', () => ({
+  vi.doMock('./hooks/use-log-sheet-active-machines', () => ({
     useLogSheetActiveMachines: mocks.mockUseLogSheetActiveMachines,
   }));
-  vi.doMock('../hooks/use-log-sheet-technicians', () => ({
+  vi.doMock('./hooks/use-log-sheet-technicians', () => ({
     useLogSheetTechnicians: mocks.mockUseLogSheetTechnicians,
   }));
 
   vi.resetModules();
 
-  const { default: LogSheetDetailPage } = await import('../page');
+  const { default: LogSheetDetailPage } = await import('./page');
   return render(<LogSheetDetailPage />);
 }
 

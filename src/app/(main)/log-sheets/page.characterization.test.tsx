@@ -49,7 +49,7 @@ function createMockProject(overrides?: Record<string, unknown>) {
 }
 
 async function renderPage() {
-  const { default: LogSheetsPage } = await import('../page');
+  const { default: LogSheetsPage } = await import('./page');
   return render(<LogSheetsPage />);
 }
 

@@ -61,11 +61,11 @@ vi.mock('@/components/data-table', () => ({
   ),
 }));
 
-vi.mock('../components/columns', () => ({
+vi.mock('./components/columns', () => ({
   getLogSheetColumns: () => [],
 }));
 
-vi.mock('../components/log-sheet-dialog', () => ({
+vi.mock('@/features/log-sheets/components/log-sheet-dialog', () => ({
   LogSheetDialog: ({
     trigger,
     onCreated,
@@ -99,7 +99,7 @@ function createMockLogSheet(overrides?: Record<string, unknown>) {
 }
 
 async function renderPage() {
-  const { default: ProjectLogSheetsPage } = await import('../page');
+  const { default: ProjectLogSheetsPage } = await import('./page');
   return render(<ProjectLogSheetsPage />);
 }
 
