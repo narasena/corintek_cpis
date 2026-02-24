@@ -9,6 +9,25 @@ export const CATEGORY_ORDER: TParameter['category'][] = [
   'CONSUMPTION',
 ];
 
+export const CHILLER_CATEGORIES = [
+  'UNIT_CONDENSOR',
+  'UNIT_EVAPORATOR',
+] as const;
+
+export const CT_CATEGORIES = [
+  'COOLING_WATER_QUALITY',
+  'GENERAL_CONDITION',
+  'JOB_DESCRIPTION',
+] as const;
+
+export function usesChillers(category: TParameter['category']): boolean {
+  return (CHILLER_CATEGORIES as readonly string[]).includes(category);
+}
+
+export function usesCoolingTowers(category: TParameter['category']): boolean {
+  return (CT_CATEGORIES as readonly string[]).includes(category);
+}
+
 export const sectionTitle: Record<TParameter['category'], string> = {
   UNIT_CONDENSOR: 'Unit Condensor',
   UNIT_EVAPORATOR: 'Unit Evaporator',
@@ -23,14 +42,10 @@ export function machinesForCategory(
   machines: { chillers: TMachine[]; coolingTowers: TMachine[] }
 ) {
   if (!machines) return [];
-  if (category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR') {
+  if (usesChillers(category)) {
     return machines.chillers || [];
   }
-  if (
-    category === 'COOLING_WATER_QUALITY' ||
-    category === 'GENERAL_CONDITION' ||
-    category === 'JOB_DESCRIPTION'
-  ) {
+  if (usesCoolingTowers(category)) {
     return machines.coolingTowers || [];
   }
   return [];

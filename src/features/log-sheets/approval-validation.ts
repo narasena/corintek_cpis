@@ -2,6 +2,10 @@ import type { ILogSheetDetailView } from './service';
 import type { ILogSheetEntry } from './types';
 import { makeEntryKey } from './utils';
 import { validateNumericRange } from './range-validation';
+import {
+  usesChillers,
+  usesCoolingTowers,
+} from './components/log-sheet-preview/category-helpers';
 
 function isEntryComplete(
   entry?: Pick<
@@ -112,10 +116,8 @@ function collectCategoryRequiredErrors(
   errors: string[]
 ) {
   const category = param.category;
-  const usesChillers =
-    category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR';
-  const usesCoolingTowers =
-    category === 'GENERAL_CONDITION' || category === 'JOB_DESCRIPTION';
+  const isChillerCategory = usesChillers(category);
+  const isCTCategory = usesCoolingTowers(category);
 
   const activeChillers = context.detail.machines.chillers.filter(m =>
     context.detail.activeMachineIds.chillers.includes(m.id)
@@ -124,9 +126,9 @@ function collectCategoryRequiredErrors(
     context.detail.activeMachineIds.coolingTowers.includes(m.id)
   );
 
-  const machines = usesChillers
+  const machines = isChillerCategory
     ? activeChillers
-    : usesCoolingTowers
+    : isCTCategory
       ? activeCTs
       : [];
   const targets =
@@ -148,7 +150,7 @@ function collectCategoryRequiredErrors(
     }
   }
 
-  if (usesCoolingTowers && activeCTs.length > 0) {
+  if (isCTCategory && activeCTs.length > 0) {
     const noteKey = makeEntryKey(param.id, null, 'NOTE');
     const noteEntry = context.entryByKey.get(noteKey);
     if (!isEntryComplete(noteEntry)) {

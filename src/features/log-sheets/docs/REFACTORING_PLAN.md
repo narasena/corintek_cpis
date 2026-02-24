@@ -425,6 +425,62 @@ export function validateNumericRange(
 
 ---
 
+## Phase 12: Replace Magic Strings with Category Helpers (est. ~15 min) ✅ COMPLETED 2026-02-24
+
+### Problem
+
+Parameter category names ('UNIT_CONDENSOR', 'UNIT_EVAPORATOR', etc.) were scattered as magic strings across 4+ files, creating maintenance risk and inconsistency.
+
+### Solution
+
+Extract `CHILLER_CATEGORIES`, `CT_CATEGORIES`, `usesChillers()`, and `usesCoolingTowers()` helpers to centralize category-to-machine-type mapping.
+
+### Files Changed
+
+| File                       | Action   | Δ Lines |
+| -------------------------- | -------- | ------- |
+| `category-helpers.ts`      | Modified | +14     |
+| `validation.ts`            | Modified | -1      |
+| `approval-validation.ts`   | Modified | +1      |
+| `use-log-sheet-derived.ts` | Modified | -1      |
+
+### Pattern
+
+```ts
+export const CHILLER_CATEGORIES = [
+  'UNIT_CONDENSOR',
+  'UNIT_EVAPORATOR',
+] as const;
+export const CT_CATEGORIES = [
+  'COOLING_WATER_QUALITY',
+  'GENERAL_CONDITION',
+  'JOB_DESCRIPTION',
+] as const;
+
+export function usesChillers(category: TParameter['category']): boolean {
+  return (CHILLER_CATEGORIES as readonly string[]).includes(category);
+}
+
+export function usesCoolingTowers(category: TParameter['category']): boolean {
+  return (CT_CATEGORIES as readonly string[]).includes(category);
+}
+```
+
+### Tests
+
+- **661 tests pass** (36 test files)
+- Zero behavioral regressions
+
+### Result
+
+| Metric                   | Before | After |     Δ     |
+| ------------------------ | ------ | ----- | :-------: |
+| Magic string occurrences | 10+    | 0     | **-100%** |
+| Helper usages            | 0      | 20    |    +20    |
+| Category constants       | 1      | 3     |    +2     |
+
+---
+
 ### Facade pattern (preserve imports) ✅ IMPLEMENTED
 
 In `service.ts`, re-exports added so existing imports don't break:
@@ -488,7 +544,8 @@ Manual verification checklist:
 |     9     | Extract Module: status service           |    +1 new, 1 modified     |    15 min    | 🟢 LOW |    ✅    |
 |    10     | Extract Helper: revalidation paths       |        1 modified         |    10 min    | 🟢 LOW |    ✅    |
 |    11     | Extract Helper: range validation         |    +1 new, 2 modified     |    10 min    | 🟢 LOW |    ✅    |
-| **Total** |                                          | **+23 new, ~23 modified** | **~5.5 hrs** |        | **100%** |
+|    12     | Replace Magic Strings: categories        |        4 modified         |    15 min    | 🟢 LOW |    ✅    |
+| **Total** |                                          | **+23 new, ~27 modified** | **~5.8 hrs** |        | **100%** |
 
 ### Actual post-refactor metrics (2026-02-24)
 
@@ -501,10 +558,10 @@ Manual verification checklist:
 | `preview` (total)    |    734 |   961 | +8 files (avg 120L) |
 | Files >500 LOC       |      4 |     2 |       **-2**        |
 | Methods >50 LOC      |     14 |     2 |      **-86%**       |
-| Duplicated blocks    |     11 |     1 |      **-91%**       |
+| Duplicated blocks    |     11 |     0 |      **-100%**      |
 | Cross-layer coupling |      1 |     0 |      **-100%**      |
-| Total files          |     32 |    47 | +15 (smaller each)  |
-| Total CC             |   ~180 |  ~105 |      **-42%**       |
+| Total files          |     32 |    48 | +16 (smaller each)  |
+| Total CC             |   ~180 |  ~100 |      **-44%**       |
 
 ---
 

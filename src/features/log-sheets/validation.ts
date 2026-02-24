@@ -1,5 +1,9 @@
 import { makeEntryKey } from '@/features/log-sheets/utils';
 import type { TParameter } from '@/features/log-sheets/types';
+import {
+  CHILLER_CATEGORIES,
+  CT_CATEGORIES,
+} from './components/log-sheet-preview/category-helpers';
 
 export type TValidationParameter = {
   id: string;
@@ -119,7 +123,7 @@ function validateChillers(
   validateMachineCategory({
     machines: input.detail?.machines.chillers ?? [],
     activeIds: input.activeChillerIds,
-    categories: ['UNIT_CONDENSOR', 'UNIT_EVAPORATOR'],
+    categories: [...CHILLER_CATEGORIES],
     machineTypeLabel: 'Chiller',
     input,
     result,
@@ -133,11 +137,7 @@ function validateCoolingTowers(
   validateMachineCategory({
     machines: input.detail?.machines.coolingTowers ?? [],
     activeIds: input.activeCTIds,
-    categories: [
-      'COOLING_WATER_QUALITY',
-      'GENERAL_CONDITION',
-      'JOB_DESCRIPTION',
-    ],
+    categories: [...CT_CATEGORIES],
     machineTypeLabel: 'Cooling Tower',
     input,
     result,
