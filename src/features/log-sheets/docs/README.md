@@ -11,27 +11,47 @@ This module has undergone significant refactoring to reduce complexity and impro
 | [BASELINE_INVENTORY.md](./BASELINE_INVENTORY.md)               | LOC metrics, file sizes, complexity tracking   |
 | [CHARACTERIZATION_FINDINGS.md](./CHARACTERIZATION_FINDINGS.md) | Surprising behaviors discovered during testing |
 | [DEPENDENCY_MAP.md](./DEPENDENCY_MAP.md)                       | Module dependency graph                        |
-| [REFACTORING_PLAN.md](./REFACTORING_PLAN.md)                   | Phased refactoring roadmap (80% complete)      |
+| [REFACTORING_PLAN.md](./REFACTORING_PLAN.md)                   | Phased refactoring roadmap (COMPLETE)          |
 | [RISK_MATRIX.md](./RISK_MATRIX.md)                             | Risk assessment for each refactoring phase     |
 | [TEST_COVERAGE_ANALYSIS.md](./TEST_COVERAGE_ANALYSIS.md)       | Test coverage metrics and gaps                 |
 
-## Key Improvements (Phase 3, 4, 5, 6, 7, 8, 9, 10, 11 & Folder Reorg)
+## Key Improvements (All Phases Complete)
 
-| Metric                      | Before      | After       | Change   |
-| --------------------------- | ----------- | ----------- | -------- |
-| `page.tsx` LOC              | 1,245       | 437         | **-65%** |
-| `service.ts` LOC            | 1,008       | 753         | **-25%** |
-| Max file size               | 1,245       | 779         | **-37%** |
-| Total cyclomatic complexity | ~180        | ~140        | **-22%** |
-| Tests                       | 652 passing | 719 passing | ✅       |
+| Metric                           | Before      | After       | Change   |
+| -------------------------------- | ----------- | ----------- | -------- |
+| `page.tsx` LOC                   | 1,245       | 437         | **-65%** |
+| `service.ts` LOC                 | 1,008       | 687         | **-32%** |
+| `log-sheet-category-section.tsx` | 731         | 116         | **-84%** |
+| Max file size                    | 1,245       | 687         | **-45%** |
+| Total cyclomatic complexity      | ~180        | ~100        | **-44%** |
+| Tests                            | 652 passing | 790 passing | ✅ +138  |
 
 ## New Extracted Components
 
-### UI Components (Phase 3, moved to features in Folder Reorg)
+### Phase 1-2: Value Types & Entry State Context
 
-- `log-sheet-toolbar.tsx` (89 lines) — Toolbar with mode toggle, save/print/submit
-- `machine-selection-panel.tsx` (132 lines) — Chiller/cooling tower selection UI
-- `log-sheet-category-section.tsx` (779 lines) — All category tables rendering
+- `utils/value-type.ts` (97 lines) — Pure value type helpers with 59 tests
+- `context/entry-state-context.tsx` (121 lines) — React context for entry state
+
+### Phase 3: Decompose God Components
+
+- `components/category-config.ts` — Category predicates
+- `components/category-sections/` — Decomposed category rendering
+  - `cooling-water-desktop.tsx` (105 lines)
+  - `cooling-water-mobile.tsx` (78 lines)
+  - `general-category-desktop.tsx` (75 lines)
+  - `general-category-mobile.tsx` (38 lines)
+  - `parameter-table-row.tsx` (77 lines)
+
+### Phase 4: Type Safety
+
+- `dto.ts` (147 lines) — Prisma → Domain type mappers
+
+### Phase 5: Data Fetching Consolidation
+
+- `service-extended.ts` (34 lines) — Technicians & chemicals fetchers
+- `page.tsx` now receives `technicians` and `chemicals` from server
+- `ChemicalUsageSection` accepts `chemicals` prop (no internal fetch)
 
 ### Services (Phase 4)
 
@@ -39,7 +59,7 @@ This module has undergone significant refactoring to reduce complexity and impro
 - `log-sheet-photos.service.ts` (128 lines) — Photo upload handling
 - `log-sheet-chemicals.service.ts` (126 lines) — Chemical usage persistence
 
-## Module Structure (After Folder Reorg 2026-02-24)
+## Module Structure (Final)
 
 ```
 src/

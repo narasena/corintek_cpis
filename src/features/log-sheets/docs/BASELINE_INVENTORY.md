@@ -1,6 +1,6 @@
 # Log-Sheets Module — Baseline Inventory
 
-> Snapshot: 2026-02-19 (Updated: 2026-02-24 after Phase 3-11 refactoring + Folder Reorg)
+> Snapshot: 2026-02-19 (Updated: 2026-02-24 after all refactoring phases COMPLETE)
 
 ---
 
@@ -8,21 +8,21 @@
 
 | Metric                                | Before | After (2026-02-24) |   Change |
 | ------------------------------------- | -----: | -----------------: | -------: |
-| Total Lines of Code (ts/tsx)          |  6,805 |              7,522 |     +717 |
-| Code Files (.ts/.tsx)                 |     32 |                 45 |      +13 |
+| Total Lines of Code (ts/tsx)          |  6,805 |              7,894 |   +1,089 |
+| Code Files (.ts/.tsx)                 |     32 |                 52 |      +20 |
 | Classes                               |      0 |                  0 |        — |
-| Largest File                          |  1,245 |                779 | **-37%** |
-| Files >500 lines                      |      4 |                  3 |       -1 |
-| Methods >50 lines                     |     14 |                  3 |  **-11** |
-| Exported Functions/Types              |    ~70 |                ~90 |      +20 |
+| Largest File                          |  1,245 |                687 | **-45%** |
+| Files >500 lines                      |      4 |                  1 |   **-3** |
+| Methods >50 lines                     |     14 |                  2 |  **-12** |
+| Exported Functions/Types              |    ~70 |               ~120 |      +50 |
 | TODO/FIXME/HACK Comments              |      0 |                  0 |        — |
-| Estimated Total Cyclomatic Complexity |   ~180 |               ~120 | **-33%** |
-| Tests                                 |    652 |                719 |      +67 |
+| Estimated Total Cyclomatic Complexity |   ~180 |               ~100 | **-44%** |
+| Tests                                 |    652 |                790 |     +138 |
 | Test Organization                     |  Mixed |          Colocated |       ✅ |
 
 ---
 
-## 2. Lines of Code by File (sorted ascending, after Folder Reorg)
+## 2. Lines of Code by File (sorted ascending, final)
 
 Source: `wc -l` over `src/app/(main)/log-sheets` and `src/features/log-sheets` (ts/tsx only).
 

@@ -699,6 +699,49 @@ return err(error, 'Fallback message');
 
 ---
 
+## Phase 15: Data Fetching Consolidation (est. ~20 min) ✅ COMPLETED 2026-02-24
+
+Consolidated data fetching for technicians and chemicals into the main `getLogSheetDetail` query.
+
+### Problem
+
+- `page.tsx` used `useLogSheetTechnicians` hook to fetch technicians separately
+- `ChemicalUsageSection` fetched chemicals internally via `getChemicalsAction`
+- Multiple sequential network requests on page load
+
+### Solution
+
+1. Created `service-extended.ts` with `fetchAllTechnicians()` and `fetchAllChemicals()`
+2. Updated `getLogSheetDetail` to call both in parallel with `Promise.all`
+3. Updated `TDetail` type to include `technicians` and `chemicals`
+4. Updated `page.tsx` to use `detail.technicians` instead of hook
+5. Updated `ChemicalUsageSection` to accept `chemicals` prop
+
+### Files Changed
+
+| File                         | Action   | Δ Lines |
+| ---------------------------- | -------- | ------- |
+| `service-extended.ts`        | NEW      | +34     |
+| `service.ts`                 | Modified | +15     |
+| `types.ts` (page)            | Modified | +11     |
+| `page.tsx`                   | Modified | -10     |
+| `chemical-usage-section.tsx` | Modified | -45     |
+| `use-log-sheet-derived.ts`   | Modified | +5      |
+
+### Tests
+
+- **790 tests pass** (47 test files)
+- All characterization tests updated to include new required fields
+- Zero behavioral regressions
+
+### Result
+
+- Eliminated 2 separate network requests on page load
+- `ChemicalUsageSection` is now fully controlled (no internal side effects)
+- Consistent data flow: Server Action → Service → View Model → UI
+
+---
+
 ## Phase 14: Extract Component — `entry-cells.tsx` (est. ~10 min) ✅ COMPLETED 2026-02-24
 
 Extracted 6 cell components from `log-sheet-category-section.tsx` into dedicated module.
