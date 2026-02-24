@@ -331,6 +331,98 @@ function CoolingWaterQualityMobile({
   );
 }
 
+interface IParameterTableRowProps {
+  param: TParameter;
+  machines: TMachine[];
+  entryState: Record<string, TEntryState>;
+  setEntryState: Dispatch<SetStateAction<Record<string, TEntryState>>>;
+  hasNotes: boolean;
+  cat: TParameter['category'];
+}
+
+function ParameterTableRow({
+  param,
+  machines,
+  entryState,
+  setEntryState,
+  hasNotes,
+  cat,
+}: IParameterTableRowProps) {
+  const targets =
+    machines.length > 0
+      ? machines
+      : ([
+          {
+            id: 'null',
+            unitNumber: 0,
+            type: 'CHILLER' as const,
+          },
+        ] as TMachine[]);
+
+  return (
+    <TableRow>
+      <TableCell className="w-max-plus!">
+        <div className="font-medium">
+          {param.name}
+          {param.unit ? ` (${param.unit})` : ''}
+        </div>
+      </TableCell>
+      <TableCell>{formatLimit(param)}</TableCell>
+      {targets.map(m => {
+        const machineIdValue = machines.length > 0 ? m.id : null;
+        const key = makeEntryKey(param.id, machineIdValue, 'VALUE');
+        const state = entryState[key];
+
+        if (param.valueType === 'BOOLEAN') {
+          return (
+            <BooleanCell
+              key={key}
+              state={state}
+              entryKey={key}
+              setEntryState={setEntryState}
+            />
+          );
+        }
+
+        if (param.valueType === 'NUMBER') {
+          const isWaterMeter =
+            cat === 'CONSUMPTION' &&
+            ['before', 'after'].some(k => param.name.toLowerCase().includes(k));
+          return (
+            <NumberCell
+              key={key}
+              state={state}
+              entryKey={key}
+              setEntryState={setEntryState}
+              minValue={param.minValue}
+              maxValue={param.maxValue}
+              isWaterMeter={isWaterMeter}
+            />
+          );
+        }
+
+        return (
+          <TextCell
+            key={key}
+            state={state}
+            entryKey={key}
+            setEntryState={setEntryState}
+          />
+        );
+      })}
+      {hasNotes && (
+        <TableCell>
+          <NoteCell
+            paramId={param.id}
+            entryState={entryState}
+            setEntryState={setEntryState}
+          />
+        </TableCell>
+      )}
+    </TableRow>
+  );
+}
+
 interface IGeneralCategoryDesktopProps {
   category: string;
   params: TParameter[];
@@ -383,82 +475,17 @@ function GeneralCategoryDesktop({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {params.map(param => {
-              const targets =
-                machines.length > 0
-                  ? machines
-                  : ([
-                      {
-                        id: 'null',
-                        unitNumber: 0,
-                        type: 'CHILLER' as const,
-                      },
-                    ] as TMachine[]);
-              return (
-                <TableRow key={param.id}>
-                  <TableCell className="w-max-plus!">
-                    <div className="font-medium">
-                      {param.name}
-                      {param.unit ? ` (${param.unit})` : ''}
-                    </div>
-                  </TableCell>
-                  <TableCell>{formatLimit(param)}</TableCell>
-                  {targets.map(m => {
-                    const machineIdValue = machines.length > 0 ? m.id : null;
-                    const key = makeEntryKey(param.id, machineIdValue, 'VALUE');
-                    const state = entryState[key];
-
-                    if (param.valueType === 'BOOLEAN') {
-                      return (
-                        <BooleanCell
-                          key={key}
-                          state={state}
-                          entryKey={key}
-                          setEntryState={setEntryState}
-                        />
-                      );
-                    }
-
-                    if (param.valueType === 'NUMBER') {
-                      const isWaterMeter =
-                        cat === 'CONSUMPTION' &&
-                        ['before', 'after'].some(k =>
-                          param.name.toLowerCase().includes(k)
-                        );
-                      return (
-                        <NumberCell
-                          key={key}
-                          state={state}
-                          entryKey={key}
-                          setEntryState={setEntryState}
-                          minValue={param.minValue}
-                          maxValue={param.maxValue}
-                          isWaterMeter={isWaterMeter}
-                        />
-                      );
-                    }
-
-                    return (
-                      <TextCell
-                        key={key}
-                        state={state}
-                        entryKey={key}
-                        setEntryState={setEntryState}
-                      />
-                    );
-                  })}
-                  {hasNotes && (
-                    <TableCell>
-                      <NoteCell
-                        paramId={param.id}
-                        entryState={entryState}
-                        setEntryState={setEntryState}
-                      />
-                    </TableCell>
-                  )}
-                </TableRow>
-              );
-            })}
+            {params.map(param => (
+              <ParameterTableRow
+                key={param.id}
+                param={param}
+                machines={machines}
+                entryState={entryState}
+                setEntryState={setEntryState}
+                hasNotes={hasNotes}
+                cat={cat}
+              />
+            ))}
           </TableBody>
         </Table>
       </div>

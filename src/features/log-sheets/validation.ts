@@ -171,6 +171,70 @@ function collectConsumptionMissing(
   });
 }
 
+export type TCompletenessChecker = (
+  state: TValidationEntryState | undefined,
+  param?: TValidationParameter
+) => boolean;
+
+export type TCategoryValidationResult = {
+  missingByMachine: Map<string, string[]>;
+  completeMachineId: string | null;
+  allMissing: string[];
+};
+
+export function validateCategoryEntries(params: {
+  parameters: TValidationParameter[];
+  machines: TValidationMachine[];
+  activeMachineIds: string[];
+  entryState: Record<string, TValidationEntryState>;
+  categories: TValidationParameter['category'][];
+  machineTypeLabel: string;
+  isComplete: TCompletenessChecker;
+  role?: 'VALUE' | 'RAW_WATER' | 'NOTE';
+}): TCategoryValidationResult {
+  const {
+    parameters,
+    machines,
+    activeMachineIds,
+    entryState,
+    categories,
+    machineTypeLabel,
+    isComplete,
+    role = 'VALUE',
+  } = params;
+
+  const active = machines.filter(m => activeMachineIds.includes(m.id));
+  const missingByMachine = new Map<string, string[]>();
+  let completeMachineId: string | null = null;
+  const allMissing: string[] = [];
+
+  for (const machine of active) {
+    const missing: string[] = [];
+
+    for (const category of categories) {
+      const catParams = parameters.filter(p => p.category === category);
+      for (const param of catParams) {
+        const key = makeEntryKey(param.id, machine.id, role);
+        const state = entryState[key];
+        if (!isComplete(state, param)) {
+          missing.push(
+            `${category}: ${param.name} (${machineTypeLabel} #${machine.unitNumber})`
+          );
+        }
+      }
+    }
+
+    if (missing.length === 0) {
+      completeMachineId = machine.id;
+    } else {
+      missingByMachine.set(machine.id, missing);
+      allMissing.push(...missing);
+    }
+  }
+
+  return { missingByMachine, completeMachineId, allMissing };
+}
+
 export function validateLogSheetEntries(
   input: TLogSheetValidationInput
 ): TLogSheetValidationResult {

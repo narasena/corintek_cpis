@@ -8,29 +8,29 @@
 
 ### App Layer (`src/app/(main)/log-sheets/`)
 
-| #   | File                                                                 |   Lines | Role                                     |
-| --- | -------------------------------------------------------------------- | ------: | ---------------------------------------- |
-| A1  | `page.tsx`                                                           |      63 | Root page — project list                 |
-| A2  | `components/project-columns.tsx`                                     |      29 | Column defs for project table            |
-| A3  | `[projectId]/page.tsx`                                               |     136 | Log-sheet list per project               |
-| A4  | `[projectId]/components/columns.tsx`                                 |      75 | Column defs for log-sheet table          |
-| A5  | `[projectId]/components/log-sheet-dialog.tsx`                        |      35 | CrudDialog wrapper for create            |
-| A6  | `[projectId]/components/log-sheet-form.tsx`                          |     160 | Create log-sheet form                    |
-| A7  | `[projectId]/[logSheetId]/page.tsx`                                  | **437** | Detail page (input + preview + signing)  |
-| A8  | `[projectId]/[logSheetId]/types.ts`                                  |     106 | Local types for detail page              |
-| A9  | `[projectId]/[logSheetId]/utils.ts`                                  |      67 | Local formatters/helpers                 |
-| A10 | `[projectId]/[logSheetId]/components/chemical-usage-section.tsx`     |     211 | Chemical usage CRUD section              |
-| A11 | `[projectId]/[logSheetId]/components/mobile-entry-card.tsx`          |     201 | Mobile-responsive entry card             |
-| A12 | `[projectId]/[logSheetId]/components/log-sheet-toolbar.tsx`          |      89 | Toolbar with mode/save/print             |
-| A13 | `[projectId]/[logSheetId]/components/machine-selection-panel.tsx`    |     132 | Chiller/CT selection UI                  |
-| A14 | `[projectId]/[logSheetId]/components/log-sheet-category-section.tsx` | **779** | Category tables rendering                |
-| A15 | `[projectId]/[logSheetId]/hooks/use-log-sheet-active-machines.ts`    |     105 | Toggle/select/clear machines             |
-| A16 | `[projectId]/[logSheetId]/hooks/use-log-sheet-derived.ts`            |     107 | Categories, machines, computed           |
-| A17 | `[projectId]/[logSheetId]/hooks/use-log-sheet-detail-data.ts`        |      35 | Fetch log-sheet detail                   |
-| A18 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-saver.ts`        |     144 | Save draft (entries, chemicals, uploads) |
-| A19 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-state.ts`        |      93 | Initialize draft state from detail       |
-| A20 | `[projectId]/[logSheetId]/hooks/use-log-sheet-technicians.ts`        |      19 | Fetch all users as technicians           |
-| A21 | `[projectId]/[logSheetId]/hooks/use-log-sheet-validation.ts`         |      79 | Client-side validation wrapper           |
+| #   | File                                                                 |   Lines | Role                                                    |
+| --- | -------------------------------------------------------------------- | ------: | ------------------------------------------------------- |
+| A1  | `page.tsx`                                                           |      63 | Root page — project list                                |
+| A2  | `components/project-columns.tsx`                                     |      29 | Column defs for project table                           |
+| A3  | `[projectId]/page.tsx`                                               |     136 | Log-sheet list per project                              |
+| A4  | `[projectId]/components/columns.tsx`                                 |      75 | Column defs for log-sheet table                         |
+| A5  | `[projectId]/components/log-sheet-dialog.tsx`                        |      35 | CrudDialog wrapper for create                           |
+| A6  | `[projectId]/components/log-sheet-form.tsx`                          |     160 | Create log-sheet form                                   |
+| A7  | `[projectId]/[logSheetId]/page.tsx`                                  | **437** | Detail page (input + preview + signing)                 |
+| A8  | `[projectId]/[logSheetId]/types.ts`                                  |     106 | Local types for detail page                             |
+| A9  | `[projectId]/[logSheetId]/utils.ts`                                  |      67 | Local formatters/helpers                                |
+| A10 | `[projectId]/[logSheetId]/components/chemical-usage-section.tsx`     |     211 | Chemical usage CRUD section                             |
+| A11 | `[projectId]/[logSheetId]/components/mobile-entry-card.tsx`          |     201 | Mobile-responsive entry card                            |
+| A12 | `[projectId]/[logSheetId]/components/log-sheet-toolbar.tsx`          |      89 | Toolbar with mode/save/print                            |
+| A13 | `[projectId]/[logSheetId]/components/machine-selection-panel.tsx`    |     132 | Chiller/CT selection UI                                 |
+| A14 | `[projectId]/[logSheetId]/components/log-sheet-category-section.tsx` | **536** | Category tables rendering (extracted ParameterTableRow) |
+| A15 | `[projectId]/[logSheetId]/hooks/use-log-sheet-active-machines.ts`    |     105 | Toggle/select/clear machines                            |
+| A16 | `[projectId]/[logSheetId]/hooks/use-log-sheet-derived.ts`            |     107 | Categories, machines, computed                          |
+| A17 | `[projectId]/[logSheetId]/hooks/use-log-sheet-detail-data.ts`        |      35 | Fetch log-sheet detail                                  |
+| A18 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-saver.ts`        |     144 | Save draft (entries, chemicals, uploads)                |
+| A19 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-state.ts`        |      93 | Initialize draft state from detail                      |
+| A20 | `[projectId]/[logSheetId]/hooks/use-log-sheet-technicians.ts`        |      19 | Fetch all users as technicians                          |
+| A21 | `[projectId]/[logSheetId]/hooks/use-log-sheet-validation.ts`         |      79 | Client-side validation wrapper                          |
 
 ### Features Layer — Runtime (`src/features/log-sheets/`)
 
@@ -55,7 +55,7 @@
 | F6h | `  documentation-section.tsx`               |     130 | Photo documentation grid                                |
 | F7  | `components/signature-section.tsx`          |     144 | Signature UI for technician / client PIC                |
 | F8  | `components/signature-pad.tsx`              |     197 | Canvas-based signature drawing component                |
-| F9  | `validation.ts`                             |     220 | Shared client/server entry completeness checks          |
+| F9  | `validation.ts`                             |     268 | Shared client/server entry completeness checks          |
 | F10 | `approval-validation.ts`                    |     198 | Server-side approval validation on detail view          |
 | F11 | `log-sheet-status.ts`                       |      53 | Status transition rules                                 |
 | F12 | `log-sheet-locking.ts`                      |      39 | Status/lock → editability decision                      |
@@ -347,12 +347,15 @@ Both A14 and A11 now import and use these helpers.
 
 **Resolution:** `log-sheet-form.tsx` imports and uses `useLogSheetTechnicians` hook (single source of truth).
 
-### DUP-10: Validation logic overlap
+### DUP-10: Validation logic overlap 🟡 PARTIALLY RESOLVED
 
 - **F9** `validation.ts` — centralised entry completeness validation (`validateLogSheetEntries`)
 - **A21** `use-log-sheet-validation.ts` — maps page state into `TLogSheetValidationInput` and calls F9
 - **F2** `service.ts` — `validateLogSheetForSubmission` and `validateLogSheetForApproval` perform additional checks that partially overlap with F9
-- Same business rules (required fields, machine selection, raw water/consumption) are enforced in multiple places with overlapping but not identical logic.
+
+**Resolution (2026-02-24):** Added `validateCategoryEntries()` helper function to `validation.ts` — a shared validator that can be used by both client-side and server-side validation. This provides a single source of truth for category-based entry completeness checks.
+
+**Remaining:** Consumers (`approval-validation.ts`, `validation.ts:validateMachineCategory`) should be refactored to delegate to this shared helper. The foundational change is complete; consumer migration is deferred to minimize risk.
 
 ---
 
@@ -495,15 +498,15 @@ graph TD
 
 ### Remaining Technical Debt
 
-| ID     | Issue                            | Recommendation                          |
-| ------ | -------------------------------- | --------------------------------------- |
-| DUP-1  | `TLogSheetRow` duplicated        | Move to shared types file               |
-| DUP-2  | `formatDate` duplicated          | Consolidate to single utils file        |
-| DUP-5  | `TEntryState` variants           | Extend base type in app layer           |
-| DUP-6  | `TParameter`/`TPreviewParameter` | Unify to single type                    |
-| DUP-8  | Inline `setEntryState` handlers  | Create shared handler factory           |
-| DUP-9  | Technician fetch pattern         | Reuse hook in form component            |
-| DUP-10 | Validation logic overlap         | Consolidate to single validation module |
+| ID     | Issue                            | Recommendation                                 | Status     |
+| ------ | -------------------------------- | ---------------------------------------------- | ---------- |
+| DUP-1  | `TLogSheetRow` duplicated        | Move to shared types file                      | Open       |
+| DUP-2  | `formatDate` duplicated          | Consolidate to single utils file               | Open       |
+| DUP-5  | `TEntryState` variants           | Extend base type in app layer                  | Open       |
+| DUP-6  | `TParameter`/`TPreviewParameter` | Unify to single type                           | Open       |
+| DUP-8  | Inline `setEntryState` handlers  | Create shared handler factory                  | Open       |
+| DUP-9  | Technician fetch pattern         | Reuse hook in form component                   | Open       |
+| DUP-10 | Validation logic overlap         | Migrate consumers to `validateCategoryEntries` | 🟡 Partial |
 
 ---
 
