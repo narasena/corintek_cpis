@@ -1,36 +1,31 @@
 # Log-Sheets Module — Dependency Map
 
-> Generated: 2026-02-19 | Updated: 2026-02-23 (Phase 3, 4 & 5 refactoring)
+> Generated: 2026-02-19 | Updated: 2026-02-24 (Phase 3-11 refactoring + Folder Reorg)
 
 ---
 
-## 1. File Inventory (38 runtime modules + tests/docs)
+## 1. File Inventory (45+ runtime modules + tests/docs)
 
 ### App Layer (`src/app/(main)/log-sheets/`)
 
-| #   | File                                                                 |   Lines | Role                                                    |
-| --- | -------------------------------------------------------------------- | ------: | ------------------------------------------------------- |
-| A1  | `page.tsx`                                                           |      63 | Root page — project list                                |
-| A2  | `components/project-columns.tsx`                                     |      29 | Column defs for project table                           |
-| A3  | `[projectId]/page.tsx`                                               |     136 | Log-sheet list per project                              |
-| A4  | `[projectId]/components/columns.tsx`                                 |      75 | Column defs for log-sheet table                         |
-| A5  | `[projectId]/components/log-sheet-dialog.tsx`                        |      35 | CrudDialog wrapper for create                           |
-| A6  | `[projectId]/components/log-sheet-form.tsx`                          |     160 | Create log-sheet form                                   |
-| A7  | `[projectId]/[logSheetId]/page.tsx`                                  | **437** | Detail page (input + preview + signing)                 |
-| A8  | `[projectId]/[logSheetId]/types.ts`                                  |     106 | Local types for detail page                             |
-| A9  | `[projectId]/[logSheetId]/utils.ts`                                  |      67 | Local formatters/helpers                                |
-| A10 | `[projectId]/[logSheetId]/components/chemical-usage-section.tsx`     |     211 | Chemical usage CRUD section                             |
-| A11 | `[projectId]/[logSheetId]/components/mobile-entry-card.tsx`          |     201 | Mobile-responsive entry card                            |
-| A12 | `[projectId]/[logSheetId]/components/log-sheet-toolbar.tsx`          |      89 | Toolbar with mode/save/print                            |
-| A13 | `[projectId]/[logSheetId]/components/machine-selection-panel.tsx`    |     132 | Chiller/CT selection UI                                 |
-| A14 | `[projectId]/[logSheetId]/components/log-sheet-category-section.tsx` | **536** | Category tables rendering (extracted ParameterTableRow) |
-| A15 | `[projectId]/[logSheetId]/hooks/use-log-sheet-active-machines.ts`    |     105 | Toggle/select/clear machines                            |
-| A16 | `[projectId]/[logSheetId]/hooks/use-log-sheet-derived.ts`            |     107 | Categories, machines, computed                          |
-| A17 | `[projectId]/[logSheetId]/hooks/use-log-sheet-detail-data.ts`        |      35 | Fetch log-sheet detail                                  |
-| A18 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-saver.ts`        |     144 | Save draft (entries, chemicals, uploads)                |
-| A19 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-state.ts`        |      93 | Initialize draft state from detail                      |
-| A20 | `[projectId]/[logSheetId]/hooks/use-log-sheet-technicians.ts`        |      19 | Fetch all users as technicians                          |
-| A21 | `[projectId]/[logSheetId]/hooks/use-log-sheet-validation.ts`         |      79 | Client-side validation wrapper                          |
+| #   | File                                                              |   Lines | Role                                             |
+| --- | ----------------------------------------------------------------- | ------: | ------------------------------------------------ |
+| A1  | `page.tsx`                                                        |      63 | Root page — project list                         |
+| A2  | `components/project-columns.tsx`                                  |      29 | Column defs for project table (route-specific)   |
+| A3  | `[projectId]/page.tsx`                                            |     136 | Log-sheet list per project                       |
+| A4  | `[projectId]/components/columns.tsx`                              |      75 | Column defs for log-sheet table (route-specific) |
+| A5  | `[projectId]/[logSheetId]/page.tsx`                               | **437** | Detail page (input + preview + signing)          |
+| A6  | `[projectId]/[logSheetId]/types.ts`                               |     106 | Local types for detail page                      |
+| A7  | `[projectId]/[logSheetId]/utils.ts`                               |      67 | Local formatters/helpers                         |
+| A8  | `[projectId]/[logSheetId]/entry-state-helpers.ts`                 |      52 | Entry state update helpers                       |
+| A9  | `[projectId]/[logSheetId]/components/entry-cells.tsx`             |    ~150 | Page-specific entry cell renderers               |
+| A10 | `[projectId]/[logSheetId]/components/mobile-entry-card.tsx`       |     179 | Mobile-responsive entry card (page-specific)     |
+| A11 | `[projectId]/[logSheetId]/hooks/use-log-sheet-active-machines.ts` |     105 | Toggle/select/clear machines                     |
+| A12 | `[projectId]/[logSheetId]/hooks/use-log-sheet-derived.ts`         |     107 | Categories, machines, computed                   |
+| A13 | `[projectId]/[logSheetId]/hooks/use-log-sheet-detail-data.ts`     |      35 | Fetch log-sheet detail                           |
+| A14 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-saver.ts`     |     144 | Save draft (entries, chemicals, uploads)         |
+| A15 | `[projectId]/[logSheetId]/hooks/use-log-sheet-draft-state.ts`     |      93 | Initialize draft state from detail               |
+| A16 | `[projectId]/[logSheetId]/hooks/use-log-sheet-validation.ts`      |      79 | Client-side validation wrapper                   |
 
 ### Features Layer — Runtime (`src/features/log-sheets/`)
 
@@ -38,10 +33,11 @@
 | --- | ------------------------------------------- | ------: | ------------------------------------------------------- |
 | F1  | `actions.ts`                                | **590** | Server actions (CRUD, status, signatures, upload)       |
 | F2  | `service.ts`                                | **753** | Prisma service layer + auth/locking (reduced 25%)       |
-| F2a | `log-sheet-entries.service.ts`              |     157 | `upsertLogSheetEntries` (extracted)                     |
-| F2b | `log-sheet-photos.service.ts`               |     128 | `upsertLogSheetPhotos` (extracted)                      |
-| F2c | `log-sheet-chemicals.service.ts`            |     126 | `upsertLogSheetChemicalUsages` (extracted)              |
-| F3  | `types.ts`                                  |     200 | Zod schemas + interfaces                                |
+| F2a | `log-sheet-entries.service.ts`              |     116 | `upsertLogSheetEntries` (extracted)                     |
+| F2b | `log-sheet-photos.service.ts`               |      69 | `upsertLogSheetPhotos` (extracted)                      |
+| F2c | `log-sheet-chemicals.service.ts`            |      67 | `upsertLogSheetChemicalUsages` (extracted)              |
+| F2d | `internal/edit-permission.ts`               |      47 | `assertLogSheetEditable` (shared)                       |
+| F3  | `types.ts`                                  |     208 | Zod schemas + interfaces                                |
 | F4  | `utils.ts`                                  |      38 | `makeEntryKey`, `isLogSheetEntryEmpty`                  |
 | F5  | `components/log-sheet-header.tsx`           |      75 | Print header component                                  |
 | F6  | `components/log-sheet-preview/` (directory) |     961 | Print preview modules (Phase 5 extraction)              |
@@ -55,24 +51,30 @@
 | F6h | `  documentation-section.tsx`               |     130 | Photo documentation grid                                |
 | F7  | `components/signature-section.tsx`          |     144 | Signature UI for technician / client PIC                |
 | F8  | `components/signature-pad.tsx`              |     197 | Canvas-based signature drawing component                |
-| F9  | `validation.ts`                             |     268 | Shared client/server entry completeness checks          |
-| F10 | `approval-validation.ts`                    |     198 | Server-side approval validation on detail view          |
+| F9  | `validation.ts`                             |     205 | Shared client/server entry completeness checks          |
+| F10 | `approval-validation.ts`                    |     199 | Server-side approval validation on detail view          |
 | F11 | `log-sheet-status.ts`                       |      53 | Status transition rules                                 |
 | F12 | `log-sheet-locking.ts`                      |      39 | Status/lock → editability decision                      |
+| F13 | `components/log-sheet-form.tsx`             |     160 | Create log-sheet form (moved from app/)                 |
+| F14 | `components/log-sheet-dialog.tsx`           |      35 | CrudDialog wrapper for create (moved from app/)         |
+| F15 | `components/log-sheet-toolbar.tsx`          |      89 | Toolbar with mode/save/print (moved from app/)          |
+| F16 | `components/machine-selection-panel.tsx`    |     132 | Chiller/CT selection UI (moved from app/)               |
+| F17 | `components/log-sheet-category-section.tsx` |     731 | Category tables rendering (moved from app/)             |
+| F18 | `components/chemical-usage-section.tsx`     |     211 | Chemical usage CRUD section (moved from app/)           |
+| F19 | `hooks/use-log-sheet-technicians.ts`        |      40 | Fetch all users as technicians (moved from app/)        |
 
-### Features Layer — Supporting Artifacts
+### Tests (Colocated with source)
 
-| File                        | Type | Role                         |
-| --------------------------- | ---- | ---------------------------- |
-| `log-sheet-locking.test.ts` | Test | Unit tests for locking rules |
-| `service.test.ts`           | Test | Unit tests for service logic |
-| `README.md`                 | Doc  | Feature overview             |
-| `RISK_MATRIX.md`            | Doc  | Risk analysis                |
-| `REFACTORING_PLAN.md`       | Doc  | Planned refactor slices      |
-| `BASELINE_INVENTORY.md`     | Doc  | Initial module inventory     |
-| `DEPENDENCY_MAP.md`         | Doc  | This document                |
+All tests are colocated with their source files using the `*.test.ts` or `*.characterization.test.ts` pattern.
 
-**Total: ~6,000+ lines of runtime code** (excluding tests/docs)
+| Location Pattern | Example                                                                 |
+| ---------------- | ----------------------------------------------------------------------- |
+| Feature tests    | `service.characterization.test.ts` next to `service.ts`                 |
+| Component tests  | `log-sheet-form.characterization.test.tsx` next to `log-sheet-form.tsx` |
+| Hook tests       | `use-log-sheet-technicians.characterization.test.ts` next to hook       |
+| Page tests       | `page.characterization.test.tsx` next to `page.tsx`                     |
+
+**Total: ~7,500+ lines of runtime code** (excluding tests/docs)
 
 ---
 
@@ -83,61 +85,63 @@
 - `→` means "imports from"
 - External deps prefixed with `@/` are outside this module
 
-### App Layer → Features Layer
+### App Layer → Features Layer (After Folder Reorg)
 
 ```
 A1  → @/features/projects/actions, @/features/projects/types, A2
 A2  → @/features/projects/types
 A3  → @/features/projects/actions, @/features/projects/types,
-       F1 (actions), F3 (types), A4, A5
+        F1 (actions), F3 (types), A4, F14 (log-sheet-dialog)
 A4  → F3 (types)
-A5  → A6
-A6  → F3 (types), F1 (actions),
-       @/features/users/actions, @/@types/user.type
-A7  → F1 (actions), F4 (utils), F6 (log-sheet-preview),
-       F7 (signature-section),
-       A8 (types), A9 (utils), A10, A11, A12, A13, A14,
-       A15, A16, A17, A18, A19, A20, A21,
-       @/hooks/use-mobile
-A8  → F3 (types: TLogSheetStatus)
-A9  → A8 (types)
-A10 → @/features/chemicals/actions, @/@types/chemical.type
-A11 → F4 (utils), A9 (utils), A8 (types)
-A12 → F1 (actions), A8 (types)
-A13 → F6b (category-helpers), @/@types/user.type, A8 (types)
-A14 → F1 (actions), A8 (types)
-A15 → F1 (actions), A8 (types)
-A16 → F4 (utils), A10 (TChemicalUsageState type), A8 (types)
-A17 → @/features/users/actions, @/@types/user.type
-A18 → F4 (utils), F9 (validation), A8 (types)
+A5  → F1 (actions), F4 (utils), F6 (log-sheet-preview),
+        F7 (signature-section),
+        A6 (types), A7 (utils), A8 (entry-helpers), A9, A10,
+        F15 (toolbar), F16 (machine-panel), F17 (category-section), F18 (chemicals),
+        A11, A12, A13, A14, A15, A16,
+        F19 (use-log-sheet-technicians),
+        @/hooks/use-mobile
+A6  → F3 (types: TLogSheetStatus)
+A7  → A6 (types)
+A8  → A6 (types) — entry state helpers
+A9  → F4 (utils), A7 (utils), A6 (types)
+A10 → F4 (utils), A7 (utils), A6 (types)
+A11 → F1 (actions), A6 (types)
+A12 → F4 (utils), F18 (TChemicalUsageState type), A6 (types)
+A13 → @/features/users/actions, @/@types/user.type
+A14 → F4 (utils), F9 (validation), A6 (types), F18 (TChemicalUsageState type)
+A15 → F4 (utils), A6 (types), F18 (TChemicalUsageState type)
+A16 → A6 (types)
 ```
 
-### Features Layer Internal
+### Features Layer Internal (After Folder Reorg)
 
 ```
 F1 → F2 (service), F2a, F2b, F2c (via facade re-exports), F3 (types), F4 (utils),
-      @/features/projects/service,
-      @/features/parameters/types,
-      @/@types/chemical.type,
-      @/lib/auth-helpers, @/lib/rbac, @/@types/auth.type
+        F2d (edit-permission),
+        @/features/projects/service,
+        @/features/parameters/types,
+        @/@types/chemical.type,
+        @/lib/auth-helpers, @/lib/rbac, @/@types/auth.type
 F2 → F3 (types), F4 (utils),
-      F10 (approval-validation),
-      F11 (log-sheet-status),
-      F12 (log-sheet-locking),
-      @/lib/prisma,
-      @/features/parameters/types,
-      @/features/machines/types,
-      @/@types/chemical.type,
-      @/@types/auth.type,
-      @/lib/rbac,
-      @/features/projects/service,
-      @/generated/prisma/client
-F2a → F3 (types), F4 (utils), F12 (log-sheet-locking),
+        F10 (approval-validation),
+        F11 (log-sheet-status),
+        F12 (log-sheet-locking),
+        F2d (edit-permission),
+        @/lib/prisma,
+        @/features/parameters/types,
+        @/features/machines/types,
+        @/@types/chemical.type,
+        @/@types/auth.type,
+        @/lib/rbac,
+        @/features/projects/service,
+        @/generated/prisma/client
+F2a → F3 (types), F4 (utils), F2d (edit-permission),
         @/lib/prisma, @/lib/rbac, @/features/projects/service
-F2b → F3 (types), F12 (log-sheet-locking),
+F2b → F3 (types), F2d (edit-permission),
         @/lib/prisma, @/lib/rbac, @/features/projects/service
-F2c → F12 (log-sheet-locking),
+F2c → F2d (edit-permission),
         @/lib/prisma, @/lib/rbac, @/features/projects/service
+F2d → F12 (log-sheet-locking), @/lib/rbac
 F3 → @/features/parameters/types
 F4 → F3 (types)
 F5 → (no local deps, uses next/image)
@@ -152,13 +156,22 @@ F6f → F4 (utils), F6b (category-helpers), F6c (format-helpers), F3 (types)
 F6g → (no local deps)
 F6h → F4 (utils), F5 (log-sheet-header), F3 (types)
 F7 → F1 (actions), F8 (signature-pad),
-       @/components/signature/signature-preview,
-       @/components/signature/signature-roles
+        @/components/signature/signature-preview,
+        @/components/signature/signature-roles
 F8 → (no local deps, uses React + ui/button)
 F9 → F4 (utils), F3 (types)
 F10 → F2 (service types), F3 (types), F4 (utils)
 F11 → F3 (types)
 F12 → F3 (types)
+F13 (log-sheet-form) → F3 (types), F1 (actions), F19 (use-log-sheet-technicians),
+        @/features/users/actions, @/@types/user.type
+F14 (log-sheet-dialog) → F13 (log-sheet-form)
+F15 (toolbar) → F1 (actions), A6 (types)
+F16 (machine-panel) → F6b (category-helpers), @/@types/user.type, A6 (types)
+F17 (category-section) → F1 (actions), A6 (types), A8 (entry-helpers), F18 (chemicals),
+        A9 (entry-cells), A10 (mobile-entry-card), F4 (utils)
+F18 (chemicals) → @/features/chemicals/actions, @/@types/chemical.type
+F19 (use-log-sheet-technicians) → @/features/users/actions, @/@types/user.type
 ```
 
 **Note:**
@@ -167,32 +180,32 @@ F12 → F3 (types)
 - F6 (log-sheet-preview) is now a directory with F6a-F6h sub-modules.
 - **Cross-layer coupling resolved:** A13 now imports from F6b (pure helper module) instead of F6a (UI component).
 
-### Cross-Module External Dependencies
+### Cross-Module External Dependencies (After Folder Reorg)
 
-| External Module                            | Used By          |
-| ------------------------------------------ | ---------------- |
-| `@/features/projects/actions`              | A1, A3           |
-| `@/features/projects/types`                | A1, A2, A3       |
-| `@/features/projects/service`              | F1, F2           |
-| `@/features/users/actions`                 | A6, A17          |
-| `@/features/parameters/types`              | F1, F2, F3       |
-| `@/features/parameters/limits-utils`       | F2               |
-| `@/features/machines/types`                | F2               |
-| `@/features/chemicals/actions`             | A10              |
-| `@/@types/user.type`                       | A6, A13, A17     |
-| `@/@types/chemical.type`                   | A10, F1, F2      |
-| `@/@types/auth.type`                       | F1, F2           |
-| `@/lib/prisma`                             | F2               |
-| `@/lib/auth-helpers`                       | F1               |
-| `@/lib/rbac`                               | F1, F2           |
-| `@/hooks/use-mobile`                       | A7               |
-| `@/components/signature/signature-preview` | F7               |
-| `@/components/signature/signature-roles`   | F7               |
-| `@/components/data-table`                  | A1, A3           |
-| `@/components/crud-dialog`                 | A5               |
-| `@/components/action-cell`                 | A4               |
-| `@/components/camera-input`                | A7, A11          |
-| `@/components/ui/*`                        | A1-A11 (various) |
+| External Module                            | Used By                         |
+| ------------------------------------------ | ------------------------------- |
+| `@/features/projects/actions`              | A1, A3                          |
+| `@/features/projects/types`                | A1, A2, A3                      |
+| `@/features/projects/service`              | F1, F2                          |
+| `@/features/users/actions`                 | F13 (log-sheet-form), F19, A13  |
+| `@/features/parameters/types`              | F1, F2, F3                      |
+| `@/features/parameters/limits-utils`       | F2                              |
+| `@/features/machines/types`                | F2                              |
+| `@/features/chemicals/actions`             | F18 (chemicals)                 |
+| `@/@types/user.type`                       | F13, F16, F19, A13              |
+| `@/@types/chemical.type`                   | F18, F1, F2                     |
+| `@/@types/auth.type`                       | F1, F2                          |
+| `@/lib/prisma`                             | F2, F2a, F2b, F2c               |
+| `@/lib/auth-helpers`                       | F1                              |
+| `@/lib/rbac`                               | F1, F2, F2a, F2b, F2c, F2d      |
+| `@/hooks/use-mobile`                       | A5                              |
+| `@/components/signature/signature-preview` | F7                              |
+| `@/components/signature/signature-roles`   | F7                              |
+| `@/components/data-table`                  | A1, A3                          |
+| `@/components/crud-dialog`                 | F14 (log-sheet-dialog)          |
+| `@/components/action-cell`                 | A4                              |
+| `@/components/camera-input`                | A5, A10                         |
+| `@/components/ui/*`                        | Various (A1-A5, F7-F8, F13-F18) |
 
 ---
 

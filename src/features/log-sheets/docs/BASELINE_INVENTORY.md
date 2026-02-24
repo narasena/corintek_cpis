@@ -1,6 +1,6 @@
 # Log-Sheets Module — Baseline Inventory
 
-> Snapshot: 2026-02-19 (Updated: 2026-02-24 after Phase 3, 4, 5, 6, 7 & 8 refactoring)
+> Snapshot: 2026-02-19 (Updated: 2026-02-24 after Phase 3-11 refactoring + Folder Reorg)
 
 ---
 
@@ -11,67 +11,66 @@
 | Total Lines of Code (ts/tsx)          |  6,805 |              7,522 |     +717 |
 | Code Files (.ts/.tsx)                 |     32 |                 45 |      +13 |
 | Classes                               |      0 |                  0 |        — |
-| Largest File                          |  1,245 |                748 | **-40%** |
+| Largest File                          |  1,245 |                779 | **-37%** |
 | Files >500 lines                      |      4 |                  3 |       -1 |
 | Methods >50 lines                     |     14 |                  3 |  **-11** |
 | Exported Functions/Types              |    ~70 |                ~90 |      +20 |
 | TODO/FIXME/HACK Comments              |      0 |                  0 |        — |
 | Estimated Total Cyclomatic Complexity |   ~180 |               ~120 | **-33%** |
+| Tests                                 |    652 |                719 |      +67 |
+| Test Organization                     |  Mixed |          Colocated |       ✅ |
 
 ---
 
-## 2. Lines of Code by File (sorted ascending)
+## 2. Lines of Code by File (sorted ascending, after Folder Reorg)
 
-Source: `wc -l` over `src/app/(main)/log-sheets` and `src/features/log-sheets` (ts/tsx only), including tests.
+Source: `wc -l` over `src/app/(main)/log-sheets` and `src/features/log-sheets` (ts/tsx only).
 
-| #   | File                                                                            |   Lines |
-| --- | ------------------------------------------------------------------------------- | ------: |
-| 1   | `components/project-columns.tsx`                                                |      28 |
-| 2   | `hooks/use-log-sheet-detail-data.ts`                                            |      34 |
-| 3   | `components/log-sheet-dialog.tsx`                                               |      34 |
-| 4   | `features/log-sheets/utils.ts`                                                  |      37 |
-| 5   | `hooks/use-log-sheet-technicians.ts`                                            |      39 |
-| 6   | `features/log-sheets/log-sheet-locking.ts`                                      |      39 |
-| 7   | `[logSheetId]/utils.ts`                                                         |      46 |
-| 8   | `features/log-sheets/log-sheet-status.ts`                                       |      54 |
-| 9   | `page.tsx` (root)                                                               |      62 |
-| 10  | `[projectId]/components/columns.tsx`                                            |      67 |
-| 11  | `features/log-sheets/components/log-sheet-header.tsx`                           |      74 |
-| 12  | `features/log-sheets/components/log-sheet-preview/category-helpers.ts`          |      37 |
-| 13  | `hooks/use-log-sheet-validation.ts`                                             |      79 |
-| 14  | `features/log-sheets/components/log-sheet-preview/format-helpers.ts`            |      82 |
-| 15  | `[logSheetId]/components/log-sheet-toolbar.tsx`                                 |      89 |
-| 16  | `hooks/use-log-sheet-draft-state.ts`                                            |      92 |
-| 17  | `hooks/use-log-sheet-derived.ts`                                                |     107 |
-| 18  | `hooks/use-log-sheet-active-machines.ts`                                        |     109 |
-| 19  | `features/log-sheets/components/log-sheet-preview/consumption-section.tsx`      |     108 |
-| 20  | `[logSheetId]/components/machine-selection-panel.tsx`                           |     132 |
-| 21  | `features/log-sheets/log-sheet-locking.test.ts`                                 |     121 |
-| 22  | `features/log-sheets/components/log-sheet-preview/cooling-water-section.tsx`    |     117 |
-| 23  | `[logSheetId]/types.ts`                                                         |     123 |
-| 24  | `[projectId]/page.tsx`                                                          |     124 |
-| 25  | `features/log-sheets/log-sheet-chemicals.service.ts`                            |     126 |
-| 26  | `features/log-sheets/log-sheet-photos.service.ts`                               |     128 |
-| 27  | `features/log-sheets/components/log-sheet-preview/documentation-section.tsx`    |     130 |
-| 28  | `components/signature-section.tsx`                                              |     144 |
-| 29  | `features/log-sheets/log-sheet-entries.service.ts`                              |     157 |
-| 30  | `hooks/use-log-sheet-draft-saver.ts`                                            |     155 |
-| 31  | `features/log-sheets/components/log-sheet-preview/general-category-section.tsx` |     155 |
-| 32  | `[projectId]/components/log-sheet-form.tsx`                                     |     185 |
-| 33  | `components/signature-pad.tsx`                                                  |     198 |
-| 34  | `features/log-sheets/approval-validation.ts`                                    |     199 |
-| 35  | `components/mobile-entry-card.tsx`                                              |     200 |
-| 36  | `features/log-sheets/types.ts`                                                  |     202 |
-| 37  | `components/chemical-usage-section.tsx`                                         |     210 |
-| 38  | `features/log-sheets/validation.ts`                                             |     205 |
-| 39  | `features/log-sheets/service.test.ts`                                           |     245 |
-| 40  | `features/log-sheets/components/log-sheet-preview/signatures-section.tsx`       |      70 |
-| 41  | **`features/log-sheets/components/log-sheet-preview/index.tsx`**                | **262** |
-| 42  | **`[logSheetId]/page.tsx`**                                                     | **437** |
-| 43  | **`features/log-sheets/actions.ts`**                                            | **590** |
-| 44  | **`[logSheetId]/components/log-sheet-category-section.tsx`**                    | **779** |
-| 45  | **`features/log-sheets/service.ts`**                                            | **748** |
-| 46  | `features/log-sheets/internal/edit-permission.ts`                               |      47 |
+| #   | File                                                                     |   Lines | Notes           |
+| --- | ------------------------------------------------------------------------ | ------: | --------------- |
+| 1   | `app/.../components/project-columns.tsx`                                 |      28 | Route-specific  |
+| 2   | `features/.../hooks/use-log-sheet-technicians.ts`                        |      40 | Moved from app/ |
+| 3   | `features/.../utils.ts`                                                  |      38 |                 |
+| 4   | `features/.../log-sheet-locking.ts`                                      |      39 |                 |
+| 5   | `app/.../[logSheetId]/entry-state-helpers.ts`                            |      52 | Extracted       |
+| 6   | `features/.../log-sheet-status.ts`                                       |      53 |                 |
+| 7   | `features/.../internal/edit-permission.ts`                               |      47 | Extracted       |
+| 8   | `app/.../page.tsx` (root)                                                |      62 |                 |
+| 9   | `app/.../[projectId]/components/columns.tsx`                             |      67 | Route-specific  |
+| 10  | `features/.../components/log-sheet-header.tsx`                           |      75 |                 |
+| 11  | `features/.../components/log-sheet-preview/category-helpers.ts`          |      37 |                 |
+| 12  | `features/.../components/log-sheet-dialog.tsx`                           |      35 | Moved from app/ |
+| 13  | `app/.../[logSheetId]/utils.ts`                                          |      67 |                 |
+| 14  | `features/.../components/log-sheet-toolbar.tsx`                          |      89 | Moved from app/ |
+| 15  | `features/.../components/log-sheet-preview/format-helpers.ts`            |      82 |                 |
+| 16  | `app/.../[logSheetId]/hooks/use-log-sheet-draft-state.ts`                |      93 |                 |
+| 17  | `app/.../[logSheetId]/hooks/use-log-sheet-derived.ts`                    |     107 |                 |
+| 18  | `app/.../[logSheetId]/hooks/use-log-sheet-active-machines.ts`            |     105 |                 |
+| 19  | `features/.../components/log-sheet-preview/consumption-section.tsx`      |     108 |                 |
+| 20  | `features/.../components/machine-selection-panel.tsx`                    |     132 | Moved from app/ |
+| 21  | `features/.../components/log-sheet-preview/cooling-water-section.tsx`    |     117 |                 |
+| 22  | `app/.../[logSheetId]/types.ts`                                          |     123 |                 |
+| 23  | `app/.../[projectId]/page.tsx`                                           |     124 |                 |
+| 24  | `features/.../log-sheet-chemicals.service.ts`                            |      67 |                 |
+| 25  | `features/.../log-sheet-photos.service.ts`                               |      69 |                 |
+| 26  | `features/.../components/log-sheet-preview/documentation-section.tsx`    |     130 |                 |
+| 27  | `features/.../components/signature-section.tsx`                          |     144 |                 |
+| 28  | `features/.../log-sheet-entries.service.ts`                              |     116 |                 |
+| 29  | `app/.../[logSheetId]/hooks/use-log-sheet-draft-saver.ts`                |     155 |                 |
+| 30  | `features/.../components/log-sheet-preview/general-category-section.tsx` |     155 |                 |
+| 31  | `features/.../components/log-sheet-form.tsx`                             |     160 | Moved from app/ |
+| 32  | `features/.../components/signature-pad.tsx`                              |     197 |                 |
+| 33  | `features/.../approval-validation.ts`                                    |     199 |                 |
+| 34  | `app/.../[logSheetId]/components/mobile-entry-card.tsx`                  |     179 | Page-specific   |
+| 35  | `features/.../types.ts`                                                  |     208 |                 |
+| 36  | `features/.../components/chemical-usage-section.tsx`                     |     211 | Moved from app/ |
+| 37  | `features/.../validation.ts`                                             |     205 |                 |
+| 38  | `features/.../components/log-sheet-preview/signatures-section.tsx`       |      70 |                 |
+| 39  | **`features/.../components/log-sheet-preview/index.tsx`**                | **262** |                 |
+| 40  | **`app/.../[logSheetId]/page.tsx`**                                      | **437** |                 |
+| 41  | **`features/.../actions.ts`**                                            | **590** |                 |
+| 42  | **`features/.../components/log-sheet-category-section.tsx`**             | **731** | Moved from app/ |
+| 43  | **`features/.../service.ts`**                                            | **748** |                 |
 
 ---
 
@@ -430,6 +429,40 @@ Added missing `locked` field to `ILogSheet` view model (was causing TypeScript e
 ### Tests
 
 - **652 tests pass** (32 test files)
+- Zero behavioral regressions
+
+## 12. Phase 12: Folder Reorganization (2026-02-24)
+
+### Changed: Test and Component Organization
+
+**Before:**
+
+- Tests in `__tests__/` folders
+- Domain components scattered between `app/` and `features/`
+- Unclear ownership rules
+
+**After:**
+
+- All tests colocated (`*.test.ts` next to source)
+- Domain components consolidated in `features/log-sheets/components/`
+- Reusable hooks in `features/log-sheets/hooks/`
+- Clear organization rules documented in AGENTS.md
+
+| Category          | Moved From                                          | Moved To                          |
+| ----------------- | --------------------------------------------------- | --------------------------------- |
+| Domain Components | `app/.../components/log-sheet-form.tsx`             | `features/log-sheets/components/` |
+| Domain Components | `app/.../components/log-sheet-dialog.tsx`           | `features/log-sheets/components/` |
+| Domain Components | `app/.../components/log-sheet-toolbar.tsx`          | `features/log-sheets/components/` |
+| Domain Components | `app/.../components/machine-selection-panel.tsx`    | `features/log-sheets/components/` |
+| Domain Components | `app/.../components/log-sheet-category-section.tsx` | `features/log-sheets/components/` |
+| Domain Components | `app/.../components/chemical-usage-section.tsx`     | `features/log-sheets/components/` |
+| Reusable Hook     | `app/.../hooks/use-log-sheet-technicians.ts`        | `features/log-sheets/hooks/`      |
+| Tests             | `__tests__/` folders                                | Colocated with source             |
+
+### Tests
+
+- **719 tests pass** (all unit/component tests)
+- 8 E2E test files require Playwright browser setup
 - Zero behavioral regressions
 
 ---
