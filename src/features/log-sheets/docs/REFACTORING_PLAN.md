@@ -573,22 +573,23 @@ Manual verification checklist:
 
 ## Summary
 
-|   Phase   | What                                     |       Files Changed       |  Est. Time   |  Risk  |  Status  |
-| :-------: | ---------------------------------------- | :-----------------------: | :----------: | :----: | :------: |
-|     1     | Tests + quick wins                       |    +4 new, 1 modified     |    45 min    | 🟢 LOW |    ✅    |
-|     2     | Deduplicate code                         |    +2 new, 6 modified     |    40 min    | 🟢 LOW |    ✅    |
-|     3     | Split god component (A7)                 |    +3 new, 1 modified     |    50 min    | 🟡 MED |    ✅    |
-|     4     | Split god module (F2)                    |    +3 new, 1 modified     |    45 min    | 🟡 MED |    ✅    |
-|     5     | Type cleanup + verify                    |        2 modified         |    20 min    | 🟢 LOW |    ✅    |
-|     6     | Split preview component                  |    +8 new, 2 modified     |    30 min    | 🟡 MED |    ✅    |
-|     7     | Extract Method: getLogSheetDetail        |        1 modified         |    15 min    | 🟢 LOW |    ✅    |
-|     8     | Extract Function: assertLogSheetEditable |    +1 new, 4 modified     |    10 min    | 🟢 LOW |    ✅    |
-|     9     | Extract Module: status service           |    +1 new, 1 modified     |    15 min    | 🟢 LOW |    ✅    |
-|    10     | Extract Helper: revalidation paths       |        1 modified         |    10 min    | 🟢 LOW |    ✅    |
-|    11     | Extract Helper: range validation         |    +1 new, 2 modified     |    10 min    | 🟢 LOW |    ✅    |
-|    12     | Replace Magic Strings: categories        |        4 modified         |    15 min    | 🟢 LOW |    ✅    |
-|    14     | Extract Component: entry-cells           |    +1 new, 1 modified     |    10 min    | 🟢 LOW |    ✅    |
-| **Total** |                                          | **+24 new, ~28 modified** | **~6.0 hrs** |        | **100%** |
+|   Phase   | What                                     |       Files Changed       |   Est. Time   |  Risk  |  Status  |
+| :-------: | ---------------------------------------- | :-----------------------: | :-----------: | :----: | :------: |
+|     1     | Tests + quick wins                       |    +4 new, 1 modified     |    45 min     | 🟢 LOW |    ✅    |
+|     2     | Deduplicate code                         |    +2 new, 6 modified     |    40 min     | 🟢 LOW |    ✅    |
+|     3     | Split god component (A7)                 |    +3 new, 1 modified     |    50 min     | 🟡 MED |    ✅    |
+|     4     | Split god module (F2)                    |    +3 new, 1 modified     |    45 min     | 🟡 MED |    ✅    |
+|     5     | Type cleanup + verify                    |        2 modified         |    20 min     | 🟢 LOW |    ✅    |
+|     6     | Split preview component                  |    +8 new, 2 modified     |    30 min     | 🟡 MED |    ✅    |
+|     7     | Extract Method: getLogSheetDetail        |        1 modified         |    15 min     | 🟢 LOW |    ✅    |
+|     8     | Extract Function: assertLogSheetEditable |    +1 new, 4 modified     |    10 min     | 🟢 LOW |    ✅    |
+|     9     | Extract Module: status service           |    +1 new, 1 modified     |    15 min     | 🟢 LOW |    ✅    |
+|    10     | Extract Helper: revalidation paths       |        1 modified         |    10 min     | 🟢 LOW |    ✅    |
+|    11     | Extract Helper: range validation         |    +1 new, 2 modified     |    10 min     | 🟢 LOW |    ✅    |
+|    12     | Replace Magic Strings: categories        |        4 modified         |    15 min     | 🟢 LOW |    ✅    |
+|    14     | Extract Component: entry-cells           |    +1 new, 1 modified     |    10 min     | 🟢 LOW |    ✅    |
+|    15     | Extract Helper: action result            |    +1 new, 1 modified     |    15 min     | 🟡 MED |    ✅    |
+| **Total** |                                          | **+25 new, ~29 modified** | **~6.25 hrs** |        | **100%** |
 
 ### Actual post-refactor metrics (2026-02-24)
 
@@ -597,15 +598,59 @@ Manual verification checklist:
 | Max file LOC               |  1,245 |   509 |      **-59%**       |
 | `page.tsx` LOC             |  1,245 |   437 |      **-65%**       |
 | `service.ts` LOC           |  1,008 |   634 |      **-37%**       |
-| `actions.ts` LOC           |    591 |   530 |      **-10%**       |
+| `actions.ts` LOC           |    533 |   454 |      **-15%**       |
 | `category-section.tsx` LOC |    731 |   509 |      **-30%**       |
 | `preview` (total)          |    734 |   961 | +8 files (avg 120L) |
 | Files >500 LOC             |      4 |     1 |       **-3**        |
 | Methods >50 LOC            |     14 |     2 |      **-86%**       |
 | Duplicated blocks          |     11 |     0 |      **-100%**      |
 | Cross-layer coupling       |      1 |     0 |      **-100%**      |
-| Total files                |     32 |    49 | +17 (smaller each)  |
-| Total CC                   |   ~180 |  ~100 |      **-44%**       |
+| Total files                |     32 |    50 | +18 (smaller each)  |
+| Total CC                   |   ~180 |   ~95 |      **-47%**       |
+
+---
+
+## Phase 15: Extract Helper — `action-helpers.ts` (est. ~15 min) ✅ COMPLETED 2026-02-24
+
+Extracted `ok()` and `err()` helpers to eliminate duplicate error handling across 16 server actions.
+
+### Files Changed
+
+| File                | Action   | Δ Lines |
+| ------------------- | -------- | ------- |
+| `action-helpers.ts` | NEW      | +15     |
+| `actions.ts`        | Modified | -79     |
+
+### Pattern Replaced
+
+**Before (repeated 12 times):**
+
+```ts
+return { success: true, data: logSheet };
+// vs
+return {
+  success: false,
+  error: error instanceof Error ? error.message : 'Fallback message',
+};
+```
+
+**After:**
+
+```ts
+return ok(logSheet);
+// vs
+return err(error, 'Fallback message');
+```
+
+### Tests
+
+- **719 tests pass** (45 test files)
+- Zero behavioral regressions
+- Error message format unchanged
+
+### Result
+
+`actions.ts` reduced from **533** to **454 lines** (−15%).
 
 ---
 
