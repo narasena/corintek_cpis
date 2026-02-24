@@ -18,6 +18,7 @@ import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { isLogSheetEntryEmpty } from './utils';
+import { uploadToR2 } from '@/lib/r2-upload';
 
 const SaveLogSheetEntriesSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
@@ -464,29 +465,9 @@ export async function saveLogSheetSignatureAction(data: unknown) {
     const base64 = matches[3];
     const buffer = Buffer.from(base64, 'base64');
 
-    const workerUrl = process.env.R2_WORKER_URL;
-    const authSecret = process.env.R2_AUTH_SECRET;
-
-    if (!workerUrl || !authSecret) {
-      throw new Error('Server configuration error: Missing R2 credentials');
-    }
-
     const key = `projects/${projectId}/log-sheets/${logSheetId}/signatures/${signatureRole.toLowerCase()}-${Date.now()}.webp`;
 
-    const response = await fetch(`${workerUrl}/${key}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authSecret}`,
-        'Content-Type': mimeType,
-      },
-      body: buffer,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`);
-    }
-
-    const url = `${workerUrl}/${key}`;
+    const url = await uploadToR2({ key, body: buffer, contentType: mimeType });
 
     const updated = await logSheetService.saveLogSheetSignature(
       actor,
@@ -530,39 +511,16 @@ export async function uploadLogSheetImageAction(formData: FormData) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const workerUrl = process.env.R2_WORKER_URL;
-    const authSecret = process.env.R2_AUTH_SECRET;
 
-    if (!workerUrl || !authSecret) {
-      throw new Error('Server configuration error: Missing R2 credentials');
-    }
-
-    // Clean up filename
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
 
-    // Structure: projects/{projectId}/log-sheets/{logSheetId}/{timestamp}_{filename}
-    // Fallback to old path if IDs are missing (backward compatibility/safety)
     let key = `log-sheets/${Date.now()}-${sanitizedName}`;
 
     if (projectId && logSheetId) {
       key = `projects/${projectId}/log-sheets/${logSheetId}/${Date.now()}_${sanitizedName}`;
     }
 
-    const response = await fetch(`${workerUrl}/${key}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authSecret}`,
-        'Content-Type': file.type,
-      },
-      body: buffer,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`);
-    }
-
-    // The worker returns the object on GET, so the URL is the worker URL + key
-    const url = `${workerUrl}/${key}`;
+    const url = await uploadToR2({ key, body: buffer, contentType: file.type });
 
     return { success: true, url };
   } catch (error) {
