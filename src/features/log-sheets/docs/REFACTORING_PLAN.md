@@ -481,6 +481,48 @@ export function usesCoolingTowers(category: TParameter['category']): boolean {
 
 ---
 
+## Phase 13: Extract Helper — R2 Upload (est. ~15 min) ✅ COMPLETED 2026-02-24
+
+### Problem
+
+R2 upload logic was duplicated in `saveLogSheetSignatureAction` and `uploadLogSheetImageAction` — identical ~27 line blocks.
+
+### Solution
+
+Extract `uploadToR2()` helper function to `lib/r2-upload.ts` to centralize R2 upload logic.
+
+### Files Changed
+
+| File           | Action   | Δ Lines |
+| -------------- | -------- | ------- |
+| `r2-upload.ts` | NEW      | +31     |
+| `actions.ts`   | Modified | -46     |
+
+### Pattern
+
+```ts
+export async function uploadToR2(params: {
+  key: string;
+  body: BodyInit;
+  contentType: string;
+}): Promise<string>;
+```
+
+### Tests
+
+- **260 tests pass** (7 test files)
+- Zero behavioral regressions
+
+### Result
+
+| Metric              | Before | After |     Δ     |
+| ------------------- | ------ | ----- | :-------: |
+| `actions.ts` LOC    | 576    | 530   |  **-8%**  |
+| Duplicate R2 blocks | 2      | 0     | **-100%** |
+| Functions >30 lines | 7      | 5     | **-29%**  |
+
+---
+
 ### Facade pattern (preserve imports) ✅ IMPLEMENTED
 
 In `service.ts`, re-exports added so existing imports don't break:
@@ -545,23 +587,59 @@ Manual verification checklist:
 |    10     | Extract Helper: revalidation paths       |        1 modified         |    10 min    | 🟢 LOW |    ✅    |
 |    11     | Extract Helper: range validation         |    +1 new, 2 modified     |    10 min    | 🟢 LOW |    ✅    |
 |    12     | Replace Magic Strings: categories        |        4 modified         |    15 min    | 🟢 LOW |    ✅    |
-| **Total** |                                          | **+23 new, ~27 modified** | **~5.8 hrs** |        | **100%** |
+|    14     | Extract Component: entry-cells           |    +1 new, 1 modified     |    10 min    | 🟢 LOW |    ✅    |
+| **Total** |                                          | **+24 new, ~28 modified** | **~6.0 hrs** |        | **100%** |
 
 ### Actual post-refactor metrics (2026-02-24)
 
-| Metric               | Before | After |          Δ          |
-| -------------------- | -----: | ----: | :-----------------: |
-| Max file LOC         |  1,245 |   634 |      **-49%**       |
-| `page.tsx` LOC       |  1,245 |   437 |      **-65%**       |
-| `service.ts` LOC     |  1,008 |   634 |      **-37%**       |
-| `actions.ts` LOC     |    591 |   575 |       **-3%**       |
-| `preview` (total)    |    734 |   961 | +8 files (avg 120L) |
-| Files >500 LOC       |      4 |     2 |       **-2**        |
-| Methods >50 LOC      |     14 |     2 |      **-86%**       |
-| Duplicated blocks    |     11 |     0 |      **-100%**      |
-| Cross-layer coupling |      1 |     0 |      **-100%**      |
-| Total files          |     32 |    48 | +16 (smaller each)  |
-| Total CC             |   ~180 |  ~100 |      **-44%**       |
+| Metric                     | Before | After |          Δ          |
+| -------------------------- | -----: | ----: | :-----------------: |
+| Max file LOC               |  1,245 |   509 |      **-59%**       |
+| `page.tsx` LOC             |  1,245 |   437 |      **-65%**       |
+| `service.ts` LOC           |  1,008 |   634 |      **-37%**       |
+| `actions.ts` LOC           |    591 |   530 |      **-10%**       |
+| `category-section.tsx` LOC |    731 |   509 |      **-30%**       |
+| `preview` (total)          |    734 |   961 | +8 files (avg 120L) |
+| Files >500 LOC             |      4 |     1 |       **-3**        |
+| Methods >50 LOC            |     14 |     2 |      **-86%**       |
+| Duplicated blocks          |     11 |     0 |      **-100%**      |
+| Cross-layer coupling       |      1 |     0 |      **-100%**      |
+| Total files                |     32 |    49 | +17 (smaller each)  |
+| Total CC                   |   ~180 |  ~100 |      **-44%**       |
+
+---
+
+## Phase 14: Extract Component — `entry-cells.tsx` (est. ~10 min) ✅ COMPLETED 2026-02-24
+
+Extracted 6 cell components from `log-sheet-category-section.tsx` into dedicated module.
+
+### Files Changed
+
+| File                             | Action   | Δ Lines |
+| -------------------------------- | -------- | ------- |
+| `entry-cells.tsx`                | NEW      | +243    |
+| `log-sheet-category-section.tsx` | Modified | -222    |
+
+### Components Extracted
+
+| Component             | Lines | Responsibility                       |
+| --------------------- | ----: | ------------------------------------ |
+| `BooleanCell`         |    40 | Checkbox input with clear button     |
+| `NumberCell`          |    48 | Number input with validation styling |
+| `TextCell`            |    19 | Text input cell                      |
+| `RawWaterCell`        |    30 | Raw water value dispatcher           |
+| `RawWaterInputMobile` |    32 | Mobile raw water input               |
+| `NoteCell`            |    20 | Note text input                      |
+
+### Tests
+
+- **719 tests pass** (45 test files)
+- Zero behavioral regressions
+- Zero import breakage
+
+### Result
+
+`log-sheet-category-section.tsx` reduced from **731** to **509 lines** (−30%).
 
 ---
 
