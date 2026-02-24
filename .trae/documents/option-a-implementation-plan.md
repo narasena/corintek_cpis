@@ -17,12 +17,63 @@ The 5-phase refactoring plan has been completed:
 - `page.tsx`: 1,245 → 437 lines (**-65%**)
 - `service.ts`: 1,008 → 687 lines (**-32%**)
 - `log-sheet-category-section.tsx`: 731 → 116 lines (**-84%**)
-- Tests: 652 → 790 (**+138**)
+- Tests: 652 → 813 (**+161**)
 - Zero new dependencies
 
-### Ready for Option A Implementation
+---
 
-The codebase is now prepared for the Option A workflow implementation.
+## Implementation Progress
+
+### 6.2. View Model Layer ✅ COMPLETE
+
+| Task                     | Status | File/Component                                        |
+| ------------------------ | ------ | ----------------------------------------------------- |
+| Define contracts (types) | ✅     | `option-a/contracts.ts`                               |
+| Unit view model builder  | ✅     | `option-a/unit-view-model-builder.ts`                 |
+| Mobile view adapter      | ✅     | `option-a/mobile-view-adapter.ts`                     |
+| Null-safety improvements | ✅     | Added `?? []` for all array access                    |
+| Unit tests               | ✅     | `option-a/unit-view-model-builder.test.ts` (27 tests) |
+| Method analysis doc      | ✅     | `option-a/METHOD_ANALYSIS.md`                         |
+
+### 6.3. UI Components 🚧 IN PROGRESS
+
+| Task                     | Status | File/Component                               |
+| ------------------------ | ------ | -------------------------------------------- |
+| Feature flag             | ✅     | `option-a/feature-flags.ts`                  |
+| Unit overview list       | ✅     | `option-a/components/unit-overview-list.tsx` |
+| Unit entry screen        | ✅     | `option-a/components/unit-entry-screen.tsx`  |
+| Integration with page    | ⏳     | Pending                                      |
+| Navigation between units | ⏳     | Pending                                      |
+
+### 6.4. Draft Persistence and Validation ⏳ PENDING
+
+- Reuse existing draft state and saver hooks
+- Validate on save and on submit
+- Ensure status-based locking still applies
+
+### 6.5. Integration ⏳ PENDING
+
+- Add routes or internal view switching to use the new screens
+- Wire existing actions for save and submit with no backend changes
+- Keep legacy detail page intact behind feature flag
+
+---
+
+## Commits (11 total)
+
+```
+4fe5962 docs(log-sheets): update METHOD_ANALYSIS with completed improvements
+466feca fix(log-sheets): add null-safety and fix test syntax in Option A builder
+6e99f03 feat(log-sheets): add feature flag for Option A mobile layout
+a6904a4 feat(log-sheets): add mobile unit entry UI components
+ddb2c44 feat(log-sheets): complete view model builder for Option A mobile layout
+99269a1 docs(log-sheets): update documentation for completed refactoring
+f2d9432 test(log-sheets): update tests for refactored architecture
+1b2278a refactor(log-sheets): consolidate data fetching in getLogSheetDetail
+356d75a refactor(log-sheets): add type-safe Prisma mappers
+7a919f1 refactor(log-sheets): decompose god component log-sheet-category-section
+28e6c3c refactor(log-sheets): extract entry state context and value type helpers
+```
 
 ---
 
@@ -106,7 +157,7 @@ The codebase is now prepared for the Option A workflow implementation.
   - ParameterRowView
   - SummaryFieldView
 
-  6.3. UI Components
+    6.3. UI Components
 
 - LogsheetOverviewScreen
   - Renders unit list and summary fields.
@@ -118,7 +169,7 @@ The codebase is now prepared for the Option A workflow implementation.
   - Handles numeric, text, boolean, and file inputs.
   - Displays target range and in-range status.
 
-  6.4. Draft Persistence and Validation
+    6.4. Draft Persistence and Validation
 
 - Reuse existing draft state and saver hooks.
 - Validate on save and on submit.
