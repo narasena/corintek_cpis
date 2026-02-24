@@ -17,6 +17,13 @@ import type {
   TCreateLogSheet,
   TUpdateLogSheet,
 } from './types';
+import {
+  mapToLogSheet,
+  mapToLogSheetEntry,
+  mapToLogSheetPhoto,
+  type TPrismaLogSheet,
+} from './dto';
+import { fetchAllTechnicians, fetchAllChemicals } from './service-extended';
 
 export async function hasProjectAssignment(
   userId: string,
@@ -96,19 +103,19 @@ export async function saveLogSheetSignature(
     where: { id: row.id },
     data:
       role === 'TECHNICIAN'
-        ? ({
+        ? {
             technicianSignatureUrl: url,
             technicianSignedAt: now,
             technicianSignedByUserId: actor.id,
-          } as any)
-        : ({
+          }
+        : {
             clientPicSignatureUrl: url,
             clientPicSignedAt: now,
             clientPicSignedByUserId: actor.id,
-          } as any),
+          },
   });
 
-  return updated as unknown as ILogSheet;
+  return updated as ILogSheet;
 }
 
 export interface ILogSheetListItem {
@@ -160,7 +167,16 @@ export async function getAllLogSheets(
     orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
   });
 
-  return logSheets as unknown as IGlobalLogSheetListItem[];
+  return logSheets.map(ls => ({
+    id: ls.id,
+    projectId: ls.projectId,
+    date: ls.date,
+    notes: ls.notes,
+    status: ls.status as ILogSheet['status'],
+    createdAt: ls.createdAt,
+    updatedAt: ls.updatedAt,
+    project: ls.project,
+  }));
 }
 
 export interface ILogSheetDetailView {
@@ -202,6 +218,16 @@ export interface ILogSheetDetailView {
     chillers: string[];
     coolingTowers: string[];
   };
+  technicians: Array<{
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  }>;
+  chemicals: Array<{
+    id: string;
+    name: string;
+    unit: string | null;
+  }>;
 }
 
 export async function getLogSheetActiveMachines(logSheetId: string) {
@@ -275,7 +301,15 @@ export async function getLogSheetsByProject(
     orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
   });
 
-  return logSheets as unknown as ILogSheetListItem[];
+  return logSheets.map(ls => ({
+    id: ls.id,
+    projectId: ls.projectId,
+    date: ls.date,
+    notes: ls.notes,
+    status: ls.status as ILogSheet['status'],
+    createdAt: ls.createdAt,
+    updatedAt: ls.updatedAt,
+  }));
 }
 
 export async function getLogSheetProjectId(id: string): Promise<string | null> {
@@ -323,7 +357,7 @@ export async function createLogSheet(
     },
   });
 
-  return logSheet as unknown as ILogSheet;
+  return logSheet as ILogSheet;
 }
 
 export async function updateLogSheet(
@@ -343,7 +377,7 @@ export async function updateLogSheet(
     },
   });
 
-  return logSheet as unknown as ILogSheet;
+  return logSheet as ILogSheet;
 }
 
 export async function deleteLogSheet(id: string): Promise<ILogSheet> {
@@ -352,11 +386,62 @@ export async function deleteLogSheet(id: string): Promise<ILogSheet> {
     data: { deletedAt: new Date() },
   });
 
-  return logSheet as unknown as ILogSheet;
+  return logSheet as ILogSheet;
 }
 
-async function fetchLogSheetRow(id: string) {
-  const logSheet = (await prisma.logSheet.findFirst({
+type TLogSheetRowResult = TPrismaLogSheet & {
+  project: {
+    id: string;
+    name: string;
+    client: { name: string } | null;
+    parameterOverrides: any[];
+    assignments: Array<{
+      role: string;
+      user: { id: string; firstName: string; lastName: string | null };
+    }>;
+  };
+  entries: Array<{
+    id: string;
+    logSheetId: string;
+    parameterId: string;
+    machineId: string | null;
+    role: string;
+    valueType: string;
+    numericValue: number | null;
+    boolValue: boolean | null;
+    textValue: string | null;
+    fileUrl: string | null;
+    checkedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+    parameter: any;
+    machine: any;
+  }>;
+  photos: Array<{
+    id: string;
+    logSheetId: string;
+    type: string;
+    url: string;
+    caption: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+  }>;
+  chemicalUsages: Array<{
+    id: string;
+    logSheetId: string;
+    chemicalId: string;
+    amount: number;
+    createdAt: Date;
+    updatedAt: Date;
+    chemical: { name: string; unit: string };
+  }>;
+  activeMachines: Array<{ machineId: string }>;
+};
+
+async function fetchLogSheetRow(id: string): Promise<TLogSheetRowResult> {
+  const logSheet = await prisma.logSheet.findFirst({
     where: {
       id,
       deletedAt: null,
@@ -433,14 +518,14 @@ async function fetchLogSheetRow(id: string) {
         },
       },
       activeMachines: true,
-    } as any,
-  })) as any;
+    },
+  });
 
   if (!logSheet) {
     throw new Error('Log sheet tidak ditemukan');
   }
 
-  return logSheet;
+  return logSheet as TLogSheetRowResult;
 }
 
 async function fetchProjectMachines(projectId: string) {
@@ -494,16 +579,16 @@ async function fetchParameters() {
 }
 
 function computeActiveMachineIds(
-  logSheet: any,
+  logSheet: TLogSheetRowResult,
   chillers: { id: string }[],
   coolingTowers: { id: string }[]
 ) {
   let activeChillerIds = logSheet.activeMachines
-    .filter((am: any) => chillers.some(c => c.id === am.machineId))
-    .map((am: any) => am.machineId);
+    .filter(am => chillers.some(c => c.id === am.machineId))
+    .map(am => am.machineId);
   let activeCTIds = logSheet.activeMachines
-    .filter((am: any) => coolingTowers.some(ct => ct.id === am.machineId))
-    .map((am: any) => am.machineId);
+    .filter(am => coolingTowers.some(ct => ct.id === am.machineId))
+    .map(am => am.machineId);
 
   if (logSheet.activeMachines.length === 0) {
     activeChillerIds = chillers.map(c => c.id);
@@ -514,77 +599,36 @@ function computeActiveMachineIds(
 }
 
 function buildLogSheetDetailView(
-  logSheet: any,
+  logSheet: TLogSheetRowResult,
   machines: { chillers: any[]; coolingTowers: any[] },
   parameters: any[],
-  activeMachineIds: { chillers: string[]; coolingTowers: string[] }
+  activeMachineIds: { chillers: string[]; coolingTowers: string[] },
+  technicians: Array<{
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  }>,
+  chemicals: Array<{ id: string; name: string; unit: string | null }>
 ): ILogSheetDetailView {
   return {
-    logSheet: {
-      id: logSheet.id,
-      projectId: logSheet.projectId,
-      date: logSheet.date,
-      notes: logSheet.notes,
-      status: logSheet.status as unknown as ILogSheet['status'],
-      locked: logSheet.locked ?? false,
-      technicianSignatureUrl: logSheet.technicianSignatureUrl,
-      technicianSignedAt: logSheet.technicianSignedAt,
-      technicianSignedByUserId: logSheet.technicianSignedByUserId,
-      clientPicSignatureUrl: logSheet.clientPicSignatureUrl,
-      clientPicSignedAt: logSheet.clientPicSignedAt,
-      clientPicSignedByUserId: logSheet.clientPicSignedByUserId,
-      submittedAt: logSheet.submittedAt,
-      submittedByUserId: logSheet.submittedByUserId,
-      approvedAt: logSheet.approvedAt,
-      approvedByUserId: logSheet.approvedByUserId,
-      createdAt: logSheet.createdAt,
-      updatedAt: logSheet.updatedAt,
-      deletedAt: logSheet.deletedAt,
+    logSheet: mapToLogSheet({
+      ...logSheet,
       project: { id: logSheet.project.id, name: logSheet.project.name },
-      replacedBy: logSheet.replacedBy,
-      submittedBy: logSheet.submittedBy,
-      approvedBy: logSheet.approvedBy,
-      technicianSignedBy: logSheet.technicianSignedBy,
-      clientPicSignedBy: logSheet.clientPicSignedBy,
-    },
+    }),
     project: {
       id: logSheet.project.id,
       name: logSheet.project.name,
       clientName: logSheet.project.client?.name ?? null,
-      assignments: (logSheet.project.assignments ?? []).map((a: any) => ({
-        role: a.role as unknown as 'PROJECT_PIC' | 'TECHNICIAN' | 'CLIENT_PIC',
+      assignments: (logSheet.project.assignments ?? []).map(a => ({
+        role: a.role as 'PROJECT_PIC' | 'TECHNICIAN' | 'CLIENT_PIC',
         user: a.user,
       })),
     },
     machines,
-    parameters: parameters as unknown as ILogSheetDetailView['parameters'],
-    entries: logSheet.entries.map((e: any) => ({
-      id: e.id,
-      logSheetId: e.logSheetId,
-      parameterId: e.parameterId,
-      machineId: e.machineId,
-      role: e.role as unknown as ILogSheetEntry['role'],
-      valueType: e.valueType as unknown as ILogSheetEntry['valueType'],
-      numericValue: e.numericValue,
-      boolValue: e.boolValue,
-      textValue: e.textValue,
-      fileUrl: e.fileUrl,
-      checkedAt: e.checkedAt,
-      createdAt: e.createdAt,
-      updatedAt: e.updatedAt,
-      deletedAt: e.deletedAt,
-    })),
-    photos: logSheet.photos.map((photo: any) => ({
-      id: photo.id,
-      logSheetId: photo.logSheetId,
-      url: photo.url,
-      type: photo.type as unknown as ILogSheetPhoto['type'],
-      caption: photo.caption,
-      createdAt: photo.createdAt,
-      updatedAt: photo.updatedAt,
-      deletedAt: photo.deletedAt,
-    })),
-    chemicalUsages: logSheet.chemicalUsages.map((usage: any) => ({
+    parameters: parameters as ILogSheetDetailView['parameters'],
+    entries: logSheet.entries.map(e => mapToLogSheetEntry(e)),
+    photos: logSheet.photos.map(photo => mapToLogSheetPhoto(photo)),
+    chemicalUsages: logSheet.chemicalUsages.map(usage => ({
       id: usage.id,
       logSheetId: usage.logSheetId,
       chemicalId: usage.chemicalId,
@@ -595,6 +639,8 @@ function buildLogSheetDetailView(
       updatedAt: usage.updatedAt,
     })),
     activeMachineIds,
+    technicians,
+    chemicals,
   };
 }
 
@@ -612,15 +658,22 @@ export async function getLogSheetDetail(
 
   const overrides = logSheet.project.parameterOverrides || [];
   const parametersWithOverrides = applyProjectOverridesToParameters(
-    parameters as any,
-    overrides as any
+    parameters,
+    overrides
   );
+
+  const [technicians, chemicals] = await Promise.all([
+    fetchAllTechnicians(),
+    fetchAllChemicals(),
+  ]);
 
   return buildLogSheetDetailView(
     logSheet,
     machines,
     parametersWithOverrides,
-    activeMachineIds
+    activeMachineIds,
+    technicians,
+    chemicals
   );
 }
 

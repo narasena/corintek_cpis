@@ -36,12 +36,12 @@ import { useLogSheetDerived } from './hooks/use-log-sheet-derived';
 import { useLogSheetDraftState } from './hooks/use-log-sheet-draft-state';
 import { useLogSheetDraftSaver } from './hooks/use-log-sheet-draft-saver';
 import { useLogSheetActiveMachines } from './hooks/use-log-sheet-active-machines';
-import { useLogSheetTechnicians } from '@/features/log-sheets/hooks/use-log-sheet-technicians';
 import { useLogSheetValidation } from './hooks/use-log-sheet-validation';
 
 import { LogSheetToolbar } from '@/features/log-sheets/components/log-sheet-toolbar';
 import { MachineSelectionPanel } from '@/features/log-sheets/components/machine-selection-panel';
 import { LogSheetCategorySection } from '@/features/log-sheets/components/log-sheet-category-section';
+import { EntryStateProvider } from '@/features/log-sheets/context';
 import { formatDate } from './utils';
 
 export default function LogSheetDetailPage() {
@@ -56,7 +56,6 @@ export default function LogSheetDetailPage() {
   const [adminOverride, setAdminOverride] = useState(false);
 
   const isMobileView = useIsMobile();
-  const { technicians } = useLogSheetTechnicians();
   const {
     detail,
     loading,
@@ -87,7 +86,7 @@ export default function LogSheetDetailPage() {
     detail,
     activeChillerIds,
     activeCTIds,
-    technicians,
+    technicians: detail?.technicians ?? [],
     replacedByUserId,
   });
 
@@ -307,7 +306,7 @@ export default function LogSheetDetailPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">- Tidak Ada Pengganti -</SelectItem>
-                  {technicians.map(t => (
+                  {(detail?.technicians ?? []).map(t => (
                     <SelectItem key={t.id} value={t.id}>
                       {t.firstName} {t.lastName || ''}
                     </SelectItem>
@@ -361,22 +360,26 @@ export default function LogSheetDetailPage() {
             onClearMachines={handleClearMachines}
           />
 
-          <LogSheetCategorySection
-            categories={categories}
-            parametersByCategory={parametersByCategory}
+          <EntryStateProvider
             entryState={entryState}
             setEntryState={setEntryState}
-            machinesForCategory={machinesForCategory}
-            activeCTIds={activeCTIds}
-            coolingTowers={detail.machines.coolingTowers}
-            isMobileView={isMobileView}
-          />
+          >
+            <LogSheetCategorySection
+              categories={categories}
+              parametersByCategory={parametersByCategory}
+              machinesForCategory={machinesForCategory}
+              activeCTIds={activeCTIds}
+              coolingTowers={detail.machines.coolingTowers}
+              isMobileView={isMobileView}
+            />
+          </EntryStateProvider>
 
           <div className="rounded-lg border bg-card p-6 shadow-sm">
             <ChemicalUsageSection
               usages={chemicalState}
               onChange={setChemicalState}
               disabled={isPending || isLocked}
+              chemicals={detail.chemicals}
             />
           </div>
           <div className="rounded-lg border bg-card p-6 shadow-sm">

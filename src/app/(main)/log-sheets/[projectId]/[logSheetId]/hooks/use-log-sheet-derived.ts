@@ -5,14 +5,19 @@ import {
   usesChillers,
   usesCoolingTowers,
 } from '@/features/log-sheets/components/log-sheet-preview/category-helpers';
-import type { TUserResponse } from '@/@types/user.type';
 import type { TDetail, TMachine, TParameter } from '../types';
+
+type TTechnician = {
+  id: string;
+  firstName: string;
+  lastName: string | null;
+};
 
 export function useLogSheetDerived(args: {
   detail: TDetail | null;
   activeChillerIds: string[];
   activeCTIds: string[];
-  technicians: TUserResponse[];
+  technicians: TTechnician[];
   replacedByUserId: string | null;
 }) {
   const {

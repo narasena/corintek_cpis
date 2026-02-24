@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,9 +22,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { getChemicalsAction } from '@/features/chemicals/actions';
-import type { TChemical } from '@/@types/chemical.type';
-
 export type TChemicalUsageState = Array<{
   id?: string;
   chemicalId: string;
@@ -37,31 +34,21 @@ interface ChemicalUsageSectionProps {
   usages: TChemicalUsageState;
   onChange: (usages: TChemicalUsageState) => void;
   disabled?: boolean;
+  chemicals: Array<{
+    id: string;
+    name: string;
+    unit: string | null;
+  }>;
 }
 
 export function ChemicalUsageSection({
   usages,
   onChange,
   disabled,
+  chemicals,
 }: ChemicalUsageSectionProps) {
-  const [chemicals, setChemicals] = useState<TChemical[]>([]);
   const [selectedChemicalId, setSelectedChemicalId] = useState<string>('');
   const [amount, setAmount] = useState<string>('');
-  const [loading, setLoading] = useState(false);
-  const [, startTransition] = useTransition();
-
-  useEffect(() => {
-    startTransition(async () => {
-      setLoading(true);
-      const res = await getChemicalsAction();
-      if (res.success && res.data) {
-        setChemicals(res.data);
-      } else {
-        toast.error(res.error || 'Gagal memuat data chemical');
-      }
-      setLoading(false);
-    });
-  }, []);
 
   const handleAdd = () => {
     if (!selectedChemicalId || !amount) return;
@@ -123,7 +110,7 @@ export function ChemicalUsageSection({
           <Select
             value={selectedChemicalId}
             onValueChange={setSelectedChemicalId}
-            disabled={disabled || loading}
+            disabled={disabled}
           >
             <SelectTrigger>
               <SelectValue placeholder="Pilih chemical..." />

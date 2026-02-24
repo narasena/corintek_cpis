@@ -19,6 +19,7 @@ export type TDetail = {
     date: string | Date;
     notes: string | null;
     status: TLogSheetStatus;
+    locked: boolean;
     technicianSignatureUrl: string | null;
     technicianSignedAt: string | Date | null;
     technicianSignedByUserId: string | null;
@@ -93,6 +94,16 @@ export type TDetail = {
     chillers: string[];
     coolingTowers: string[];
   };
+  technicians: Array<{
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  }>;
+  chemicals: Array<{
+    id: string;
+    name: string;
+    unit: string | null;
+  }>;
 };
 
 export type TEntryState = TEntryStateBase & {
