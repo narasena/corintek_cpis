@@ -84,6 +84,16 @@ async function assertCanAccessLogSheet(actor: IJwtPayload, logSheetId: string) {
   return projectId;
 }
 
+function revalidateLogSheetPaths(projectId: string, logSheetId?: string): void {
+  revalidatePath('/log-sheets');
+  revalidatePath(`/log-sheets/${projectId}`);
+  revalidatePath('/');
+  revalidatePath(`/my-projects/${projectId}`);
+  if (logSheetId) {
+    revalidatePath(`/log-sheets/${projectId}/${logSheetId}`);
+  }
+}
+
 export async function getLogSheetsByProjectAction(projectId: string) {
   try {
     const actor = await requireActor();
@@ -139,10 +149,7 @@ export async function createLogSheetAction(data: unknown) {
     );
     const logSheet = await logSheetService.createLogSheet(validatedData);
 
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${validatedData.projectId}`);
-    revalidatePath('/');
-    revalidatePath(`/my-projects/${validatedData.projectId}`);
+    revalidateLogSheetPaths(validatedData.projectId);
     return { success: true, data: logSheet };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.Create:', error);
@@ -164,10 +171,7 @@ export async function updateLogSheetAction(data: unknown) {
       status: undefined,
     });
 
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${logSheet.projectId}`);
-    revalidatePath('/');
-    revalidatePath(`/my-projects/${logSheet.projectId}`);
+    revalidateLogSheetPaths(logSheet.projectId);
     return { success: true, data: logSheet };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.Update:', error);
@@ -193,10 +197,7 @@ export async function updateLogSheetAdminOverrideAction(data: unknown) {
       { allowAdminOverride: true }
     );
 
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${logSheet.projectId}`);
-    revalidatePath('/');
-    revalidatePath(`/my-projects/${logSheet.projectId}`);
+    revalidateLogSheetPaths(logSheet.projectId);
     return { success: true, data: logSheet };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.UpdateAdminOverride:', error);
@@ -228,10 +229,7 @@ export async function updateLogSheetStatusAction(data: unknown) {
       validatedData.id,
       validatedData.status
     );
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${logSheet.projectId}`);
-    revalidatePath('/');
-    revalidatePath(`/my-projects/${logSheet.projectId}`);
+    revalidateLogSheetPaths(logSheet.projectId);
     return { success: true, data: logSheet };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.UpdateStatus:', error);
@@ -261,10 +259,7 @@ export async function deleteLogSheetAction(id: string) {
     await assertCanAccessLogSheet(actor, validatedId);
     const logSheet = await logSheetService.deleteLogSheet(validatedId);
 
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${logSheet.projectId}`);
-    revalidatePath('/');
-    revalidatePath(`/my-projects/${logSheet.projectId}`);
+    revalidateLogSheetPaths(logSheet.projectId);
     return { success: true };
   } catch (error) {
     console.error('[CPIS-ERROR] LogSheet.Delete:', error);
@@ -327,10 +322,8 @@ export async function saveLogSheetEntriesAction(data: unknown) {
     const projectId = await logSheetService.getLogSheetProjectId(
       validatedData.logSheetId
     );
-    revalidatePath('/log-sheets');
     if (projectId) {
-      revalidatePath(`/log-sheets/${projectId}`);
-      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+      revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
     return { success: true };
   } catch (error) {
@@ -362,10 +355,8 @@ export async function saveLogSheetPhotosAction(data: unknown) {
     const projectId = await logSheetService.getLogSheetProjectId(
       validatedData.logSheetId
     );
-    revalidatePath('/log-sheets');
     if (projectId) {
-      revalidatePath(`/log-sheets/${projectId}`);
-      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+      revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
     return { success: true };
   } catch (error) {
@@ -399,10 +390,8 @@ export async function saveLogSheetChemicalsAction(data: unknown) {
     const projectId = await logSheetService.getLogSheetProjectId(
       validatedData.logSheetId
     );
-    revalidatePath('/log-sheets');
     if (projectId) {
-      revalidatePath(`/log-sheets/${projectId}`);
-      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+      revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
     return { success: true };
   } catch (error) {
@@ -437,10 +426,8 @@ export async function saveLogSheetMachinesAction(data: unknown) {
     const projectId = await logSheetService.getLogSheetProjectId(
       validatedData.logSheetId
     );
-    revalidatePath('/log-sheets');
     if (projectId) {
-      revalidatePath(`/log-sheets/${projectId}`);
-      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+      revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
     return { success: true };
   } catch (error) {
@@ -508,9 +495,7 @@ export async function saveLogSheetSignatureAction(data: unknown) {
       url
     );
 
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${projectId}`);
-    revalidatePath(`/log-sheets/${projectId}/${logSheetId}`);
+    revalidateLogSheetPaths(projectId, logSheetId);
 
     return { success: true, url, data: updated };
   } catch (error) {

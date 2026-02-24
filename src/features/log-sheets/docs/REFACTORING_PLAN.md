@@ -327,6 +327,53 @@ Extract status-related operations into dedicated `log-sheet-status.service.ts`.
 
 ~115 lines extracted into focused domain module. Single responsibility per file improved.
 
+---
+
+## Phase 10: Extract Helper — Revalidation Paths (est. ~10 min) ✅ COMPLETED 2026-02-24
+
+### Problem
+
+`actions.ts` contained 10+ duplicate blocks of revalidation path calls, violating DRY and creating maintenance risk.
+
+### Solution
+
+Extract `revalidateLogSheetPaths` helper function to centralize cache revalidation.
+
+### Files Changed
+
+| File         | Action   | Δ Lines |
+| ------------ | -------- | ------- |
+| `actions.ts` | Modified | -16     |
+
+### Pattern
+
+```ts
+function revalidateLogSheetPaths(projectId: string, logSheetId?: string): void {
+  revalidatePath('/log-sheets');
+  revalidatePath(`/log-sheets/${projectId}`);
+  revalidatePath('/');
+  revalidatePath(`/my-projects/${projectId}`);
+  if (logSheetId) {
+    revalidatePath(`/log-sheets/${projectId}/${logSheetId}`);
+  }
+}
+```
+
+### Tests
+
+- **371 tests pass** (14 test files)
+- Zero behavioral regressions
+
+### Result
+
+| Metric           | Before | After |     Δ     |
+| ---------------- | ------ | ----- | :-------: |
+| `actions.ts` LOC | 591    | 575   |  **-3%**  |
+| Duplicate blocks | 10     | 0     | **-100%** |
+| Helper calls     | 0      | 11    |    +11    |
+
+---
+
 ### Facade pattern (preserve imports) ✅ IMPLEMENTED
 
 In `service.ts`, re-exports added so existing imports don't break:
@@ -388,7 +435,8 @@ Manual verification checklist:
 |     7     | Extract Method: getLogSheetDetail        |        1 modified         |    15 min    | 🟢 LOW |    ✅    |
 |     8     | Extract Function: assertLogSheetEditable |    +1 new, 4 modified     |    10 min    | 🟢 LOW |    ✅    |
 |     9     | Extract Module: status service           |    +1 new, 1 modified     |    15 min    | 🟢 LOW |    ✅    |
-| **Total** |                                          | **+22 new, ~20 modified** | **~5.0 hrs** |        | **100%** |
+|    10     | Extract Helper: revalidation paths       |        1 modified         |    10 min    | 🟢 LOW |    ✅    |
+| **Total** |                                          | **+22 new, ~21 modified** | **~5.2 hrs** |        | **100%** |
 
 ### Actual post-refactor metrics (2026-02-24)
 
@@ -397,13 +445,14 @@ Manual verification checklist:
 | Max file LOC         |  1,245 |   634 |      **-49%**       |
 | `page.tsx` LOC       |  1,245 |   437 |      **-65%**       |
 | `service.ts` LOC     |  1,008 |   634 |      **-37%**       |
+| `actions.ts` LOC     |    591 |   575 |       **-3%**       |
 | `preview` (total)    |    734 |   961 | +8 files (avg 120L) |
 | Files >500 LOC       |      4 |     2 |       **-2**        |
 | Methods >50 LOC      |     14 |     2 |      **-86%**       |
-| Duplicated blocks    |     11 |     3 |      **-73%**       |
+| Duplicated blocks    |     11 |     2 |      **-82%**       |
 | Cross-layer coupling |      1 |     0 |      **-100%**      |
 | Total files          |     32 |    46 | +14 (smaller each)  |
-| Total CC             |   ~180 |  ~115 |      **-36%**       |
+| Total CC             |   ~180 |  ~110 |      **-39%**       |
 
 ---
 
