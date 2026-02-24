@@ -573,40 +573,85 @@ Manual verification checklist:
 
 ## Summary
 
-|   Phase   | What                                     |       Files Changed       |   Est. Time   |  Risk  |  Status  |
-| :-------: | ---------------------------------------- | :-----------------------: | :-----------: | :----: | :------: |
-|     1     | Tests + quick wins                       |    +4 new, 1 modified     |    45 min     | 🟢 LOW |    ✅    |
-|     2     | Deduplicate code                         |    +2 new, 6 modified     |    40 min     | 🟢 LOW |    ✅    |
-|     3     | Split god component (A7)                 |    +3 new, 1 modified     |    50 min     | 🟡 MED |    ✅    |
-|     4     | Split god module (F2)                    |    +3 new, 1 modified     |    45 min     | 🟡 MED |    ✅    |
-|     5     | Type cleanup + verify                    |        2 modified         |    20 min     | 🟢 LOW |    ✅    |
-|     6     | Split preview component                  |    +8 new, 2 modified     |    30 min     | 🟡 MED |    ✅    |
-|     7     | Extract Method: getLogSheetDetail        |        1 modified         |    15 min     | 🟢 LOW |    ✅    |
-|     8     | Extract Function: assertLogSheetEditable |    +1 new, 4 modified     |    10 min     | 🟢 LOW |    ✅    |
-|     9     | Extract Module: status service           |    +1 new, 1 modified     |    15 min     | 🟢 LOW |    ✅    |
-|    10     | Extract Helper: revalidation paths       |        1 modified         |    10 min     | 🟢 LOW |    ✅    |
-|    11     | Extract Helper: range validation         |    +1 new, 2 modified     |    10 min     | 🟢 LOW |    ✅    |
-|    12     | Replace Magic Strings: categories        |        4 modified         |    15 min     | 🟢 LOW |    ✅    |
-|    14     | Extract Component: entry-cells           |    +1 new, 1 modified     |    10 min     | 🟢 LOW |    ✅    |
-|    15     | Extract Helper: action result            |    +1 new, 1 modified     |    15 min     | 🟡 MED |    ✅    |
-| **Total** |                                          | **+25 new, ~29 modified** | **~6.25 hrs** |        | **100%** |
+|   Phase   | What                                     |       Files Changed       |  Est. Time   |  Risk  |  Status  |
+| :-------: | ---------------------------------------- | :-----------------------: | :----------: | :----: | :------: |
+|     1     | Tests + quick wins                       |    +4 new, 1 modified     |    45 min    | 🟢 LOW |    ✅    |
+|     2     | Deduplicate code                         |    +2 new, 6 modified     |    40 min    | 🟢 LOW |    ✅    |
+|     3     | Split god component (A7)                 |    +3 new, 1 modified     |    50 min    | 🟡 MED |    ✅    |
+|     4     | Split god module (F2)                    |    +3 new, 1 modified     |    45 min    | 🟡 MED |    ✅    |
+|     5     | Type cleanup + verify                    |        2 modified         |    20 min    | 🟢 LOW |    ✅    |
+|     6     | Split preview component                  |    +8 new, 2 modified     |    30 min    | 🟡 MED |    ✅    |
+|     7     | Extract Method: getLogSheetDetail        |        1 modified         |    15 min    | 🟢 LOW |    ✅    |
+|     8     | Extract Function: assertLogSheetEditable |    +1 new, 4 modified     |    10 min    | 🟢 LOW |    ✅    |
+|     9     | Extract Module: status service           |    +1 new, 1 modified     |    15 min    | 🟢 LOW |    ✅    |
+|    10     | Extract Helper: revalidation paths       |        1 modified         |    10 min    | 🟢 LOW |    ✅    |
+|    11     | Extract Helper: range validation         |    +1 new, 2 modified     |    10 min    | 🟢 LOW |    ✅    |
+|    12     | Replace Magic Strings: categories        |        4 modified         |    15 min    | 🟢 LOW |    ✅    |
+|    14     | Extract Component: entry-cells           |    +1 new, 1 modified     |    10 min    | 🟢 LOW |    ✅    |
+|    15     | Extract Helper: action result            |    +1 new, 1 modified     |    15 min    | 🟡 MED |    ✅    |
+|    16     | Consolidate: isEntryComplete             |        2 modified         |    10 min    | 🟢 LOW |    ✅    |
+| **Total** |                                          | **+25 new, ~31 modified** | **~6.4 hrs** |        | **100%** |
 
 ### Actual post-refactor metrics (2026-02-24)
 
-| Metric                     | Before | After |          Δ          |
-| -------------------------- | -----: | ----: | :-----------------: |
-| Max file LOC               |  1,245 |   509 |      **-59%**       |
-| `page.tsx` LOC             |  1,245 |   437 |      **-65%**       |
-| `service.ts` LOC           |  1,008 |   634 |      **-37%**       |
-| `actions.ts` LOC           |    533 |   454 |      **-15%**       |
-| `category-section.tsx` LOC |    731 |   509 |      **-30%**       |
-| `preview` (total)          |    734 |   961 | +8 files (avg 120L) |
-| Files >500 LOC             |      4 |     1 |       **-3**        |
-| Methods >50 LOC            |     14 |     2 |      **-86%**       |
-| Duplicated blocks          |     11 |     0 |      **-100%**      |
-| Cross-layer coupling       |      1 |     0 |      **-100%**      |
-| Total files                |     32 |    50 | +18 (smaller each)  |
-| Total CC                   |   ~180 |   ~95 |      **-47%**       |
+| Metric                       | Before | After |          Δ          |
+| ---------------------------- | -----: | ----: | :-----------------: |
+| Max file LOC                 |  1,245 |   509 |      **-59%**       |
+| `page.tsx` LOC               |  1,245 |   437 |      **-65%**       |
+| `service.ts` LOC             |  1,008 |   634 |      **-37%**       |
+| `actions.ts` LOC             |    533 |   454 |      **-15%**       |
+| `validation.ts` LOC          |    205 |   204 |       **0%**        |
+| `approval-validation.ts` LOC |    189 |   157 |      **-17%**       |
+| `category-section.tsx` LOC   |    731 |   509 |      **-30%**       |
+| `preview` (total)            |    734 |   961 | +8 files (avg 120L) |
+| Files >500 LOC               |      4 |     1 |       **-3**        |
+| Methods >50 LOC              |     14 |     2 |      **-86%**       |
+| Duplicated blocks            |     11 |     0 |      **-100%**      |
+| Cross-layer coupling         |      1 |     0 |      **-100%**      |
+| Total files                  |     32 |    50 | +18 (smaller each)  |
+| Total CC                     |   ~180 |   ~95 |      **-47%**       |
+
+---
+
+## Phase 16: Consolidate — `isEntryComplete()` (est. ~10 min) ✅ COMPLETED 2026-02-24
+
+Consolidated duplicate entry completeness logic into shared helper in `utils.ts`.
+
+### Files Changed
+
+| File                     | Action    | Δ Lines |
+| ------------------------ | --------- | ------- |
+| `utils.ts`               | Modified  | +30     |
+| `approval-validation.ts` | Modified  | -32     |
+| `validation.ts`          | Unchanged | 0       |
+
+### What Was Consolidated
+
+**Before:** Two near-identical functions with subtle differences:
+
+- `validation.ts:isEmpty()` — TEXT fields never considered empty (intentional for submission)
+- `approval-validation.ts:isEntryComplete()` — TEXT fields validated with trim check
+
+**After:**
+
+- `utils.ts:isEntryComplete()` — Single shared function with full validation
+- `validation.ts` — Retains local `isEmpty()` for submission validation (different semantics)
+- `approval-validation.ts` — Uses shared `isEntryComplete()` from utils
+
+### Behavior Preserved
+
+- Submission validation (`validation.ts`) keeps original TEXT handling
+- Approval validation (`approval-validation.ts`) now uses shared helper
+- Both validation paths work correctly with their specific requirements
+
+### Tests
+
+- **719 tests pass** (45 test files)
+- Zero behavioral regressions
+
+### Result
+
+`approval-validation.ts` reduced from **189** to **157 lines** (−17%).
 
 ---
 
