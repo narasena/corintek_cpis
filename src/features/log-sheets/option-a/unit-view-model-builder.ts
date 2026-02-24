@@ -5,10 +5,37 @@ import type {
   ILogSheetUnitViewConfig,
   ILogSheetUnitViewModel,
   ILogSheetUnitViewModelBuilder,
+  IParameterRowView,
   IUnitView,
+  IUnitCompletionStats,
   TReadonlyEntryStateMap,
   TUnitId,
+  TCategoryId,
+  ILogSheetMachineSnapshot,
+  ILogSheetParameterSnapshot,
 } from './contracts';
+import { isEntryValueComplete, isNumericInRange } from '../utils/value-type';
+import { makeEntryKey } from '../utils';
+
+const CHILLER_CATEGORIES: readonly TCategoryId[] = [
+  'UNIT_CONDENSOR',
+  'UNIT_EVAPORATOR',
+];
+
+const CT_CATEGORIES: readonly TCategoryId[] = [
+  'COOLING_WATER_QUALITY',
+  'GENERAL_CONDITION',
+  'JOB_DESCRIPTION',
+];
+
+const CATEGORY_LABELS: Record<TCategoryId, string> = {
+  UNIT_CONDENSOR: 'Unit Condensor',
+  UNIT_EVAPORATOR: 'Unit Evaporator',
+  COOLING_WATER_QUALITY: 'Cooling Water Quality',
+  GENERAL_CONDITION: 'General Condition',
+  JOB_DESCRIPTION: 'Job Description',
+  CONSUMPTION: 'Consumption',
+};
 
 export class LogSheetUnitViewModelBuilder
   implements ILogSheetUnitViewModelBuilder
@@ -19,104 +46,223 @@ export class LogSheetUnitViewModelBuilder
     config: ILogSheetUnitViewConfig
   ): ILogSheetUnitViewModel {
     this.assertConfiguration(config);
-    const units = this.buildUnitViews(detail);
+    const units = this.buildUnitViews(detail, entryState);
     const activeUnitId = this.selectActiveUnitId(units, config);
-    const categoriesByUnit = this.buildCategoriesByUnit(units);
-
-    return {
+    const categoriesByUnit = this.buildCategoriesByUnit(
       units,
-      activeUnitId,
-      categoriesByUnit,
-      summaryFields: [],
-    };
+      detail,
+      entryState
+    );
+
+    return { units, activeUnitId, categoriesByUnit, summaryFields: [] };
   }
 
   private assertConfiguration(
     config: ILogSheetUnitViewConfig
   ): asserts config is ILogSheetUnitViewConfig {
     if (!config.featureEnabled) {
-      const error: ILogSheetUnitConfigurationError = {
-        kind: 'CONFIGURATION_ERROR',
-        message: 'Option A unit view is disabled by configuration',
-        field: 'featureEnabled',
-      };
-      throw error;
+      throw this.configError(
+        'Option A unit view is disabled',
+        'featureEnabled'
+      );
     }
-
     if (config.maxVisibleUnits !== undefined && config.maxVisibleUnits < 1) {
-      const error: ILogSheetUnitConfigurationError = {
-        kind: 'CONFIGURATION_ERROR',
-        message: 'maxVisibleUnits must be greater than zero when provided',
-        field: 'maxVisibleUnits',
-      };
-      throw error;
+      throw this.configError('maxVisibleUnits must be >= 1', 'maxVisibleUnits');
     }
   }
 
-  private buildUnitViews(detail: ILogSheetDetailSnapshot): IUnitView[] {
-    const visibleChillers = this.getVisibleChillers(detail);
-    return visibleChillers.map(m => ({
-      id: `CHILLER-${m.unitNumber}`,
-      label: `Chiller #${m.unitNumber}`,
-      type: 'CHILLER',
-      completion: {
-        completedCount: 0,
-        totalCount: 0,
-        completionRatio: null,
-      },
-      status: 'EMPTY',
-    }));
+  private configError(
+    message: string,
+    field: string
+  ): ILogSheetUnitConfigurationError {
+    return { kind: 'CONFIGURATION_ERROR', message, field };
   }
 
-  private getVisibleChillers(detail: ILogSheetDetailSnapshot) {
-    const activeChillerIds = new Set(detail.activeMachineIds.chillers);
-    if (activeChillerIds.size === 0) {
-      return detail.machines.chillers;
+  private buildUnitViews(
+    detail: ILogSheetDetailSnapshot,
+    entryState: TReadonlyEntryStateMap
+  ): IUnitView[] {
+    const chillers = this.getVisibleMachines(
+      detail.machines.chillers,
+      detail.activeMachineIds.chillers
+    );
+    const coolingTowers = this.getVisibleMachines(
+      detail.machines.coolingTowers,
+      detail.activeMachineIds.coolingTowers
+    );
+
+    const chillerUnits = chillers.map(m =>
+      this.createUnitView(m, 'CHILLER', detail, entryState)
+    );
+    const ctUnits = coolingTowers.map(m =>
+      this.createUnitView(m, 'COOLING_TOWER', detail, entryState)
+    );
+
+    return [...chillerUnits, ...ctUnits];
+  }
+
+  private getVisibleMachines(
+    machines: readonly ILogSheetMachineSnapshot[],
+    activeIds: readonly string[]
+  ): readonly ILogSheetMachineSnapshot[] {
+    if (activeIds.length === 0) return machines;
+    const activeSet = new Set(activeIds);
+    return machines.filter(m => activeSet.has(m.id));
+  }
+
+  private createUnitView(
+    machine: ILogSheetMachineSnapshot,
+    type: 'CHILLER' | 'COOLING_TOWER',
+    detail: ILogSheetDetailSnapshot,
+    entryState: TReadonlyEntryStateMap
+  ): IUnitView {
+    const id = this.makeUnitId(type, machine.unitNumber);
+    const label = `${type === 'CHILLER' ? 'Chiller' : 'Cooling Tower'} #${machine.unitNumber}`;
+    const completion = this.calculateCompletion(
+      machine.id,
+      type,
+      detail,
+      entryState
+    );
+    return {
+      id,
+      machineId: machine.id,
+      label,
+      type,
+      completion,
+      status: this.getStatus(completion),
+    };
+  }
+
+  private makeUnitId(
+    type: 'CHILLER' | 'COOLING_TOWER',
+    unitNumber: number
+  ): TUnitId {
+    return `${type}-${unitNumber}`;
+  }
+
+  private calculateCompletion(
+    machineId: string,
+    type: 'CHILLER' | 'COOLING_TOWER',
+    detail: ILogSheetDetailSnapshot,
+    entryState: TReadonlyEntryStateMap
+  ): IUnitCompletionStats {
+    const categories = type === 'CHILLER' ? CHILLER_CATEGORIES : CT_CATEGORIES;
+    const relevantParams = detail.parameters.filter(p =>
+      categories.includes(p.category)
+    );
+
+    let completed = 0;
+    const total = relevantParams.length;
+
+    for (const param of relevantParams) {
+      const key = makeEntryKey(param.id, machineId, 'VALUE');
+      const state = entryState[key];
+      if (isEntryValueComplete(state)) completed++;
     }
-    return detail.machines.chillers.filter(m => activeChillerIds.has(m.id));
+
+    return {
+      completedCount: completed,
+      totalCount: total,
+      completionRatio: total > 0 ? completed / total : null,
+    };
+  }
+
+  private getStatus(
+    completion: IUnitCompletionStats
+  ): 'EMPTY' | 'IN_PROGRESS' | 'COMPLETE' {
+    if (completion.totalCount === 0) return 'EMPTY';
+    if (completion.completedCount === 0) return 'EMPTY';
+    if (completion.completedCount === completion.totalCount) return 'COMPLETE';
+    return 'IN_PROGRESS';
   }
 
   private selectActiveUnitId(
     units: readonly IUnitView[],
     config: ILogSheetUnitViewConfig
   ): TUnitId | null {
-    if (units.length === 0) {
-      return null;
-    }
-    if (config.defaultViewMode !== 'unit-first') {
-      return null;
-    }
+    if (units.length === 0) return null;
+    if (config.defaultViewMode !== 'unit-first') return null;
     return units[0].id;
   }
 
   private buildCategoriesByUnit(
-    units: readonly IUnitView[]
+    units: readonly IUnitView[],
+    detail: ILogSheetDetailSnapshot,
+    entryState: TReadonlyEntryStateMap
   ): ReadonlyMap<TUnitId, readonly ICategoryView[]> {
-    if (!Array.isArray(units)) {
-      throw new Error('Invalid units collection');
-    }
-
     const map = new Map<TUnitId, readonly ICategoryView[]>();
     for (const unit of units) {
-      const categories = createCategoriesForUnit(unit);
+      const categories = this.createCategoriesForUnit(unit, detail, entryState);
       map.set(unit.id, categories);
     }
     return map;
   }
-}
 
-function createCategoriesForUnit(unit: IUnitView): ICategoryView[] {
-  const baseCategories: { id: ICategoryView['id']; label: string }[] = [
-    { id: 'UNIT_CONDENSOR', label: 'Unit Condensor' },
-    { id: 'UNIT_EVAPORATOR', label: 'Unit Evaporator' },
-    { id: 'GENERAL_CONDITION', label: 'General Condition' },
-    { id: 'JOB_DESCRIPTION', label: 'Job Description' },
-    { id: 'CONSUMPTION', label: 'Consumption' },
-  ];
+  private createCategoriesForUnit(
+    unit: IUnitView,
+    detail: ILogSheetDetailSnapshot,
+    entryState: TReadonlyEntryStateMap
+  ): ICategoryView[] {
+    const categoryIds =
+      unit.type === 'CHILLER' ? CHILLER_CATEGORIES : CT_CATEGORIES;
+    return categoryIds
+      .map(catId => this.buildCategoryView(catId, unit, detail, entryState))
+      .filter(cat => cat.parameters.length > 0);
+  }
 
-  return baseCategories.map(category => ({
-    id: category.id,
-    label: `${category.label} - ${unit.label}`,
-    parameters: [],
-  }));
+  private buildCategoryView(
+    categoryId: TCategoryId,
+    unit: IUnitView,
+    detail: ILogSheetDetailSnapshot,
+    entryState: TReadonlyEntryStateMap
+  ): ICategoryView {
+    const params = detail.parameters.filter(p => p.category === categoryId);
+    const rows = params
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map(p => this.buildParameterRow(p, unit.machineId, entryState));
+
+    return {
+      id: categoryId,
+      label: CATEGORY_LABELS[categoryId],
+      parameters: rows,
+    };
+  }
+
+  private buildParameterRow(
+    param: ILogSheetParameterSnapshot,
+    machineId: string,
+    entryState: TReadonlyEntryStateMap
+  ): IParameterRowView {
+    const entryKey = makeEntryKey(param.id, machineId, 'VALUE');
+    const state = entryState[entryKey];
+    const inRange = this.checkInRange(param, state);
+
+    return {
+      parameterId: param.id,
+      label: param.name,
+      categoryId: param.category,
+      displayOrder: param.displayOrder,
+      valueType: param.valueType,
+      unit: param.unit,
+      targetRangeText: this.formatRange(param.minValue, param.maxValue),
+      entryKey,
+      inRange,
+    };
+  }
+
+  private checkInRange(
+    param: ILogSheetParameterSnapshot,
+    state: { valueType?: string; numericValue?: number | null } | undefined
+  ): boolean | null {
+    if (!state || state.valueType !== 'NUMBER') return null;
+    return isNumericInRange(state.numericValue, param.minValue, param.maxValue);
+  }
+
+  private formatRange(min: number | null, max: number | null): string | null {
+    if (min === null && max === null) return null;
+    if (min === null) return `≤ ${max}`;
+    if (max === null) return `≥ ${min}`;
+    return `${min} - ${max}`;
+  }
 }
