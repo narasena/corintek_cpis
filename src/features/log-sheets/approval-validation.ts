@@ -1,6 +1,7 @@
 import type { ILogSheetDetailView } from './service';
 import type { ILogSheetEntry } from './types';
 import { makeEntryKey } from './utils';
+import { validateNumericRange } from './range-validation';
 
 function isEntryComplete(
   entry?: Pick<
@@ -69,28 +70,11 @@ function collectApprovalRangeErrors(
   errors: string[]
 ) {
   for (const entry of context.detail.entries) {
-    if (entry.valueType !== 'NUMBER' || entry.numericValue === null) continue;
+    if (entry.valueType !== 'NUMBER') continue;
     const param = context.parameterById.get(entry.parameterId);
     if (!param) continue;
 
-    let min: number | null = param.minValue;
-    let max: number | null = param.maxValue;
-
-    if (entry.role === 'RAW_WATER') {
-      min = param.rawWaterMinValue ?? null;
-      max = param.rawWaterMaxValue ?? null;
-    }
-
-    if (min !== null && entry.numericValue < min) {
-      errors.push(
-        `${param.name}: Nilai ${entry.numericValue} di bawah minimum ${min}`
-      );
-    }
-    if (max !== null && entry.numericValue > max) {
-      errors.push(
-        `${param.name}: Nilai ${entry.numericValue} di atas maksimum ${max}`
-      );
-    }
+    errors.push(...validateNumericRange(entry, param));
   }
 }
 
@@ -140,7 +124,11 @@ function collectCategoryRequiredErrors(
     context.detail.activeMachineIds.coolingTowers.includes(m.id)
   );
 
-  const machines = usesChillers ? activeChillers : usesCoolingTowers ? activeCTs : [];
+  const machines = usesChillers
+    ? activeChillers
+    : usesCoolingTowers
+      ? activeCTs
+      : [];
   const targets =
     machines.length > 0
       ? machines.map(machine => ({ id: machine.id }))
@@ -196,4 +184,3 @@ export function validateLogSheetApprovalDetail(
     throw new Error(`Validasi gagal:\n${errors.join('\n')}`);
   }
 }
-

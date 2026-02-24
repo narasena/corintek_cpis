@@ -374,6 +374,57 @@ function revalidateLogSheetPaths(projectId: string, logSheetId?: string): void {
 
 ---
 
+## Phase 11: Extract Helper — Numeric Range Validation (est. ~10 min) ✅ COMPLETED 2026-02-24
+
+### Problem
+
+Range validation logic was duplicated in `log-sheet-status.service.ts` and `approval-validation.ts` — identical 20-line blocks for checking min/max values.
+
+### Solution
+
+Extract `validateNumericRange()` helper function to centralize range validation.
+
+### Files Changed
+
+| File                          | Action   | Δ Lines |
+| ----------------------------- | -------- | ------- |
+| `range-validation.ts`         | NEW      | +42     |
+| `log-sheet-status.service.ts` | Modified | -17     |
+| `approval-validation.ts`      | Modified | -14     |
+
+### Pattern
+
+```ts
+export function validateNumericRange(
+  entry: { numericValue: number | null; role: string },
+  param: {
+    name: string;
+    minValue: number | null;
+    maxValue: number | null;
+    rawWaterMinValue: number | null;
+    rawWaterMaxValue: number | null;
+  }
+): string[] {
+  // Returns array of error messages for out-of-range values
+}
+```
+
+### Tests
+
+- **371 tests pass** (14 test files)
+- Zero behavioral regressions
+
+### Result
+
+| Metric                        | Before | After |     Δ     |
+| ----------------------------- | ------ | ----- | :-------: |
+| `log-sheet-status.service.ts` | 124    | 107   | **-14%**  |
+| `approval-validation.ts`      | 200    | 186   |  **-7%**  |
+| Duplicate range logic blocks  | 2      | 0     | **-100%** |
+| Helper usages                 | 0      | 4     |    +4     |
+
+---
+
 ### Facade pattern (preserve imports) ✅ IMPLEMENTED
 
 In `service.ts`, re-exports added so existing imports don't break:
@@ -436,7 +487,8 @@ Manual verification checklist:
 |     8     | Extract Function: assertLogSheetEditable |    +1 new, 4 modified     |    10 min    | 🟢 LOW |    ✅    |
 |     9     | Extract Module: status service           |    +1 new, 1 modified     |    15 min    | 🟢 LOW |    ✅    |
 |    10     | Extract Helper: revalidation paths       |        1 modified         |    10 min    | 🟢 LOW |    ✅    |
-| **Total** |                                          | **+22 new, ~21 modified** | **~5.2 hrs** |        | **100%** |
+|    11     | Extract Helper: range validation         |    +1 new, 2 modified     |    10 min    | 🟢 LOW |    ✅    |
+| **Total** |                                          | **+23 new, ~23 modified** | **~5.5 hrs** |        | **100%** |
 
 ### Actual post-refactor metrics (2026-02-24)
 
@@ -449,10 +501,10 @@ Manual verification checklist:
 | `preview` (total)    |    734 |   961 | +8 files (avg 120L) |
 | Files >500 LOC       |      4 |     2 |       **-2**        |
 | Methods >50 LOC      |     14 |     2 |      **-86%**       |
-| Duplicated blocks    |     11 |     2 |      **-82%**       |
+| Duplicated blocks    |     11 |     1 |      **-91%**       |
 | Cross-layer coupling |      1 |     0 |      **-100%**      |
-| Total files          |     32 |    46 | +14 (smaller each)  |
-| Total CC             |   ~180 |  ~110 |      **-39%**       |
+| Total files          |     32 |    47 | +15 (smaller each)  |
+| Total CC             |   ~180 |  ~105 |      **-42%**       |
 
 ---
 

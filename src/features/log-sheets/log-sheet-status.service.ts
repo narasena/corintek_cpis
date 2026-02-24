@@ -6,6 +6,7 @@ import type { ILogSheet, TLogSheetStatus } from './types';
 import { validateLogSheetApprovalDetail } from './approval-validation';
 import { decideLogSheetStatusTransition } from './log-sheet-status';
 import { getLogSheetDetail, hasProjectAssignment } from './service';
+import { validateNumericRange } from './range-validation';
 
 export async function updateLogSheetStatus(
   actor: IJwtPayload,
@@ -87,28 +88,11 @@ export async function validateLogSheetForSubmission(id: string) {
   }
 
   for (const entry of detail.entries) {
-    if (entry.valueType === 'NUMBER' && entry.numericValue !== null) {
+    if (entry.valueType === 'NUMBER') {
       const param = detail.parameters.find(p => p.id === entry.parameterId);
       if (!param) continue;
 
-      let min: number | null = param.minValue;
-      let max: number | null = param.maxValue;
-
-      if (entry.role === 'RAW_WATER') {
-        min = param.rawWaterMinValue ?? null;
-        max = param.rawWaterMaxValue ?? null;
-      }
-
-      if (min !== null && entry.numericValue < min) {
-        errors.push(
-          `${param.name}: Nilai ${entry.numericValue} di bawah minimum ${min}`
-        );
-      }
-      if (max !== null && entry.numericValue > max) {
-        errors.push(
-          `${param.name}: Nilai ${entry.numericValue} di atas maksimum ${max}`
-        );
-      }
+      errors.push(...validateNumericRange(entry, param));
     }
   }
 
