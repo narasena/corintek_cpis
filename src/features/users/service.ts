@@ -77,6 +77,37 @@ export async function createUser(
 }
 
 /**
+ * Get all users with TECHNICIAN role (for dropdowns/assignments)
+ * Accessible by any authenticated user who can view log sheets
+ */
+export async function getTechniciansList(actor: IJwtPayload) {
+  // Allow access if user can read log sheets (which Technicians can)
+  if (!canAccess(actor.role, RbacResource.LOG_SHEETS, 'read')) {
+    throw new Error('Unauthorized');
+  }
+
+  const technicians = await prisma.user.findMany({
+    where: {
+      deletedAt: null,
+      role: 'TECHNICIAN',
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      role: true,
+      // Minimal fields for selection
+    },
+    orderBy: {
+      firstName: 'asc',
+    },
+  });
+
+  return technicians as any[]; // Cast to TUserResponse[] equivalent
+}
+
+/**
  * Get all non-deleted users
  */
 export async function getAllUsers(actor: IJwtPayload) {

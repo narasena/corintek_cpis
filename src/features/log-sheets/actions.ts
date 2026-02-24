@@ -3,6 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod/v4';
 import * as logSheetService from './service';
+import { updateLogSheetStatusWithNotifications } from './status-with-notifications';
+import {
+  notifyLimitBreachesOnSubmission,
+  getTechnicianUserIds,
+} from './log-sheet-notifications';
 import * as projectService from '@/features/projects/service';
 import {
   CreateLogSheetEntrySchema,
@@ -219,15 +224,10 @@ export async function updateLogSheetStatusAction(data: unknown) {
       })
       .parse(data);
 
-    if (validatedData.status === 'SUBMITTED') {
-      await logSheetService.validateLogSheetForSubmission(validatedData.id);
-    }
-
-    const logSheet = await logSheetService.updateLogSheetStatus(
-      actor,
-      validatedData.id,
-      validatedData.status
-    );
+    const logSheet = await updateLogSheetStatusWithNotifications(actor, {
+      id: validatedData.id,
+      status: validatedData.status,
+    });
     revalidatePath('/log-sheets');
     revalidatePath(`/log-sheets/${logSheet.projectId}`);
     revalidatePath('/');
@@ -323,6 +323,27 @@ export async function saveLogSheetEntriesAction(data: unknown) {
       })),
       { allowAdminOverride }
     );
+
+    // Check for limit breaches and notify
+    try {
+      console.log('[DEBUG] Checking for limit breaches...');
+      const detail = await logSheetService.getLogSheetDetail(
+        validatedData.logSheetId
+      );
+      const technicianIds = getTechnicianUserIds(detail);
+      console.log('[DEBUG] Technician IDs:', technicianIds);
+      console.log('[DEBUG] Entries count:', detail.entries.length);
+
+      await notifyLimitBreachesOnSubmission({
+        evaluatorUserId: actor.id,
+        technicianUserIds: technicianIds,
+        detail,
+      });
+      console.log('[DEBUG] Notification check done.');
+    } catch (error) {
+      console.error('[CPIS-ERROR] LogSheet.SaveEntries.Notify:', error);
+      // Don't fail the save if notification fails
+    }
 
     const projectId = await logSheetService.getLogSheetProjectId(
       validatedData.logSheetId

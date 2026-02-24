@@ -18,6 +18,17 @@
 - [x] Protect Log Sheets, Work Reports, Lab Analyses, and Summary Reports from URL guessing.
 - [x] Add Assignment Management UI in Project edit dialog (PIC Project, Teknisi, PIC Klien).
 
+#### 2.7 [NEW] Notifications System (Backend & Log Sheet Integration)
+
+**Scope ID:** `NT-02`
+**Why:** Alert technicians when log sheet entries breach parameter limits.
+**Tasks:**
+
+- [x] Implement Notification persistence and Service layer.
+- [x] Implement Limit Evaluation Adapter for Log Sheets.
+- [x] Integrate Notifications into Log Sheet submission flow.
+- [x] Expose Notifications in UI (Header Bell/Dropdown) - `NT-03`.
+
 ---
 
 ## 0. MVP Definition (Rescue Mode) - ✅ COMPLETED
@@ -40,7 +51,7 @@
 - Dashboard complex charts (Project list only for MVP).
 - Attendance module (use existing HR tools).
 - Digital signatures (originally out-of-scope for MVP, now implemented post-MVP).
-- Notifications system (complex alerts).
+- Notifications system (complex alerts). **(Moved to In Scope - NT-02)**
 - Client portal / external access.
 - **OPS-02 (Password Reset)**.
 - **OPS-03 (Backup Plan)**.
@@ -65,6 +76,7 @@
 | Work Reports    | ✅     | ✅      | ✅      | ✅  | Ad-hoc technician reports + signatures      |
 | Summary Reports | ✅     | ✅      | ✅      | ✅  | Monthly project sign-off                    |
 | Worker (R2)     | ✅     | ✅      | N/A     | N/A | Basic upload API ready                      |
+| Notifications   | ✅     | ✅      | ✅      | ✅  | NT-02 & NT-03 Complete                      |
 
 ### ✅ Log Sheets Domain (Mostly Complete)
 
@@ -268,23 +280,23 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 
 #### 4.2 Notifications
 
-**Scope ID:** `NT-01` (System)
+**Scope ID:** `NT-01` (System) ✅
 **Tasks:**
 
-- [ ] Create `Notification` schema
-- [ ] Service for creating notifications
+- [x] Create `Notification` schema
+- [x] Service for creating notifications
 
-**Scope ID:** `NT-02` (Limit Alerts)
+**Scope ID:** `NT-02` (Limit Alerts) ✅
 **Tasks:**
 
-- [ ] On entry save, check against limits
-- [ ] Create notification if exceeded
+- [x] On entry save, check against limits
+- [x] Create notification if exceeded
 
-**Scope ID:** `NT-03` (UI)
+**Scope ID:** `NT-03` (UI) ✅
 **Tasks:**
 
-- [ ] Notification bell in header
-- [ ] Dropdown with unread count
+- [x] Notification bell in header
+- [x] Dropdown with unread count
 
 #### 4.3 Digital Signatures
 

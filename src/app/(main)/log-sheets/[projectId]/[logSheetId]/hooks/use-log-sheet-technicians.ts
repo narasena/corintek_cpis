@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { getAllUsersAction } from '@/features/users/actions';
+import { getTechniciansListAction } from '@/features/users/actions';
 import type { TUserResponse } from '@/@types/user.type';
 
 async function loadTechnicians(
   onSuccess: (users: TUserResponse[]) => void
 ) {
   try {
-    const res = await getAllUsersAction();
+    const res = await getTechniciansListAction();
     if (res.success && res.data) {
       onSuccess(res.data);
     } else {

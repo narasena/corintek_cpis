@@ -14,10 +14,12 @@ import type {
   TCreateLogSheet,
   TLogSheetStatus,
   TUpdateLogSheet,
+  ILogSheetDetailView,
 } from './types';
 import { validateLogSheetApprovalDetail } from './approval-validation';
 import { getLogSheetEditState } from './log-sheet-locking';
 import { decideLogSheetStatusTransition } from './log-sheet-status';
+import { evaluateSubmissionLimits } from './log-sheet-notifications';
 
 async function hasProjectAssignment(
   userId: string,
@@ -203,47 +205,6 @@ export async function getAllLogSheets(
   });
 
   return logSheets as unknown as IGlobalLogSheetListItem[];
-}
-
-export interface ILogSheetDetailView {
-  logSheet: ILogSheet;
-  project: {
-    id: string;
-    name: string;
-    clientName: string | null;
-    assignments?: Array<{
-      role: 'PROJECT_PIC' | 'TECHNICIAN' | 'CLIENT_PIC';
-      user: { id: string; firstName: string; lastName: string | null };
-    }>;
-  };
-  machines: {
-    chillers: Pick<IMachine, 'id' | 'unitNumber' | 'type'>[];
-    coolingTowers: Pick<IMachine, 'id' | 'unitNumber' | 'type'>[];
-  };
-  parameters: Pick<
-    IParameter,
-    | 'id'
-    | 'name'
-    | 'variableName'
-    | 'category'
-    | 'valueType'
-    | 'unit'
-    | 'minValue'
-    | 'maxValue'
-    | 'rawWaterMinValue'
-    | 'rawWaterMaxValue'
-    | 'displayOrder'
-  >[];
-  entries: ILogSheetEntry[];
-  photos: ILogSheetPhoto[];
-  chemicalUsages: (TChemicalUsage & {
-    chemicalName: string;
-    chemicalUnit: string;
-  })[];
-  activeMachineIds: {
-    chillers: string[];
-    coolingTowers: string[];
-  };
 }
 
 export async function getLogSheetActiveMachines(logSheetId: string) {
@@ -701,42 +662,12 @@ export async function getLogSheetDetail(
   };
 }
 
-export async function validateLogSheetForSubmission(id: string) {
-  const detail = await getLogSheetDetail(id);
-  const errors: string[] = [];
-
-  if (!detail.logSheet.technicianSignatureUrl) {
-    errors.push('Tanda tangan teknisi belum diisi');
-  }
-  if (!detail.logSheet.clientPicSignatureUrl) {
-    errors.push('Tanda tangan PIC klien belum diisi');
-  }
-
-  for (const entry of detail.entries) {
-    if (entry.valueType === 'NUMBER' && entry.numericValue !== null) {
-      const param = detail.parameters.find(p => p.id === entry.parameterId);
-      if (!param) continue;
-
-      let min: number | null = param.minValue;
-      let max: number | null = param.maxValue;
-
-      if (entry.role === 'RAW_WATER') {
-        min = param.rawWaterMinValue ?? null;
-        max = param.rawWaterMaxValue ?? null;
-      }
-
-      if (min !== null && entry.numericValue < min) {
-        errors.push(
-          `${param.name}: Nilai ${entry.numericValue} di bawah minimum ${min}`
-        );
-      }
-      if (max !== null && entry.numericValue > max) {
-        errors.push(
-          `${param.name}: Nilai ${entry.numericValue} di atas maksimum ${max}`
-        );
-      }
-    }
-  }
+export async function validateLogSheetForSubmission(
+  id: string,
+  detail?: ILogSheetDetailView
+) {
+  const data = detail ?? (await getLogSheetDetail(id));
+  const { errors } = evaluateSubmissionLimits(data);
 
   if (errors.length > 0) {
     throw new Error(`Validasi gagal:\n${errors.join('\n')}`);

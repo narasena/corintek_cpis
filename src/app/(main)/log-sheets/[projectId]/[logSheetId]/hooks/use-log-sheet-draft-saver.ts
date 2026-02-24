@@ -121,6 +121,8 @@ export function useLogSheetDraftSaver(args: {
 
       if (entriesRes.success && chemicalRes.success) {
         if (showToast) toast.success('Log sheet berhasil disimpan');
+        // Refresh notifications immediately as limit breaches might have occurred
+        window.dispatchEvent(new Event('refresh-notifications'));
       } else {
         if (!entriesRes.success) {
           toast.error('Gagal menyimpan entry log sheet', {

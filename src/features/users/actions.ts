@@ -9,6 +9,7 @@ import {
 import {
   createUser,
   getAllUsers,
+  getTechniciansList,
   getUserById,
   updateUser,
   deleteUser,
@@ -84,6 +85,34 @@ export async function getAllUsersAction(): Promise<
         error instanceof Error
           ? error.message
           : 'Gagal mengambil data pengguna',
+    };
+  }
+}
+
+/**
+ * Server Action: Get technicians list
+ */
+export async function getTechniciansListAction(): Promise<
+  TActionResponse<TUserResponse[]>
+> {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
+  try {
+    const technicians = await getTechniciansList(actor);
+
+    return {
+      success: true,
+      data: technicians,
+    };
+  } catch (error) {
+    console.error('[CPIS-ERROR] Users.TechniciansList:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal mengambil daftar teknisi',
     };
   }
 }

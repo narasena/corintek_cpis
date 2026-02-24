@@ -1,5 +1,7 @@
 import { z } from 'zod/v4';
-import { ValueTypeEnum, type TValueType } from '@/features/parameters/types';
+import { ValueTypeEnum, type TValueType, type IParameter } from '@/features/parameters/types';
+import type { IMachine } from '@/features/machines/types';
+import type { TChemicalUsage } from '@/@types/chemical.type';
 
 export const LogSheetStatusEnum = z.enum(['DRAFT', 'SUBMITTED', 'APPROVED']);
 export type TLogSheetStatus = z.infer<typeof LogSheetStatusEnum>;
@@ -186,7 +188,7 @@ export type TPreviewMachine = {
   type: 'CHILLER' | 'COOLING_TOWER';
 };
 
-export type TLogSheetPhoto = {
+export type TLogSheetPhotoDef = {
   id: string;
   type: 'BEFORE' | 'AFTER';
   url: string;
@@ -195,8 +197,48 @@ export type TLogSheetPhoto = {
 
 export type TEntryState = {
   valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
-  numericValue?: number | null;
-  boolValue?: boolean | null;
-  textValue?: string | null;
-  fileUrl?: string | null;
+  numericValue: number | null;
+  boolValue: boolean | null;
+  textValue: string | null;
 };
+
+export interface ILogSheetDetailView {
+  logSheet: ILogSheet;
+  project: {
+    id: string;
+    name: string;
+    clientName: string | null;
+    assignments?: Array<{
+      role: 'PROJECT_PIC' | 'TECHNICIAN' | 'CLIENT_PIC';
+      user: { id: string; firstName: string; lastName: string | null };
+    }>;
+  };
+  machines: {
+    chillers: Pick<IMachine, 'id' | 'unitNumber' | 'type'>[];
+    coolingTowers: Pick<IMachine, 'id' | 'unitNumber' | 'type'>[];
+  };
+  parameters: Pick<
+    IParameter,
+    | 'id'
+    | 'name'
+    | 'variableName'
+    | 'category'
+    | 'valueType'
+    | 'unit'
+    | 'minValue'
+    | 'maxValue'
+    | 'rawWaterMinValue'
+    | 'rawWaterMaxValue'
+    | 'displayOrder'
+  >[];
+  entries: ILogSheetEntry[];
+  photos: ILogSheetPhoto[];
+  chemicalUsages: (TChemicalUsage & {
+    chemicalName: string;
+    chemicalUnit: string;
+  })[];
+  activeMachineIds: {
+    chillers: string[];
+    coolingTowers: string[];
+  };
+}

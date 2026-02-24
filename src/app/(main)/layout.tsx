@@ -1,5 +1,6 @@
 import { AppSidebar } from '@/components/app-sidebar';
 import { HeaderTitle } from '@/components/header-title';
+import { NotificationBell } from '@/features/notifications/components/notification-bell';
 import { MobileNav } from '@/components/mobile-nav';
 import {
   SidebarInset,
@@ -33,17 +34,18 @@ export default async function MainLayout({
         <AppSidebar user={sidebarUser} />
       </div>
       <SidebarInset className="print:m-0">
-        <header className="flex fixed top-0 z-40 w-full h-16 shrink-0 items-center gap-2 border-b bg-primary text-primary-foreground px-4 print:hidden">
+        <header className="flex sticky top-0 z-40 w-full h-16 shrink-0 items-center gap-2 border-b bg-primary text-primary-foreground px-4 print:hidden">
           <SidebarTrigger className="-ml-1 hidden md:flex" />
           <Separator
             orientation="vertical"
             className="mr-2 h-4 hidden md:block"
           />
-          <div className="font-medium">
+          <div className="font-medium flex-1">
             <HeaderTitle />
           </div>
+          <NotificationBell />
         </header>
-        <div className="mt-16 print:mt-0! flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8 print:p-0 pb-20 md:pb-6 mx-auto w-full print:w!">
+        <div className="print:mt-0! flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8 print:p-0 pb-20 md:pb-6 mx-auto w-full print:w!">
           {children}
         </div>
         <MobileNav role={sidebarUser.role} />
