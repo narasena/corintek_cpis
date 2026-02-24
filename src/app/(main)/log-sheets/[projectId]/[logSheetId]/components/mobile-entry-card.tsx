@@ -10,6 +10,12 @@ import { makeEntryKey } from '@/features/log-sheets/utils';
 
 import { formatLimit, isOutOfRange } from '../utils';
 import type { TEntryState, TMachine, TParameter } from '../types';
+import {
+  createBooleanEntryUpdater,
+  createNumberEntryUpdater,
+  createTextEntryUpdater,
+  createCameraEntryUpdater,
+} from '../entry-state-helpers';
 
 export interface MobileEntryCardProps {
   param: TParameter;
@@ -73,13 +79,9 @@ export function MobileEntryCard({
                     id={key}
                     checked={state?.boolValue ?? false}
                     onCheckedChange={value => {
-                      setEntryState(prev => ({
-                        ...prev,
-                        [key]: {
-                          valueType: 'BOOLEAN',
-                          boolValue: value === true,
-                        },
-                      }));
+                      setEntryState(
+                        createBooleanEntryUpdater(key, value === true)
+                      );
                     }}
                   />
                   <label htmlFor={key} className="text-sm">
@@ -94,10 +96,7 @@ export function MobileEntryCard({
                     size="xs"
                     className="h-7 text-xs ml-auto"
                     onClick={() =>
-                      setEntryState(prev => ({
-                        ...prev,
-                        [key]: { valueType: 'BOOLEAN', boolValue: null },
-                      }))
+                      setEntryState(createBooleanEntryUpdater(key, null))
                     }
                   >
                     Kosongkan
@@ -125,31 +124,18 @@ export function MobileEntryCard({
                         : String(state.numericValue)
                     }
                     onChange={e => {
-                      const raw = e.target.value;
-                      setEntryState(prev => ({
-                        ...prev,
-                        [key]: {
-                          ...prev[key],
-                          valueType: 'NUMBER',
-                          numericValue: raw === '' ? null : Number(raw),
-                        },
-                      }));
+                      setEntryState(
+                        createNumberEntryUpdater(key, e.target.value)
+                      );
                     }}
                   />
                   {isWaterMeter?.(param.name) && (
                     <CameraInput
                       value={state?.fileUrl}
                       onChange={(url, file) => {
-                        setEntryState(prev => ({
-                          ...prev,
-                          [key]: {
-                            ...prev[key],
-                            valueType: 'NUMBER',
-                            numericValue: prev[key]?.numericValue ?? null,
-                            fileUrl: url,
-                            pendingFile: file,
-                          },
-                        }));
+                        setEntryState(
+                          createCameraEntryUpdater(key, url, file ?? null)
+                        );
                       }}
                     />
                   )}
@@ -159,11 +145,7 @@ export function MobileEntryCard({
                   placeholder="Keterangan..."
                   value={state?.textValue ?? ''}
                   onChange={e => {
-                    const raw = e.target.value;
-                    setEntryState(prev => ({
-                      ...prev,
-                      [key]: { valueType: 'TEXT', textValue: raw },
-                    }));
+                    setEntryState(createTextEntryUpdater(key, e.target.value));
                   }}
                 />
               )}
@@ -184,10 +166,7 @@ export function MobileEntryCard({
                   placeholder="Catatan tambahan..."
                   value={state?.textValue ?? ''}
                   onChange={e => {
-                    setEntryState(prev => ({
-                      ...prev,
-                      [key]: { valueType: 'TEXT', textValue: e.target.value },
-                    }));
+                    setEntryState(createTextEntryUpdater(key, e.target.value));
                   }}
                 />
               );

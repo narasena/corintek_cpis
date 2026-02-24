@@ -317,12 +317,19 @@ Selected exported functions (not exhaustive):
 
 **Resolution:** Extracted to `F6b` (`category-helpers.ts`). Both A13 and F6 now import from single source.
 
-### DUP-8: Inline `setEntryState` handlers
+### ~~DUP-8: Inline `setEntryState` handlers~~ ✅ RESOLVED
 
-- **A14** `log-sheet-category-section.tsx` — ~15 occurrences of nearly identical `setEntryState(prev => ({ ...prev, [key]: { valueType: '...', ... } }))` patterns
-- **A11** `mobile-entry-card.tsx` — ~5 occurrences of the same pattern
-- **A10** (indirectly via chemical state)
-- No shared handler abstraction exists.
+- ~~**A14** `log-sheet-category-section.tsx` — ~15 occurrences of nearly identical `setEntryState(prev => ({ ...prev, [key]: { valueType: '...', ... } }))` patterns~~
+- ~~**A11** `mobile-entry-card.tsx` — ~5 occurrences of the same pattern~~
+
+**Resolution:** Extracted to `entry-state-helpers.ts` with 4 reusable updaters:
+
+- `createNumberEntryUpdater(key, rawValue)`
+- `createBooleanEntryUpdater(key, boolValue)`
+- `createTextEntryUpdater(key, textValue)`
+- `createCameraEntryUpdater(key, fileUrl, file)`
+
+Both A14 and A11 now import and use these helpers.
 
 ### DUP-9: Technician fetch pattern
 

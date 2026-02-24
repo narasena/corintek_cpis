@@ -240,8 +240,8 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 ┌──────────────────────────────┬──────────┐
 │ Metric                       │ Current  │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (ts/tsx)           │    7,522 │
-│ File count                   │       45 │
+│ Total LOC (ts/tsx)           │    7,503 │
+│ File count                   │       46 │
 │ Files >500 LOC               │        3 │
 │ Methods >50 LOC              │        3 │
 │ Max file size                │      748 │
@@ -249,7 +249,7 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 │ Total cyclomatic complexity  │     ~120 │
 │ Avg CC per file              │     ~2.7 │
 │ TODO/FIXME count             │        0 │
-│ Duplicated code blocks       │        2 │
+│ Duplicated code blocks       │        1 │
 │ God classes (>300 LOC)       │        3 │
 │ Circular dependencies        │        0 │
 │ Cross-layer coupling         │        0 │
@@ -269,7 +269,7 @@ Occurrences in this markdown file are documentation-only and not counted as tech
 | Methods >50 LOC       |     14 |     3 | **-79%**  |
 | Total CC              |   ~180 |  ~120 | **-33%**  |
 | Avg CC/file           |   ~5.6 |  ~2.7 | **-52%**  |
-| Duplicated blocks     |     11 |     2 | **-82%**  |
+| Duplicated blocks     |     11 |     1 | **-91%**  |
 | Circular dependencies |      1 |     0 | **-100%** |
 | Cross-layer coupling  |      1 |     0 | **-100%** |
 
@@ -354,6 +354,38 @@ Added missing `locked` field to `ILogSheet` view model (was causing TypeScript e
 ### Tests
 
 - **371 tests pass** (14 test files in `src/features/log-sheets/`)
+- Zero behavioral regressions
+
+---
+
+## 10. Phase 10: Extract Method — `entry-state-helpers` (2026-02-24)
+
+### Changed: Inline `setEntryState` handlers in 2 components
+
+**Before:** ~20 identical `setEntryState(prev => ({ ...prev, [key]: { ... } }))` patterns:
+
+- `log-sheet-category-section.tsx` — 10 occurrences
+- `mobile-entry-card.tsx` — 5 occurrences
+
+**After:** Single source of truth in `entry-state-helpers.ts`:
+
+- `createNumberEntryUpdater(key, rawValue)` — NUMBER value updates
+- `createBooleanEntryUpdater(key, boolValue)` — BOOLEAN value updates
+- `createTextEntryUpdater(key, textValue)` — TEXT value updates
+- `createCameraEntryUpdater(key, fileUrl, file)` — Camera/file uploads
+
+| File                             | Before | After |    Δ    |
+| -------------------------------- | -----: | ----: | :-----: |
+| `log-sheet-category-section.tsx` |    780 |   731 | **-49** |
+| `mobile-entry-card.tsx`          |    201 |   179 | **-22** |
+| `entry-state-helpers.ts` (new)   |      — |    52 | **+52** |
+| **Net**                          |    981 |   962 | **-19** |
+
+**Net reduction:** ~19 lines eliminated. Single source of truth for entry state updates.
+
+### Tests
+
+- **652 tests pass** (32 test files across features/log-sheets and app/log-sheets)
 - Zero behavioral regressions
 
 ---

@@ -17,6 +17,12 @@ import { MobileEntryCard } from './mobile-entry-card';
 import { makeEntryKey } from '@/features/log-sheets/utils';
 import { formatLimit, formatRawWaterLimit, isOutOfRange } from '../utils';
 import type { TMachine, TParameter, TEntryState } from '../types';
+import {
+  createBooleanEntryUpdater,
+  createNumberEntryUpdater,
+  createTextEntryUpdater,
+  createCameraEntryUpdater,
+} from '../entry-state-helpers';
 
 type TMachinesForCategoryResult = {
   machines: TMachine[];
@@ -303,14 +309,9 @@ function CoolingWaterQualityMobile({
                           : String(state.numericValue)
                       }
                       onChange={e => {
-                        const raw = e.target.value;
-                        setEntryState(prev => ({
-                          ...prev,
-                          [key]: {
-                            valueType: 'NUMBER',
-                            numericValue: raw === '' ? null : Number(raw),
-                          },
-                        }));
+                        setEntryState(
+                          createNumberEntryUpdater(key, e.target.value)
+                        );
                       }}
                     />
                   </div>
@@ -530,14 +531,7 @@ function BooleanCell({
         <Checkbox
           checked={isIndeterminate ? false : checked}
           onCheckedChange={value => {
-            const next = value === true;
-            setEntryState(prev => ({
-              ...prev,
-              [entryKey]: {
-                valueType: 'BOOLEAN',
-                boolValue: next,
-              },
-            }));
+            setEntryState(createBooleanEntryUpdater(entryKey, value === true));
           }}
         />
         {showClearButton && (
@@ -546,13 +540,7 @@ function BooleanCell({
             variant="ghost"
             size="sm"
             onClick={() =>
-              setEntryState(prev => ({
-                ...prev,
-                [entryKey]: {
-                  valueType: 'BOOLEAN',
-                  boolValue: null,
-                },
-              }))
+              setEntryState(createBooleanEntryUpdater(entryKey, null))
             }
           >
             Kosongkan
@@ -597,31 +585,16 @@ function NumberCell({
               : String(state.numericValue)
           }
           onChange={e => {
-            const raw = e.target.value;
-            setEntryState(prev => ({
-              ...prev,
-              [entryKey]: {
-                ...prev[entryKey],
-                valueType: 'NUMBER',
-                numericValue: raw === '' ? null : Number(raw),
-              },
-            }));
+            setEntryState(createNumberEntryUpdater(entryKey, e.target.value));
           }}
         />
         {isWaterMeter && (
           <CameraInput
             value={state?.fileUrl}
             onChange={(url, file) => {
-              setEntryState(prev => ({
-                ...prev,
-                [entryKey]: {
-                  ...prev[entryKey],
-                  valueType: 'NUMBER',
-                  numericValue: prev[entryKey]?.numericValue ?? null,
-                  fileUrl: url,
-                  pendingFile: file,
-                },
-              }));
+              setEntryState(
+                createCameraEntryUpdater(entryKey, url, file ?? null)
+              );
             }}
           />
         )}
@@ -642,14 +615,7 @@ function TextCell({ state, entryKey, setEntryState }: ITextCellProps) {
       <Input
         value={state?.textValue ?? ''}
         onChange={e => {
-          const raw = e.target.value;
-          setEntryState(prev => ({
-            ...prev,
-            [entryKey]: {
-              valueType: 'TEXT',
-              textValue: raw,
-            },
-          }));
+          setEntryState(createTextEntryUpdater(entryKey, e.target.value));
         }}
       />
     </TableCell>
@@ -737,14 +703,7 @@ function RawWaterInputMobile({
             : String(rawState.numericValue)
         }
         onChange={e => {
-          const raw = e.target.value;
-          setEntryState(prev => ({
-            ...prev,
-            [rawKey]: {
-              valueType: 'NUMBER',
-              numericValue: raw === '' ? null : Number(raw),
-            },
-          }));
+          setEntryState(createNumberEntryUpdater(rawKey, e.target.value));
         }}
       />
     </div>
@@ -765,14 +724,7 @@ function NoteCell({ paramId, entryState, setEntryState }: INoteCellProps) {
     <Input
       value={state?.textValue ?? ''}
       onChange={e => {
-        const raw = e.target.value;
-        setEntryState(prev => ({
-          ...prev,
-          [key]: {
-            valueType: 'TEXT',
-            textValue: raw,
-          },
-        }));
+        setEntryState(createTextEntryUpdater(key, e.target.value));
       }}
     />
   );
