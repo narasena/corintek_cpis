@@ -1,4 +1,4 @@
-import { makeEntryKey } from '@/features/log-sheets/utils';
+import { makeEntryKey, isEntryValueEmpty } from '@/features/log-sheets/utils';
 import type { TParameter } from '@/features/log-sheets/types';
 import {
   CHILLER_CATEGORIES,
@@ -53,13 +53,7 @@ function isEmpty(
   if (!state) return true;
   if (state.fileUrl) return false;
   if (state.valueType === 'TEXT' || param?.valueType === 'TEXT') return false;
-  if (state.valueType === 'NUMBER') {
-    return state.numericValue === null || state.numericValue === undefined;
-  }
-  if (state.valueType === 'BOOLEAN') {
-    return state.boolValue === null || state.boolValue === undefined;
-  }
-  return true;
+  return isEntryValueEmpty(state);
 }
 
 type TMachineCategoryValidatorParams = {

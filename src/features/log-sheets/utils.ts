@@ -1,4 +1,19 @@
 import { TLogSheetEntryRole } from './types';
+import {
+  isEntryValueEmpty,
+  isEntryValueComplete,
+  getTypedValue,
+  createEmptyEntryState,
+  isNumericInRange,
+} from './utils/value-type';
+
+export {
+  isEntryValueEmpty,
+  isEntryValueComplete,
+  getTypedValue,
+  createEmptyEntryState,
+  isNumericInRange,
+};
 
 export function makeEntryKey(
   parameterId: string,
@@ -15,25 +30,7 @@ export function isLogSheetEntryEmpty(entry: {
   textValue?: string | null;
   fileUrl?: string | null;
 }) {
-  if (entry.fileUrl) return false;
-
-  if (entry.valueType === 'NUMBER') {
-    return entry.numericValue === null || entry.numericValue === undefined;
-  }
-
-  if (entry.valueType === 'BOOLEAN') {
-    return entry.boolValue === null || entry.boolValue === undefined;
-  }
-
-  if (entry.valueType === 'TEXT') {
-    return (
-      entry.textValue === null ||
-      entry.textValue === undefined ||
-      entry.textValue.trim() === ''
-    );
-  }
-
-  return true;
+  return isEntryValueEmpty(entry);
 }
 
 export function isEntryComplete(entry?: {
@@ -42,27 +39,5 @@ export function isEntryComplete(entry?: {
   boolValue?: boolean | null;
   textValue?: string | null;
 }): boolean {
-  if (!entry) return false;
-
-  if (entry.valueType === 'NUMBER') {
-    return (
-      entry.numericValue !== null &&
-      entry.numericValue !== undefined &&
-      !Number.isNaN(entry.numericValue)
-    );
-  }
-
-  if (entry.valueType === 'BOOLEAN') {
-    return entry.boolValue !== null && entry.boolValue !== undefined;
-  }
-
-  if (entry.valueType === 'TEXT') {
-    return (
-      entry.textValue !== null &&
-      entry.textValue !== undefined &&
-      entry.textValue.trim() !== ''
-    );
-  }
-
-  return false;
+  return isEntryValueComplete(entry);
 }
