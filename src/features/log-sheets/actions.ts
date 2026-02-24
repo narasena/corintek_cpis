@@ -19,6 +19,7 @@ import { ensureAccess, RbacResource } from '@/lib/rbac';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { isLogSheetEntryEmpty } from './utils';
 import { uploadToR2 } from '@/lib/r2-upload';
+import { ok, err } from '@/lib/action-helpers';
 
 const SaveLogSheetEntriesSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
@@ -103,16 +104,9 @@ export async function getLogSheetsByProjectAction(projectId: string) {
     await projectService.assertCanAccessProject(actor, validatedProjectId);
     const logSheets =
       await logSheetService.getLogSheetsByProject(validatedProjectId);
-    return { success: true, data: logSheets };
+    return ok(logSheets);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.GetByProject:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil data log sheet',
-    };
+    return err(error, 'Gagal mengambil data log sheet');
   }
 }
 
@@ -125,16 +119,9 @@ export async function getAllLogSheetsAction() {
     const logSheets = await logSheetService.getAllLogSheets(
       projectIds ?? undefined
     );
-    return { success: true, data: logSheets };
+    return ok(logSheets);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.GetAll:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil data log sheet',
-    };
+    return err(error, 'Gagal mengambil data log sheet');
   }
 }
 
@@ -151,13 +138,9 @@ export async function createLogSheetAction(data: unknown) {
     const logSheet = await logSheetService.createLogSheet(validatedData);
 
     revalidateLogSheetPaths(validatedData.projectId);
-    return { success: true, data: logSheet };
+    return ok(logSheet);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.Create:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Gagal membuat log sheet',
-    };
+    return err(error, 'Gagal membuat log sheet');
   }
 }
 
@@ -173,14 +156,9 @@ export async function updateLogSheetAction(data: unknown) {
     });
 
     revalidateLogSheetPaths(logSheet.projectId);
-    return { success: true, data: logSheet };
+    return ok(logSheet);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.Update:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal memperbarui log sheet',
-    };
+    return err(error, 'Gagal memperbarui log sheet');
   }
 }
 
@@ -199,14 +177,9 @@ export async function updateLogSheetAdminOverrideAction(data: unknown) {
     );
 
     revalidateLogSheetPaths(logSheet.projectId);
-    return { success: true, data: logSheet };
+    return ok(logSheet);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.UpdateAdminOverride:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal memperbarui log sheet',
-    };
+    return err(error, 'Gagal memperbarui log sheet');
   }
 }
 
@@ -231,16 +204,9 @@ export async function updateLogSheetStatusAction(data: unknown) {
       validatedData.status
     );
     revalidateLogSheetPaths(logSheet.projectId);
-    return { success: true, data: logSheet };
+    return ok(logSheet);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.UpdateStatus:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal memperbarui status log sheet',
-    };
+    return err(error, 'Gagal memperbarui status log sheet');
   }
 }
 
@@ -261,14 +227,9 @@ export async function deleteLogSheetAction(id: string) {
     const logSheet = await logSheetService.deleteLogSheet(validatedId);
 
     revalidateLogSheetPaths(logSheet.projectId);
-    return { success: true };
+    return ok(undefined);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.Delete:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal menghapus log sheet',
-    };
+    return err(error, 'Gagal menghapus log sheet');
   }
 }
 
@@ -279,16 +240,9 @@ export async function getLogSheetDetailAction(id: string) {
     const validatedId = z.string().uuid().parse(id);
     await assertCanAccessLogSheet(actor, validatedId);
     const detail = await logSheetService.getLogSheetDetail(validatedId);
-    return { success: true, data: { ...detail, viewerRole: actor.role } };
+    return ok({ ...detail, viewerRole: actor.role });
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.GetDetail:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil detail log sheet',
-    };
+    return err(error, 'Gagal mengambil detail log sheet');
   }
 }
 
@@ -326,14 +280,9 @@ export async function saveLogSheetEntriesAction(data: unknown) {
     if (projectId) {
       revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
-    return { success: true };
+    return ok(undefined);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.SaveEntries:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal menyimpan log sheet',
-    };
+    return err(error, 'Gagal menyimpan log sheet');
   }
 }
 
@@ -359,16 +308,9 @@ export async function saveLogSheetPhotosAction(data: unknown) {
     if (projectId) {
       revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
-    return { success: true };
+    return ok(undefined);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.SavePhotos:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menyimpan foto log sheet',
-    };
+    return err(error, 'Gagal menyimpan foto log sheet');
   }
 }
 
@@ -394,16 +336,9 @@ export async function saveLogSheetChemicalsAction(data: unknown) {
     if (projectId) {
       revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
-    return { success: true };
+    return ok(undefined);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.SaveChemicals:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menyimpan penggunaan chemical',
-    };
+    return err(error, 'Gagal menyimpan penggunaan chemical');
   }
 }
 
@@ -430,14 +365,9 @@ export async function saveLogSheetMachinesAction(data: unknown) {
     if (projectId) {
       revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
-    return { success: true };
+    return ok(undefined);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.SaveMachines:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal menyimpan pilihan unit',
-    };
+    return err(error, 'Gagal menyimpan pilihan unit');
   }
 }
 
@@ -480,12 +410,7 @@ export async function saveLogSheetSignatureAction(data: unknown) {
 
     return { success: true, url, data: updated };
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.Signature:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal menyimpan tanda tangan',
-    };
+    return err(error, 'Gagal menyimpan tanda tangan');
   }
 }
 
@@ -524,10 +449,6 @@ export async function uploadLogSheetImageAction(formData: FormData) {
 
     return { success: true, url };
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.UploadImage:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Upload failed',
-    };
+    return err(error, 'Upload failed');
   }
 }

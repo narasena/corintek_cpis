@@ -695,10 +695,7 @@ describe('Error handling pattern (characterization)', () => {
 
     await getLogSheetsByProjectAction(anotherUUID);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '[CPIS-ERROR] LogSheet.GetByProject:',
-      expect.any(Error)
-    );
+    expect(consoleSpy).toHaveBeenCalledWith('[CPIS-ERROR]', expect.any(Error));
 
     consoleSpy.mockRestore();
   });
