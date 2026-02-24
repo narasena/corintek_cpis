@@ -35,3 +35,34 @@ export function isLogSheetEntryEmpty(entry: {
 
   return true;
 }
+
+export function isEntryComplete(entry?: {
+  valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
+  numericValue?: number | null;
+  boolValue?: boolean | null;
+  textValue?: string | null;
+}): boolean {
+  if (!entry) return false;
+
+  if (entry.valueType === 'NUMBER') {
+    return (
+      entry.numericValue !== null &&
+      entry.numericValue !== undefined &&
+      !Number.isNaN(entry.numericValue)
+    );
+  }
+
+  if (entry.valueType === 'BOOLEAN') {
+    return entry.boolValue !== null && entry.boolValue !== undefined;
+  }
+
+  if (entry.valueType === 'TEXT') {
+    return (
+      entry.textValue !== null &&
+      entry.textValue !== undefined &&
+      entry.textValue.trim() !== ''
+    );
+  }
+
+  return false;
+}
