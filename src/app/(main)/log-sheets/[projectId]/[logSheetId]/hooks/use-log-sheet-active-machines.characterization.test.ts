@@ -28,6 +28,7 @@ function createMockDetail(overrides?: Partial<TDetail>): TDetail {
       date: '2024-01-15',
       notes: null,
       status: 'DRAFT',
+      locked: false,
       technicianSignatureUrl: null,
       technicianSignedAt: null,
       technicianSignedByUserId: null,
@@ -63,6 +64,8 @@ function createMockDetail(overrides?: Partial<TDetail>): TDetail {
       chillers: ['ch-1'],
       coolingTowers: ['ct-1'],
     },
+    technicians: [],
+    chemicals: [],
     ...overrides,
   };
 }

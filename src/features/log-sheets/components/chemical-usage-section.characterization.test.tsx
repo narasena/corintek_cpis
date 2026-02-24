@@ -1,15 +1,9 @@
 /** @vitest-environment jsdom */
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { TChemicalUsageState } from './chemical-usage-section';
-
-const mockGetChemicalsAction = vi.fn();
-
-vi.mock('@/features/chemicals/actions', () => ({
-  getChemicalsAction: (...args: unknown[]) => mockGetChemicalsAction(...args),
-}));
 
 vi.mock('sonner', () => ({
   toast: {
@@ -22,16 +16,20 @@ function createMockChemical(overrides?: Record<string, unknown>) {
     id: 'chem-1',
     name: 'Test Chemical',
     unit: 'L',
-    createdAt: new Date(),
-    updatedAt: new Date(),
     ...overrides,
   };
 }
+
+const defaultChemicals = [
+  createMockChemical({ id: 'chem-1', name: 'Chemical A', unit: 'L' }),
+  createMockChemical({ id: 'chem-2', name: 'Chemical B', unit: 'kg' }),
+];
 
 async function renderSection(props?: {
   usages?: TChemicalUsageState;
   onChange?: (usages: TChemicalUsageState) => void;
   disabled?: boolean;
+  chemicals?: Array<{ id: string; name: string; unit: string | null }>;
 }) {
   const { ChemicalUsageSection } = await import('./chemical-usage-section');
   return render(
@@ -39,6 +37,7 @@ async function renderSection(props?: {
       usages={props?.usages ?? []}
       onChange={props?.onChange ?? vi.fn()}
       disabled={props?.disabled}
+      chemicals={props?.chemicals ?? defaultChemicals}
     />
   );
 }
@@ -46,13 +45,6 @@ async function renderSection(props?: {
 describe('ChemicalUsageSection - characterization', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetChemicalsAction.mockResolvedValue({
-      success: true,
-      data: [
-        createMockChemical({ id: 'chem-1', name: 'Chemical A', unit: 'L' }),
-        createMockChemical({ id: 'chem-2', name: 'Chemical B', unit: 'kg' }),
-      ],
-    });
   });
 
   describe('initial rendering', () => {
@@ -76,40 +68,6 @@ describe('ChemicalUsageSection - characterization', () => {
       expect(
         screen.queryByText('Belum ada penggunaan chemical')
       ).not.toBeNull();
-    });
-  });
-
-  describe('chemical loading', () => {
-    it('calls getChemicalsAction on mount (main path)', async () => {
-      await renderSection();
-      expect(mockGetChemicalsAction).toHaveBeenCalled();
-    });
-
-    it('shows error toast when chemicals fail to load (error condition)', async () => {
-      const { toast } = await import('sonner');
-      mockGetChemicalsAction.mockResolvedValueOnce({
-        success: false,
-        error: 'Database error',
-      });
-
-      await renderSection();
-
-      await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('Database error');
-      });
-    });
-
-    it('handles null chemicals data (edge case)', async () => {
-      mockGetChemicalsAction.mockResolvedValueOnce({
-        success: true,
-        data: null,
-      });
-
-      await renderSection();
-
-      await waitFor(() => {
-        expect(mockGetChemicalsAction).toHaveBeenCalled();
-      });
     });
   });
 

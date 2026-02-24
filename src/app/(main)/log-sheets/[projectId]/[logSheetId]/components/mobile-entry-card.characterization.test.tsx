@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { TEntryState, TMachine, TParameter } from '../types';
+import { EntryStateProvider } from '@/features/log-sheets/context';
 
 vi.mock('@/components/camera-input', () => ({
   CameraInput: ({
@@ -57,14 +58,17 @@ async function renderCard(props?: {
   const setEntryState = vi.fn();
 
   const result = render(
-    <MobileEntryCard
-      param={props?.param ?? createMockParam()}
-      machines={props?.machines ?? [createMockMachine()]}
+    <EntryStateProvider
       entryState={props?.entryState ?? {}}
       setEntryState={setEntryState}
-      hasNotes={props?.hasNotes}
-      isWaterMeter={props?.isWaterMeter}
-    />
+    >
+      <MobileEntryCard
+        param={props?.param ?? createMockParam()}
+        machines={props?.machines ?? [createMockMachine()]}
+        hasNotes={props?.hasNotes}
+        isWaterMeter={props?.isWaterMeter}
+      />
+    </EntryStateProvider>
   );
 
   return { ...result, setEntryState };

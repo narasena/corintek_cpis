@@ -14,6 +14,7 @@ function createMockDetail(overrides?: Partial<TDetail>): TDetail {
       date: '2024-01-15',
       notes: 'Initial notes',
       status: 'DRAFT',
+      locked: false,
       technicianSignatureUrl: null,
       technicianSignedAt: null,
       technicianSignedByUserId: null,
@@ -87,6 +88,8 @@ function createMockDetail(overrides?: Partial<TDetail>): TDetail {
       chillers: ['ch-1'],
       coolingTowers: ['ct-1'],
     },
+    technicians: [],
+    chemicals: [],
     ...overrides,
   };
 }
@@ -449,7 +452,7 @@ describe('useLogSheetDraftState (characterization)', () => {
       const { result, rerender } = renderHook(
         ({ detail }: { detail: TDetail | null }) =>
           useLogSheetDraftState(detail),
-        { initialProps: { detail: null } }
+        { initialProps: { detail: null as TDetail | null } }
       );
 
       expect(result.current.notes).toBe('');

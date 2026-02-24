@@ -51,6 +51,7 @@ describe('useMobileUnitViewModel', () => {
         date: '2024-01-01',
         notes: 'n',
         status: 'SUBMITTED',
+        locked: true,
         technicianSignatureUrl: null,
         technicianSignedAt: null,
         technicianSignedByUserId: null,
@@ -110,6 +111,8 @@ describe('useMobileUnitViewModel', () => {
         chillers: ['ch-1'],
         coolingTowers: [],
       },
+      technicians: [],
+      chemicals: [],
     };
 
     const entryState: Record<string, TEntryState> = {
@@ -190,6 +193,7 @@ describe('useMobileUnitViewModel', () => {
         date: new Date('2024-02-01'),
         notes: null,
         status: 'DRAFT',
+        locked: false,
         technicianSignatureUrl: null,
         technicianSignedAt: null,
         technicianSignedByUserId: null,
@@ -224,6 +228,8 @@ describe('useMobileUnitViewModel', () => {
         chillers: [],
         coolingTowers: [],
       },
+      technicians: [],
+      chemicals: [],
     };
 
     const entryState: Record<string, TEntryState> = {};

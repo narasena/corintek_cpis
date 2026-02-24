@@ -40,6 +40,12 @@ vi.mock('@/lib/prisma', () => ({
     parameter: {
       findMany: vi.fn(),
     },
+    user: {
+      findMany: vi.fn(),
+    },
+    chemical: {
+      findMany: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));
@@ -158,6 +164,12 @@ const mockPrisma = prisma as unknown as {
   parameter: {
     findMany: ReturnType<typeof vi.fn>;
   };
+  user: {
+    findMany: ReturnType<typeof vi.fn>;
+  };
+  chemical: {
+    findMany: ReturnType<typeof vi.fn>;
+  };
   $transaction: ReturnType<typeof vi.fn>;
 };
 
@@ -175,6 +187,8 @@ function createMockActor(overrides?: Partial<IJwtPayload>): IJwtPayload {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockPrisma.user.findMany.mockResolvedValue([]);
+  mockPrisma.chemical.findMany.mockResolvedValue([]);
 });
 
 afterEach(() => {
@@ -1745,6 +1759,8 @@ describe('getLogSheetDetail (characterization)', () => {
     mockPrisma.logSheet.findFirst.mockResolvedValue(mockLogSheet);
     mockPrisma.machine.findMany.mockResolvedValue(mockMachines);
     mockPrisma.parameter.findMany.mockResolvedValue([]);
+    mockPrisma.user.findMany.mockResolvedValue([]);
+    mockPrisma.chemical.findMany.mockResolvedValue([]);
 
     const result = await getLogSheetDetail(validUUID);
 
