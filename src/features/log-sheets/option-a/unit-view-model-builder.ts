@@ -83,12 +83,12 @@ export class LogSheetUnitViewModelBuilder
     entryState: TReadonlyEntryStateMap
   ): IUnitView[] {
     const chillers = this.getVisibleMachines(
-      detail.machines.chillers,
-      detail.activeMachineIds.chillers
+      detail.machines?.chillers ?? [],
+      detail.activeMachineIds?.chillers ?? []
     );
     const coolingTowers = this.getVisibleMachines(
-      detail.machines.coolingTowers,
-      detail.activeMachineIds.coolingTowers
+      detail.machines?.coolingTowers ?? [],
+      detail.activeMachineIds?.coolingTowers ?? []
     );
 
     const chillerUnits = chillers.map(m =>
@@ -148,7 +148,7 @@ export class LogSheetUnitViewModelBuilder
     entryState: TReadonlyEntryStateMap
   ): IUnitCompletionStats {
     const categories = type === 'CHILLER' ? CHILLER_CATEGORIES : CT_CATEGORIES;
-    const relevantParams = detail.parameters.filter(p =>
+    const relevantParams = (detail.parameters ?? []).filter(p =>
       categories.includes(p.category)
     );
 
@@ -217,7 +217,9 @@ export class LogSheetUnitViewModelBuilder
     detail: ILogSheetDetailSnapshot,
     entryState: TReadonlyEntryStateMap
   ): ICategoryView {
-    const params = detail.parameters.filter(p => p.category === categoryId);
+    const params = (detail.parameters ?? []).filter(
+      p => p.category === categoryId
+    );
     const rows = params
       .sort((a, b) => a.displayOrder - b.displayOrder)
       .map(p => this.buildParameterRow(p, unit.machineId, entryState));
