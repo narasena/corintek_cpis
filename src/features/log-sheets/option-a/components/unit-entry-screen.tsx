@@ -3,6 +3,12 @@
 import { ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { ICategoryView, IParameterRowView, IUnitView } from '../contracts';
 import { ParameterInput } from '../../components/inputs';
+import {
+  calculateCompletionPercent,
+  ProgressBar,
+  StatusBadge,
+  CompletionText,
+} from './shared-ui';
 
 interface IUnitEntryScreenProps {
   unit: IUnitView;
@@ -29,14 +35,13 @@ export function UnitEntryScreen({
         onBack={onBack}
         disabled={disabled}
       />
-      <ProgressBar status={unit.status} completionPercent={completionPercent} />
+      <ProgressBar
+        ratio={unit.completion.completionRatio}
+        status={unit.status}
+      />
       <CategoryList categories={categories} disabled={disabled} />
     </div>
   );
-}
-
-function calculateCompletionPercent(ratio: number | null): number {
-  return ratio !== null ? Math.round(ratio * 100) : 0;
 }
 
 interface IUnitHeaderProps {
@@ -64,99 +69,14 @@ function UnitHeader({
       <div className="flex-1">
         <h2 className="font-semibold text-lg">{unit.label}</h2>
         <CompletionText
-          completion={unit.completion}
+          completedCount={unit.completion.completedCount}
+          totalCount={unit.completion.totalCount}
           percent={completionPercent}
         />
       </div>
       <StatusBadge status={unit.status} />
     </div>
   );
-}
-
-interface ICompletionTextProps {
-  completion: IUnitView['completion'];
-  percent: number;
-}
-
-function CompletionText({ completion, percent }: ICompletionTextProps) {
-  return (
-    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-      <span>
-        {completion.completedCount}/{completion.totalCount} selesai
-      </span>
-      <span className="text-xs">({percent}%)</span>
-    </div>
-  );
-}
-
-interface IProgressBarProps {
-  status: IUnitView['status'];
-  completionPercent: number;
-}
-
-function ProgressBar({ status, completionPercent }: IProgressBarProps) {
-  const colorClass = getProgressColor(status);
-
-  return (
-    <div className="h-2 bg-muted rounded-full overflow-hidden">
-      <div
-        className={`h-full transition-all duration-300 ${colorClass}`}
-        style={{ width: `${completionPercent}%` }}
-      />
-    </div>
-  );
-}
-
-function getProgressColor(status: IUnitView['status']): string {
-  switch (status) {
-    case 'COMPLETE':
-      return 'bg-green-500';
-    case 'IN_PROGRESS':
-      return 'bg-amber-500';
-    default:
-      return 'bg-muted-foreground/30';
-  }
-}
-
-interface IStatusBadgeProps {
-  status: IUnitView['status'];
-}
-
-function StatusBadge({ status }: IStatusBadgeProps) {
-  const config = getStatusBadgeConfig(status);
-  const Icon = config.icon;
-
-  return (
-    <span
-      className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${config.className}`}
-    >
-      {Icon && <Icon className="h-3 w-3" />}
-      {config.label}
-    </span>
-  );
-}
-
-function getStatusBadgeConfig(status: IUnitView['status']) {
-  switch (status) {
-    case 'COMPLETE':
-      return {
-        icon: CheckCircle2,
-        label: 'Lengkap',
-        className: 'text-green-700 bg-green-100',
-      };
-    case 'IN_PROGRESS':
-      return {
-        icon: AlertCircle,
-        label: 'Sebagian',
-        className: 'text-amber-700 bg-amber-100',
-      };
-    default:
-      return {
-        icon: null,
-        label: 'Kosong',
-        className: 'text-muted-foreground bg-muted',
-      };
-  }
 }
 
 interface ICategoryListProps {

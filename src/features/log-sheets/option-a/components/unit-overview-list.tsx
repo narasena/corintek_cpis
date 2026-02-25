@@ -1,7 +1,13 @@
 'use client';
 
-import { ChevronRight, CheckCircle2, Circle, Loader2 } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import type { IUnitView, TUnitId } from '../contracts';
+import {
+  calculateCompletionPercent,
+  ProgressBar,
+  StatusIcon,
+  CompletionText,
+} from './shared-ui';
 
 interface UnitOverviewListProps {
   units: readonly IUnitView[];
@@ -47,10 +53,9 @@ interface UnitRowProps {
 }
 
 function UnitRow({ unit, isActive, onSelect, disabled }: UnitRowProps) {
-  const completionPercent =
-    unit.completion.completionRatio !== null
-      ? Math.round(unit.completion.completionRatio * 100)
-      : 0;
+  const completionPercent = calculateCompletionPercent(
+    unit.completion.completionRatio
+  );
 
   return (
     <button
@@ -62,54 +67,17 @@ function UnitRow({ unit, isActive, onSelect, disabled }: UnitRowProps) {
           : 'border-border hover:border-primary/50 hover:bg-muted/50'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
-      <StatusIcon status={unit.status} />
+      <StatusIcon status={unit.status} size="lg" />
       <div className="flex-1 min-w-0">
         <div className="font-medium truncate">{unit.label}</div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>
-            {unit.completion.completedCount}/{unit.completion.totalCount}{' '}
-            selesai
-          </span>
-          {unit.completion.totalCount > 0 && (
-            <span className="text-xs">({completionPercent}%)</span>
-          )}
-        </div>
-        <ProgressBar ratio={unit.completion.completionRatio} />
+        <CompletionText
+          completedCount={unit.completion.completedCount}
+          totalCount={unit.completion.totalCount}
+          percent={completionPercent}
+        />
+        <ProgressBar ratio={unit.completion.completionRatio} className="mt-2" />
       </div>
       <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
     </button>
-  );
-}
-
-interface StatusIconProps {
-  status: IUnitView['status'];
-}
-
-function StatusIcon({ status }: StatusIconProps) {
-  switch (status) {
-    case 'COMPLETE':
-      return <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />;
-    case 'IN_PROGRESS':
-      return <Loader2 className="h-6 w-6 text-amber-500 shrink-0" />;
-    case 'EMPTY':
-    default:
-      return <Circle className="h-6 w-6 text-muted-foreground shrink-0" />;
-  }
-}
-
-interface ProgressBarProps {
-  ratio: number | null;
-}
-
-function ProgressBar({ ratio }: ProgressBarProps) {
-  if (ratio === null) return null;
-
-  return (
-    <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
-      <div
-        className="h-full bg-primary transition-all duration-300"
-        style={{ width: `${ratio * 100}%` }}
-      />
-    </div>
   );
 }

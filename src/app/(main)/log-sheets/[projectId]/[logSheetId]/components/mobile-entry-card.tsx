@@ -7,6 +7,7 @@ import {
   ParameterHeader,
   ParameterInput,
 } from '@/features/log-sheets/components/inputs';
+import { formatMachineLabel } from '@/features/log-sheets/option-a/components/shared-ui';
 import type { TMachine, TParameter } from '../types';
 
 export interface IMobileEntryCardProps {
@@ -114,10 +115,7 @@ interface IMachineLabelProps {
 }
 
 function MachineLabel({ machine }: IMachineLabelProps) {
-  const label =
-    machine.type === 'CHILLER'
-      ? `Chiller #${machine.unitNumber}`
-      : `CT #${machine.unitNumber}`;
+  const label = formatMachineLabel(machine.type, machine.unitNumber);
   return (
     <div className="text-xs font-medium text-muted-foreground">{label}</div>
   );

@@ -5,6 +5,7 @@ import {
   ParameterHeader,
   ParameterInput,
 } from '@/features/log-sheets/components/inputs';
+import { formatMachineLabel } from '@/features/log-sheets/option-a/components/shared-ui';
 import type { TMachine, TParameter } from '@/features/log-sheets/types';
 import { RawWaterInputMobile } from '@/app/(main)/log-sheets/[projectId]/[logSheetId]/components/entry-cells';
 
@@ -70,12 +71,11 @@ interface ICoolingTowerInputProps {
 
 function CoolingTowerInput({ param, machine }: ICoolingTowerInputProps) {
   const entryKey = entryKeys.value(param.id, machine.id);
+  const label = formatMachineLabel(machine.type, machine.unitNumber);
 
   return (
     <div className="space-y-2">
-      <div className="text-xs font-medium text-muted-foreground">
-        CT #{machine.unitNumber}
-      </div>
+      <div className="text-xs font-medium text-muted-foreground">{label}</div>
       <ParameterInput
         entryKey={entryKey}
         valueType={param.valueType}
