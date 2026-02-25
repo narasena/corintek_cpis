@@ -353,7 +353,6 @@ export default function LogSheetDetailPage() {
                 machinesForCategory={machinesForCategory}
                 activeCTIds={activeCTIds}
                 coolingTowers={detail.machines.coolingTowers}
-                isMobileView={isMobileView}
               />
             )}
             {isMobileView && (

@@ -96,7 +96,7 @@
 | Chemical Fill-up           | ✅     | Master data + Log Sheet integration                          |
 | Print Preview Mode         | ✅     | `log-sheet-preview.tsx`                                      |
 | **Refactoring (LS-STAB)**  | ✅     | Page: -65%, Service: -32%, Tests: +161                       |
-| **Option A Mobile Layout** | 🚧     | View model ✅, UI components ✅, Integration ⏳              |
+| **Option A Mobile Layout** | ✅     | Unit-based mobile entry view with consumption section        |
 
 ---
 
@@ -460,10 +460,10 @@ These fields are documented in the FSD and are now first-class fields in the cur
 
 This section summarizes the recommended execution order for remaining work, based on the gap between the current implementation and the FSD.
 
-1. **Complete Option A Mobile Layout Integration (P1)**
-   - Wire existing `UnitOverviewList` and `UnitEntryScreen` components into the log sheet detail page.
-   - Implement mobile-first navigation flow with feature flag toggle.
-   - Components exist at `src/features/log-sheets/option-a/components/`.
+1. ~~**Complete Option A Mobile Layout Integration (P1)**~~ ✅ COMPLETE
+   - Unit-based mobile entry view with `UnitOverviewList` and `UnitEntryScreen`.
+   - Consumption section with camera input for water meters.
+   - Removed old mobile components (`CoolingWaterQualityMobile`, `GeneralCategoryMobile`).
 
 2. **Implement My Profile (MP-01)**
    - Profile view with editable fields and avatar upload.
