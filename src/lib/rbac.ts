@@ -22,6 +22,7 @@ export const RbacRole = {
   TECHNICIAN: 'TECHNICIAN',
   REPORTING: 'REPORTING',
   DIRECTOR: 'DIRECTOR',
+  CLIENT: 'CLIENT',
   CLIENT_TECHNICIAN: 'CLIENT_TECHNICIAN',
   CLIENT_SUPERVISOR: 'CLIENT_SUPERVISOR',
 } as const;
@@ -112,6 +113,19 @@ const ROLE_MATRIX: Record<
     PROJECTS_ADMIN: '-',
     MASTER_DATA: '-',
   },
+  CLIENT: {
+    DASHBOARD: 'R',
+    SUMMARY_REPORTS: 'R',
+    LOG_SHEETS: 'R',
+    WORK_REPORTS: 'R',
+    REPORTS: 'R',
+    LAB_ANALYSES: '-',
+    ATTENDANCE: '-',
+    USERS_ADMIN: '-',
+    PROJECTS_LIST: 'R',
+    PROJECTS_ADMIN: '-',
+    MASTER_DATA: '-',
+  },
   CLIENT_SUPERVISOR: {
     DASHBOARD: 'R',
     SUMMARY_REPORTS: 'R',
@@ -171,8 +185,10 @@ export function getRoleLabel(role: string) {
       return 'Reporting';
     case 'DIRECTOR':
       return 'Direksi';
-    case 'CLIENT_SUPERVISOR':
+    case 'CLIENT':
       return 'Klien';
+    case 'CLIENT_SUPERVISOR':
+      return 'PIC Klien';
     case 'CLIENT_TECHNICIAN':
       return 'Teknisi (Klien)';
     default:

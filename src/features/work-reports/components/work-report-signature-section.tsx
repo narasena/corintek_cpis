@@ -109,6 +109,7 @@ const previewVisibilityByRole: Record<TUserRole, TSignaturePreviewVisibility> =
   {
     ADMIN: { showTechnicianPreview: true, showClientPreview: true },
     TECHNICIAN: { showTechnicianPreview: true, showClientPreview: false },
+    CLIENT: { showTechnicianPreview: false, showClientPreview: true },
     CLIENT_TECHNICIAN: {
       showTechnicianPreview: true,
       showClientPreview: false,

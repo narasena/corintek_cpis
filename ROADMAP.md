@@ -371,11 +371,28 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 - [x] Avatar upload (with file validation: image/\*, max 5MB)
 - [ ] **UI Browser Test Required**
 
-**Scope ID:** `CP-01` (Client Portal) 🚧
-**Tasks:**
+**Scope ID:** `CP-01` (Client Portal) ✅
+**Implemented:** 2026-02-25
+**Branch:** `feat/client-portal-cp01`
+**Files:**
+
+- `prisma/schema/users.prisma` - Added `CLIENT` to `UserRole` enum
+- `src/@types/user.type.ts` - Added `CLIENT` to `UserRole` constant
+- `src/lib/rbac.ts` - Added `CLIENT` role with read-only permissions
+- `src/lib/auth-helpers.ts` - Added `requireActor()`, `getActorOrNull()`, `AuthenticationError`
+- `src/lib/action-helpers.ts` - Added `TActionResponse<T>` alias, `unauthorized()` helper
+- `src/lib/prisma-selects.ts` - NEW: Shared Prisma select objects
+- `src/features/projects/access-policy.ts` - Added `CLIENT` to project-scoped roles
+- `src/app/(main)/page.tsx` - Added `CLIENT` to scoped role check
+- `src/features/work-reports/components/work-report-signature-section.tsx` - Added `CLIENT` signature visibility
+  **Tests:** 46 passing (auth-helpers: 19, action-helpers: 11, rbac: 16)
+  **Tasks:**
 
 - [x] Filtered views for CLIENT role (via project-scoped RBAC)
-- [ ] Read-only dashboard
+- [x] Read-only dashboard (DashboardScoped with assigned projects)
+- [x] CLIENT role in Prisma schema with migration
+- [x] CLIENT role in RBAC matrix (read-only: Dashboard, Summary Reports, Log Sheets, Work Reports, Reports, Projects List)
+- [ ] **UI Browser Test Required** (verify CLIENT user sees only assigned projects)
 
 **Scope ID:** `AC-01` (RBAC) ✅
 **Tasks:**
@@ -417,7 +434,7 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 7.  **My Profile**
     - Status: ✅ Implemented (`MP-01` in section 4.6). Code complete with 25 tests. Pending browser UI verification.
 8.  **Client-Facing Read-Only Dashboard / Portal**
-    - Status: ⏳ Partially implemented. CLIENT role scoping exists (`CP-01` in section 4.6), dedicated read-only dashboard still pending.
+    - Status: ✅ Implemented (`CP-01` in section 4.6). CLIENT role with read-only access to assigned projects.
 9.  **Project Personnel Assignment**
     - Status: ✅ Implemented via `ProjectAssignment` and assignment UI (see section 2.6 and Completed Domains).
 10. **User Matrix/RBAC**
@@ -474,28 +491,29 @@ These fields are documented in the FSD and are now first-class fields in the cur
 
 This section summarizes the recommended execution order for remaining work, based on the gap between the current implementation and the FSD.
 
-1. **Browser UI Test for My Profile (MP-01)** ✅ CODE COMPLETE
+1. **Browser UI Test for My Profile (MP-01)**
    - Verify avatar upload works in browser.
    - Verify form submission and data persistence.
    - Test on different roles (ADMIN, SUPERVISOR, TECHNICIAN, CLIENT).
 
-2. **Complete Option A Mobile Layout Integration (P1)**
+2. **Browser UI Test for Client Portal (CP-01)**
+   - Verify CLIENT user sees only assigned projects.
+   - Verify read-only access (no create/edit buttons).
+   - Test project assignment UI for CLIENT users.
+
+3. **Complete Option A Mobile Layout Integration (P1)**
    - Wire existing `UnitOverviewList` and `UnitEntryScreen` components into the log sheet detail page.
    - Implement mobile-first navigation flow with feature flag toggle.
    - Components exist at `src/features/log-sheets/option-a/components/`.
 
-3. **Implement Summary Report Analytics (SR-02)**
+4. **Implement Summary Report Analytics (SR-02)**
    - Executive Summary Water Quality (avg/min/max per parameter).
    - Executive Summary Condenser Approach (avg/min/max per unit).
    - Prepare data access patterns needed for more complex reporting if required.
 
-4. **Finalize Dashboard Recent Activity List (DB-01)**
+5. **Finalize Dashboard Recent Activity List (DB-01)**
    - Close out residual items in `DB-01` (recent activity list).
    - Feed from existing log sheets, work reports, and approvals data.
-
-5. **Complete Client Portal Read-Only Experience (CP-01)**
-   - Implement `CP-01` read-only dashboard for CLIENT role using existing RBAC + project scoping.
-   - Ensure only assigned projects are visible with no write actions.
 
 6. **Log Sheet Adjustments (LS-ADJ)**
    - Optional video attachment upload (before/after).
@@ -521,11 +539,11 @@ This section summarizes the recommended execution order for remaining work, base
 
 ### 7.1 Feature Dependency Matrix
 
-| Level     | Features                                              | Can Start           |
-| --------- | ----------------------------------------------------- | ------------------- |
-| 🟢 LOW    | CP-01 (Client Portal), PRJ-FIELDS, CLIENT/USER-FIELDS | Immediately         |
-| 🟡 MEDIUM | SR-02 (Analytics), DS-EXT, DB-01 residual             | After prerequisites |
-| 🔴 HIGH   | LS-OPTION-A, LS-ADJ                                   | After logsheet work |
+| Level     | Features                                  | Can Start           |
+| --------- | ----------------------------------------- | ------------------- |
+| 🟢 LOW    | PRJ-FIELDS, CLIENT/USER-FIELDS            | Immediately         |
+| 🟡 MEDIUM | SR-02 (Analytics), DS-EXT, DB-01 residual | After prerequisites |
+| 🔴 HIGH   | LS-OPTION-A, LS-ADJ                       | After logsheet work |
 
 ### 7.2 Testing Standards
 
@@ -593,6 +611,9 @@ This section summarizes the recommended execution order for remaining work, base
 - [ ] Extend digital signatures to Summary Reports (sign-off area on print).
 - Keep this as the lowest-priority item after all other roadmap gaps are closed.
 
-### 8.9 Client Portal Read-Only UX (CP-01)
+### 8.9 Client Portal Read-Only UX (CP-01) ✅
 
-- [ ] Read-only dashboard for client roles (summary only).
+- [x] Read-only dashboard for client roles (summary only).
+- [x] CLIENT role added to RBAC with read-only permissions.
+- [x] Project-scoped access for CLIENT users.
+- [ ] Browser UI test for CLIENT role dashboard.
