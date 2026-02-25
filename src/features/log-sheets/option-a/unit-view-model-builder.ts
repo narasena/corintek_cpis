@@ -238,7 +238,6 @@ export class LogSheetUnitViewModelBuilder
   ): IParameterRowView {
     const entryKey = makeEntryKey(param.id, machineId, 'VALUE');
     const state = entryState[entryKey];
-    const inRange = this.checkInRange(param, state);
 
     return {
       parameterId: param.id,
@@ -247,9 +246,11 @@ export class LogSheetUnitViewModelBuilder
       displayOrder: param.displayOrder,
       valueType: param.valueType,
       unit: param.unit,
+      minValue: param.minValue,
+      maxValue: param.maxValue,
       targetRangeText: this.formatRange(param.minValue, param.maxValue),
       entryKey,
-      inRange,
+      inRange: this.checkInRange(param, state),
     };
   }
 

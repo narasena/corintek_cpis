@@ -116,6 +116,8 @@ export interface IParameterRowView {
   readonly displayOrder: number;
   readonly valueType: TValueType;
   readonly unit: string | null;
+  readonly minValue: number | null;
+  readonly maxValue: number | null;
   readonly targetRangeText: string | null;
   readonly entryKey: string;
   readonly inRange: boolean | null;

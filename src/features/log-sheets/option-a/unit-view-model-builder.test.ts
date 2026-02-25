@@ -638,6 +638,8 @@ describe('LogSheetUnitViewModelBuilder - parameter rows', () => {
 
     expect(params).toHaveLength(1);
     expect(params[0].targetRangeText).toBe('10 - 20');
+    expect(params[0].minValue).toBe(10);
+    expect(params[0].maxValue).toBe(20);
   });
 
   it('marks inRange as true when value is within limits', () => {

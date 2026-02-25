@@ -229,6 +229,8 @@ function ParameterRow({ parameter, disabled }: IParameterRowProps) {
         <ParameterInput
           entryKey={parameter.entryKey}
           valueType={parameter.valueType}
+          minValue={parameter.minValue}
+          maxValue={parameter.maxValue}
           placeholder="-"
           disabled={disabled}
         />
