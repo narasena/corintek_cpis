@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { CameraInput } from '@/components/camera-input';
@@ -14,7 +13,6 @@ export interface IParameterInputProps {
   minValue?: number | null;
   maxValue?: number | null;
   isWaterMeter?: boolean;
-  showClearButton?: boolean;
   placeholder?: string;
   disabled?: boolean;
 }
@@ -25,7 +23,6 @@ export function ParameterInput({
   minValue = null,
   maxValue = null,
   isWaterMeter = false,
-  showClearButton = false,
   placeholder,
   disabled = false,
 }: IParameterInputProps) {
@@ -39,7 +36,6 @@ export function ParameterInput({
       <BooleanInput
         entryKey={entryKey}
         state={state}
-        showClearButton={showClearButton}
         disabled={disabled}
         updateBoolean={updateBoolean}
       />
@@ -76,7 +72,6 @@ export function ParameterInput({
 interface IBooleanInputProps {
   entryKey: string;
   state: { boolValue?: boolean | null } | undefined;
-  showClearButton: boolean;
   disabled: boolean;
   updateBoolean: (key: string, value: boolean | null) => void;
 }
@@ -84,15 +79,12 @@ interface IBooleanInputProps {
 function BooleanInput({
   entryKey,
   state,
-  showClearButton,
   disabled,
   updateBoolean,
 }: IBooleanInputProps) {
   const checked = state?.boolValue === true;
   const isIndeterminate =
     state?.boolValue === null || state?.boolValue === undefined;
-
-  const handleClear = () => updateBoolean(entryKey, null);
 
   return (
     <div className="flex items-center gap-2">
@@ -104,18 +96,6 @@ function BooleanInput({
       <span className="text-sm">
         {isIndeterminate ? 'Pilih...' : checked ? 'Ya' : 'Tidak'}
       </span>
-      {showClearButton && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="xs"
-          className="h-7 text-xs ml-auto"
-          onClick={handleClear}
-          disabled={disabled}
-        >
-          Kosongkan
-        </Button>
-      )}
     </div>
   );
 }

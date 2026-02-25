@@ -21,6 +21,12 @@ export function ConsumptionSection({
   disabled,
 }: IConsumptionSectionProps) {
   const waterMeterParams = parameters.filter(isWaterMeterParam);
+  const beforeParam = parameters.find(p =>
+    p.name.toLowerCase().includes('before')
+  );
+  const afterParam = parameters.find(p =>
+    p.name.toLowerCase().includes('after')
+  );
   const totalParam = parameters.find(p =>
     p.name.toLowerCase().includes('total')
   );
@@ -36,7 +42,14 @@ export function ConsumptionSection({
         {waterMeterParams.map(param => (
           <WaterMeterRow key={param.id} param={param} disabled={disabled} />
         ))}
-        {totalParam && <TotalRow param={totalParam} disabled={disabled} />}
+        {totalParam && beforeParam && afterParam && (
+          <TotalRow
+            totalParam={totalParam}
+            beforeParam={beforeParam}
+            afterParam={afterParam}
+            disabled={disabled}
+          />
+        )}
       </div>
     </div>
   );
@@ -65,8 +78,6 @@ function WaterMeterRow({ param, disabled }: IWaterMeterRowProps) {
     updateCamera(entryKey, url, file ?? null);
   };
 
-  const isBefore = param.name.toLowerCase().includes('before');
-
   return (
     <div className="px-4 py-3">
       <div className="font-medium truncate mb-2">{param.name}</div>
@@ -81,41 +92,47 @@ function WaterMeterRow({ param, disabled }: IWaterMeterRowProps) {
             disabled={disabled}
           />
         </div>
-        {isBefore && (
-          <div className="flex-shrink-0">
-            <CameraInput
-              value={state?.fileUrl}
-              onChange={handleCameraChange}
-              disabled={disabled}
-            />
-          </div>
-        )}
+        <div className="flex-shrink-0">
+          <CameraInput
+            value={state?.fileUrl}
+            onChange={handleCameraChange}
+            disabled={disabled}
+          />
+        </div>
       </div>
     </div>
   );
 }
 
 interface ITotalRowProps {
-  param: IConsumptionParameter;
+  totalParam: IConsumptionParameter;
+  beforeParam: IConsumptionParameter;
+  afterParam: IConsumptionParameter;
   disabled?: boolean;
 }
 
-function TotalRow({ param, disabled }: ITotalRowProps) {
+function TotalRow({ totalParam, beforeParam, afterParam }: ITotalRowProps) {
   const { getEntry } = useEntryStateContext();
-  const entryKey = entryKeys.value(param.id, null);
-  const state = getEntry(entryKey);
 
-  const displayValue =
-    state?.numericValue !== null && state?.numericValue !== undefined
-      ? String(state.numericValue)
-      : '-';
+  const beforeState = getEntry(entryKeys.value(beforeParam.id, null));
+  const afterState = getEntry(entryKeys.value(afterParam.id, null));
+
+  const beforeValue = beforeState?.numericValue ?? null;
+  const afterValue = afterState?.numericValue ?? null;
+
+  const calculatedTotal =
+    beforeValue !== null && afterValue !== null
+      ? afterValue - beforeValue
+      : null;
+
+  const displayValue = calculatedTotal !== null ? String(calculatedTotal) : '-';
 
   return (
     <div className="px-4 py-3 bg-muted/30">
       <div className="flex items-center justify-between">
-        <div className="font-medium truncate">{param.name}</div>
+        <div className="font-medium truncate">{totalParam.name}</div>
         <div className="font-semibold text-lg">
-          {displayValue} {param.unit || ''}
+          {displayValue} {totalParam.unit || ''}
         </div>
       </div>
       <div className="text-xs text-muted-foreground mt-1">

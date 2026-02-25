@@ -170,8 +170,7 @@ function ParameterValueInput({
         valueType={parameter.valueType}
         minValue={parameter.minValue}
         maxValue={parameter.maxValue}
-        showClearButton={parameter.valueType === 'BOOLEAN'}
-        placeholder="-"
+        showClearButton={false}
         disabled={disabled}
       />
       {showStatusIcon && <RangeStatusIcon inRange={parameter.inRange} />}

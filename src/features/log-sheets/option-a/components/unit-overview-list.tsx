@@ -164,7 +164,6 @@ function RawWaterParameterRow({ param, disabled }: IRawWaterParameterRowProps) {
         <Input
           type="number"
           inputMode="decimal"
-          placeholder="-"
           value={displayValue}
           onChange={e => updateNumber(param.entryKey, e.target.value)}
           disabled={disabled}
