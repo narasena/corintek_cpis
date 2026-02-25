@@ -3,8 +3,11 @@
 import {
   userCreateSchema,
   userUpdateSchema,
+  profileUpdateSchema,
   TUserCreateInput,
   TUserUpdateInput,
+  TUserResponse,
+  ICurrentUserProfile,
 } from '@/@types/user.type';
 import {
   createUser,
@@ -13,10 +16,12 @@ import {
   getUserById,
   updateUser,
   deleteUser,
+  getCurrentUserProfile,
+  updateCurrentUserProfile,
 } from './service';
 import { revalidatePath } from 'next/cache';
-import { TUserResponse } from '@/@types/user.type';
 import { getCurrentUser } from '@/lib/auth-helpers';
+import { uploadToR2 } from '@/lib/r2-upload';
 
 type TActionResponse<T = unknown> = {
   success: boolean;
@@ -217,6 +222,76 @@ export async function deleteUserAction(id: string): Promise<TActionResponse> {
       success: false,
       error:
         error instanceof Error ? error.message : 'Gagal menghapus pengguna',
+    };
+  }
+}
+
+export async function getCurrentUserProfileAction(): Promise<
+  TActionResponse<ICurrentUserProfile>
+> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized' };
+
+  try {
+    const profile = await getCurrentUserProfile(user.id);
+    return { success: true, data: profile };
+  } catch (error) {
+    console.error('[CPIS-ERROR] Users.GetCurrentProfile:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'Gagal mengambil data profil',
+    };
+  }
+}
+
+export async function updateCurrentUserProfileAction(
+  input: unknown
+): Promise<TActionResponse<ICurrentUserProfile>> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized' };
+
+  try {
+    const validatedData = profileUpdateSchema.parse(input);
+    const profile = await updateCurrentUserProfile(user.id, validatedData);
+    revalidatePath('/my-profile');
+    return { success: true, data: profile };
+  } catch (error) {
+    console.error('[CPIS-ERROR] Users.UpdateCurrentProfile:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'Gagal memperbarui profil',
+    };
+  }
+}
+
+export async function uploadAvatarAction(
+  formData: FormData
+): Promise<TActionResponse<{ url: string }>> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized' };
+
+  const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
+
+  try {
+    const file = formData.get('file') as File | null;
+    if (!file) throw new Error('File tidak ditemukan');
+    if (!file.type.startsWith('image/'))
+      throw new Error('File harus berupa gambar');
+    if (file.size > MAX_AVATAR_SIZE)
+      throw new Error('Ukuran file maksimal 5MB');
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const key = `avatars/${user.id}/${Date.now()}-${file.name}`;
+    const url = await uploadToR2({ key, body: buffer, contentType: file.type });
+
+    return { success: true, data: { url } };
+  } catch (error) {
+    console.error('[CPIS-ERROR] Users.UploadAvatar:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Gagal mengupload avatar',
     };
   }
 }
