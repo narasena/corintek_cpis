@@ -1,9 +1,10 @@
 'use client';
 
-import { Input } from '@/components/ui/input';
-import { makeEntryKey } from '@/features/log-sheets/utils';
-import { useEntryStateContext } from '@/features/log-sheets/context';
-import { formatLimit } from '@/app/(main)/log-sheets/[projectId]/[logSheetId]/utils';
+import { entryKeys } from '@/features/log-sheets/utils';
+import {
+  ParameterHeader,
+  ParameterInput,
+} from '@/features/log-sheets/components/inputs';
 import type { TMachine, TParameter } from '@/features/log-sheets/types';
 import { RawWaterInputMobile } from '@/app/(main)/log-sheets/[projectId]/[logSheetId]/components/entry-cells';
 
@@ -18,61 +19,69 @@ export function CoolingWaterQualityMobile({
   params,
   activeCTs,
 }: ICoolingWaterQualityMobileProps) {
-  const { entryState, updateNumber } = useEntryStateContext();
-
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">{category}</h2>
       <div className="grid gap-4">
         {params.map(param => (
-          <div
+          <CoolingWaterParamCard
             key={param.id}
-            className="rounded-lg border bg-card p-4 space-y-4 shadow-sm"
-          >
-            <div className="flex items-start justify-between border-b pb-2">
-              <div>
-                <h3 className="font-semibold text-sm">
-                  {param.name}
-                  {param.unit ? ` (${param.unit})` : ''}
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Target: {formatLimit(param)}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {activeCTs.map(m => {
-                const key = makeEntryKey(param.id, m.id, 'VALUE');
-                const state = entryState[key];
-                return (
-                  <div key={key} className="space-y-2">
-                    <div className="text-xs font-medium text-muted-foreground">
-                      CT #{m.unitNumber}
-                    </div>
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      placeholder="Nilai..."
-                      value={
-                        state?.numericValue === null ||
-                        state?.numericValue === undefined
-                          ? ''
-                          : String(state.numericValue)
-                      }
-                      onChange={e => {
-                        updateNumber(key, e.target.value);
-                      }}
-                    />
-                  </div>
-                );
-              })}
-
-              <RawWaterInputMobile param={param} />
-            </div>
-          </div>
+            param={param}
+            activeCTs={activeCTs}
+          />
         ))}
       </div>
+    </div>
+  );
+}
+
+interface ICoolingWaterParamCardProps {
+  param: TParameter;
+  activeCTs: TMachine[];
+}
+
+function CoolingWaterParamCard({
+  param,
+  activeCTs,
+}: ICoolingWaterParamCardProps) {
+  return (
+    <div className="rounded-lg border bg-card p-4 space-y-4 shadow-sm">
+      <ParameterHeader
+        name={param.name}
+        unit={param.unit}
+        minValue={param.minValue}
+        maxValue={param.maxValue}
+        className="border-b pb-2"
+      />
+      <div className="space-y-4">
+        {activeCTs.map(m => (
+          <CoolingTowerInput key={m.id} param={param} machine={m} />
+        ))}
+        <RawWaterInputMobile param={param} />
+      </div>
+    </div>
+  );
+}
+
+interface ICoolingTowerInputProps {
+  param: TParameter;
+  machine: TMachine;
+}
+
+function CoolingTowerInput({ param, machine }: ICoolingTowerInputProps) {
+  const entryKey = entryKeys.value(param.id, machine.id);
+
+  return (
+    <div className="space-y-2">
+      <div className="text-xs font-medium text-muted-foreground">
+        CT #{machine.unitNumber}
+      </div>
+      <ParameterInput
+        entryKey={entryKey}
+        valueType={param.valueType}
+        minValue={param.minValue}
+        maxValue={param.maxValue}
+      />
     </div>
   );
 }

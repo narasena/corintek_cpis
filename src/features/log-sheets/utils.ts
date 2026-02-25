@@ -41,3 +41,14 @@ export function isEntryComplete(entry?: {
 }): boolean {
   return isEntryValueComplete(entry);
 }
+
+export const entryKeys = {
+  value: (parameterId: string, machineId: string | null): string =>
+    makeEntryKey(parameterId, machineId, 'VALUE'),
+
+  rawWater: (parameterId: string): string =>
+    makeEntryKey(parameterId, null, 'RAW_WATER'),
+
+  note: (parameterId: string): string =>
+    makeEntryKey(parameterId, null, 'NOTE'),
+};
