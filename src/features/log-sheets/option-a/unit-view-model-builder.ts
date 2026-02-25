@@ -37,6 +37,11 @@ const CATEGORY_LABELS: Record<TCategoryId, string> = {
   CONSUMPTION: 'Consumption',
 };
 
+const NOTES_CATEGORIES: Set<TCategoryId> = new Set([
+  'GENERAL_CONDITION',
+  'JOB_DESCRIPTION',
+]);
+
 export class LogSheetUnitViewModelBuilder
   implements ILogSheetUnitViewModelBuilder
 {
@@ -238,6 +243,8 @@ export class LogSheetUnitViewModelBuilder
   ): IParameterRowView {
     const entryKey = makeEntryKey(param.id, machineId, 'VALUE');
     const state = entryState[entryKey];
+    const hasRawWater = param.category === 'COOLING_WATER_QUALITY';
+    const hasNotes = NOTES_CATEGORIES.has(param.category);
 
     return {
       parameterId: param.id,
@@ -251,6 +258,12 @@ export class LogSheetUnitViewModelBuilder
       targetRangeText: this.formatRange(param.minValue, param.maxValue),
       entryKey,
       inRange: this.checkInRange(param, state),
+      rawWaterMinValue: hasRawWater ? (param.rawWaterMinValue ?? null) : null,
+      rawWaterMaxValue: hasRawWater ? (param.rawWaterMaxValue ?? null) : null,
+      rawWaterEntryKey: hasRawWater
+        ? makeEntryKey(param.id, null, 'RAW_WATER')
+        : null,
+      noteEntryKey: hasNotes ? makeEntryKey(param.id, null, 'NOTE') : null,
     };
   }
 

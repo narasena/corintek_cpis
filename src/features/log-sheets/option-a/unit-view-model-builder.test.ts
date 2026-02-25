@@ -642,6 +642,142 @@ describe('LogSheetUnitViewModelBuilder - parameter rows', () => {
     expect(params[0].maxValue).toBe(20);
   });
 
+  it('includes raw water fields for COOLING_WATER_QUALITY parameters', () => {
+    const builder = new LogSheetUnitViewModelBuilder();
+
+    const detail = createDetailSnapshot({
+      machines: {
+        chillers: [],
+        coolingTowers: [
+          createMachine({ id: 'ct-1', unitNumber: 1, type: 'COOLING_TOWER' }),
+        ],
+      },
+      activeMachineIds: createActiveMachineIds({
+        chillers: [],
+        coolingTowers: ['ct-1'],
+      }),
+      parameters: [
+        createCTParameter({
+          id: 'param-cw-1',
+          minValue: 6.5,
+          maxValue: 8.5,
+          rawWaterMinValue: 6.0,
+          rawWaterMaxValue: 8.0,
+        }),
+      ],
+    });
+
+    const entryState = createEntryStateMap();
+    const config = createConfig({ featureEnabled: true });
+
+    const viewModel = builder.build(detail, entryState, config);
+    const categories = viewModel.categoriesByUnit.get('COOLING_TOWER-1')!;
+    const params = categories[0]?.parameters ?? [];
+
+    expect(params).toHaveLength(1);
+    expect(params[0].rawWaterMinValue).toBe(6.0);
+    expect(params[0].rawWaterMaxValue).toBe(8.0);
+    expect(params[0].rawWaterEntryKey).toBe('param-cw-1:null:RAW_WATER');
+    expect(params[0].noteEntryKey).toBeNull();
+  });
+
+  it('includes note entry key for GENERAL_CONDITION parameters', () => {
+    const builder = new LogSheetUnitViewModelBuilder();
+
+    const detail = createDetailSnapshot({
+      machines: {
+        chillers: [],
+        coolingTowers: [
+          createMachine({ id: 'ct-1', unitNumber: 1, type: 'COOLING_TOWER' }),
+        ],
+      },
+      activeMachineIds: createActiveMachineIds({
+        chillers: [],
+        coolingTowers: ['ct-1'],
+      }),
+      parameters: [
+        {
+          ...createCTParameter({ id: 'param-gc-1' }),
+          category: 'GENERAL_CONDITION',
+        },
+      ],
+    });
+
+    const entryState = createEntryStateMap();
+    const config = createConfig({ featureEnabled: true });
+
+    const viewModel = builder.build(detail, entryState, config);
+    const categories = viewModel.categoriesByUnit.get('COOLING_TOWER-1')!;
+    const gcCategory = categories.find(c => c.id === 'GENERAL_CONDITION');
+    const params = gcCategory?.parameters ?? [];
+
+    expect(params).toHaveLength(1);
+    expect(params[0].noteEntryKey).toBe('param-gc-1:null:NOTE');
+    expect(params[0].rawWaterEntryKey).toBeNull();
+  });
+
+  it('includes note entry key for JOB_DESCRIPTION parameters', () => {
+    const builder = new LogSheetUnitViewModelBuilder();
+
+    const detail = createDetailSnapshot({
+      machines: {
+        chillers: [],
+        coolingTowers: [
+          createMachine({ id: 'ct-1', unitNumber: 1, type: 'COOLING_TOWER' }),
+        ],
+      },
+      activeMachineIds: createActiveMachineIds({
+        chillers: [],
+        coolingTowers: ['ct-1'],
+      }),
+      parameters: [
+        {
+          ...createCTParameter({ id: 'param-jd-1' }),
+          category: 'JOB_DESCRIPTION',
+        },
+      ],
+    });
+
+    const entryState = createEntryStateMap();
+    const config = createConfig({ featureEnabled: true });
+
+    const viewModel = builder.build(detail, entryState, config);
+    const categories = viewModel.categoriesByUnit.get('COOLING_TOWER-1')!;
+    const jdCategory = categories.find(c => c.id === 'JOB_DESCRIPTION');
+    const params = jdCategory?.parameters ?? [];
+
+    expect(params).toHaveLength(1);
+    expect(params[0].noteEntryKey).toBe('param-jd-1:null:NOTE');
+  });
+
+  it('sets raw water fields to null for non-cooling-water parameters', () => {
+    const builder = new LogSheetUnitViewModelBuilder();
+
+    const detail = createDetailSnapshot({
+      machines: {
+        chillers: [createMachine({ id: 'ch-1', unitNumber: 1 })],
+        coolingTowers: [],
+      },
+      activeMachineIds: createActiveMachineIds({
+        chillers: ['ch-1'],
+        coolingTowers: [],
+      }),
+      parameters: [createChillerParameter({ id: 'param-1' })],
+    });
+
+    const entryState = createEntryStateMap();
+    const config = createConfig({ featureEnabled: true });
+
+    const viewModel = builder.build(detail, entryState, config);
+    const categories = viewModel.categoriesByUnit.get('CHILLER-1')!;
+    const params = categories[0]?.parameters ?? [];
+
+    expect(params[0].rawWaterMinValue).toBeNull();
+    expect(params[0].rawWaterMaxValue).toBeNull();
+    expect(params[0].rawWaterEntryKey).toBeNull();
+    expect(params[0].noteEntryKey).toBeNull();
+  });
+
   it('marks inRange as true when value is within limits', () => {
     const builder = new LogSheetUnitViewModelBuilder();
 

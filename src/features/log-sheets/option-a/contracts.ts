@@ -121,6 +121,10 @@ export interface IParameterRowView {
   readonly targetRangeText: string | null;
   readonly entryKey: string;
   readonly inRange: boolean | null;
+  readonly rawWaterMinValue: number | null;
+  readonly rawWaterMaxValue: number | null;
+  readonly rawWaterEntryKey: string | null;
+  readonly noteEntryKey: string | null;
 }
 
 export interface ICategoryView {
