@@ -30,19 +30,33 @@ import { ChemicalUsageSection } from '@/features/log-sheets/components/chemical-
 
 import { submitLogSheetAction } from '@/features/log-sheets/actions';
 import { useIsMobile } from '@/hooks/use-mobile';
-import type { TEntryState } from './types';
 import { useLogSheetDetailData } from './hooks/use-log-sheet-detail-data';
 import { useLogSheetDerived } from './hooks/use-log-sheet-derived';
 import { useLogSheetDraftState } from './hooks/use-log-sheet-draft-state';
 import { useLogSheetDraftSaver } from './hooks/use-log-sheet-draft-saver';
 import { useLogSheetActiveMachines } from './hooks/use-log-sheet-active-machines';
 import { useLogSheetValidation } from './hooks/use-log-sheet-validation';
+import { useLogSheetDerivedUsers } from './hooks/use-log-sheet-derived-users';
+import { useMobileUnitViewModel } from './hooks/use-mobile-unit-view-model';
+import { formatUserName } from '@/lib/utils/user';
+import { MobileLayoutWrapper } from '@/features/log-sheets/option-a/components/mobile-layout-wrapper';
 
 import { LogSheetToolbar } from '@/features/log-sheets/components/log-sheet-toolbar';
 import { MachineSelectionPanel } from '@/features/log-sheets/components/machine-selection-panel';
 import { LogSheetCategorySection } from '@/features/log-sheets/components/log-sheet-category-section';
 import { EntryStateProvider } from '@/features/log-sheets/context';
 import { formatDate } from './utils';
+
+function LoadingState() {
+  return (
+    <div className="flex items-center justify-center p-8 border rounded-lg h-64 bg-muted/20">
+      <div className="flex flex-col items-center gap-2">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="text-muted-foreground">Memuat data...</p>
+      </div>
+    </div>
+  );
+}
 
 export default function LogSheetDetailPage() {
   const params = useParams<{ projectId: string; logSheetId: string }>();
@@ -54,6 +68,7 @@ export default function LogSheetDetailPage() {
   const [isPending, startTransition] = useTransition();
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
   const [adminOverride, setAdminOverride] = useState(false);
+  const [useOptionAMobile, setUseOptionAMobile] = useState(false);
 
   const isMobileView = useIsMobile();
   const {
@@ -125,6 +140,9 @@ export default function LogSheetDetailPage() {
   const isStatusLocked = detail?.logSheet.status !== 'DRAFT';
   const isLocked = isStatusLocked && !adminOverride;
 
+  const derivedUsers = useLogSheetDerivedUsers(detail);
+  const mobileViewModel = useMobileUnitViewModel(detail, entryState);
+
   const handleSave = () => {
     if (isLocked) {
       toast.error('Tidak bisa menyimpan', {
@@ -180,61 +198,19 @@ export default function LogSheetDetailPage() {
   };
 
   if (loading || !detail) {
-    return (
-      <div>
-        <div className="flex items-center justify-center p-8 border rounded-lg h-64 bg-muted/20">
-          <div className="flex flex-col items-center gap-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="text-muted-foreground">Memuat data...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
-  const projectAssignments = detail.project.assignments ?? [];
-
-  const assignedProjectPic = projectAssignments.find(
-    a => a.role === 'PROJECT_PIC'
-  )?.user;
-  const assignedClientPic = projectAssignments.find(
-    a => a.role === 'CLIENT_PIC'
-  )?.user;
-
-  const assignedProjectPicName = assignedProjectPic
-    ? `${assignedProjectPic.firstName} ${assignedProjectPic.lastName ?? ''}`.trim()
-    : null;
-  const assignedClientPicName = assignedClientPic
-    ? `${assignedClientPic.firstName} ${assignedClientPic.lastName ?? ''}`.trim()
-    : null;
-
-  const submittedByName = detail.logSheet.submittedBy
-    ? `${detail.logSheet.submittedBy.firstName} ${detail.logSheet.submittedBy.lastName ?? ''}`.trim()
-    : '-';
-
-  const approvedByName = detail.logSheet.approvedBy
-    ? `${detail.logSheet.approvedBy.firstName} ${detail.logSheet.approvedBy.lastName ?? ''}`.trim()
-    : null;
-
-  const corintekPicName = approvedByName ?? assignedProjectPicName ?? '-';
-  const clientPicName = assignedClientPicName ?? '-';
-
-  const technicianSignedByName = detail.logSheet.technicianSignedBy
-    ? `${detail.logSheet.technicianSignedBy.firstName} ${detail.logSheet.technicianSignedBy.lastName ?? ''}`.trim()
-    : null;
-  const clientPicSignedByName = detail.logSheet.clientPicSignedBy
-    ? `${detail.logSheet.clientPicSignedBy.firstName} ${detail.logSheet.clientPicSignedBy.lastName ?? ''}`.trim()
-    : null;
-
-  const canSignTechnician =
-    detail.viewerRole === 'ADMIN' || detail.viewerRole === 'TECHNICIAN';
-  const canSignClientPic =
-    detail.viewerRole === 'ADMIN' ||
-    detail.viewerRole === 'CLIENT_TECHNICIAN' ||
-    detail.viewerRole === 'CLIENT_SUPERVISOR';
-
-  const canAdminOverride =
-    detail.viewerRole === 'ADMIN' && detail.logSheet.status !== 'DRAFT';
+  const {
+    corintekPicName,
+    clientPicName,
+    submittedByName,
+    technicianSignedByName,
+    clientPicSignedByName,
+    canSignTechnician,
+    canSignClientPic,
+    canAdminOverride,
+  } = derivedUsers;
 
   return (
     <div className="space-y-4 md:space-y-8 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
@@ -307,7 +283,7 @@ export default function LogSheetDetailPage() {
                   <SelectItem value="none">- Tidak Ada Pengganti -</SelectItem>
                   {(detail?.technicians ?? []).map(t => (
                     <SelectItem key={t.id} value={t.id}>
-                      {t.firstName} {t.lastName || ''}
+                      {formatUserName(t)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -359,18 +335,43 @@ export default function LogSheetDetailPage() {
             onClearMachines={handleClearMachines}
           />
 
+          {isMobileView && (
+            <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/30">
+              <input
+                type="checkbox"
+                id="option-a-toggle"
+                checked={useOptionAMobile}
+                onChange={e => setUseOptionAMobile(e.target.checked)}
+                className="h-4 w-4"
+              />
+              <label
+                htmlFor="option-a-toggle"
+                className="text-sm cursor-pointer"
+              >
+                Tampilan Unit Baru (Beta)
+              </label>
+            </div>
+          )}
+
           <EntryStateProvider
             entryState={entryState}
             setEntryState={setEntryState}
           >
-            <LogSheetCategorySection
-              categories={categories}
-              parametersByCategory={parametersByCategory}
-              machinesForCategory={machinesForCategory}
-              activeCTIds={activeCTIds}
-              coolingTowers={detail.machines.coolingTowers}
-              isMobileView={isMobileView}
-            />
+            {isMobileView && useOptionAMobile && mobileViewModel ? (
+              <MobileLayoutWrapper
+                viewModel={mobileViewModel}
+                disabled={isLocked || isPending}
+              />
+            ) : (
+              <LogSheetCategorySection
+                categories={categories}
+                parametersByCategory={parametersByCategory}
+                machinesForCategory={machinesForCategory}
+                activeCTIds={activeCTIds}
+                coolingTowers={detail.machines.coolingTowers}
+                isMobileView={isMobileView}
+              />
+            )}
           </EntryStateProvider>
 
           <div className="rounded-lg border bg-card p-6 shadow-sm">

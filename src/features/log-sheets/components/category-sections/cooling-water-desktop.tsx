@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { makeEntryKey } from '@/features/log-sheets/utils';
+import { entryKeys } from '@/features/log-sheets/utils';
 import {
   formatLimit,
   formatRawWaterLimit,
@@ -34,72 +34,136 @@ export function CoolingWaterQualityDesktop({
 }: ICoolingWaterQualityDesktopProps) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{category}</h2>
-      </div>
-
+      <CategoryHeader title={category} />
       <div className="rounded-md border">
         <Table className="w-max min-w-full">
-          <TableHeader>
-            <TableRow className="bg-muted/40">
-              <TableHead className="w-max-plus">Parameter</TableHead>
-              <TableHead className="w-max-plus">Target</TableHead>
-              {activeCTs.map(m => (
-                <TableHead key={m.id} className="min-w-[140px] text-center">
-                  {`CT #${m.unitNumber}`}
-                </TableHead>
-              ))}
-              <TableHead className="w-max-plus text-center">
-                Raw Water
-              </TableHead>
-              <TableHead className="w-max-plus text-center">
-                Target (Raw Water)
-              </TableHead>
-            </TableRow>
-          </TableHeader>
+          <CoolingWaterTableHeader activeCTs={activeCTs} />
           <TableBody>
             {params.map(param => (
-              <TableRow key={param.id}>
-                <TableCell>
-                  <div className="font-medium">
-                    {param.name}
-                    {param.unit ? ` (${param.unit})` : ''}
-                  </div>
-                </TableCell>
-                <TableCell>{formatLimit(param)}</TableCell>
-                {activeCTs.map(m => {
-                  const key = makeEntryKey(param.id, m.id, 'VALUE');
-
-                  if (param.valueType === 'BOOLEAN') {
-                    return (
-                      <BooleanCell key={key} entryKey={key} showClearButton />
-                    );
-                  }
-
-                  if (param.valueType === 'NUMBER') {
-                    return (
-                      <NumberCell
-                        key={key}
-                        entryKey={key}
-                        minValue={param.minValue}
-                        maxValue={param.maxValue}
-                      />
-                    );
-                  }
-
-                  return <TextCell key={key} entryKey={key} />;
-                })}
-
-                <RawWaterCell param={param} />
-
-                <TableCell className="text-center">
-                  {formatRawWaterLimit(param)}
-                </TableCell>
-              </TableRow>
+              <ParameterRow
+                key={param.id}
+                param={param}
+                activeCTs={activeCTs}
+              />
             ))}
           </TableBody>
         </Table>
       </div>
     </div>
+  );
+}
+
+interface ICategoryHeaderProps {
+  title: string;
+}
+
+function CategoryHeader({ title }: ICategoryHeaderProps) {
+  return (
+    <div className="flex items-center justify-between">
+      <h2 className="text-lg font-semibold">{title}</h2>
+    </div>
+  );
+}
+
+interface ICoolingWaterTableHeaderProps {
+  activeCTs: TMachine[];
+}
+
+function CoolingWaterTableHeader({ activeCTs }: ICoolingWaterTableHeaderProps) {
+  return (
+    <TableHeader>
+      <TableRow className="bg-muted/40">
+        <TableHead className="w-max-plus">Parameter</TableHead>
+        <TableHead className="w-max-plus">Target</TableHead>
+        {activeCTs.map(m => (
+          <TableHead key={m.id} className="min-w-[140px] text-center">
+            CT #{m.unitNumber}
+          </TableHead>
+        ))}
+        <TableHead className="w-max-plus text-center">Raw Water</TableHead>
+        <TableHead className="w-max-plus text-center">
+          Target (Raw Water)
+        </TableHead>
+      </TableRow>
+    </TableHeader>
+  );
+}
+
+interface IParameterRowProps {
+  param: TParameter;
+  activeCTs: TMachine[];
+}
+
+function ParameterRow({ param, activeCTs }: IParameterRowProps) {
+  return (
+    <TableRow>
+      <ParameterNameCell param={param} />
+      <TargetCell param={param} />
+      {activeCTs.map(m => (
+        <CoolingWaterValueCell key={m.id} param={param} machineId={m.id} />
+      ))}
+      <RawWaterCell param={param} />
+      <RawWaterTargetCell param={param} />
+    </TableRow>
+  );
+}
+
+interface IParameterNameCellProps {
+  param: TParameter;
+}
+
+function ParameterNameCell({ param }: IParameterNameCellProps) {
+  const displayName = param.unit ? `${param.name} (${param.unit})` : param.name;
+  return (
+    <TableCell>
+      <div className="font-medium">{displayName}</div>
+    </TableCell>
+  );
+}
+
+interface ITargetCellProps {
+  param: TParameter;
+}
+
+function TargetCell({ param }: ITargetCellProps) {
+  return <TableCell>{formatLimit(param)}</TableCell>;
+}
+
+interface ICoolingWaterValueCellProps {
+  param: TParameter;
+  machineId: string;
+}
+
+function CoolingWaterValueCell({
+  param,
+  machineId,
+}: ICoolingWaterValueCellProps) {
+  const key = entryKeys.value(param.id, machineId);
+
+  if (param.valueType === 'BOOLEAN') {
+    return <BooleanCell key={key} entryKey={key} showClearButton />;
+  }
+
+  if (param.valueType === 'NUMBER') {
+    return (
+      <NumberCell
+        key={key}
+        entryKey={key}
+        minValue={param.minValue}
+        maxValue={param.maxValue}
+      />
+    );
+  }
+
+  return <TextCell key={key} entryKey={key} />;
+}
+
+interface IRawWaterTargetCellProps {
+  param: TParameter;
+}
+
+function RawWaterTargetCell({ param }: IRawWaterTargetCellProps) {
+  return (
+    <TableCell className="text-center">{formatRawWaterLimit(param)}</TableCell>
   );
 }

@@ -11,6 +11,8 @@ import { buildMobileUnitViewModelForLogSheet } from '@/features/log-sheets/optio
 
 import type { TDetail, TEntryState } from '../types';
 
+const viewModelBuilder = new LogSheetUnitViewModelBuilder();
+
 function mapDetailToSnapshot(detail: TDetail): ILogSheetDetailSnapshot {
   return {
     header: {
@@ -94,13 +96,12 @@ export function useMobileUnitViewModel(
     const snapshot = mapDetailToSnapshot(detail);
     const stateMap = mapEntryState(entryState);
     const config = createMobileUnitViewConfig(configOverride);
-    const builder = new LogSheetUnitViewModelBuilder();
 
     return buildMobileUnitViewModelForLogSheet({
       detail: snapshot,
       entryState: stateMap as TReadonlyEntryStateMap,
       config,
-      builder,
+      builder: viewModelBuilder,
     });
   }, [detail, entryState, configOverride]);
 }

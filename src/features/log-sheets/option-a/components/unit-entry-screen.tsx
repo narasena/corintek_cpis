@@ -1,15 +1,10 @@
 'use client';
 
 import { ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
-import type {
-  ICategoryView,
-  IParameterRowView,
-  IUnitView,
-  TUnitId,
-} from '../contracts';
-import { useEntryStateContext } from '../../context';
+import type { ICategoryView, IParameterRowView, IUnitView } from '../contracts';
+import { ParameterInput } from '../../components/inputs';
 
-interface UnitEntryScreenProps {
+interface IUnitEntryScreenProps {
   unit: IUnitView;
   categories: readonly ICategoryView[];
   onBack: () => void;
@@ -21,104 +16,179 @@ export function UnitEntryScreen({
   categories,
   onBack,
   disabled,
-}: UnitEntryScreenProps) {
-  const completionPercent =
-    unit.completion.completionRatio !== null
-      ? Math.round(unit.completion.completionRatio * 100)
-      : 0;
+}: IUnitEntryScreenProps) {
+  const completionPercent = calculateCompletionPercent(
+    unit.completion.completionRatio
+  );
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onBack}
-          disabled={disabled}
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="flex-1">
-          <h2 className="font-semibold text-lg">{unit.label}</h2>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>
-              {unit.completion.completedCount}/{unit.completion.totalCount}{' '}
-              selesai
-            </span>
-            <span className="text-xs">({completionPercent}%)</span>
-          </div>
-        </div>
-        <StatusBadge status={unit.status} />
-      </div>
-
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <div
-          className={`h-full transition-all duration-300 ${
-            unit.status === 'COMPLETE'
-              ? 'bg-green-500'
-              : unit.status === 'IN_PROGRESS'
-                ? 'bg-amber-500'
-                : 'bg-muted-foreground/30'
-          }`}
-          style={{ width: `${completionPercent}%` }}
-        />
-      </div>
-
-      <div className="space-y-6">
-        {categories.map(category => (
-          <CategorySection
-            key={category.id}
-            category={category}
-            disabled={disabled}
-          />
-        ))}
-      </div>
+      <UnitHeader
+        unit={unit}
+        completionPercent={completionPercent}
+        onBack={onBack}
+        disabled={disabled}
+      />
+      <ProgressBar status={unit.status} completionPercent={completionPercent} />
+      <CategoryList categories={categories} disabled={disabled} />
     </div>
   );
 }
 
-interface StatusBadgeProps {
-  status: IUnitView['status'];
+function calculateCompletionPercent(ratio: number | null): number {
+  return ratio !== null ? Math.round(ratio * 100) : 0;
 }
 
-function StatusBadge({ status }: StatusBadgeProps) {
+interface IUnitHeaderProps {
+  unit: IUnitView;
+  completionPercent: number;
+  onBack: () => void;
+  disabled?: boolean;
+}
+
+function UnitHeader({
+  unit,
+  completionPercent,
+  onBack,
+  disabled,
+}: IUnitHeaderProps) {
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={onBack}
+        disabled={disabled}
+        className="p-2 hover:bg-muted rounded-lg transition-colors"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </button>
+      <div className="flex-1">
+        <h2 className="font-semibold text-lg">{unit.label}</h2>
+        <CompletionText
+          completion={unit.completion}
+          percent={completionPercent}
+        />
+      </div>
+      <StatusBadge status={unit.status} />
+    </div>
+  );
+}
+
+interface ICompletionTextProps {
+  completion: IUnitView['completion'];
+  percent: number;
+}
+
+function CompletionText({ completion, percent }: ICompletionTextProps) {
+  return (
+    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <span>
+        {completion.completedCount}/{completion.totalCount} selesai
+      </span>
+      <span className="text-xs">({percent}%)</span>
+    </div>
+  );
+}
+
+interface IProgressBarProps {
+  status: IUnitView['status'];
+  completionPercent: number;
+}
+
+function ProgressBar({ status, completionPercent }: IProgressBarProps) {
+  const colorClass = getProgressColor(status);
+
+  return (
+    <div className="h-2 bg-muted rounded-full overflow-hidden">
+      <div
+        className={`h-full transition-all duration-300 ${colorClass}`}
+        style={{ width: `${completionPercent}%` }}
+      />
+    </div>
+  );
+}
+
+function getProgressColor(status: IUnitView['status']): string {
   switch (status) {
     case 'COMPLETE':
-      return (
-        <span className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
-          <CheckCircle2 className="h-3 w-3" />
-          Lengkap
-        </span>
-      );
+      return 'bg-green-500';
     case 'IN_PROGRESS':
-      return (
-        <span className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-amber-700 bg-amber-100 rounded-full">
-          <AlertCircle className="h-3 w-3" />
-          Sebagian
-        </span>
-      );
-    case 'EMPTY':
+      return 'bg-amber-500';
     default:
-      return (
-        <span className="px-2 py-1 text-xs font-medium text-muted-foreground bg-muted rounded-full">
-          Kosong
-        </span>
-      );
+      return 'bg-muted-foreground/30';
   }
 }
 
-interface CategorySectionProps {
+interface IStatusBadgeProps {
+  status: IUnitView['status'];
+}
+
+function StatusBadge({ status }: IStatusBadgeProps) {
+  const config = getStatusBadgeConfig(status);
+  const Icon = config.icon;
+
+  return (
+    <span
+      className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${config.className}`}
+    >
+      {Icon && <Icon className="h-3 w-3" />}
+      {config.label}
+    </span>
+  );
+}
+
+function getStatusBadgeConfig(status: IUnitView['status']) {
+  switch (status) {
+    case 'COMPLETE':
+      return {
+        icon: CheckCircle2,
+        label: 'Lengkap',
+        className: 'text-green-700 bg-green-100',
+      };
+    case 'IN_PROGRESS':
+      return {
+        icon: AlertCircle,
+        label: 'Sebagian',
+        className: 'text-amber-700 bg-amber-100',
+      };
+    default:
+      return {
+        icon: null,
+        label: 'Kosong',
+        className: 'text-muted-foreground bg-muted',
+      };
+  }
+}
+
+interface ICategoryListProps {
+  categories: readonly ICategoryView[];
+  disabled?: boolean;
+}
+
+function CategoryList({ categories, disabled }: ICategoryListProps) {
+  return (
+    <div className="space-y-6">
+      {categories.map(category => (
+        <CategorySection
+          key={category.id}
+          category={category}
+          disabled={disabled}
+        />
+      ))}
+    </div>
+  );
+}
+
+interface ICategorySectionProps {
   category: ICategoryView;
   disabled?: boolean;
 }
 
-function CategorySection({ category, disabled }: CategorySectionProps) {
+function CategorySection({ category, disabled }: ICategorySectionProps) {
   if (category.parameters.length === 0) return null;
 
   return (
     <div className="rounded-lg border bg-card">
-      <div className="px-4 py-3 border-b bg-muted/30">
-        <h3 className="font-medium">{category.label}</h3>
-      </div>
+      <CategoryHeader label={category.label} />
       <div className="divide-y">
         {category.parameters.map(param => (
           <ParameterRow
@@ -132,74 +202,80 @@ function CategorySection({ category, disabled }: CategorySectionProps) {
   );
 }
 
-interface ParameterRowProps {
+interface ICategoryHeaderProps {
+  label: string;
+}
+
+function CategoryHeader({ label }: ICategoryHeaderProps) {
+  return (
+    <div className="px-4 py-3 border-b bg-muted/30">
+      <h3 className="font-medium">{label}</h3>
+    </div>
+  );
+}
+
+interface IParameterRowProps {
   parameter: IParameterRowView;
   disabled?: boolean;
 }
 
-function ParameterRow({ parameter, disabled }: ParameterRowProps) {
-  const { entryState, setEntryState } = useEntryStateContext();
-  const state = entryState[parameter.entryKey];
-  const value = state?.numericValue ?? null;
-
-  const handleChange = (newValue: number | null) => {
-    setEntryState({
-      ...entryState,
-      [parameter.entryKey]: {
-        valueType: parameter.valueType,
-        numericValue: newValue,
-        boolValue: null,
-        textValue: null,
-      },
-    });
-  };
-
-  const isInRange = parameter.inRange !== false;
+function ParameterRow({ parameter, disabled }: IParameterRowProps) {
+  const showStatusIcon = parameter.inRange !== null;
 
   return (
     <div className="flex items-center gap-4 px-4 py-3">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-medium truncate">{parameter.label}</span>
-          {parameter.unit && (
-            <span className="text-xs text-muted-foreground">
-              ({parameter.unit})
-            </span>
-          )}
-        </div>
-        {parameter.targetRangeText && (
-          <div className="text-xs text-muted-foreground">
-            Target: {parameter.targetRangeText}
-          </div>
-        )}
-      </div>
-
+      <ParameterLabel parameter={parameter} />
       <div className="flex items-center gap-2">
-        <input
-          type="number"
-          value={value ?? ''}
-          onChange={e => {
-            const val = e.target.value;
-            handleChange(val ? parseFloat(val) : null);
-          }}
-          disabled={disabled}
-          className={`w-24 px-3 py-2 text-right rounded-lg border text-sm ${
-            value !== null && !isInRange
-              ? 'border-red-500 bg-red-50'
-              : 'border-input bg-background'
-          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        <ParameterInput
+          entryKey={parameter.entryKey}
+          valueType={parameter.valueType}
           placeholder="-"
+          disabled={disabled}
         />
-        {value !== null && (
-          <div className="w-4">
-            {isInRange ? (
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-            ) : (
-              <AlertCircle className="h-4 w-4 text-red-500" />
-            )}
-          </div>
+        {showStatusIcon && <RangeStatusIcon inRange={parameter.inRange} />}
+      </div>
+    </div>
+  );
+}
+
+interface IParameterLabelProps {
+  parameter: IParameterRowView;
+}
+
+function ParameterLabel({ parameter }: IParameterLabelProps) {
+  return (
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-2">
+        <span className="font-medium truncate">{parameter.label}</span>
+        {parameter.unit && (
+          <span className="text-xs text-muted-foreground">
+            ({parameter.unit})
+          </span>
         )}
       </div>
+      {parameter.targetRangeText && (
+        <div className="text-xs text-muted-foreground">
+          Target: {parameter.targetRangeText}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface IRangeStatusIconProps {
+  inRange: boolean | null;
+}
+
+function RangeStatusIcon({ inRange }: IRangeStatusIconProps) {
+  if (inRange === null) return null;
+
+  return (
+    <div className="w-4">
+      {inRange ? (
+        <CheckCircle2 className="h-4 w-4 text-green-500" />
+      ) : (
+        <AlertCircle className="h-4 w-4 text-red-500" />
+      )}
     </div>
   );
 }

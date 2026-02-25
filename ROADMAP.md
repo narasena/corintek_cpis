@@ -1,7 +1,7 @@
 # CPIS Project Implementation Roadmap
 
 > **Project:** Corintek Project Information System (CPIS)
-> **Updated:** 2026-02-18
+> **Updated:** 2026-02-25
 > **Status:** MVP Phase Completed - Transitioning to Operational Phase
 > **WARNING:** DO NOT REMOVE ANYTHING FROM THIS DOCUMENT!!! Just update, append, or change. Removal need PERMISSION!!!
 
@@ -397,7 +397,7 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 4.  **Digital Signature (DS-\*)**
     - Status: ✅ Implemented for Log Sheets (`DS-01`/`DS-02` in section 4.3) and 🚧 partially implemented for Work Reports (`DS-EXT`, technician signature); Summary Report approval signatures still pending (`DS-EXT` in section 4.7).
 5.  **Notifications (NT-\*)**
-    - Status: ⏳ Not implemented. Planned as `NT-01`–`NT-03` in section 4.2 (Phase 2 limit alerts + UI).
+    - Status: ✅ Implemented. `NT-01`–`NT-03` complete with schema, service, actions, and header bell UI.
 6.  **Dashboard Charts & Photo Gallery** (FSD Dashboard section 1)
     - Status: ✅ Completed. `AnalyticsDashboard` with historical charts and gallery is active.
 7.  **My Profile**
@@ -444,10 +444,10 @@ These fields are documented in the FSD and are now first-class fields in the cur
 
 ### ⚠️ P1: Operational Efficiency
 
-#### 4.1 Notifications (NT-01)
+#### 4.1 Notifications (NT-01) ✅ COMPLETE
 
-- [ ] Alert supervisors when parameters exceed thresholds.
-- [ ] Notifications for pending approvals.
+- [x] Alert supervisors when parameters exceed thresholds.
+- [x] Notifications for pending approvals.
 
 #### 4.2 Digital Signatures (DS-01/DS-02)
 
@@ -460,31 +460,38 @@ These fields are documented in the FSD and are now first-class fields in the cur
 
 This section summarizes the recommended execution order for remaining work, based on the gap between the current implementation and the FSD.
 
-1. **Finalize Submission Locking & Approval Flows (P0 Stabilization)**
-   - Complete remaining items under `LS-LOCK / WR-APP` in section 3.1 (e.g., decide on explicit `locked` semantics/field for LogSheet/LabAnalysis) and extend consistent locking rules to Lab Analysis if still required by operations.
+1. **Complete Option A Mobile Layout Integration (P1)**
+   - Wire existing `UnitOverviewList` and `UnitEntryScreen` components into the log sheet detail page.
+   - Implement mobile-first navigation flow with feature flag toggle.
+   - Components exist at `src/features/log-sheets/option-a/components/`.
 
-2. **Finalize Dashboard & Summary Analytics (SR-02 / DB-01)**
-   - Close out residual items in `DB-01` (recent activity list).
-   - Implement `SR-02` (Executive Summary analytics with avg/min/max) in Summary Reports.
+2. **Implement My Profile (MP-01)**
+   - Profile view with editable fields and avatar upload.
+   - Users can view their assignments and basic profile.
+
+3. **Implement Summary Report Analytics (SR-02)**
+   - Executive Summary Water Quality (avg/min/max per parameter).
+   - Executive Summary Condenser Approach (avg/min/max per unit).
    - Prepare data access patterns needed for more complex reporting if required.
 
-3. **Implement Notifications (NT-\*) as the First Major Phase-2 Feature**
-   - Deliver `NT-01`–`NT-03` in section 4.2 to satisfy the FSD requirement for limit alerts and approvals notifications.
-   - Start with back-end schema + service (`Notification`, creation triggers), then add the header bell + dropdown UI.
+4. **Finalize Dashboard Recent Activity List (DB-01)**
+   - Close out residual items in `DB-01` (recent activity list).
+   - Feed from existing log sheets, work reports, and approvals data.
 
-4. **Deliver My Profile (MP-01) and Complete Client Portal Read-Only Experience**
-   - Implement `MP-01` in section 4.6 so users can see their assignments and basic profile.
-   - Complete `CP-01` read-only dashboard for CLIENT role (section 4.6) using existing RBAC + project scoping.
+5. **Complete Client Portal Read-Only Experience (CP-01)**
+   - Implement `CP-01` read-only dashboard for CLIENT role using existing RBAC + project scoping.
+   - Ensure only assigned projects are visible with no write actions.
 
-5. **Plan and Implement Digital Signatures Expansion (DS-EXT, Lowest Priority)**
-   - Schedule `DS-EXT` (section 4.7) as the last Phase 2 item: extend existing digital signatures from Log Sheets to Work Reports and Summary Reports without adding new libraries or blocking current flows.
+6. **Log Sheet Adjustments (LS-ADJ)**
+   - Optional video attachment upload (before/after).
+   - Final A4 print fit for all log sheet variants.
+   - Inline min/max limit warnings (notifikasi ringan di form).
 
-6. **Implement Dashboard Charts & Gallery (DB-02 / DB-03) per FSD**
-   - Map FSD Dashboard metrics (Approach/Ampere for Condenser/Evaporator) to concrete queries.
-   - Implement charts and recent-photos gallery using the standard dashboard layout (section 4.4), ensuring no new charting packages are introduced without approval.
+7. **Plan and Implement Digital Signatures Expansion (DS-EXT, Lowest Priority)**
+   - Schedule `DS-EXT` (section 4.7) as the last Phase 2 item: extend existing digital signatures to Summary Reports without adding new libraries or blocking current flows.
 
-7. **Refine Project Fields from FSD (If Needed Operationally)**
-   - All four FSD project fields (`Tipe Project`, `Jenis Project`, `Pekerjaan`, and `Warranty`) are now implemented as structured fields (see section “Project Fields in FSD but May Need Review”).
+8. **Refine Project Fields from FSD (If Needed Operationally)**
+   - All four FSD project fields (`Tipe Project`, `Jenis Project`, `Pekerjaan`, and `Warranty`) are now implemented as structured fields (see section "Project Fields in FSD but May Need Review").
    - If operations require stricter rules (e.g., making them mandatory or backfilling legacy data), design migrations and UI validation updates under a dedicated scope ID (e.g., `PRJ-FIELDS-02`) and schedule as a Phase 2 enhancement in line with rescue-mode constraints.
 
 ---
@@ -531,9 +538,9 @@ This section summarizes the recommended execution order for remaining work, base
 
 ### 6.7 Notifications (NT-01/NT-02/NT-03)
 
-- [ ] Notification schema + creation service.
-- [ ] Limit exceed alerts on log sheet submission.
-- [ ] Notification bell + unread count UI.
+- [x] Notification schema + creation service.
+- [x] Limit exceed alerts on log sheet submission.
+- [x] Notification bell + unread count UI.
 
 ### 6.8 Digital Signatures Expansion (DS-EXT, Lowest Priority)
 

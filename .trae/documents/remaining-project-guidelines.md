@@ -102,7 +102,8 @@ This section enumerates all remaining items derived from:
 
 **P1 – High Business Value**
 
-- NT‑01/02/03: Notifications system, limit alerts, and UI bell.
+- ✅ NT‑01/02/03: Notifications system, limit alerts, and UI bell — **COMPLETE**
+- Option A: Mobile Layout Integration (components exist, page wiring pending).
 - SR‑02: Executive Summary analytics (Summary Reports).
 - DB‑01 (residual): Recent activity list.
 
@@ -188,7 +189,9 @@ Each subsection uses this template:
 - Testing procedures
 - Acceptance criteria
 
-### 5.1 Notifications (NT‑01/NT‑02/NT‑03)
+### 5.1 Notifications (NT‑01/NT‑02/NT‑03) ✅ COMPLETE
+
+> **Status:** Fully implemented. Schema, service, actions, and UI bell/dropdown are in production.
 
 #### 5.1.1 Technical Specification
 
@@ -519,6 +522,16 @@ After completing the stabilization slices, the Option A mobile layout implementa
 | Unit Entry Screen  | ✅     | `option-a/components/unit-entry-screen.tsx`           |
 | Page Integration   | ⏳     | Pending                                               |
 
+**Integration Requirements:**
+
+1. Add mobile layout wrapper to `page.tsx` with feature flag check
+2. Wire `UnitOverviewList` → `UnitEntryScreen` navigation flow
+3. Ensure `EntryStateProvider` integration for state management
+4. Add back button to return to unit list from entry screen
+5. Implement responsive layout that shows:
+   - Mobile: Unit list → Unit detail (drill-down)
+   - Desktop: Existing layout (no change)
+
 ### 6.4 Stabilization Results Summary
 
 | Metric                           | Before | After | Change |
@@ -634,11 +647,11 @@ Example matrix (excerpt):
   - No functional regressions in log‑sheet flows.
   - Reduced LOC and CC in key god modules/components.
 
-### Phase 2 – Notifications (NT‑01/02/03)
+### Phase 2 – Notifications (NT‑01/02/03) ✅ COMPLETE
 
-- Deliverables:
+- Deliverables: All delivered.
   - Notification schema, service, actions, header bell, dropdown.
-- Acceptance:
+- Acceptance: Verified in production.
   - Notifications reliably created on limit‑exceed events.
   - UI unread counts accurate for tested users.
 
@@ -666,7 +679,8 @@ Example matrix (excerpt):
 
 This document should be treated as the canonical implementation guide for completing the remaining CPIS work. Each phase can be executed independently, but the recommended sequence is:
 
-1. LS‑STAB (stabilization)
-2. Notifications
-3. Dashboard + Summary analytics
-4. Profile/Portal/Data completeness + signature expansion
+1. LS‑STAB (stabilization) ✅ COMPLETE
+2. Notifications ✅ COMPLETE
+3. Option A Mobile Layout Integration (next priority)
+4. Dashboard + Summary analytics
+5. Profile/Portal/Data completeness + signature expansion
