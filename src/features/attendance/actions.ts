@@ -5,11 +5,9 @@ import { getCurrentUser } from '@/lib/auth-helpers';
 import { attendanceListFiltersSchema } from './types';
 import * as service from './service';
 
-type TActionResponse<T = unknown> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-};
+type TActionResponse<T = unknown> =
+  | { success: true; data: T }
+  | { success: false; error: string };
 
 function toUserError(error: unknown, fallback: string) {
   if (error instanceof Error) {
@@ -79,8 +77,10 @@ export async function getTodayAttendanceAction(): Promise<TActionResponse> {
     console.error('[CPIS-ERROR] Attendance.GetToday:', error);
     return {
       success: false,
-      error:
-        toUserError(error, 'Terjadi kesalahan server. Coba muat ulang halaman.'),
+      error: toUserError(
+        error,
+        'Terjadi kesalahan server. Coba muat ulang halaman.'
+      ),
     };
   }
 }
@@ -179,8 +179,7 @@ export async function getAttendanceListAction(
     console.error('[CPIS-ERROR] Attendance.List:', error);
     return {
       success: false,
-      error:
-        toUserError(error, 'Gagal mengambil daftar absensi'),
+      error: toUserError(error, 'Gagal mengambil daftar absensi'),
     };
   }
 }

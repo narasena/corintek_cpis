@@ -28,7 +28,9 @@ describe('getProjectColumns - warranty column', () => {
     onDelete: async () => ({ success: true }),
   });
 
-  const warrantyColumn = columns.find(col => col.accessorKey === 'warrantyMonths');
+  const warrantyColumn = columns.find(
+    col => col.accessorKey === 'warrantyMonths'
+  );
 
   it('renders "-" when warrantyMonths is null or undefined', () => {
     expect(warrantyColumn).toBeDefined();

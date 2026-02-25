@@ -1,33 +1,15 @@
-import type { TLogSheetStatus } from '@/features/log-sheets/types';
+import type {
+  TLogSheetStatus,
+  TParameter as TParameterBase,
+  TMachine as TMachineBase,
+  TEntryState as TEntryStateBase,
+} from '@/features/log-sheets/types';
 import type { TUserRole } from '@/@types/user.type';
 
-export type TMachine = {
-  id: string;
-  unitNumber: number;
-  type: 'CHILLER' | 'COOLING_TOWER';
-};
+export type TMachine = TMachineBase;
+export type TParameter = TParameterBase;
 
 export type TEntryRole = 'VALUE' | 'RAW_WATER' | 'NOTE';
-
-export type TParameter = {
-  id: string;
-  name: string;
-  variableName: string;
-  category:
-    | 'UNIT_CONDENSOR'
-    | 'UNIT_EVAPORATOR'
-    | 'COOLING_WATER_QUALITY'
-    | 'GENERAL_CONDITION'
-    | 'JOB_DESCRIPTION'
-    | 'CONSUMPTION';
-  valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
-  unit: string | null;
-  minValue: number | null;
-  maxValue: number | null;
-  rawWaterMinValue?: number | null;
-  rawWaterMaxValue?: number | null;
-  displayOrder: number;
-};
 
 export type TDetail = {
   viewerRole: TUserRole;
@@ -37,6 +19,7 @@ export type TDetail = {
     date: string | Date;
     notes: string | null;
     status: TLogSheetStatus;
+    locked: boolean;
     technicianSignatureUrl: string | null;
     technicianSignedAt: string | Date | null;
     technicianSignedByUserId: string | null;
@@ -111,13 +94,18 @@ export type TDetail = {
     chillers: string[];
     coolingTowers: string[];
   };
+  technicians: Array<{
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  }>;
+  chemicals: Array<{
+    id: string;
+    name: string;
+    unit: string | null;
+  }>;
 };
 
-export type TEntryState = {
-  valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
-  numericValue?: number | null;
-  boolValue?: boolean | null;
-  textValue?: string | null;
-  fileUrl?: string | null;
+export type TEntryState = TEntryStateBase & {
   pendingFile?: File | null;
 };

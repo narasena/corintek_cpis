@@ -191,11 +191,7 @@ function SignatureDialog({
             <DialogTitle>Tanda Tangan {label}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <SignaturePad
-              value={dataUrl}
-              onChange={setDataUrl}
-              disabled={isSaving}
-            />
+            <SignaturePad onChange={setDataUrl} disabled={isSaving} />
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"

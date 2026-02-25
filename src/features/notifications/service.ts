@@ -307,7 +307,5 @@ class NotificationService implements INotificationService {
 const detector = new LimitBreachDetector();
 const repository = createPrismaNotificationRepository();
 
-export const notificationService: INotificationService = new NotificationService(
-  { detector, repository }
-);
-
+export const notificationService: INotificationService =
+  new NotificationService({ detector, repository });

@@ -7,7 +7,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
 import { getProjectColumns } from './components/columns';
-import { ProjectDialog } from './components/project-dialog';
+import { ProjectDialog } from '@/features/projects/components/project-dialog';
 
 import {
   getProjectsAction,

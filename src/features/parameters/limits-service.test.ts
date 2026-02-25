@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { updateParameterLimit, updateParameterLimitBatch } from './limits-service';
+import {
+  updateParameterLimit,
+  updateParameterLimitBatch,
+} from './limits-service';
 
 vi.mock('@/lib/rbac', () => ({
   ensureAccess: vi.fn(),
@@ -35,7 +38,9 @@ describe('updateParameterLimit service', () => {
   });
 
   it('updates single limit fields correctly', async () => {
-    vi.mocked(prisma.parameter.update).mockResolvedValue({ id: 'param-1' } as any);
+    vi.mocked(prisma.parameter.update).mockResolvedValue({
+      id: 'param-1',
+    } as any);
 
     await updateParameterLimit(actor, {
       parameterId: 'param-1',
@@ -50,7 +55,9 @@ describe('updateParameterLimit service', () => {
   });
 
   it('updates all provided limit fields together', async () => {
-    vi.mocked(prisma.parameter.update).mockResolvedValue({ id: 'param-1' } as any);
+    vi.mocked(prisma.parameter.update).mockResolvedValue({
+      id: 'param-1',
+    } as any);
 
     await updateParameterLimit(actor, {
       parameterId: 'param-1',
@@ -73,7 +80,9 @@ describe('updateParameterLimit service', () => {
   });
 
   it('allows null values and persists them', async () => {
-    vi.mocked(prisma.parameter.update).mockResolvedValue({ id: 'param-1' } as any);
+    vi.mocked(prisma.parameter.update).mockResolvedValue({
+      id: 'param-1',
+    } as any);
 
     await updateParameterLimit(actor, {
       parameterId: 'param-1',
@@ -109,7 +118,9 @@ describe('updateParameterLimit service', () => {
         rawWaterMinValue: 5,
         rawWaterMaxValue: 1,
       })
-    ).rejects.toThrow('Nilai raw minimum tidak boleh lebih besar dari maksimum');
+    ).rejects.toThrow(
+      'Nilai raw minimum tidak boleh lebih besar dari maksimum'
+    );
 
     expect(prisma.parameter.update).not.toHaveBeenCalled();
   });

@@ -12,7 +12,7 @@ export function useLogSheetDetailData(logSheetId: string) {
     setLoading(true);
     try {
       const result = await getLogSheetDetailAction(logSheetId);
-      if (!result.success || !result.data) {
+      if (!result.success) {
         toast.error('Gagal mengambil detail log sheet', {
           description: result.error,
         });

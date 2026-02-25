@@ -20,7 +20,9 @@ export default async function NewLabAnalysisPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Tambah Hasil Analisa Lab</h1>
+      <h1 className="text-2xl font-bold tracking-tight">
+        Tambah Hasil Analisa Lab
+      </h1>
       <LabAnalysisForm
         mode="create"
         projectId={projectId}
@@ -31,4 +33,3 @@ export default async function NewLabAnalysisPage({ params }: PageProps) {
     </div>
   );
 }
-

@@ -10,7 +10,9 @@ import { ensureAccess, RbacResource } from '@/lib/rbac';
 /**
  * Get all active parameters
  */
-export async function getAllParameters(actor: IJwtPayload): Promise<IParameter[]> {
+export async function getAllParameters(
+  actor: IJwtPayload
+): Promise<IParameter[]> {
   ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
 
   const parameters = await prisma.parameter.findMany({

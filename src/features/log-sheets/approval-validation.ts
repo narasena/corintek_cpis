@@ -1,41 +1,14 @@
-import type { ILogSheetDetailView } from './service';
-import type { ILogSheetEntry } from './types';
-import { makeEntryKey } from './utils';
-
-function isEntryComplete(
-  entry?: Pick<
-    ILogSheetEntry,
-    'valueType' | 'numericValue' | 'boolValue' | 'textValue'
-  >
-) {
-  if (!entry) return false;
-
-  if (entry.valueType === 'NUMBER') {
-    return (
-      entry.numericValue !== null &&
-      entry.numericValue !== undefined &&
-      !Number.isNaN(entry.numericValue)
-    );
-  }
-
-  if (entry.valueType === 'BOOLEAN') {
-    return entry.boolValue !== null && entry.boolValue !== undefined;
-  }
-
-  if (entry.valueType === 'TEXT') {
-    return (
-      entry.textValue !== null &&
-      entry.textValue !== undefined &&
-      entry.textValue.trim() !== ''
-    );
-  }
-
-  return false;
-}
+import type { ILogSheetDetailView, ILogSheetEntry, TParameter } from './types';
+import { makeEntryKey, isEntryComplete } from './utils';
+import { validateNumericRange } from './range-validation';
+import {
+  usesChillers,
+  usesCoolingTowers,
+} from './components/log-sheet-preview/category-helpers';
 
 type TApprovalContext = {
   detail: ILogSheetDetailView;
-  parameterById: Map<string, (typeof detail.parameters)[number]>;
+  parameterById: Map<string, ILogSheetDetailView['parameters'][number]>;
   entryByKey: Map<string, ILogSheetEntry>;
   machineLabelById: Map<string, string>;
 };
@@ -69,28 +42,11 @@ function collectApprovalRangeErrors(
   errors: string[]
 ) {
   for (const entry of context.detail.entries) {
-    if (entry.valueType !== 'NUMBER' || entry.numericValue === null) continue;
+    if (entry.valueType !== 'NUMBER') continue;
     const param = context.parameterById.get(entry.parameterId);
     if (!param) continue;
 
-    let min: number | null = param.minValue;
-    let max: number | null = param.maxValue;
-
-    if (entry.role === 'RAW_WATER') {
-      min = param.rawWaterMinValue ?? null;
-      max = param.rawWaterMaxValue ?? null;
-    }
-
-    if (min !== null && entry.numericValue < min) {
-      errors.push(
-        `${param.name}: Nilai ${entry.numericValue} di bawah minimum ${min}`
-      );
-    }
-    if (max !== null && entry.numericValue > max) {
-      errors.push(
-        `${param.name}: Nilai ${entry.numericValue} di atas maksimum ${max}`
-      );
-    }
+    errors.push(...validateNumericRange(entry, param));
   }
 }
 
@@ -127,11 +83,9 @@ function collectCategoryRequiredErrors(
   param: (typeof context.detail.parameters)[number],
   errors: string[]
 ) {
-  const category = param.category;
-  const usesChillers =
-    category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR';
-  const usesCoolingTowers =
-    category === 'GENERAL_CONDITION' || category === 'JOB_DESCRIPTION';
+  const category = param.category as TParameter['category'];
+  const isChillerCategory = usesChillers(category);
+  const isCTCategory = usesCoolingTowers(category);
 
   const activeChillers = context.detail.machines.chillers.filter(m =>
     context.detail.activeMachineIds.chillers.includes(m.id)
@@ -140,7 +94,11 @@ function collectCategoryRequiredErrors(
     context.detail.activeMachineIds.coolingTowers.includes(m.id)
   );
 
-  const machines = usesChillers ? activeChillers : usesCoolingTowers ? activeCTs : [];
+  const machines = isChillerCategory
+    ? activeChillers
+    : isCTCategory
+      ? activeCTs
+      : [];
   const targets =
     machines.length > 0
       ? machines.map(machine => ({ id: machine.id }))
@@ -160,7 +118,7 @@ function collectCategoryRequiredErrors(
     }
   }
 
-  if (usesCoolingTowers && activeCTs.length > 0) {
+  if (isCTCategory && activeCTs.length > 0) {
     const noteKey = makeEntryKey(param.id, null, 'NOTE');
     const noteEntry = context.entryByKey.get(noteKey);
     if (!isEntryComplete(noteEntry)) {
@@ -196,4 +154,3 @@ export function validateLogSheetApprovalDetail(
     throw new Error(`Validasi gagal:\n${errors.join('\n')}`);
   }
 }
-

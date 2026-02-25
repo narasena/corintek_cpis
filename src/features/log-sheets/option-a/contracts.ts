@@ -102,6 +102,7 @@ export type TUnitCompletionStatus = 'EMPTY' | 'IN_PROGRESS' | 'COMPLETE';
 
 export interface IUnitView {
   readonly id: TUnitId;
+  readonly machineId: string;
   readonly label: string;
   readonly type: TMachineType;
   readonly completion: IUnitCompletionStats;

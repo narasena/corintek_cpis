@@ -1,5 +1,8 @@
 import { prisma } from '@/lib/prisma';
-import type { Notification as PrismaNotification } from '@/generated/prisma/client';
+import type {
+  Notification as PrismaNotification,
+  Prisma,
+} from '@/generated/prisma/client';
 import type {
   INotification,
   INotificationRepository,
@@ -43,7 +46,7 @@ export function createPrismaNotificationRepository(): INotificationRepository {
               title: notification.title,
               message: notification.message,
               severity: notification.severity,
-              source: notification.source as unknown as PrismaNotification['source'],
+              source: JSON.parse(JSON.stringify(notification.source)),
             },
           });
           rows.push(row);
@@ -55,10 +58,13 @@ export function createPrismaNotificationRepository(): INotificationRepository {
       return created.map(mapRowToNotification);
     },
 
-    async findByUser(input: TListNotificationsInput): Promise<TListNotificationsResult> {
+    async findByUser(
+      input: TListNotificationsInput
+    ): Promise<TListNotificationsResult> {
       const page = input.page && input.page > 0 ? input.page : 1;
-      const pageSize = input.pageSize && input.pageSize > 0 ? input.pageSize : 10;
-      const where: Parameters<typeof prisma.notification.findMany>[0]['where'] = {
+      const pageSize =
+        input.pageSize && input.pageSize > 0 ? input.pageSize : 10;
+      const where: Prisma.NotificationWhereInput = {
         userId: input.userId,
       };
 
@@ -105,7 +111,9 @@ export function createPrismaNotificationRepository(): INotificationRepository {
       return mapRowToNotification(row);
     },
 
-    async markAsRead(input: TMarkNotificationReadInput): Promise<INotification> {
+    async markAsRead(
+      input: TMarkNotificationReadInput
+    ): Promise<INotification> {
       const existing = await prisma.notification.findUnique({
         where: { id: input.notificationId },
       });
@@ -133,7 +141,9 @@ export function createPrismaNotificationRepository(): INotificationRepository {
       return mapRowToNotification(updated);
     },
 
-    async markAllAsRead(input: TMarkAllNotificationsReadInput): Promise<number> {
+    async markAllAsRead(
+      input: TMarkAllNotificationsReadInput
+    ): Promise<number> {
       const result = await prisma.notification.updateMany({
         where: {
           userId: input.userId,

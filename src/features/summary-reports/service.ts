@@ -8,6 +8,7 @@ import { ParameterCategory } from '@/generated/prisma/client';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import { applyProjectOverridesToParameters } from '@/features/parameters/limits-utils';
 import { getProjectReportingScope } from '@/features/projects/reporting-scope';
+import type { TMachine } from '@/features/log-sheets/types';
 
 export async function getSummaryReports(projectId: string) {
   return await prisma.summaryReport.findMany({
@@ -106,8 +107,7 @@ export async function getMonthlyLogSheets(projectId: string, period: Date) {
   const projectIds = scope?.projectIds ?? [projectId];
   return prisma.logSheet.findMany({
     where: {
-      projectId:
-        projectIds.length === 1 ? projectIds[0] : { in: projectIds },
+      projectId: projectIds.length === 1 ? projectIds[0] : { in: projectIds },
       date: { gte: start, lt: end },
       deletedAt: null,
     },
@@ -231,10 +231,14 @@ async function loadProjectLogSheetConfigData(projectId: string) {
 
 function groupMachinesByType(
   machines: Array<{ type: string; unitNumber: number; id: string }>
-) {
+): { chillers: TMachine[]; coolingTowers: TMachine[] } {
   return {
-    chillers: machines.filter(m => m.type === 'CHILLER'),
-    coolingTowers: machines.filter(m => m.type === 'COOLING_TOWER'),
+    chillers: machines
+      .filter(m => m.type === 'CHILLER')
+      .map(m => ({ ...m, type: 'CHILLER' as const })),
+    coolingTowers: machines
+      .filter(m => m.type === 'COOLING_TOWER')
+      .map(m => ({ ...m, type: 'COOLING_TOWER' as const })),
   };
 }
 
@@ -244,8 +248,7 @@ export async function getMonthlyWorkReports(projectId: string, period: Date) {
   const projectIds = scope?.projectIds ?? [projectId];
   return prisma.workReport.findMany({
     where: {
-      projectId:
-        projectIds.length === 1 ? projectIds[0] : { in: projectIds },
+      projectId: projectIds.length === 1 ? projectIds[0] : { in: projectIds },
       date: { gte: start, lt: end },
       deletedAt: null,
     },
@@ -266,8 +269,7 @@ export async function getMonthlyLabAnalyses(projectId: string, period: Date) {
   const projectIds = scope?.projectIds ?? [projectId];
   return prisma.labAnalysis.findMany({
     where: {
-      projectId:
-        projectIds.length === 1 ? projectIds[0] : { in: projectIds },
+      projectId: projectIds.length === 1 ? projectIds[0] : { in: projectIds },
       date: { gte: start, lt: end },
       deletedAt: null,
     },

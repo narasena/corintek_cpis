@@ -7,6 +7,7 @@ import type {
   ILogSheetParameterSnapshot,
   ILogSheetUnitViewConfig,
   IProjectSnapshot,
+  IReadonlyEntryState,
   TLogSheetId,
   TProjectId,
   TReadonlyEntryStateMap,
@@ -43,9 +44,9 @@ export const createParameter = (
   overrides: Partial<ILogSheetParameterSnapshot> = {}
 ): ILogSheetParameterSnapshot => ({
   id: overrides.id ?? 'param-1',
-  name: overrides.name ?? 'Cooling Water Temp',
-  variableName: overrides.variableName ?? 'cooling_temp',
-  category: overrides.category ?? 'COOLING_WATER_QUALITY',
+  name: overrides.name ?? 'Condensor Temp',
+  variableName: overrides.variableName ?? 'condensor_temp',
+  category: overrides.category ?? 'UNIT_CONDENSOR',
   valueType: overrides.valueType ?? 'NUMBER',
   unit: overrides.unit ?? 'C',
   minValue: overrides.minValue ?? 10,
@@ -54,6 +55,24 @@ export const createParameter = (
   rawWaterMaxValue: overrides.rawWaterMaxValue ?? null,
   displayOrder: overrides.displayOrder ?? 1,
 });
+
+export const createChillerParameter = (
+  overrides: Partial<ILogSheetParameterSnapshot> = {}
+): ILogSheetParameterSnapshot =>
+  createParameter({
+    category: 'UNIT_CONDENSOR',
+    ...overrides,
+  });
+
+export const createCTParameter = (
+  overrides: Partial<ILogSheetParameterSnapshot> = {}
+): ILogSheetParameterSnapshot =>
+  createParameter({
+    id: 'param-ct-1',
+    name: 'Cooling Water pH',
+    category: 'COOLING_WATER_QUALITY',
+    ...overrides,
+  });
 
 export const createEntry = (
   overrides: Partial<ILogSheetEntrySnapshot> = {}
@@ -91,10 +110,16 @@ export const createDetailSnapshot = (
 });
 
 export const createEntryStateMap = (
-  overrides: Partial<TReadonlyEntryStateMap> = {}
-): TReadonlyEntryStateMap => ({
-  ...overrides,
-});
+  overrides: Record<string, IReadonlyEntryState> = {}
+): TReadonlyEntryStateMap => {
+  const result: Record<string, IReadonlyEntryState> = {};
+  for (const [key, value] of Object.entries(overrides)) {
+    if (value !== undefined) {
+      result[key] = value;
+    }
+  }
+  return result;
+};
 
 export const createConfig = (
   overrides: Partial<ILogSheetUnitViewConfig> = {}
@@ -104,4 +129,3 @@ export const createConfig = (
   defaultViewMode: overrides.defaultViewMode ?? 'overview-first',
   unitSortStrategy: overrides.unitSortStrategy ?? 'byUnitNumber',
 });
-

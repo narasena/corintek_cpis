@@ -21,7 +21,9 @@ export default async function EditLabAnalysisPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Ubah Hasil Analisa Lab</h1>
+      <h1 className="text-2xl font-bold tracking-tight">
+        Ubah Hasil Analisa Lab
+      </h1>
       <LabAnalysisForm
         mode="edit"
         projectId={projectId}
@@ -31,4 +33,3 @@ export default async function EditLabAnalysisPage({ params }: PageProps) {
     </div>
   );
 }
-

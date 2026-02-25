@@ -54,11 +54,14 @@ export function buildLimitEvaluationInput(
 
   for (const entry of detail.entries) {
     const snapshot = mapEntryToSnapshot(detail, entry);
-    if (snapshot && snapshot.value !== null && Number.isFinite(snapshot.value)) {
+    if (
+      snapshot &&
+      snapshot.value !== null &&
+      Number.isFinite(snapshot.value)
+    ) {
       snapshots.push(snapshot);
     }
   }
 
   return snapshots;
 }
-

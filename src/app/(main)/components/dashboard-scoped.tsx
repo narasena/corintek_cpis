@@ -89,13 +89,13 @@ export function DashboardScoped({
         date: new Date(),
       });
 
-      if (!res.success || !res.data) {
+      if (!res.success) {
         toast.error('Gagal membuat log sheet', { description: res.error });
         return;
       }
 
       toast.success('Log sheet dibuat');
-      const logSheetId = (res.data as { id: string }).id;
+      const logSheetId = res.data.id;
       router.push(`/log-sheets/${projectId}/${logSheetId}`);
       router.refresh();
     });

@@ -6,9 +6,10 @@ import type {
   TLimitBreach,
 } from '@/features/notifications/types';
 
-export function evaluateSubmissionLimits(
-  detail: ILogSheetDetailView
-): { breaches: TLimitBreach[]; errors: string[] } {
+export function evaluateSubmissionLimits(detail: ILogSheetDetailView): {
+  breaches: TLimitBreach[];
+  errors: string[];
+} {
   const snapshots = buildLimitEvaluationInput(detail);
   const breaches: TLimitBreach[] = [];
   const errors: string[] = [];
@@ -27,9 +28,17 @@ export function evaluateSubmissionLimits(
     if (value === null || !Number.isFinite(value)) continue;
 
     if (minLimit !== null && value < minLimit) {
-      breaches.push({ entry, breachDirection: 'BELOW_MIN', severity: 'WARNING' });
+      breaches.push({
+        entry,
+        breachDirection: 'BELOW_MIN',
+        severity: 'WARNING',
+      });
     } else if (maxLimit !== null && value > maxLimit) {
-      breaches.push({ entry, breachDirection: 'ABOVE_MAX', severity: 'WARNING' });
+      breaches.push({
+        entry,
+        breachDirection: 'ABOVE_MAX',
+        severity: 'WARNING',
+      });
     }
   }
 
@@ -38,18 +47,16 @@ export function evaluateSubmissionLimits(
 
 export function getTechnicianUserIds(detail: ILogSheetDetailView): string[] {
   const assignments = detail.project.assignments ?? [];
-  return assignments
-    .filter(a => a.role === 'TECHNICIAN')
-    .map(a => a.user.id);
+  return assignments.filter(a => a.role === 'TECHNICIAN').map(a => a.user.id);
 }
 
 /**
  * Evaluates log sheet entries against defined limits and notifies relevant users of breaches.
- * 
+ *
  * SOLID Compliance:
  * - SRP: Orchestrates limit evaluation and notification dispatch.
  * - OCP: Uses adapter for input building, allowing format changes without modifying core logic.
- * 
+ *
  * @param params
  * @param params.evaluatorUserId - The user triggering the evaluation (usually current user).
  * @param params.technicianUserIds - List of technicians assigned to the project.

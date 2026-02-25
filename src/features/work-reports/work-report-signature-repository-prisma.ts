@@ -3,8 +3,8 @@ import type {
   IWorkReportRepository,
   IWorkReportSnapshot,
   IWorkReportSignature,
-  TWorkReportStatus,
 } from './signature';
+import type { TWorkReportStatus } from './types';
 
 type WorkReportSignatureRow = {
   id: string;

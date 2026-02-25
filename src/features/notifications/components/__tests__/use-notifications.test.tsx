@@ -63,15 +63,17 @@ describe('useNotifications', () => {
   });
 
   it('handles fetch errors gracefully (silent failure)', async () => {
-    vi.mocked(actions.getNotificationsAction).mockRejectedValue(new Error('Network error'));
-    
+    vi.mocked(actions.getNotificationsAction).mockRejectedValue(
+      new Error('Network error')
+    );
+
     const { result } = renderHook(() => useNotifications());
 
     // Should not throw and maintain initial state
     await waitFor(() => {
       expect(actions.getNotificationsAction).toHaveBeenCalled();
     });
-    
+
     expect(result.current.notifications).toEqual([]);
     expect(result.current.unreadCount).toBe(0);
     // Ensure no toast error for background fetch
@@ -98,7 +100,7 @@ describe('useNotifications', () => {
     await act(async () => {
       vi.advanceTimersByTime(60000);
     });
-    
+
     // Check if called again
     expect(actions.getNotificationsAction).toHaveBeenCalledTimes(2);
   });
@@ -125,7 +127,9 @@ describe('useNotifications', () => {
   });
 
   it('handles mark as read error', async () => {
-    vi.mocked(actions.markNotificationReadAction).mockRejectedValue(new Error('Failed'));
+    vi.mocked(actions.markNotificationReadAction).mockRejectedValue(
+      new Error('Failed')
+    );
 
     const { result } = renderHook(() => useNotifications());
 
@@ -133,11 +137,15 @@ describe('useNotifications', () => {
       await result.current.markRead('1');
     });
 
-    expect(toast.error).toHaveBeenCalledWith('Gagal menandai notifikasi sudah dibaca');
+    expect(toast.error).toHaveBeenCalledWith(
+      'Gagal menandai notifikasi sudah dibaca'
+    );
   });
 
   it('marks all notifications as read and refreshes', async () => {
-    vi.mocked(actions.markAllNotificationsReadAction).mockResolvedValue(undefined);
+    vi.mocked(actions.markAllNotificationsReadAction).mockResolvedValue(
+      undefined
+    );
 
     const { result } = renderHook(() => useNotifications());
 
@@ -146,13 +154,17 @@ describe('useNotifications', () => {
     });
 
     expect(actions.markAllNotificationsReadAction).toHaveBeenCalled();
-    expect(toast.success).toHaveBeenCalledWith('Semua notifikasi ditandai sudah dibaca');
+    expect(toast.success).toHaveBeenCalledWith(
+      'Semua notifikasi ditandai sudah dibaca'
+    );
     // Should refresh data
     expect(actions.getNotificationsAction).toHaveBeenCalledTimes(2);
   });
 
   it('handles mark all read error', async () => {
-    vi.mocked(actions.markAllNotificationsReadAction).mockRejectedValue(new Error('Failed'));
+    vi.mocked(actions.markAllNotificationsReadAction).mockRejectedValue(
+      new Error('Failed')
+    );
 
     const { result } = renderHook(() => useNotifications());
 
@@ -160,6 +172,8 @@ describe('useNotifications', () => {
       await result.current.markAllRead();
     });
 
-    expect(toast.error).toHaveBeenCalledWith('Gagal menandai semua notifikasi sudah dibaca');
+    expect(toast.error).toHaveBeenCalledWith(
+      'Gagal menandai semua notifikasi sudah dibaca'
+    );
   });
 });

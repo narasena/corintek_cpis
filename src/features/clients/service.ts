@@ -6,7 +6,10 @@ import { ensureAccess, RbacResource } from '@/lib/rbac';
 /**
  * Create a new client
  */
-export async function createClient(actor: IJwtPayload, data: TClientCreateInput) {
+export async function createClient(
+  actor: IJwtPayload,
+  data: TClientCreateInput
+) {
   ensureAccess(actor.role, RbacResource.MASTER_DATA, 'create');
 
   // Check for existing client with same name (including soft-deleted)

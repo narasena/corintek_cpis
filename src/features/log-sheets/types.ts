@@ -1,5 +1,9 @@
 import { z } from 'zod/v4';
-import { ValueTypeEnum, type TValueType, type IParameter } from '@/features/parameters/types';
+import {
+  ValueTypeEnum,
+  type TValueType,
+  type IParameter,
+} from '@/features/parameters/types';
 import type { IMachine } from '@/features/machines/types';
 import type { TChemicalUsage } from '@/@types/chemical.type';
 
@@ -162,7 +166,7 @@ export interface ILogSheetPhoto {
   updatedAt: Date;
 }
 
-export type TPreviewParameter = {
+export type TParameter = {
   id: string;
   name: string;
   variableName: string;
@@ -182,13 +186,16 @@ export type TPreviewParameter = {
   displayOrder: number;
 };
 
-export type TPreviewMachine = {
+export type TMachine = {
   id: string;
   unitNumber: number;
   type: 'CHILLER' | 'COOLING_TOWER';
 };
 
-export type TLogSheetPhotoDef = {
+export type TPreviewParameter = TParameter;
+export type TPreviewMachine = TMachine;
+
+export type TLogSheetPhoto = {
   id: string;
   type: 'BEFORE' | 'AFTER';
   url: string;
@@ -200,6 +207,7 @@ export type TEntryState = {
   numericValue: number | null;
   boolValue: boolean | null;
   textValue: string | null;
+  fileUrl?: string | null;
 };
 
 export interface ILogSheetDetailView {
@@ -241,4 +249,14 @@ export interface ILogSheetDetailView {
     chillers: string[];
     coolingTowers: string[];
   };
+  technicians?: Array<{
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  }>;
+  chemicals?: Array<{
+    id: string;
+    name: string;
+    unit: string | null;
+  }>;
 }

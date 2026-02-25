@@ -20,7 +20,7 @@ import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-prev
 import { makeEntryKey } from '@/features/log-sheets/utils';
 import type {
   TLogSheetEntryRole,
-  TPreviewParameter,
+  TParameter,
   TEntryState,
 } from '@/features/log-sheets/types';
 import { WorkReportPreview } from '@/features/work-reports/components/work-report-preview';
@@ -222,9 +222,7 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
                     }
                     notes={ls.notes}
                     machines={logSheetConfig.machines}
-                    parameters={
-                      logSheetConfig.parameters as TPreviewParameter[]
-                    }
+                    parameters={logSheetConfig.parameters as TParameter[]}
                     valuesByKey={valuesByKey}
                     photos={ls.photos.map(p => ({
                       id: p.id,
@@ -264,7 +262,7 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
               >
                 <LabAnalysisPrint
                   labAnalysis={la}
-                  parameters={logSheetConfig.labParameters}
+                  parameters={logSheetConfig.labParameters as any}
                 />
               </div>
             ))}

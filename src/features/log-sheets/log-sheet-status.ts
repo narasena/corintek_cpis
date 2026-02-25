@@ -51,4 +51,3 @@ export function decideLogSheetStatusTransition(
 
   return { ok: false, error: 'Status tidak valid' };
 }
-

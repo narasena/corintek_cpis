@@ -165,9 +165,7 @@ export interface INotificationService {
   listUserNotifications(
     input: TListNotificationsInput
   ): Promise<TListNotificationsResult>;
-  getUserUnreadCount(
-    input: TUnreadCountInput
-  ): Promise<TUnreadCountResult>;
+  getUserUnreadCount(input: TUnreadCountInput): Promise<TUnreadCountResult>;
   markNotificationAsRead(
     input: TMarkNotificationReadInput
   ): Promise<TMarkNotificationReadResult>;
@@ -197,4 +195,3 @@ export class NotificationError extends Error implements INotificationError {
     this.details = params.details;
   }
 }
-
