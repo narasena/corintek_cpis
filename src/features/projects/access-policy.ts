@@ -1,7 +1,9 @@
+import type { ProjectStatus } from '@/generated/prisma/client';
+
 export type TProjectAccessWhere = {
   id?: string;
   deletedAt?: Date | null;
-  status?: string;
+  status?: ProjectStatus;
   assignments?: {
     some: {
       userId: string;

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@/generated/prisma/client';
 import {
   TCreateProject,
   TUpdateProject,
@@ -321,7 +322,10 @@ export async function setProjectAssignments(
 }
 
 async function applyProjectAssignmentsTransaction(
-  tx: typeof prisma,
+  tx: Omit<
+    typeof prisma,
+    '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
+  >,
   projectId: string,
   assignments: TProjectAssignmentInput[]
 ) {
@@ -594,7 +598,10 @@ async function assertValidAddendumOnUpdate(data: TUpdateProject) {
 }
 
 async function syncProjectMachines(
-  tx: typeof prisma,
+  tx: Omit<
+    typeof prisma,
+    '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
+  >,
   projectId: string,
   machines: TUpdateMachines
 ) {
@@ -615,7 +622,10 @@ async function syncProjectMachines(
 }
 
 async function getExistingMachineIds(
-  tx: typeof prisma,
+  tx: Omit<
+    typeof prisma,
+    '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
+  >,
   projectId: string
 ): Promise<string[]> {
   const rows = await tx.machine.findMany({
@@ -638,7 +648,13 @@ function splitMachinesByAction(
   return { toCreate, toUpdate, toDelete };
 }
 
-async function applyMachineDeletions(tx: typeof prisma, ids: string[]) {
+async function applyMachineDeletions(
+  tx: Omit<
+    typeof prisma,
+    '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
+  >,
+  ids: string[]
+) {
   if (!ids.length) return;
 
   await tx.machine.updateMany({
@@ -648,7 +664,10 @@ async function applyMachineDeletions(tx: typeof prisma, ids: string[]) {
 }
 
 async function applyMachineCreations(
-  tx: typeof prisma,
+  tx: Omit<
+    typeof prisma,
+    '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
+  >,
   projectId: string,
   machines: TUpdateMachines
 ) {
@@ -670,7 +689,10 @@ async function applyMachineCreations(
 }
 
 async function applyMachineUpdates(
-  tx: typeof prisma,
+  tx: Omit<
+    typeof prisma,
+    '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
+  >,
   machines: TUpdateMachines
 ) {
   for (const machine of machines) {

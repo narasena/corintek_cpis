@@ -49,7 +49,10 @@ export async function createParameterAction(data: TCreateParameter) {
 
   try {
     const validatedData = CreateParameterSchema.parse(data);
-    const parameter = await parameterService.createParameter(actor, validatedData);
+    const parameter = await parameterService.createParameter(
+      actor,
+      validatedData
+    );
 
     revalidatePath('/parameters');
     return { success: true, data: parameter };
@@ -89,7 +92,10 @@ export async function updateParameterAction(data: TUpdateParameter) {
 
   try {
     const validatedData = UpdateParameterSchema.parse(data);
-    const parameter = await parameterService.updateParameter(actor, validatedData);
+    const parameter = await parameterService.updateParameter(
+      actor,
+      validatedData
+    );
 
     revalidatePath('/parameters');
     return { success: true, data: parameter };

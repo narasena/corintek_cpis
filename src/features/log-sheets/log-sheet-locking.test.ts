@@ -43,8 +43,18 @@ describe('getLogSheetEditState', () => {
   });
 
   it('treats locked flag as a hard lock regardless of status or override', () => {
-    expectState('DRAFT', { isAdmin: true, allowAdminOverride: true }, 'LOCKED_APPROVED', true);
-    expectState('SUBMITTED', { isAdmin: true, allowAdminOverride: true }, 'LOCKED_APPROVED', true);
+    expectState(
+      'DRAFT',
+      { isAdmin: true, allowAdminOverride: true },
+      'LOCKED_APPROVED',
+      true
+    );
+    expectState(
+      'SUBMITTED',
+      { isAdmin: true, allowAdminOverride: true },
+      'LOCKED_APPROVED',
+      true
+    );
   });
 });
 

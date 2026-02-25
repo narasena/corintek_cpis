@@ -9,7 +9,7 @@ import {
   updateLogSheetAction,
   uploadLogSheetImageAction,
 } from '@/features/log-sheets/actions';
-import type { TChemicalUsageState } from '../components/chemical-usage-section';
+import type { TChemicalUsageState } from '@/features/log-sheets/components/chemical-usage-section';
 import type { TEntryRole, TEntryState } from '../types';
 
 export function useLogSheetDraftSaver(args: {
@@ -69,8 +69,8 @@ export function useLogSheetDraftSaver(args: {
 
             const uploadRes = await uploadLogSheetImageAction(formData);
 
-            if (uploadRes.success && uploadRes.url) {
-              uploadedUrls[key] = uploadRes.url;
+            if (uploadRes.success) {
+              uploadedUrls[key] = uploadRes.data.url;
             } else {
               toast.error('Gagal mengupload foto', {
                 description: uploadRes.error,

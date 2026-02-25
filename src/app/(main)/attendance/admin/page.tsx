@@ -57,13 +57,13 @@ export default function AttendanceAdminPage() {
       userId: userId || undefined,
     });
 
-    if (result.success && Array.isArray(result.data)) {
-      setData(result.data as TAttendanceAdminRow[]);
-    } else {
+    if (!result.success) {
       toast.error('Gagal mengambil data absensi', {
         description: result.error,
       });
       setData([]);
+    } else if (Array.isArray(result.data)) {
+      setData(result.data as TAttendanceAdminRow[]);
     }
     setLoading(false);
   }, [dateFrom, dateTo, userId]);
@@ -92,8 +92,13 @@ export default function AttendanceAdminPage() {
         userId: userId || undefined,
       });
 
-      if (!result.success || !result.data?.csv) {
+      if (!result.success) {
         toast.error('Gagal export CSV', { description: result.error });
+        return;
+      }
+
+      if (!result.data.csv) {
+        toast.error('Gagal export CSV', { description: 'Data tidak tersedia' });
         return;
       }
 

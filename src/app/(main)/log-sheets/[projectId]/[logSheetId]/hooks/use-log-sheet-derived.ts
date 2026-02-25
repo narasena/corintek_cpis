@@ -1,14 +1,23 @@
 import { useCallback, useMemo } from 'react';
 
-import { CATEGORY_ORDER } from '@/features/log-sheets/components/log-sheet-preview';
-import type { TUserResponse } from '@/@types/user.type';
+import {
+  CATEGORY_ORDER,
+  usesChillers,
+  usesCoolingTowers,
+} from '@/features/log-sheets/components/log-sheet-preview/category-helpers';
 import type { TDetail, TMachine, TParameter } from '../types';
+
+type TTechnician = {
+  id: string;
+  firstName: string;
+  lastName: string | null;
+};
 
 export function useLogSheetDerived(args: {
   detail: TDetail | null;
   activeChillerIds: string[];
   activeCTIds: string[];
-  technicians: TUserResponse[];
+  technicians: TTechnician[];
   replacedByUserId: string | null;
 }) {
   const {
@@ -46,17 +55,13 @@ export function useLogSheetDerived(args: {
   const machinesForCategory = useCallback(
     (category: TParameter['category']) => {
       if (!detail) return { machines: [] as TMachine[], label: '' };
-      if (category === 'UNIT_CONDENSOR' || category === 'UNIT_EVAPORATOR') {
+      if (usesChillers(category)) {
         const filtered = detail.machines.chillers.filter(m =>
           activeChillerIds.includes(m.id)
         );
         return { machines: filtered, label: 'Chiller' };
       }
-      if (
-        category === 'COOLING_WATER_QUALITY' ||
-        category === 'GENERAL_CONDITION' ||
-        category === 'JOB_DESCRIPTION'
-      ) {
+      if (usesCoolingTowers(category)) {
         const filtered = detail.machines.coolingTowers.filter(m =>
           activeCTIds.includes(m.id)
         );

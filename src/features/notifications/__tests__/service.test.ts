@@ -59,10 +59,7 @@ describe('Limit breach evaluation', () => {
   });
 
   it('does not create breach when value equals min or max', async () => {
-    const entries = [
-      makeEntry({ value: 5 }),
-      makeEntry({ value: 8 }),
-    ];
+    const entries = [makeEntry({ value: 5 }), makeEntry({ value: 8 })];
 
     const result = await notificationService.evaluateLimitBreaches({
       evaluatorUserId: 'evaluator-1',
@@ -115,7 +112,9 @@ describe('Limit breach evaluation', () => {
       },
     ];
 
-    (prismaMock.$transaction as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+    (
+      prismaMock.$transaction as unknown as ReturnType<typeof vi.fn>
+    ).mockImplementation(
       async (fn: (client: typeof prismaMock) => Promise<INotification[]>) =>
         fn(prismaMock as never)
     );
@@ -187,7 +186,9 @@ describe('Limit breach evaluation', () => {
       },
     ];
 
-    (prismaMock.$transaction as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+    (
+      prismaMock.$transaction as unknown as ReturnType<typeof vi.fn>
+    ).mockImplementation(
       async (fn: (client: typeof prismaMock) => Promise<INotification[]>) =>
         fn(prismaMock as never)
     );
@@ -206,9 +207,10 @@ describe('Limit breach evaluation', () => {
 
     expect(result.breaches).toHaveLength(1);
     expect(result.createdNotifications).toHaveLength(2);
-    expect(
-      result.createdNotifications.map(n => n.userId).sort()
-    ).toEqual(['tech-1', 'tech-2']);
+    expect(result.createdNotifications.map(n => n.userId).sort()).toEqual([
+      'tech-1',
+      'tech-2',
+    ]);
   });
 
   it('throws on empty technician list', async () => {

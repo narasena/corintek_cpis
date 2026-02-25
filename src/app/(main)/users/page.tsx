@@ -9,7 +9,7 @@ import { TUserResponse } from '@/@types/user.type';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
 import { getUserColumns } from './components/user-columns';
-import { UserDialog } from './components/user-dialog';
+import { UserDialog } from '@/features/users/components/user-dialog';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<TUserResponse[]>([]);

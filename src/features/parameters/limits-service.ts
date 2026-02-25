@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { ParameterCategory, ValueType } from '@/generated/prisma/client';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import type {
@@ -12,12 +13,12 @@ import type {
 function buildWhere(filters?: TParameterLimitListInput) {
   const where: {
     deletedAt: null;
-    category?: string;
-    valueType?: string;
+    category?: ParameterCategory;
+    valueType?: ValueType;
     isActive?: boolean;
   } = { deletedAt: null };
-  if (filters?.category) where.category = filters.category;
-  if (filters?.valueType) where.valueType = filters.valueType;
+  if (filters?.category) where.category = filters.category as ParameterCategory;
+  if (filters?.valueType) where.valueType = filters.valueType as ValueType;
   if (filters?.isActive !== undefined) where.isActive = filters.isActive;
   return where;
 }
@@ -111,6 +112,16 @@ export async function updateParameterLimitBatch(
   input: TUpdateParameterLimitBatchInput
 ) {
   ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
-  const updates = input.items.map(item => updateParameterLimitCore(item));
+  const updates = input.items.map(item => {
+    assertValidLimit(item);
+    const data = buildUpdateData(item);
+    if (Object.keys(data).length === 0) {
+      throw new Error('Tidak ada nilai limit yang diubah');
+    }
+    return prisma.parameter.update({
+      where: { id: item.parameterId },
+      data,
+    });
+  });
   return prisma.$transaction(updates);
 }

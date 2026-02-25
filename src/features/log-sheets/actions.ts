@@ -23,6 +23,8 @@ import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { isLogSheetEntryEmpty } from './utils';
+import { uploadToR2 } from '@/lib/r2-upload';
+import { ok, err } from '@/lib/action-helpers';
 
 const SaveLogSheetEntriesSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
@@ -89,6 +91,16 @@ async function assertCanAccessLogSheet(actor: IJwtPayload, logSheetId: string) {
   return projectId;
 }
 
+function revalidateLogSheetPaths(projectId: string, logSheetId?: string): void {
+  revalidatePath('/log-sheets');
+  revalidatePath(`/log-sheets/${projectId}`);
+  revalidatePath('/');
+  revalidatePath(`/my-projects/${projectId}`);
+  if (logSheetId) {
+    revalidatePath(`/log-sheets/${projectId}/${logSheetId}`);
+  }
+}
+
 export async function getLogSheetsByProjectAction(projectId: string) {
   try {
     const actor = await requireActor();
@@ -97,16 +109,9 @@ export async function getLogSheetsByProjectAction(projectId: string) {
     await projectService.assertCanAccessProject(actor, validatedProjectId);
     const logSheets =
       await logSheetService.getLogSheetsByProject(validatedProjectId);
-    return { success: true, data: logSheets };
+    return ok(logSheets);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.GetByProject:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil data log sheet',
-    };
+    return err(error, 'Gagal mengambil data log sheet');
   }
 }
 
@@ -119,16 +124,9 @@ export async function getAllLogSheetsAction() {
     const logSheets = await logSheetService.getAllLogSheets(
       projectIds ?? undefined
     );
-    return { success: true, data: logSheets };
+    return ok(logSheets);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.GetAll:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil data log sheet',
-    };
+    return err(error, 'Gagal mengambil data log sheet');
   }
 }
 
@@ -144,17 +142,10 @@ export async function createLogSheetAction(data: unknown) {
     );
     const logSheet = await logSheetService.createLogSheet(validatedData);
 
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${validatedData.projectId}`);
-    revalidatePath('/');
-    revalidatePath(`/my-projects/${validatedData.projectId}`);
-    return { success: true, data: logSheet };
+    revalidateLogSheetPaths(validatedData.projectId);
+    return ok(logSheet);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.Create:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Gagal membuat log sheet',
-    };
+    return err(error, 'Gagal membuat log sheet');
   }
 }
 
@@ -169,18 +160,10 @@ export async function updateLogSheetAction(data: unknown) {
       status: undefined,
     });
 
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${logSheet.projectId}`);
-    revalidatePath('/');
-    revalidatePath(`/my-projects/${logSheet.projectId}`);
-    return { success: true, data: logSheet };
+    revalidateLogSheetPaths(logSheet.projectId);
+    return ok(logSheet);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.Update:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal memperbarui log sheet',
-    };
+    return err(error, 'Gagal memperbarui log sheet');
   }
 }
 
@@ -198,18 +181,10 @@ export async function updateLogSheetAdminOverrideAction(data: unknown) {
       { allowAdminOverride: true }
     );
 
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${logSheet.projectId}`);
-    revalidatePath('/');
-    revalidatePath(`/my-projects/${logSheet.projectId}`);
-    return { success: true, data: logSheet };
+    revalidateLogSheetPaths(logSheet.projectId);
+    return ok(logSheet);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.UpdateAdminOverride:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal memperbarui log sheet',
-    };
+    return err(error, 'Gagal memperbarui log sheet');
   }
 }
 
@@ -228,20 +203,10 @@ export async function updateLogSheetStatusAction(data: unknown) {
       id: validatedData.id,
       status: validatedData.status,
     });
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${logSheet.projectId}`);
-    revalidatePath('/');
-    revalidatePath(`/my-projects/${logSheet.projectId}`);
-    return { success: true, data: logSheet };
+    revalidateLogSheetPaths(logSheet.projectId);
+    return ok(logSheet);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.UpdateStatus:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal memperbarui status log sheet',
-    };
+    return err(error, 'Gagal memperbarui status log sheet');
   }
 }
 
@@ -261,18 +226,10 @@ export async function deleteLogSheetAction(id: string) {
     await assertCanAccessLogSheet(actor, validatedId);
     const logSheet = await logSheetService.deleteLogSheet(validatedId);
 
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${logSheet.projectId}`);
-    revalidatePath('/');
-    revalidatePath(`/my-projects/${logSheet.projectId}`);
-    return { success: true };
+    revalidateLogSheetPaths(logSheet.projectId);
+    return ok(undefined);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.Delete:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal menghapus log sheet',
-    };
+    return err(error, 'Gagal menghapus log sheet');
   }
 }
 
@@ -283,16 +240,9 @@ export async function getLogSheetDetailAction(id: string) {
     const validatedId = z.string().uuid().parse(id);
     await assertCanAccessLogSheet(actor, validatedId);
     const detail = await logSheetService.getLogSheetDetail(validatedId);
-    return { success: true, data: { ...detail, viewerRole: actor.role } };
+    return ok({ ...detail, viewerRole: actor.role });
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.GetDetail:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil detail log sheet',
-    };
+    return err(error, 'Gagal mengambil detail log sheet');
   }
 }
 
@@ -348,19 +298,12 @@ export async function saveLogSheetEntriesAction(data: unknown) {
     const projectId = await logSheetService.getLogSheetProjectId(
       validatedData.logSheetId
     );
-    revalidatePath('/log-sheets');
     if (projectId) {
-      revalidatePath(`/log-sheets/${projectId}`);
-      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+      revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
-    return { success: true };
+    return ok(undefined);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.SaveEntries:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal menyimpan log sheet',
-    };
+    return err(error, 'Gagal menyimpan log sheet');
   }
 }
 
@@ -383,21 +326,12 @@ export async function saveLogSheetPhotosAction(data: unknown) {
     const projectId = await logSheetService.getLogSheetProjectId(
       validatedData.logSheetId
     );
-    revalidatePath('/log-sheets');
     if (projectId) {
-      revalidatePath(`/log-sheets/${projectId}`);
-      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+      revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
-    return { success: true };
+    return ok(undefined);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.SavePhotos:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menyimpan foto log sheet',
-    };
+    return err(error, 'Gagal menyimpan foto log sheet');
   }
 }
 
@@ -420,21 +354,12 @@ export async function saveLogSheetChemicalsAction(data: unknown) {
     const projectId = await logSheetService.getLogSheetProjectId(
       validatedData.logSheetId
     );
-    revalidatePath('/log-sheets');
     if (projectId) {
-      revalidatePath(`/log-sheets/${projectId}`);
-      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+      revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
-    return { success: true };
+    return ok(undefined);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.SaveChemicals:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menyimpan penggunaan chemical',
-    };
+    return err(error, 'Gagal menyimpan penggunaan chemical');
   }
 }
 
@@ -458,19 +383,12 @@ export async function saveLogSheetMachinesAction(data: unknown) {
     const projectId = await logSheetService.getLogSheetProjectId(
       validatedData.logSheetId
     );
-    revalidatePath('/log-sheets');
     if (projectId) {
-      revalidatePath(`/log-sheets/${projectId}`);
-      revalidatePath(`/log-sheets/${projectId}/${validatedData.logSheetId}`);
+      revalidateLogSheetPaths(projectId, validatedData.logSheetId);
     }
-    return { success: true };
+    return ok(undefined);
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.SaveMachines:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal menyimpan pilihan unit',
-    };
+    return err(error, 'Gagal menyimpan pilihan unit');
   }
 }
 
@@ -498,29 +416,9 @@ export async function saveLogSheetSignatureAction(data: unknown) {
     const base64 = matches[3];
     const buffer = Buffer.from(base64, 'base64');
 
-    const workerUrl = process.env.R2_WORKER_URL;
-    const authSecret = process.env.R2_AUTH_SECRET;
-
-    if (!workerUrl || !authSecret) {
-      throw new Error('Server configuration error: Missing R2 credentials');
-    }
-
     const key = `projects/${projectId}/log-sheets/${logSheetId}/signatures/${signatureRole.toLowerCase()}-${Date.now()}.webp`;
 
-    const response = await fetch(`${workerUrl}/${key}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authSecret}`,
-        'Content-Type': mimeType,
-      },
-      body: buffer,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`);
-    }
-
-    const url = `${workerUrl}/${key}`;
+    const url = await uploadToR2({ key, body: buffer, contentType: mimeType });
 
     const updated = await logSheetService.saveLogSheetSignature(
       actor,
@@ -529,18 +427,11 @@ export async function saveLogSheetSignatureAction(data: unknown) {
       url
     );
 
-    revalidatePath('/log-sheets');
-    revalidatePath(`/log-sheets/${projectId}`);
-    revalidatePath(`/log-sheets/${projectId}/${logSheetId}`);
+    revalidateLogSheetPaths(projectId, logSheetId);
 
-    return { success: true, url, data: updated };
+    return ok({ url, data: updated });
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.Signature:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal menyimpan tanda tangan',
-    };
+    return err(error, 'Gagal menyimpan tanda tangan');
   }
 }
 
@@ -566,46 +457,19 @@ export async function uploadLogSheetImageAction(formData: FormData) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const workerUrl = process.env.R2_WORKER_URL;
-    const authSecret = process.env.R2_AUTH_SECRET;
 
-    if (!workerUrl || !authSecret) {
-      throw new Error('Server configuration error: Missing R2 credentials');
-    }
-
-    // Clean up filename
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
 
-    // Structure: projects/{projectId}/log-sheets/{logSheetId}/{timestamp}_{filename}
-    // Fallback to old path if IDs are missing (backward compatibility/safety)
     let key = `log-sheets/${Date.now()}-${sanitizedName}`;
 
     if (projectId && logSheetId) {
       key = `projects/${projectId}/log-sheets/${logSheetId}/${Date.now()}_${sanitizedName}`;
     }
 
-    const response = await fetch(`${workerUrl}/${key}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authSecret}`,
-        'Content-Type': file.type,
-      },
-      body: buffer,
-    });
+    const url = await uploadToR2({ key, body: buffer, contentType: file.type });
 
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`);
-    }
-
-    // The worker returns the object on GET, so the URL is the worker URL + key
-    const url = `${workerUrl}/${key}`;
-
-    return { success: true, url };
+    return ok({ url });
   } catch (error) {
-    console.error('[CPIS-ERROR] LogSheet.UploadImage:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Upload failed',
-    };
+    return err(error, 'Upload failed');
   }
 }

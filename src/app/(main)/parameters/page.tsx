@@ -7,7 +7,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
 import { getParameterColumns } from './components/columns';
-import { ParameterDialog } from './components/parameter-dialog';
+import { ParameterDialog } from '@/features/parameters/components/parameter-dialog';
 
 import {
   getParametersAction,

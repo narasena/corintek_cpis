@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { makeEntryKey } from '@/features/log-sheets/utils';
-import type { TChemicalUsageState } from '../components/chemical-usage-section';
+import type { TChemicalUsageState } from '@/features/log-sheets/components/chemical-usage-section';
 import type { TDetail, TEntryState } from '../types';
 
 export function useLogSheetDraftState(detail: TDetail | null) {
@@ -46,12 +46,22 @@ export function useLogSheetDraftState(detail: TDetail | null) {
         for (const ctId of ctIds) {
           const key = makeEntryKey(param.id, ctId, 'VALUE');
           if (!initial[key]) {
-            initial[key] = { valueType: 'BOOLEAN', boolValue: false };
+            initial[key] = {
+              valueType: 'BOOLEAN',
+              boolValue: false,
+              numericValue: null,
+              textValue: null,
+            };
           }
         }
         const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
         if (!initial[rawKey]) {
-          initial[rawKey] = { valueType: 'BOOLEAN', boolValue: false };
+          initial[rawKey] = {
+            valueType: 'BOOLEAN',
+            boolValue: false,
+            numericValue: null,
+            textValue: null,
+          };
         }
         continue;
       }
@@ -59,7 +69,12 @@ export function useLogSheetDraftState(detail: TDetail | null) {
       for (const ctId of ctIds) {
         const key = makeEntryKey(param.id, ctId, 'VALUE');
         if (!initial[key]) {
-          initial[key] = { valueType: 'BOOLEAN', boolValue: false };
+          initial[key] = {
+            valueType: 'BOOLEAN',
+            boolValue: false,
+            numericValue: null,
+            textValue: null,
+          };
         }
       }
     }

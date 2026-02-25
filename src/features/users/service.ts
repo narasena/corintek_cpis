@@ -6,7 +6,10 @@ import bcrypt from 'bcrypt';
 
 const SALT_ROUNDS = 10;
 
-function ensureUsersAccess(actor: IJwtPayload, capability: 'create' | 'read' | 'update' | 'delete') {
+function ensureUsersAccess(
+  actor: IJwtPayload,
+  capability: 'create' | 'read' | 'update' | 'delete'
+) {
   if (!canAccess(actor.role, RbacResource.USERS_ADMIN, capability)) {
     throw new Error('Unauthorized');
   }

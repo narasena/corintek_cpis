@@ -89,7 +89,11 @@ export async function createLabAnalysis(input: CreateLabAnalysisInput) {
       },
     });
 
-    const createdColumns = await createLabAnalysisColumns(tx, input, labAnalysis.id);
+    const createdColumns = await createLabAnalysisColumns(
+      tx,
+      input,
+      labAnalysis.id
+    );
     const columnIdByTempId = mapLabAnalysisColumnTempIds(input, createdColumns);
 
     await createLabAnalysisEntries(
@@ -245,7 +249,9 @@ function findRemovedLabAnalysisColumnIds(
   columns: UpdateLabAnalysisInput['columns']
 ) {
   const existingIds = new Set(existingColumns.map(c => c.id));
-  const incomingIds = new Set(columns.map(c => c.id).filter(Boolean) as string[]);
+  const incomingIds = new Set(
+    columns.map(c => c.id).filter(Boolean) as string[]
+  );
   return [...existingIds].filter(id => !incomingIds.has(id));
 }
 

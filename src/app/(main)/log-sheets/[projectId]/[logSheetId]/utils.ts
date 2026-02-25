@@ -3,6 +3,7 @@ import {
   formatNumericLimit,
   formatRawWaterLimit as formatRawLimitCore,
 } from '@/features/parameters/limits-format';
+import { isNumericInRange } from '@/features/log-sheets/utils';
 
 export function formatDate(value: string | Date) {
   const date = typeof value === 'string' ? new Date(value) : value;
@@ -39,8 +40,5 @@ export function isOutOfRange(
   min: number | null,
   max: number | null
 ) {
-  if (value === null || value === undefined) return false;
-  if (min !== null && value < min) return true;
-  if (max !== null && value > max) return true;
-  return false;
+  return !isNumericInRange(value, min, max);
 }

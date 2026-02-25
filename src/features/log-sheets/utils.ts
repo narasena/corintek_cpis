@@ -1,4 +1,19 @@
 import { TLogSheetEntryRole } from './types';
+import {
+  isEntryValueEmpty,
+  isEntryValueComplete,
+  getTypedValue,
+  createEmptyEntryState,
+  isNumericInRange,
+} from './utils/value-type';
+
+export {
+  isEntryValueEmpty,
+  isEntryValueComplete,
+  getTypedValue,
+  createEmptyEntryState,
+  isNumericInRange,
+};
 
 export function makeEntryKey(
   parameterId: string,
@@ -15,23 +30,14 @@ export function isLogSheetEntryEmpty(entry: {
   textValue?: string | null;
   fileUrl?: string | null;
 }) {
-  if (entry.fileUrl) return false;
+  return isEntryValueEmpty(entry);
+}
 
-  if (entry.valueType === 'NUMBER') {
-    return entry.numericValue === null || entry.numericValue === undefined;
-  }
-
-  if (entry.valueType === 'BOOLEAN') {
-    return entry.boolValue === null || entry.boolValue === undefined;
-  }
-
-  if (entry.valueType === 'TEXT') {
-    return (
-      entry.textValue === null ||
-      entry.textValue === undefined ||
-      entry.textValue.trim() === ''
-    );
-  }
-
-  return true;
+export function isEntryComplete(entry?: {
+  valueType: 'NUMBER' | 'BOOLEAN' | 'TEXT';
+  numericValue?: number | null;
+  boolValue?: boolean | null;
+  textValue?: string | null;
+}): boolean {
+  return isEntryValueComplete(entry);
 }

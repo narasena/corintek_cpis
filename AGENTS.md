@@ -102,7 +102,8 @@ npm run prisma:seed        # seed DB
 - Format: Conventional Commits (see `commitlint.config.js` for types: feat, fix, docs, build, style, refactor, test, chore, perf, ci, revert)
 - **Scope Separation:** Separate commits for different scopes (don't bundle unrelated changes)
 - **DO NOT COMMIT DIRECTLY ON `main`/`master`, `dev`/`development`, `stage`/`staging`, all commits must be created their own dedicated branches first.**
-- Create a dedicated branch first before excution / implementation (when you need to write access ) 
+- Create a dedicated branch first before excution / implementation (when you need to write access )
+
 ---
 
 # Repository Tour
@@ -309,5 +310,75 @@ Security Considerations
 - Scope: Internal Team (<40 Users).
 
 - Authorization: Role checks happen in the Service Layer (service.ts).
+
+---
+
+## 📁 Folder Organization Rules
+
+### Component Placement
+
+| Component Type           | Location                         | Example                               |
+| ------------------------ | -------------------------------- | ------------------------------------- |
+| **Route-scoped UI**      | `app/(main)/[route]/components/` | Table columns, page-specific wrappers |
+| **Domain components**    | `features/[domain]/components/`  | Forms, dialogs, previews              |
+| **Shared UI primitives** | `components/ui/`                 | shadcn components, buttons, inputs    |
+
+**Rules:**
+
+- Forms (create/edit) → `features/[domain]/components/[entity]-form.tsx`
+- Dialogs → `features/[domain]/components/[entity]-dialog.tsx`
+- Table columns → `app/(main)/[route]/components/columns.tsx` (route-specific)
+- Hooks used across routes → `features/[domain]/hooks/`
+
+### Test Placement
+
+| Test Type                | Location                               | Example                                          |
+| ------------------------ | -------------------------------------- | ------------------------------------------------ |
+| **Unit/Component tests** | Colocated (`*.test.ts` next to source) | `service.ts` + `service.test.ts`                 |
+| **E2E tests**            | `src/__tests__/e2e/`                   | `src/__tests__/e2e/log-sheet/happy-path.spec.ts` |
+
+**Rules:**
+
+- ❌ NO `__tests__` folders for unit/component tests
+- ✅ Tests live alongside their source files
+- ✅ E2E tests remain centralized in `src/__tests__/e2e/`
+
+### Directory Structure (After Refactor)
+
+```
+src/
+├── app/(main)/                    # Routes only
+│   ├── log-sheets/
+│   │   ├── page.tsx               # Project list
+│   │   ├── [projectId]/
+│   │   │   ├── page.tsx           # Log sheet list
+│   │   │   ├── columns.tsx        # Route-scoped columns
+│   │   │   └── columns.test.tsx   # Colocated test
+│   │   └── [projectId]/[logSheetId]/
+│   │       ├── page.tsx           # Detail page
+│   │       ├── entry-cells.tsx    # Page-specific component
+│   │       ├── hooks/             # Page-specific hooks
+│   │       └── utils.ts
+│   └── ...
+│
+├── features/
+│   └── log-sheets/
+│       ├── actions.ts
+│       ├── actions.test.ts        # Colocated test
+│       ├── service.ts
+│       ├── service.test.ts        # Colocated test
+│       ├── types.ts
+│       ├── validation.ts
+│       ├── components/            # Domain components
+│       │   ├── log-sheet-form.tsx
+│       │   ├── log-sheet-dialog.tsx
+│       │   ├── log-sheet-toolbar.tsx
+│       │   └── log-sheet-preview/
+│       └── hooks/                 # Reusable hooks
+│           └── use-log-sheet-technicians.ts
+│
+└── __tests__/e2e/                 # E2E tests only
+    └── log-sheet/
+```
 
 Update to last commit: 3c0934cc20e56f2ad23096d3b1815a525f9a528f

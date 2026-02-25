@@ -15,6 +15,7 @@ export default defineConfig({
       '.next',
       'worker',
       'src/__tests__/setup.ts',
+      'src/__tests__/e2e',
     ],
   },
   resolve: {

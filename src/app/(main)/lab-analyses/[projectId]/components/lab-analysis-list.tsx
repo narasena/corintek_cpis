@@ -13,4 +13,3 @@ export function LabAnalysisList({ projectId, data }: LabAnalysisListProps) {
   const columns = getLabAnalysisColumns({ projectId });
   return <DataTable columns={columns} data={data} />;
 }
-
