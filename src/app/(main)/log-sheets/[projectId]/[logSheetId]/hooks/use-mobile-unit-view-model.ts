@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import type {
+  IActiveMachineIdsSnapshot,
   ILogSheetDetailSnapshot,
   ILogSheetUnitViewConfig,
   ILogSheetUnitViewModel,
@@ -13,38 +14,83 @@ import type { TDetail, TEntryState } from '../types';
 
 const viewModelBuilder = new LogSheetUnitViewModelBuilder();
 
-function mapDetailToSnapshot(detail: TDetail): ILogSheetDetailSnapshot {
+export interface IActiveMachineIdsOverride {
+  chillers: string[];
+  coolingTowers: string[];
+}
+
+function mapDetailToSnapshot(
+  detail: TDetail,
+  activeMachineIdsOverride?: IActiveMachineIdsOverride
+): ILogSheetDetailSnapshot {
   return {
-    header: {
-      id: detail.logSheet.id,
-      projectId: detail.logSheet.projectId,
-      date: new Date(detail.logSheet.date),
-      status: detail.logSheet.status,
-      notes: detail.logSheet.notes,
-      locked: detail.logSheet.status !== 'DRAFT',
-    },
-    project: {
-      id: detail.project.id,
-      name: detail.project.name,
-      clientName: detail.project.clientName,
-    },
-    machines: {
-      chillers: detail.machines.chillers,
-      coolingTowers: detail.machines.coolingTowers,
-    },
+    header: buildHeaderSnapshot(detail),
+    project: buildProjectSnapshot(detail),
+    machines: buildMachinesSnapshot(detail),
     parameters: detail.parameters,
-    entries: detail.entries.map(entry => ({
-      logSheetId: detail.logSheet.id,
-      parameterId: entry.parameterId,
-      machineId: entry.machineId,
-      role: entry.role,
-      valueType: entry.valueType,
-      numericValue: entry.numericValue,
-      boolValue: entry.boolValue,
-      textValue: entry.textValue,
-      fileUrl: entry.fileUrl,
-    })),
-    activeMachineIds: detail.activeMachineIds,
+    entries: buildEntriesSnapshot(detail),
+    activeMachineIds: resolveActiveMachineIds(detail, activeMachineIdsOverride),
+  };
+}
+
+function buildHeaderSnapshot(
+  detail: TDetail
+): ILogSheetDetailSnapshot['header'] {
+  return {
+    id: detail.logSheet.id,
+    projectId: detail.logSheet.projectId,
+    date: new Date(detail.logSheet.date),
+    status: detail.logSheet.status,
+    notes: detail.logSheet.notes,
+    locked: detail.logSheet.status !== 'DRAFT',
+  };
+}
+
+function buildProjectSnapshot(
+  detail: TDetail
+): ILogSheetDetailSnapshot['project'] {
+  return {
+    id: detail.project.id,
+    name: detail.project.name,
+    clientName: detail.project.clientName,
+  };
+}
+
+function buildMachinesSnapshot(
+  detail: TDetail
+): ILogSheetDetailSnapshot['machines'] {
+  return {
+    chillers: detail.machines.chillers,
+    coolingTowers: detail.machines.coolingTowers,
+  };
+}
+
+function buildEntriesSnapshot(
+  detail: TDetail
+): ILogSheetDetailSnapshot['entries'] {
+  return detail.entries.map(entry => ({
+    logSheetId: detail.logSheet.id,
+    parameterId: entry.parameterId,
+    machineId: entry.machineId,
+    role: entry.role,
+    valueType: entry.valueType,
+    numericValue: entry.numericValue,
+    boolValue: entry.boolValue,
+    textValue: entry.textValue,
+    fileUrl: entry.fileUrl,
+  }));
+}
+
+function resolveActiveMachineIds(
+  detail: TDetail,
+  override?: IActiveMachineIdsOverride
+): IActiveMachineIdsSnapshot {
+  if (!override) {
+    return detail.activeMachineIds;
+  }
+  return {
+    chillers: override.chillers,
+    coolingTowers: override.coolingTowers,
   };
 }
 
@@ -70,7 +116,7 @@ function createMobileUnitViewConfig(
   const base: ILogSheetUnitViewConfig = {
     featureEnabled: true,
     maxVisibleUnits: 1,
-    defaultViewMode: 'unit-first',
+    defaultViewMode: 'overview-first',
     unitSortStrategy: 'byUnitNumber',
   };
 
@@ -88,12 +134,13 @@ function createMobileUnitViewConfig(
 export function useMobileUnitViewModel(
   detail: TDetail | null,
   entryState: Record<string, TEntryState>,
+  activeMachineIds?: IActiveMachineIdsOverride,
   configOverride?: Partial<ILogSheetUnitViewConfig>
 ): ILogSheetUnitViewModel | null {
   return useMemo(() => {
     if (!detail) return null;
 
-    const snapshot = mapDetailToSnapshot(detail);
+    const snapshot = mapDetailToSnapshot(detail, activeMachineIds);
     const stateMap = mapEntryState(entryState);
     const config = createMobileUnitViewConfig(configOverride);
 
@@ -103,5 +150,5 @@ export function useMobileUnitViewModel(
       config,
       builder: viewModelBuilder,
     });
-  }, [detail, entryState, configOverride]);
+  }, [detail, entryState, activeMachineIds, configOverride]);
 }

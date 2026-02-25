@@ -141,7 +141,10 @@ export default function LogSheetDetailPage() {
   const isLocked = isStatusLocked && !adminOverride;
 
   const derivedUsers = useLogSheetDerivedUsers(detail);
-  const mobileViewModel = useMobileUnitViewModel(detail, entryState);
+  const mobileViewModel = useMobileUnitViewModel(detail, entryState, {
+    chillers: activeChillerIds,
+    coolingTowers: activeCTIds,
+  });
 
   const handleSave = () => {
     if (isLocked) {

@@ -179,9 +179,430 @@ describe('useMobileUnitViewModel', () => {
     expect(callArgs.config).toEqual({
       featureEnabled: true,
       maxVisibleUnits: 1,
+      defaultViewMode: 'overview-first',
+      unitSortStrategy: 'byUnitNumber',
+    });
+  });
+
+  it('uses activeMachineIds override when provided', () => {
+    const detail: TDetail = {
+      viewerRole: 'ADMIN',
+      logSheet: {
+        id: 'ls-1',
+        projectId: 'proj-1',
+        date: '2024-01-01',
+        notes: null,
+        status: 'DRAFT',
+        locked: false,
+        technicianSignatureUrl: null,
+        technicianSignedAt: null,
+        technicianSignedByUserId: null,
+        clientPicSignatureUrl: null,
+        clientPicSignedAt: null,
+        clientPicSignedByUserId: null,
+        submittedAt: null,
+        submittedByUserId: null,
+        approvedAt: null,
+        approvedByUserId: null,
+        replacedBy: null,
+        submittedBy: null,
+        approvedBy: null,
+        technicianSignedBy: null,
+        clientPicSignedBy: null,
+      },
+      project: {
+        id: 'proj-1',
+        name: 'Project',
+        clientName: 'Client',
+        assignments: [],
+      },
+      machines: {
+        chillers: [
+          { id: 'ch-1', unitNumber: 1, type: 'CHILLER' },
+          { id: 'ch-2', unitNumber: 2, type: 'CHILLER' },
+        ],
+        coolingTowers: [],
+      },
+      parameters: [],
+      entries: [],
+      photos: [],
+      chemicalUsages: [],
+      activeMachineIds: {
+        chillers: ['ch-1', 'ch-2'],
+        coolingTowers: [],
+      },
+      technicians: [],
+      chemicals: [],
+    };
+
+    const entryState: Record<string, TEntryState> = {};
+
+    const fakeViewModel: ILogSheetUnitViewModel = {
+      units: [],
+      activeUnitId: null,
+      categoriesByUnit: new Map(),
+      summaryFields: [],
+    };
+
+    const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockReturnValue(fakeViewModel);
+
+    useMobileUnitViewModel(detail, entryState, {
+      chillers: ['ch-2'],
+      coolingTowers: [],
+    });
+
+    expect(buildMock).toHaveBeenCalledTimes(1);
+
+    const callArgs = buildMock.mock.calls[0]?.[0];
+    const snapshot = callArgs.detail as ILogSheetDetailSnapshot;
+
+    expect(snapshot.activeMachineIds.chillers).toEqual(['ch-2']);
+    expect(snapshot.activeMachineIds.coolingTowers).toEqual([]);
+  });
+
+  it('falls back to detail.activeMachineIds when override is not provided', () => {
+    const detail: TDetail = {
+      viewerRole: 'ADMIN',
+      logSheet: {
+        id: 'ls-1',
+        projectId: 'proj-1',
+        date: '2024-01-01',
+        notes: null,
+        status: 'DRAFT',
+        locked: false,
+        technicianSignatureUrl: null,
+        technicianSignedAt: null,
+        technicianSignedByUserId: null,
+        clientPicSignatureUrl: null,
+        clientPicSignedAt: null,
+        clientPicSignedByUserId: null,
+        submittedAt: null,
+        submittedByUserId: null,
+        approvedAt: null,
+        approvedByUserId: null,
+        replacedBy: null,
+        submittedBy: null,
+        approvedBy: null,
+        technicianSignedBy: null,
+        clientPicSignedBy: null,
+      },
+      project: {
+        id: 'proj-1',
+        name: 'Project',
+        clientName: 'Client',
+        assignments: [],
+      },
+      machines: {
+        chillers: [{ id: 'ch-1', unitNumber: 1, type: 'CHILLER' }],
+        coolingTowers: [],
+      },
+      parameters: [],
+      entries: [],
+      photos: [],
+      chemicalUsages: [],
+      activeMachineIds: {
+        chillers: ['ch-1'],
+        coolingTowers: [],
+      },
+      technicians: [],
+      chemicals: [],
+    };
+
+    const entryState: Record<string, TEntryState> = {};
+
+    const fakeViewModel: ILogSheetUnitViewModel = {
+      units: [],
+      activeUnitId: null,
+      categoriesByUnit: new Map(),
+      summaryFields: [],
+    };
+
+    const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockReturnValue(fakeViewModel);
+
+    useMobileUnitViewModel(detail, entryState);
+
+    const callArgs = buildMock.mock.calls[0]?.[0];
+    const snapshot = callArgs.detail as ILogSheetDetailSnapshot;
+
+    expect(snapshot.activeMachineIds.chillers).toEqual(['ch-1']);
+  });
+
+  it('handles empty arrays in activeMachineIds override', () => {
+    const detail: TDetail = {
+      viewerRole: 'ADMIN',
+      logSheet: {
+        id: 'ls-1',
+        projectId: 'proj-1',
+        date: '2024-01-01',
+        notes: null,
+        status: 'DRAFT',
+        locked: false,
+        technicianSignatureUrl: null,
+        technicianSignedAt: null,
+        technicianSignedByUserId: null,
+        clientPicSignatureUrl: null,
+        clientPicSignedAt: null,
+        clientPicSignedByUserId: null,
+        submittedAt: null,
+        submittedByUserId: null,
+        approvedAt: null,
+        approvedByUserId: null,
+        replacedBy: null,
+        submittedBy: null,
+        approvedBy: null,
+        technicianSignedBy: null,
+        clientPicSignedBy: null,
+      },
+      project: {
+        id: 'proj-1',
+        name: 'Project',
+        clientName: 'Client',
+        assignments: [],
+      },
+      machines: {
+        chillers: [{ id: 'ch-1', unitNumber: 1, type: 'CHILLER' }],
+        coolingTowers: [{ id: 'ct-1', unitNumber: 1, type: 'COOLING_TOWER' }],
+      },
+      parameters: [],
+      entries: [],
+      photos: [],
+      chemicalUsages: [],
+      activeMachineIds: {
+        chillers: ['ch-1'],
+        coolingTowers: ['ct-1'],
+      },
+      technicians: [],
+      chemicals: [],
+    };
+
+    const entryState: Record<string, TEntryState> = {};
+
+    const fakeViewModel: ILogSheetUnitViewModel = {
+      units: [],
+      activeUnitId: null,
+      categoriesByUnit: new Map(),
+      summaryFields: [],
+    };
+
+    const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockReturnValue(fakeViewModel);
+
+    useMobileUnitViewModel(detail, entryState, {
+      chillers: [],
+      coolingTowers: [],
+    });
+
+    const callArgs = buildMock.mock.calls[0]?.[0];
+    const snapshot = callArgs.detail as ILogSheetDetailSnapshot;
+
+    expect(snapshot.activeMachineIds.chillers).toEqual([]);
+    expect(snapshot.activeMachineIds.coolingTowers).toEqual([]);
+  });
+
+  it('applies config override while preserving featureEnabled', () => {
+    const detail: TDetail = {
+      viewerRole: 'ADMIN',
+      logSheet: {
+        id: 'ls-1',
+        projectId: 'proj-1',
+        date: '2024-01-01',
+        notes: null,
+        status: 'DRAFT',
+        locked: false,
+        technicianSignatureUrl: null,
+        technicianSignedAt: null,
+        technicianSignedByUserId: null,
+        clientPicSignatureUrl: null,
+        clientPicSignedAt: null,
+        clientPicSignedByUserId: null,
+        submittedAt: null,
+        submittedByUserId: null,
+        approvedAt: null,
+        approvedByUserId: null,
+        replacedBy: null,
+        submittedBy: null,
+        approvedBy: null,
+        technicianSignedBy: null,
+        clientPicSignedBy: null,
+      },
+      project: {
+        id: 'proj-1',
+        name: 'Project',
+        clientName: 'Client',
+        assignments: [],
+      },
+      machines: { chillers: [], coolingTowers: [] },
+      parameters: [],
+      entries: [],
+      photos: [],
+      chemicalUsages: [],
+      activeMachineIds: { chillers: [], coolingTowers: [] },
+      technicians: [],
+      chemicals: [],
+    };
+
+    const entryState: Record<string, TEntryState> = {};
+
+    const fakeViewModel: ILogSheetUnitViewModel = {
+      units: [],
+      activeUnitId: null,
+      categoriesByUnit: new Map(),
+      summaryFields: [],
+    };
+
+    const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockReturnValue(fakeViewModel);
+
+    useMobileUnitViewModel(detail, entryState, undefined, {
+      defaultViewMode: 'unit-first',
+      maxVisibleUnits: 5,
+    });
+
+    const callArgs = buildMock.mock.calls[0]?.[0];
+
+    expect(callArgs.config).toEqual({
+      featureEnabled: true,
+      maxVisibleUnits: 5,
       defaultViewMode: 'unit-first',
       unitSortStrategy: 'byUnitNumber',
     });
+  });
+
+  it('handles both chillers and coolingTowers in override', () => {
+    const detail: TDetail = {
+      viewerRole: 'ADMIN',
+      logSheet: {
+        id: 'ls-1',
+        projectId: 'proj-1',
+        date: '2024-01-01',
+        notes: null,
+        status: 'DRAFT',
+        locked: false,
+        technicianSignatureUrl: null,
+        technicianSignedAt: null,
+        technicianSignedByUserId: null,
+        clientPicSignatureUrl: null,
+        clientPicSignedAt: null,
+        clientPicSignedByUserId: null,
+        submittedAt: null,
+        submittedByUserId: null,
+        approvedAt: null,
+        approvedByUserId: null,
+        replacedBy: null,
+        submittedBy: null,
+        approvedBy: null,
+        technicianSignedBy: null,
+        clientPicSignedBy: null,
+      },
+      project: {
+        id: 'proj-1',
+        name: 'Project',
+        clientName: 'Client',
+        assignments: [],
+      },
+      machines: {
+        chillers: [{ id: 'ch-1', unitNumber: 1, type: 'CHILLER' }],
+        coolingTowers: [{ id: 'ct-1', unitNumber: 1, type: 'COOLING_TOWER' }],
+      },
+      parameters: [],
+      entries: [],
+      photos: [],
+      chemicalUsages: [],
+      activeMachineIds: {
+        chillers: ['ch-1'],
+        coolingTowers: ['ct-1'],
+      },
+      technicians: [],
+      chemicals: [],
+    };
+
+    const entryState: Record<string, TEntryState> = {};
+
+    const fakeViewModel: ILogSheetUnitViewModel = {
+      units: [],
+      activeUnitId: null,
+      categoriesByUnit: new Map(),
+      summaryFields: [],
+    };
+
+    const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockReturnValue(fakeViewModel);
+
+    useMobileUnitViewModel(detail, entryState, {
+      chillers: ['ch-1'],
+      coolingTowers: ['ct-1'],
+    });
+
+    const callArgs = buildMock.mock.calls[0]?.[0];
+    const snapshot = callArgs.detail as ILogSheetDetailSnapshot;
+
+    expect(snapshot.activeMachineIds.chillers).toEqual(['ch-1']);
+    expect(snapshot.activeMachineIds.coolingTowers).toEqual(['ct-1']);
+  });
+
+  it('parses date string into Date object', () => {
+    const detail: TDetail = {
+      viewerRole: 'ADMIN',
+      logSheet: {
+        id: 'ls-1',
+        projectId: 'proj-1',
+        date: '2024-06-15',
+        notes: null,
+        status: 'DRAFT',
+        locked: false,
+        technicianSignatureUrl: null,
+        technicianSignedAt: null,
+        technicianSignedByUserId: null,
+        clientPicSignatureUrl: null,
+        clientPicSignedAt: null,
+        clientPicSignedByUserId: null,
+        submittedAt: null,
+        submittedByUserId: null,
+        approvedAt: null,
+        approvedByUserId: null,
+        replacedBy: null,
+        submittedBy: null,
+        approvedBy: null,
+        technicianSignedBy: null,
+        clientPicSignedBy: null,
+      },
+      project: {
+        id: 'proj-1',
+        name: 'Project',
+        clientName: 'Client',
+        assignments: [],
+      },
+      machines: { chillers: [], coolingTowers: [] },
+      parameters: [],
+      entries: [],
+      photos: [],
+      chemicalUsages: [],
+      activeMachineIds: { chillers: [], coolingTowers: [] },
+      technicians: [],
+      chemicals: [],
+    };
+
+    const entryState: Record<string, TEntryState> = {};
+
+    const fakeViewModel: ILogSheetUnitViewModel = {
+      units: [],
+      activeUnitId: null,
+      categoriesByUnit: new Map(),
+      summaryFields: [],
+    };
+
+    const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockReturnValue(fakeViewModel);
+
+    useMobileUnitViewModel(detail, entryState);
+
+    const callArgs = buildMock.mock.calls[0]?.[0];
+    const snapshot = callArgs.detail as ILogSheetDetailSnapshot;
+
+    expect(snapshot.header.date).toBeInstanceOf(Date);
+    expect(snapshot.header.date.getFullYear()).toBe(2024);
   });
 
   it('sets locked flag to false when status is DRAFT', () => {
