@@ -4,6 +4,7 @@
 > **Updated:** 2026-02-25
 > **Status:** MVP Phase Completed - Transitioning to Operational Phase
 > **WARNING:** DO NOT REMOVE ANYTHING FROM THIS DOCUMENT!!! Just update, append, or change. Removal need PERMISSION!!!
+> **Single Source of Truth:** This document is the canonical roadmap. Do NOT create duplicate tracking documents.
 
 #### 2.6 [NEW] RBAC & Project Scoping (Keamanan & Pembatasan Proyek)
 
@@ -352,10 +353,23 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 #### 4.6 User Experience
 
 **Scope ID:** `MP-01` (My Profile)
-**Tasks:**
+**Status:** ✅ Implemented (Not yet tested in browser UI)
+**Implemented:** 2026-02-25
+**Branch:** `feat/users/my-profile-mp01`
+**Files:**
 
-- [ ] Profile view
-- [ ] Avatar upload
+- `src/features/users/service.ts` - Added `getCurrentUserProfile`, `updateCurrentUserProfile`
+- `src/features/users/actions.ts` - Added profile actions + avatar upload
+- `src/features/users/components/profile-form.tsx` - Profile edit form
+- `src/app/(main)/my-profile/page.tsx` - Profile page
+- `src/components/nav-user.tsx` - Added "Profil" link in dropdown
+  **Tests:** 25 passing (service.test.ts: 11, actions.test.ts: 14)
+  **Pending:** Real browser UI test (avatar upload, form submission)
+  **Tasks:**
+
+- [x] Profile view
+- [x] Avatar upload (with file validation: image/\*, max 5MB)
+- [ ] **UI Browser Test Required**
 
 **Scope ID:** `CP-01` (Client Portal) 🚧
 **Tasks:**
@@ -401,7 +415,7 @@ These are planned but moved to "Phase 2" to prioritize the rescue mission.
 6.  **Dashboard Charts & Photo Gallery** (FSD Dashboard section 1)
     - Status: ✅ Completed. `AnalyticsDashboard` with historical charts and gallery is active.
 7.  **My Profile**
-    - Status: ⏳ Not implemented. Planned as `MP-01` in section 4.6.
+    - Status: ✅ Implemented (`MP-01` in section 4.6). Code complete with 25 tests. Pending browser UI verification.
 8.  **Client-Facing Read-Only Dashboard / Portal**
     - Status: ⏳ Partially implemented. CLIENT role scoping exists (`CP-01` in section 4.6), dedicated read-only dashboard still pending.
 9.  **Project Personnel Assignment**
@@ -460,14 +474,15 @@ These fields are documented in the FSD and are now first-class fields in the cur
 
 This section summarizes the recommended execution order for remaining work, based on the gap between the current implementation and the FSD.
 
-1. **Complete Option A Mobile Layout Integration (P1)**
+1. **Browser UI Test for My Profile (MP-01)** ✅ CODE COMPLETE
+   - Verify avatar upload works in browser.
+   - Verify form submission and data persistence.
+   - Test on different roles (ADMIN, SUPERVISOR, TECHNICIAN, CLIENT).
+
+2. **Complete Option A Mobile Layout Integration (P1)**
    - Wire existing `UnitOverviewList` and `UnitEntryScreen` components into the log sheet detail page.
    - Implement mobile-first navigation flow with feature flag toggle.
    - Components exist at `src/features/log-sheets/option-a/components/`.
-
-2. **Implement My Profile (MP-01)**
-   - Profile view with editable fields and avatar upload.
-   - Users can view their assignments and basic profile.
 
 3. **Implement Summary Report Analytics (SR-02)**
    - Executive Summary Water Quality (avg/min/max per parameter).
@@ -496,28 +511,52 @@ This section summarizes the recommended execution order for remaining work, base
 
 ---
 
-## 6. Gap Audit (FSD vs Current Implementation)
+## 7. Implementation Guidelines (Consolidated)
 
-### 6.1 Dashboard (DB-02/DB-03)
+> **Architecture:** UI → Server Action (`actions.ts`) → Service (`service.ts`) → Prisma
+> **Validation:** All external inputs via Zod schemas
+> **Naming:** Actions = `[verb][Noun]Action`, Services = `[verb][Noun]`, Interfaces = `I*`, Types = `T*`
+> **Logging:** `[CPIS-ERROR] <Feature>.<Action>:` prefix in catch blocks
+> **No internal fetch:** Server actions call services directly, no HTTP for internal flows
+
+### 7.1 Feature Dependency Matrix
+
+| Level     | Features                                              | Can Start           |
+| --------- | ----------------------------------------------------- | ------------------- |
+| 🟢 LOW    | CP-01 (Client Portal), PRJ-FIELDS, CLIENT/USER-FIELDS | Immediately         |
+| 🟡 MEDIUM | SR-02 (Analytics), DS-EXT, DB-01 residual             | After prerequisites |
+| 🔴 HIGH   | LS-OPTION-A, LS-ADJ                                   | After logsheet work |
+
+### 7.2 Testing Standards
+
+- **Service tests:** ≥90% coverage for business logic
+- **Manual testing:** Happy path + edge cases per feature
+- **Performance:** Actions <2s, charts <3s for 1-year data
+
+---
+
+## 8. Gap Audit (FSD vs Current Implementation)
+
+### 8.1 Dashboard (DB-02/DB-03)
 
 - [x] Historical charts for Approach/Ampere (Condenser & Evaporator).
 - [x] Photo gallery of log sheet images sorted by latest.
 - [ ] Parameter snapshot panel for active project.
 - [ ] Recent activity list (log sheet + work report + approvals).
 
-### 6.2 Log Sheet Adjustments (LS-ADJ)
+### 8.2 Log Sheet Adjustments (LS-ADJ)
 
 - [ ] Optional video attachment upload (before/after).
 - [ ] Final A4 print fit for all log sheet variants.
 - [ ] Inline min/max limit warnings (notifikasi ringan di form).
 - [ ] Mandatory fields mapping review vs FSD (unit selection, notes).
 
-### 6.3 Summary Report Analytics (SR-02)
+### 8.3 Summary Report Analytics (SR-02)
 
 - [ ] Executive Summary Water Quality (avg/min/max per parameter).
 - [ ] Executive Summary Condenser Approach (avg/min/max per unit).
 
-### 6.4 Project Data Completeness (PRJ-FIELDS)
+### 8.4 Project Data Completeness (PRJ-FIELDS)
 
 - [x] Add project type (Utama/Addendum) with continuity rules (ProjectType + reporting scope).
 - [x] Add project kind (Langsung/Subcon) (ProjectContractType + select di form project).
@@ -525,29 +564,35 @@ This section summarizes the recommended execution order for remaining work, base
 - [x] Add warranty duration (months) (`warrantyMonths` di schema + form + kolom list project).
 - [ ] Evaluate and, jika dibutuhkan, implement multi-select jenis pekerjaan (saat ini single-select `workCategory` sudah aktif).
 
-### 6.5 Client & User Data Completeness (CLIENT/USER-FIELDS)
+### 8.5 Client & User Data Completeness (CLIENT/USER-FIELDS)
 
 - [ ] Client website field.
 - [ ] User company field for client accounts.
 - [ ] User address field.
 
-### 6.6 My Profile (MP-01)
+### 8.6 My Profile (MP-01)
 
-- [ ] Profile view with editable personal info.
-- [ ] Avatar upload.
+- [x] Profile view with editable personal info.
+- [x] Avatar upload.
+- [x] Service layer: `getCurrentUserProfile`, `updateCurrentUserProfile`.
+- [x] Actions: `getCurrentUserProfileAction`, `updateCurrentUserProfileAction`, `uploadAvatarAction`.
+- [x] UI: `/my-profile` page with form and avatar upload.
+- [x] Navigation: "Profil" link in user dropdown.
+- [x] Tests: 25 passing (service + actions).
+- [ ] **Browser UI Test Required** (verify avatar upload and form submission in real browser).
 
-### 6.7 Notifications (NT-01/NT-02/NT-03)
+### 8.7 Notifications (NT-01/NT-02/NT-03)
 
 - [x] Notification schema + creation service.
 - [x] Limit exceed alerts on log sheet submission.
 - [x] Notification bell + unread count UI.
 
-### 6.8 Digital Signatures Expansion (DS-EXT, Lowest Priority)
+### 8.8 Digital Signatures Expansion (DS-EXT, Lowest Priority)
 
 - [x] Extend digital signatures to Work Reports (technician and approval signatures on print).
 - [ ] Extend digital signatures to Summary Reports (sign-off area on print).
 - Keep this as the lowest-priority item after all other roadmap gaps are closed.
 
-### 6.9 Client Portal Read-Only UX (CP-01)
+### 8.9 Client Portal Read-Only UX (CP-01)
 
 - [ ] Read-only dashboard for client roles (summary only).
