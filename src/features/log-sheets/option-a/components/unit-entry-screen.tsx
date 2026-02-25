@@ -1,10 +1,8 @@
 'use client';
 
 import { ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import type { ICategoryView, IParameterRowView, IUnitView } from '../contracts';
 import { ParameterInput } from '../../components/inputs';
-import { useEntryStateContext } from '../../context';
 import {
   calculateCompletionPercent,
   ProgressBar,
@@ -142,9 +140,6 @@ interface IParameterRowProps {
 }
 
 function ParameterRow({ parameter, disabled }: IParameterRowProps) {
-  const hasRawWater = parameter.rawWaterEntryKey !== null;
-  const hasNotes = parameter.noteEntryKey !== null;
-
   return (
     <div className="px-4 py-3">
       <div className="flex items-center gap-4">
@@ -153,10 +148,6 @@ function ParameterRow({ parameter, disabled }: IParameterRowProps) {
           <ParameterValueInput parameter={parameter} disabled={disabled} />
         </div>
       </div>
-      {hasRawWater && (
-        <RawWaterInput parameter={parameter} disabled={disabled} />
-      )}
-      {hasNotes && <NoteInput parameter={parameter} disabled={disabled} />}
     </div>
   );
 }
@@ -186,115 +177,6 @@ function ParameterValueInput({
       {showStatusIcon && <RangeStatusIcon inRange={parameter.inRange} />}
     </>
   );
-}
-
-interface IRawWaterInputProps {
-  parameter: IParameterRowView;
-  disabled?: boolean;
-}
-
-function RawWaterInput({ parameter, disabled }: IRawWaterInputProps) {
-  const { getEntry, updateNumber } = useEntryStateContext();
-  const rawKey = parameter.rawWaterEntryKey;
-
-  if (!rawKey) return null;
-
-  const rawState = getEntry(rawKey);
-
-  return (
-    <RawWaterInputContent
-      rawKey={rawKey}
-      displayValue={formatNumericValue(rawState?.numericValue)}
-      targetText={formatRawWaterTarget(
-        parameter.rawWaterMinValue,
-        parameter.rawWaterMaxValue
-      )}
-      onUpdate={updateNumber}
-      disabled={disabled}
-    />
-  );
-}
-
-interface IRawWaterInputContentProps {
-  rawKey: string;
-  displayValue: string;
-  targetText: string | null;
-  onUpdate: (key: string, value: string) => void;
-  disabled?: boolean;
-}
-
-function RawWaterInputContent({
-  rawKey,
-  displayValue,
-  targetText,
-  onUpdate,
-  disabled,
-}: IRawWaterInputContentProps) {
-  return (
-    <div className="space-y-2 pt-2 border-t mt-2">
-      <div className="flex justify-between items-center">
-        <div className="text-xs font-medium text-muted-foreground">
-          Raw Water
-        </div>
-        {targetText && (
-          <div className="text-[10px] text-muted-foreground">
-            Target: {targetText}
-          </div>
-        )}
-      </div>
-      <Input
-        type="number"
-        inputMode="decimal"
-        placeholder="Nilai Raw Water..."
-        value={displayValue}
-        onChange={e => onUpdate(rawKey, e.target.value)}
-        disabled={disabled}
-      />
-    </div>
-  );
-}
-
-interface INoteInputProps {
-  parameter: IParameterRowView;
-  disabled?: boolean;
-}
-
-function NoteInput({ parameter, disabled }: INoteInputProps) {
-  const { getEntry, updateText } = useEntryStateContext();
-  const noteKey = parameter.noteEntryKey;
-
-  if (!noteKey) return null;
-
-  const noteState = getEntry(noteKey);
-
-  return (
-    <div className="pt-2 border-t mt-2">
-      <div className="text-xs font-medium text-muted-foreground mb-1">
-        Catatan
-      </div>
-      <Input
-        placeholder="Catatan tambahan..."
-        value={noteState?.textValue ?? ''}
-        onChange={e => updateText(noteKey, e.target.value)}
-        disabled={disabled}
-      />
-    </div>
-  );
-}
-
-function formatNumericValue(value: number | null | undefined): string {
-  if (value === null || value === undefined) return '';
-  return String(value);
-}
-
-function formatRawWaterTarget(
-  min: number | null,
-  max: number | null
-): string | null {
-  if (min === null && max === null) return null;
-  if (min === null) return `≤ ${max}`;
-  if (max === null) return `≥ ${min}`;
-  return `${min} - ${max}`;
 }
 
 interface IParameterLabelProps {

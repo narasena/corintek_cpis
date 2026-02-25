@@ -5,7 +5,7 @@ import {
   CoolingWaterQualityDesktop,
   GeneralCategoryDesktop,
 } from './category-sections';
-import { UNIT_CATEGORIES, hasNotesCategory } from './category-config';
+import { UNIT_CATEGORIES } from './category-config';
 
 type TMachinesForCategoryResult = {
   machines: TMachine[];
@@ -70,15 +70,12 @@ export function LogSheetCategorySection({
           );
         }
 
-        const hasNotes = hasNotesCategory(cat);
-
         return (
           <GeneralCategoryDesktop
             key={category}
             category={category}
             params={params}
             machines={machines}
-            hasNotes={hasNotes}
             cat={cat}
           />
         );

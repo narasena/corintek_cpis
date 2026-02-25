@@ -48,6 +48,7 @@ export function MobileLayoutWrapper({
       activeUnitId={activeUnitId}
       onSelectUnit={handleSelectUnit}
       disabled={disabled}
+      rawWaterParameters={viewModel.rawWaterParameters}
     />
   );
 }

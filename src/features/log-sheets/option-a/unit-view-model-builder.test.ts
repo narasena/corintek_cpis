@@ -642,7 +642,7 @@ describe('LogSheetUnitViewModelBuilder - parameter rows', () => {
     expect(params[0].maxValue).toBe(20);
   });
 
-  it('includes raw water fields for COOLING_WATER_QUALITY parameters', () => {
+  it('includes raw water fields for COOLING_WATER_QUALITY parameters in rawWaterParameters', () => {
     const builder = new LogSheetUnitViewModelBuilder();
 
     const detail = createDetailSnapshot({
@@ -671,17 +671,16 @@ describe('LogSheetUnitViewModelBuilder - parameter rows', () => {
     const config = createConfig({ featureEnabled: true });
 
     const viewModel = builder.build(detail, entryState, config);
-    const categories = viewModel.categoriesByUnit.get('COOLING_TOWER-1')!;
-    const params = categories[0]?.parameters ?? [];
 
-    expect(params).toHaveLength(1);
-    expect(params[0].rawWaterMinValue).toBe(6.0);
-    expect(params[0].rawWaterMaxValue).toBe(8.0);
-    expect(params[0].rawWaterEntryKey).toBe('param-cw-1:null:RAW_WATER');
-    expect(params[0].noteEntryKey).toBeNull();
+    expect(viewModel.rawWaterParameters).toHaveLength(1);
+    expect(viewModel.rawWaterParameters[0].minValue).toBe(6.0);
+    expect(viewModel.rawWaterParameters[0].maxValue).toBe(8.0);
+    expect(viewModel.rawWaterParameters[0].entryKey).toBe(
+      'param-cw-1:null:RAW_WATER'
+    );
   });
 
-  it('includes note entry key for GENERAL_CONDITION parameters', () => {
+  it('does not include note entry key for GENERAL_CONDITION parameters (removed)', () => {
     const builder = new LogSheetUnitViewModelBuilder();
 
     const detail = createDetailSnapshot({
@@ -712,11 +711,10 @@ describe('LogSheetUnitViewModelBuilder - parameter rows', () => {
     const params = gcCategory?.parameters ?? [];
 
     expect(params).toHaveLength(1);
-    expect(params[0].noteEntryKey).toBe('param-gc-1:null:NOTE');
-    expect(params[0].rawWaterEntryKey).toBeNull();
+    expect(params[0]).not.toHaveProperty('noteEntryKey');
   });
 
-  it('includes note entry key for JOB_DESCRIPTION parameters', () => {
+  it('does not include note entry key for JOB_DESCRIPTION parameters (removed)', () => {
     const builder = new LogSheetUnitViewModelBuilder();
 
     const detail = createDetailSnapshot({
@@ -747,10 +745,10 @@ describe('LogSheetUnitViewModelBuilder - parameter rows', () => {
     const params = jdCategory?.parameters ?? [];
 
     expect(params).toHaveLength(1);
-    expect(params[0].noteEntryKey).toBe('param-jd-1:null:NOTE');
+    expect(params[0]).not.toHaveProperty('noteEntryKey');
   });
 
-  it('sets raw water fields to null for non-cooling-water parameters', () => {
+  it('parameter rows do not have raw water or note fields', () => {
     const builder = new LogSheetUnitViewModelBuilder();
 
     const detail = createDetailSnapshot({
@@ -772,10 +770,10 @@ describe('LogSheetUnitViewModelBuilder - parameter rows', () => {
     const categories = viewModel.categoriesByUnit.get('CHILLER-1')!;
     const params = categories[0]?.parameters ?? [];
 
-    expect(params[0].rawWaterMinValue).toBeNull();
-    expect(params[0].rawWaterMaxValue).toBeNull();
-    expect(params[0].rawWaterEntryKey).toBeNull();
-    expect(params[0].noteEntryKey).toBeNull();
+    expect(params[0]).not.toHaveProperty('rawWaterMinValue');
+    expect(params[0]).not.toHaveProperty('rawWaterMaxValue');
+    expect(params[0]).not.toHaveProperty('rawWaterEntryKey');
+    expect(params[0]).not.toHaveProperty('noteEntryKey');
   });
 
   it('marks inRange as true when value is within limits', () => {

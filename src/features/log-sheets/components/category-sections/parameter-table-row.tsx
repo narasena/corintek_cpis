@@ -9,20 +9,17 @@ import {
   BooleanCell,
   NumberCell,
   TextCell,
-  NoteCell,
 } from '@/app/(main)/log-sheets/[projectId]/[logSheetId]/components/entry-cells';
 
 interface IParameterTableRowProps {
   param: TParameter;
   machines: TMachine[];
-  hasNotes: boolean;
   cat: TParameter['category'];
 }
 
 export function ParameterTableRow({
   param,
   machines,
-  hasNotes,
   cat,
 }: IParameterTableRowProps) {
   const targets = getTargetMachines(machines);
@@ -40,7 +37,6 @@ export function ParameterTableRow({
           cat={cat}
         />
       ))}
-      {hasNotes && <NoteCell paramId={param.id} />}
     </TableRow>
   );
 }
