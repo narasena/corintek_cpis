@@ -677,10 +677,73 @@ Example matrix (excerpt):
 
 ---
 
+## Appendix A: Feature Dependency Analysis & Workstream Planning
+
+### A.1 Dependency Level Framework
+
+Features are categorized by their dependency complexity to enable parallel workstreams:
+
+| Level         | Description                                             | Can Start           | Risk     |
+| ------------- | ------------------------------------------------------- | ------------------- | -------- |
+| 🟢 **LOW**    | User module only or pure UI/form work                   | Immediately         | Minimal  |
+| 🟡 **MEDIUM** | Reuses existing infrastructure, some integration needed | After prerequisites | Moderate |
+| 🔴 **HIGH**   | Logsheet-intensive, complex wiring                      | After logsheet work | High     |
+
+### A.2 Remaining Features by Dependency Level
+
+#### 🟢 LOW (Can start now - no logsheet dependencies)
+
+| Feature                                    | Scope ID           | Dependencies                      | Workstream |
+| ------------------------------------------ | ------------------ | --------------------------------- | ---------- |
+| **My Profile**                             | MP-01              | User module only                  | Profile    |
+| **Client Portal Read-Only**                | CP-01              | RBAC + Project Scoping (existing) | Portal     |
+| **Data Completeness - Project Fields**     | PRJ-FIELDS         | Existing Project module           | Data       |
+| **Data Completeness - Client/User Fields** | CLIENT/USER-FIELDS | Existing Client/User modules      | Data       |
+
+#### 🟡 MEDIUM (Reuses existing infrastructure)
+
+| Feature                          | Scope ID         | Dependencies                             | Workstream |
+| -------------------------------- | ---------------- | ---------------------------------------- | ---------- |
+| **Summary Report Analytics**     | SR-02            | Log Sheet data queries (read-only)       | Reports    |
+| **Digital Signatures Expansion** | DS-EXT           | Existing SignaturePad component          | Reports    |
+| **Dashboard Recent Activity**    | DB-01 (residual) | Log Sheets, Work Reports (existing data) | Dashboard  |
+
+#### 🔴 HIGH (Logsheet-intensive - handle in separate worktree)
+
+| Feature                    | Scope ID    | Dependencies                     | Notes                                        |
+| -------------------------- | ----------- | -------------------------------- | -------------------------------------------- |
+| **Option A Mobile Layout** | LS-OPTION-A | Log Sheet UI, EntryStateProvider | Components exist, page wiring pending        |
+| **Log Sheet Adjustments**  | LS-ADJ      | Log Sheet UI + Service           | Video attachments, A4 print, inline warnings |
+
+### A.3 Recommended Parallel Workstreams
+
+For 3-workstream parallel execution (minimizing context switching):
+
+| Worktree | Feature                          | Dependency Level | Prerequisites          |
+| -------- | -------------------------------- | ---------------- | ---------------------- |
+| **1**    | My Profile (MP-01)               | LOW              | User module (exists)   |
+| **2**    | Client Portal (CP-01)            | LOW              | RBAC exists            |
+| **3**    | Summary Report Analytics (SR-02) | MEDIUM           | Log Sheet data queries |
+
+**Features to SKIP for these worktrees:**
+
+- Option A Mobile Layout
+- LS-ADJ (video, A4, inline warnings)
+
+### A.4 Feature Implementation Priority Order
+
+Based on dependency analysis, execute in this order:
+
+1. **Immediate (LOW):** MP-01, CP-01, PRJ-FIELDS, CLIENT/USER-FIELDS
+2. **Post-Logsheet Stabilization (MEDIUM):** SR-02, DS-EXT, DB-01 residual
+3. **After Logsheet Worktree Ready (HIGH):** LS-OPTION-A, LS-ADJ
+
+---
+
 This document should be treated as the canonical implementation guide for completing the remaining CPIS work. Each phase can be executed independently, but the recommended sequence is:
 
 1. LS‑STAB (stabilization) ✅ COMPLETE
 2. Notifications ✅ COMPLETE
-3. Option A Mobile Layout Integration (next priority)
-4. Dashboard + Summary analytics
-5. Profile/Portal/Data completeness + signature expansion
+3. LOW priority features (MP‑01, CP‑01, PRJ‑FIELDS, CLIENT/USER‑FIELDS) — parallel workstreams
+4. MEDIUM priority (SR‑02, DS‑EXT, DB‑01 residual)
+5. HIGH priority (LS‑OPTION‑A, LS‑ADJ) — after logsheet worktree ready
