@@ -26,10 +26,6 @@ type ParameterLite = {
   name: string;
   unit: string | null;
   valueType: ValueType;
-  minValue: number | null;
-  maxValue: number | null;
-  rawWaterMinValue: number | null;
-  rawWaterMaxValue: number | null;
 };
 
 type ColumnState = {

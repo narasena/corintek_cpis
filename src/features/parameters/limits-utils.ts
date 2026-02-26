@@ -1,9 +1,9 @@
 export interface IParameterLike {
   id: string;
-  minValue: number | null;
-  maxValue: number | null;
-  rawWaterMinValue: number | null;
-  rawWaterMaxValue: number | null;
+  minValue?: number | null;
+  maxValue?: number | null;
+  rawWaterMinValue?: number | null;
+  rawWaterMaxValue?: number | null;
 }
 
 export interface IParameterOverrideLike {

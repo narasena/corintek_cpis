@@ -5,10 +5,10 @@ type TRangeValidationEntry = {
 
 type TRangeValidationParam = {
   name: string;
-  minValue: number | null;
-  maxValue: number | null;
-  rawWaterMinValue: number | null;
-  rawWaterMaxValue: number | null;
+  minValue?: number | null;
+  maxValue?: number | null;
+  rawWaterMinValue?: number | null;
+  rawWaterMaxValue?: number | null;
 };
 
 export function validateNumericRange(
@@ -19,8 +19,8 @@ export function validateNumericRange(
 
   if (entry.numericValue === null) return errors;
 
-  let min: number | null = param.minValue;
-  let max: number | null = param.maxValue;
+  let min: number | null = param.minValue ?? null;
+  let max: number | null = param.maxValue ?? null;
 
   if (entry.role === 'RAW_WATER') {
     min = param.rawWaterMinValue ?? null;

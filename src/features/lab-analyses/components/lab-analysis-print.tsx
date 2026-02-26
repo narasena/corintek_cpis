@@ -13,10 +13,6 @@ type ParameterLite = {
   name: string;
   unit: string | null;
   valueType: ValueType;
-  minValue: number | null;
-  maxValue: number | null;
-  rawWaterMinValue: number | null;
-  rawWaterMaxValue: number | null;
 };
 
 type ParameterOverrideLite = {
@@ -218,12 +214,10 @@ export function LabAnalysisPrint({
               <tbody>
                 {parameters.map(parameter => {
                   const override = overrideByParameterId.get(parameter.id);
-                  const rawMin =
-                    override?.rawWaterMinValue ?? parameter.rawWaterMinValue;
-                  const rawMax =
-                    override?.rawWaterMaxValue ?? parameter.rawWaterMaxValue;
-                  const min = override?.minValue ?? parameter.minValue;
-                  const max = override?.maxValue ?? parameter.maxValue;
+                  const rawMin = override?.rawWaterMinValue ?? null;
+                  const rawMax = override?.rawWaterMaxValue ?? null;
+                  const min = override?.minValue ?? null;
+                  const max = override?.maxValue ?? null;
 
                   return (
                     <tr key={parameter.id}>

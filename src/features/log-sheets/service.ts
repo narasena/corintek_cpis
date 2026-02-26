@@ -514,10 +514,6 @@ async function fetchParameters() {
       category: true,
       valueType: true,
       unit: true,
-      minValue: true,
-      maxValue: true,
-      rawWaterMinValue: true,
-      rawWaterMaxValue: true,
       displayOrder: true,
     },
     orderBy: [

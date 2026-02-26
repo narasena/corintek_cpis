@@ -16,8 +16,8 @@ function resolveLimits(
     };
   }
   return {
-    minLimit: parameter.minValue,
-    maxLimit: parameter.maxValue,
+    minLimit: parameter.minValue ?? null,
+    maxLimit: parameter.maxValue ?? null,
   };
 }
 

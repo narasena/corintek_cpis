@@ -87,10 +87,10 @@ export interface IParameter {
   category: TParameterCategory;
   valueType: TValueType;
   unit: string | null;
-  minValue: number | null;
-  maxValue: number | null;
-  rawWaterMinValue: number | null;
-  rawWaterMaxValue: number | null;
+  minValue?: number | null;
+  maxValue?: number | null;
+  rawWaterMinValue?: number | null;
+  rawWaterMaxValue?: number | null;
   displayOrder: number;
   isActive: boolean;
   createdAt: Date;

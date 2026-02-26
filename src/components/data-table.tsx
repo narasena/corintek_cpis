@@ -9,6 +9,10 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
+  HeaderGroup,
+  Row,
+  Cell,
+  Header,
 } from '@tanstack/react-table';
 
 import {
@@ -141,12 +145,12 @@ function DataTableInner<TData, TValue>({
       <div className="hidden md:block rounded-md border overflow-hidden">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map(headerGroup => (
+            {table.getHeaderGroups().map((headerGroup: HeaderGroup<TData>) => (
               <TableRow
                 key={headerGroup.id}
                 className="bg-primary hover:bg-primary/90"
               >
-                {headerGroup.headers.map(header => {
+                {headerGroup.headers.map((header: Header<TData, unknown>) => {
                   return (
                     <TableHead
                       key={header.id}
@@ -178,12 +182,12 @@ function DataTableInner<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map(row => (
+              table.getRowModel().rows.map((row: Row<TData>) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
                 >
-                  {row.getVisibleCells().map(cell => (
+                  {row.getVisibleCells().map((cell: Cell<TData, unknown>) => (
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -210,13 +214,17 @@ function DataTableInner<TData, TValue>({
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
         {table.getRowModel().rows?.length ? (
-          table.getRowModel().rows.map(row => {
+          table.getRowModel().rows.map((row: Row<TData>) => {
             const actionCell = row
               .getVisibleCells()
-              .find(cell => cell.column.id === 'actions');
+              .find(
+                (cell: Cell<TData, unknown>) => cell.column.id === 'actions'
+              );
             const contentCells = row
               .getVisibleCells()
-              .filter(cell => cell.column.id !== 'actions');
+              .filter(
+                (cell: Cell<TData, unknown>) => cell.column.id !== 'actions'
+              );
 
             const titleCell = contentCells[0];
             const otherCells = contentCells.slice(1);
@@ -244,10 +252,13 @@ function DataTableInner<TData, TValue>({
                   )}
                 </CardHeader>
                 <CardContent className="grid gap-2">
-                  {otherCells.map(cell => {
+                  {otherCells.map((cell: Cell<TData, unknown>) => {
                     const header = table
                       .getFlatHeaders()
-                      .find(h => h.column.id === cell.column.id);
+                      .find(
+                        (h: Header<TData, unknown>) =>
+                          h.column.id === cell.column.id
+                      );
 
                     return (
                       <div

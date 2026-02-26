@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/data-table';
 import { getParameterColumns } from './components/columns';
 import { ParameterDialog } from '@/features/parameters/components/parameter-dialog';
@@ -15,6 +16,8 @@ import {
   deleteParameterAction,
 } from '@/features/parameters/actions';
 import { IParameter } from '@/features/parameters/types';
+import { ParameterLimitsContent } from '@/features/parameter-limit-profiles/components/parameter-limits-content';
+import { ProfilesContent } from '@/features/parameter-limit-profiles/components/profiles-content';
 
 export default function ParametersPage() {
   const router = useRouter();
@@ -96,40 +99,60 @@ export default function ParametersPage() {
             Kelola parameter pengukuran dan konfigurasi sistem.
           </p>
         </div>
-        <ParameterDialog
-          mode="create"
-          onSuccess={handleSuccess}
-          trigger={
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Tambah Parameter
-            </Button>
-          }
-        />
+        {tab === 'parameter' && (
+          <ParameterDialog
+            mode="create"
+            onSuccess={handleSuccess}
+            trigger={
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Tambah Parameter
+              </Button>
+            }
+          />
+        )}
       </div>
 
-      {loading && parameters.length === 0 ? (
-        <div className="flex items-center justify-center p-8 border rounded-lg h-64 bg-muted/20">
-          <div className="flex flex-col items-center gap-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="text-muted-foreground">Memuat data...</p>
-          </div>
-        </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={parameters}
-          emptyMessage="Belum ada data parameter."
-        />
-      )}
+      <Tabs value={tab} onValueChange={onTabChange} className="w-full">
+        <TabsList>
+          <TabsTrigger value="parameter">Parameter</TabsTrigger>
+          <TabsTrigger value="limits">Batas Default</TabsTrigger>
+          <TabsTrigger value="profiles">Profil</TabsTrigger>
+        </TabsList>
 
-      {/* Edit Dialog */}
-      <ParameterDialog
-        mode="edit"
-        parameter={selectedParameter}
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        onSuccess={handleSuccess}
-      />
+        <TabsContent value="parameter" className="mt-4">
+          {loading && parameters.length === 0 ? (
+            <div className="flex items-center justify-center p-8 border rounded-lg h-64 bg-muted/20">
+              <div className="flex flex-col items-center gap-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p className="text-muted-foreground">Memuat data...</p>
+              </div>
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={parameters}
+              emptyMessage="Belum ada data parameter."
+            />
+          )}
+
+          {/* Edit Dialog */}
+          <ParameterDialog
+            mode="edit"
+            parameter={selectedParameter}
+            open={showEditDialog}
+            onOpenChange={setShowEditDialog}
+            onSuccess={handleSuccess}
+          />
+        </TabsContent>
+
+        <TabsContent value="limits" className="mt-4">
+          <ParameterLimitsContent />
+        </TabsContent>
+
+        <TabsContent value="profiles" className="mt-4">
+          <ProfilesContent />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
