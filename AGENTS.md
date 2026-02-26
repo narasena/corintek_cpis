@@ -25,7 +25,15 @@ We eliminated the REST API layer. **The flow is:**
 - ✅ Verify imports against `tsconfig.json` aliases (`@/lib`, `@/features`)
 - ✅ If stuck after 2 attempts → STOP and document blocker
 
-### 4. Testing (Emergency Mode)
+### 4. Mobile-First Principle
+
+**The mobile version of log sheet entry is the PRIMARY user interface.**
+
+- Technicians use low-budget Android phones in field conditions
+- Mobile UX takes precedence over desktop
+- Test on mobile viewport first, desktop second
+
+### 5. Testing (Emergency Mode)
 
 - **Logic-only tests** for `service.ts` with complex business rules
 - NO TDD, NO component tests

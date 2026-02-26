@@ -30,10 +30,23 @@
 
 ### 🚧 In Progress (Separate Worktree)
 
-| Feature                | Status         | Notes                                                             |
-| ---------------------- | -------------- | ----------------------------------------------------------------- |
-| Option A Mobile Layout | 🚧 In Progress | View model ✅, UI components ✅, Integration in separate worktree |
-
+| Feature                    | Status | File/Component                                               |
+| -------------------------- | ------ | ------------------------------------------------------------ |
+| Unified Reports List       | ✅     | `/reports/page.tsx`                                          |
+| Log Sheet List per Project | ✅     | `/log-sheets/[projectId]/page.tsx`                           |
+| Create Log Sheet Dialog    | ✅     | `log-sheet-dialog.tsx`, `log-sheet-form.tsx`                 |
+| Log Sheet Detail/Edit      | ✅     | `/log-sheets/[projectId]/[logSheetId]/page.tsx` (~437 lines) |
+| Unit Condensor Entry       | ✅     | Per-chiller entries with limits                              |
+| Unit Evaporator Entry      | ✅     | Per-chiller entries with limits                              |
+| Cooling Water Quality      | ✅     | Per-CT entries + Raw Water column                            |
+| General Condition          | ✅     | Per-CT boolean entries + notes                               |
+| Job Description            | ✅     | Per-CT boolean entries + notes                               |
+| Consumption                | ✅     | Water meter before/after                                     |
+| Photo Attachments          | ✅     | Before/After sections, max 8, preview support                |
+| Chemical Fill-up           | ✅     | Master data + Log Sheet integration                          |
+| Print Preview Mode         | ✅     | `log-sheet-preview.tsx`                                      |
+| **Refactoring (LS-STAB)**  | ✅     | Page: -65%, Service: -32%, Tests: +161                       |
+| **Option A Mobile Layout** | ✅     | Unit-based mobile entry view with consumption section        |
 ---
 
 ## 2. Gap Audit (FSD vs Current Implementation)
@@ -212,6 +225,10 @@ Project → parameterLimitCategoryId (nullable, defaults to "Standard")
 
 #### 7.1 Summary Report Signatures (DS-EXT)
 
+1. ~~**Complete Option A Mobile Layout Integration (P1)**~~ ✅ COMPLETE
+   - Unit-based mobile entry view with `UnitOverviewList` and `UnitEntryScreen`.
+   - Consumption section with camera input for water meters.
+   - Removed old mobile components (`CoolingWaterQualityMobile`, `GeneralCategoryMobile`).
 **Scope ID:** `DS-EXT`
 **Why:** Optional approval signatures for Summary Reports.
 **Priority Note:** Only implement after all other P0/P1/P2 items are stable.

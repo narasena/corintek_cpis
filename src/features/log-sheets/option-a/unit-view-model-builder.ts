@@ -6,6 +6,7 @@ import type {
   ILogSheetUnitViewModel,
   ILogSheetUnitViewModelBuilder,
   IParameterRowView,
+  IRawWaterParameterView,
   IUnitView,
   IUnitCompletionStats,
   TReadonlyEntryStateMap,
@@ -53,8 +54,15 @@ export class LogSheetUnitViewModelBuilder
       detail,
       entryState
     );
+    const rawWaterParameters = this.buildRawWaterParameters(detail, entryState);
 
-    return { units, activeUnitId, categoriesByUnit, summaryFields: [] };
+    return {
+      units,
+      activeUnitId,
+      categoriesByUnit,
+      rawWaterParameters,
+      summaryFields: [],
+    };
   }
 
   private assertConfiguration(
@@ -238,7 +246,6 @@ export class LogSheetUnitViewModelBuilder
   ): IParameterRowView {
     const entryKey = makeEntryKey(param.id, machineId, 'VALUE');
     const state = entryState[entryKey];
-    const inRange = this.checkInRange(param, state);
 
     return {
       parameterId: param.id,
@@ -247,10 +254,60 @@ export class LogSheetUnitViewModelBuilder
       displayOrder: param.displayOrder,
       valueType: param.valueType,
       unit: param.unit,
+      minValue: param.minValue,
+      maxValue: param.maxValue,
       targetRangeText: this.formatRange(param.minValue, param.maxValue),
       entryKey,
-      inRange,
+      inRange: this.checkInRange(param, state),
     };
+  }
+
+  private buildRawWaterParameters(
+    detail: ILogSheetDetailSnapshot,
+    entryState: TReadonlyEntryStateMap
+  ): IRawWaterParameterView[] {
+    const cwqParams = (detail.parameters ?? []).filter(
+      p => p.category === 'COOLING_WATER_QUALITY'
+    );
+
+    return cwqParams
+      .filter(p => p.rawWaterMinValue !== null || p.rawWaterMaxValue !== null)
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map(p => this.buildRawWaterParamRow(p, entryState));
+  }
+
+  private buildRawWaterParamRow(
+    param: ILogSheetParameterSnapshot,
+    entryState: TReadonlyEntryStateMap
+  ): IRawWaterParameterView {
+    const entryKey = makeEntryKey(param.id, null, 'RAW_WATER');
+    const state = entryState[entryKey];
+
+    return {
+      parameterId: param.id,
+      label: param.name,
+      unit: param.unit,
+      minValue: param.rawWaterMinValue ?? null,
+      maxValue: param.rawWaterMaxValue ?? null,
+      targetRangeText: this.formatRange(
+        param.rawWaterMinValue ?? null,
+        param.rawWaterMaxValue ?? null
+      ),
+      entryKey,
+      inRange: this.checkRawWaterInRange(state, param),
+    };
+  }
+
+  private checkRawWaterInRange(
+    state: { valueType?: string; numericValue?: number | null } | undefined,
+    param: ILogSheetParameterSnapshot
+  ): boolean | null {
+    if (!state || state.valueType !== 'NUMBER') return null;
+    return isNumericInRange(
+      state.numericValue,
+      param.rawWaterMinValue ?? null,
+      param.rawWaterMaxValue ?? null
+    );
   }
 
   private checkInRange(

@@ -116,6 +116,19 @@ export interface IParameterRowView {
   readonly displayOrder: number;
   readonly valueType: TValueType;
   readonly unit: string | null;
+  readonly minValue: number | null;
+  readonly maxValue: number | null;
+  readonly targetRangeText: string | null;
+  readonly entryKey: string;
+  readonly inRange: boolean | null;
+}
+
+export interface IRawWaterParameterView {
+  readonly parameterId: string;
+  readonly label: string;
+  readonly unit: string | null;
+  readonly minValue: number | null;
+  readonly maxValue: number | null;
   readonly targetRangeText: string | null;
   readonly entryKey: string;
   readonly inRange: boolean | null;
@@ -140,6 +153,7 @@ export interface ILogSheetUnitViewModel {
   readonly units: readonly IUnitView[];
   readonly activeUnitId: TUnitId | null;
   readonly categoriesByUnit: ReadonlyMap<TUnitId, readonly ICategoryView[]>;
+  readonly rawWaterParameters: readonly IRawWaterParameterView[];
   readonly summaryFields: readonly ISummaryFieldView[];
 }
 

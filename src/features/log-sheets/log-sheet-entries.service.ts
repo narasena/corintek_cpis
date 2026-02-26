@@ -6,14 +6,13 @@ import {
   assertLogSheetEditable,
   type TLogSheetEditOptions,
 } from './internal/edit-permission';
-import type { PrismaClient } from '@/generated/prisma/client';
+
+type TPrismaTransaction = Parameters<
+  Parameters<typeof prisma.$transaction>[0]
+>[0];
 
 async function upsertSingleLogSheetEntry(
-  tx: PrismaClient['$transaction'] extends (fn: infer F) => any
-    ? F extends (arg: infer A) => any
-      ? A
-      : never
-    : never,
+  tx: TPrismaTransaction,
   logSheetId: string,
   entry: TCreateLogSheetEntry & {
     numericValue?: number | null;
@@ -66,6 +65,111 @@ async function upsertSingleLogSheetEntry(
   });
 }
 
+interface IWaterMeterParams {
+  beforeId: string | null;
+  afterId: string | null;
+  totalId: string | null;
+}
+
+async function getWaterMeterParams(
+  logSheetId: string
+): Promise<IWaterMeterParams> {
+  const logSheet = await prisma.logSheet.findFirst({
+    where: { id: logSheetId },
+    select: {
+      projectId: true,
+    },
+  });
+
+  if (!logSheet) {
+    return { beforeId: null, afterId: null, totalId: null };
+  }
+
+  const consumptionParams = await prisma.parameter.findMany({
+    where: {
+      category: 'CONSUMPTION',
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  let beforeId: string | null = null;
+  let afterId: string | null = null;
+  let totalId: string | null = null;
+
+  for (const param of consumptionParams) {
+    const nameLower = param.name.toLowerCase();
+    if (nameLower.includes('before') && !nameLower.includes('after')) {
+      beforeId = param.id;
+    } else if (nameLower.includes('after') && !nameLower.includes('before')) {
+      afterId = param.id;
+    } else if (
+      nameLower.includes('total') ||
+      nameLower.includes('consumption')
+    ) {
+      if (!totalId) {
+        totalId = param.id;
+      }
+    }
+  }
+
+  return { beforeId, afterId, totalId };
+}
+
+async function calculateAndSaveWaterMeterTotal(
+  tx: TPrismaTransaction,
+  logSheetId: string,
+  waterMeterParams: IWaterMeterParams,
+  existingByKey: Map<string, { id: string; deletedAt: Date | null }>,
+  now: Date
+) {
+  const { beforeId, afterId, totalId } = waterMeterParams;
+
+  if (!beforeId || !afterId || !totalId) return;
+
+  const [beforeEntry, afterEntry] = await Promise.all([
+    tx.logSheetEntry.findFirst({
+      where: { logSheetId, parameterId: beforeId, deletedAt: null },
+      select: { numericValue: true },
+    }),
+    tx.logSheetEntry.findFirst({
+      where: { logSheetId, parameterId: afterId, deletedAt: null },
+      select: { numericValue: true },
+    }),
+  ]);
+
+  const beforeValue = beforeEntry?.numericValue;
+  const afterValue = afterEntry?.numericValue;
+
+  if (
+    beforeValue === null ||
+    beforeValue === undefined ||
+    afterValue === null ||
+    afterValue === undefined
+  ) {
+    return;
+  }
+
+  const totalValue = afterValue - beforeValue;
+
+  await upsertSingleLogSheetEntry(
+    tx,
+    logSheetId,
+    {
+      logSheetId,
+      parameterId: totalId,
+      machineId: null,
+      role: 'VALUE',
+      valueType: 'NUMBER',
+      numericValue: totalValue,
+    },
+    existingByKey,
+    now
+  );
+}
+
 export async function upsertLogSheetEntries(
   actor: IJwtPayload,
   logSheetId: string,
@@ -101,6 +205,8 @@ export async function upsertLogSheetEntries(
     ])
   );
 
+  const waterMeterParams = await getWaterMeterParams(logSheetId);
+
   await prisma.$transaction(async tx => {
     const now = new Date();
     for (const entry of entries) {
@@ -112,5 +218,13 @@ export async function upsertLogSheetEntries(
         now
       );
     }
+
+    await calculateAndSaveWaterMeterTotal(
+      tx,
+      logSheetId,
+      waterMeterParams,
+      existingByKey,
+      now
+    );
   });
 }

@@ -3,11 +3,9 @@
 import type { TMachine, TParameter } from '@/features/log-sheets/types';
 import {
   CoolingWaterQualityDesktop,
-  CoolingWaterQualityMobile,
   GeneralCategoryDesktop,
-  GeneralCategoryMobile,
 } from './category-sections';
-import { UNIT_CATEGORIES, hasNotesCategory } from './category-config';
+import { UNIT_CATEGORIES } from './category-config';
 
 type TMachinesForCategoryResult = {
   machines: TMachine[];
@@ -22,7 +20,6 @@ interface ILogSheetCategorySectionProps {
   ) => TMachinesForCategoryResult;
   activeCTIds: string[];
   coolingTowers: TMachine[];
-  isMobileView: boolean;
 }
 
 export function LogSheetCategorySection({
@@ -31,7 +28,6 @@ export function LogSheetCategorySection({
   machinesForCategory,
   activeCTIds,
   coolingTowers,
-  isMobileView,
 }: ILogSheetCategorySectionProps) {
   return (
     <>
@@ -64,17 +60,6 @@ export function LogSheetCategorySection({
             activeCTIds.includes(m.id)
           );
 
-          if (isMobileView) {
-            return (
-              <CoolingWaterQualityMobile
-                key={category}
-                category={category}
-                params={params}
-                activeCTs={activeCTs}
-              />
-            );
-          }
-
           return (
             <CoolingWaterQualityDesktop
               key={category}
@@ -85,28 +70,12 @@ export function LogSheetCategorySection({
           );
         }
 
-        const hasNotes = hasNotesCategory(cat);
-
-        if (isMobileView) {
-          return (
-            <GeneralCategoryMobile
-              key={category}
-              category={category}
-              params={params}
-              machines={machines}
-              hasNotes={hasNotes}
-              cat={cat}
-            />
-          );
-        }
-
         return (
           <GeneralCategoryDesktop
             key={category}
             category={category}
             params={params}
             machines={machines}
-            hasNotes={hasNotes}
             cat={cat}
           />
         );

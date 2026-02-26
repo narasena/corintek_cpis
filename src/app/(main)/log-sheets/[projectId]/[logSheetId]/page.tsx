@@ -40,6 +40,7 @@ import { useLogSheetDerivedUsers } from './hooks/use-log-sheet-derived-users';
 import { useMobileUnitViewModel } from './hooks/use-mobile-unit-view-model';
 import { formatUserName } from '@/lib/utils/user';
 import { MobileLayoutWrapper } from '@/features/log-sheets/option-a/components/mobile-layout-wrapper';
+import { ConsumptionSection } from '@/features/log-sheets/option-a/components/consumption-section';
 
 import { LogSheetToolbar } from '@/features/log-sheets/components/log-sheet-toolbar';
 import { MachineSelectionPanel } from '@/features/log-sheets/components/machine-selection-panel';
@@ -68,7 +69,6 @@ export default function LogSheetDetailPage() {
   const [isPending, startTransition] = useTransition();
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
   const [adminOverride, setAdminOverride] = useState(false);
-  const [useOptionAMobile, setUseOptionAMobile] = useState(false);
 
   const isMobileView = useIsMobile();
   const {
@@ -95,7 +95,6 @@ export default function LogSheetDetailPage() {
     categories,
     parametersByCategory,
     machinesForCategory,
-    activeMachines,
     replacedByName,
   } = useLogSheetDerived({
     detail,
@@ -141,7 +140,10 @@ export default function LogSheetDetailPage() {
   const isLocked = isStatusLocked && !adminOverride;
 
   const derivedUsers = useLogSheetDerivedUsers(detail);
-  const mobileViewModel = useMobileUnitViewModel(detail, entryState);
+  const mobileViewModel = useMobileUnitViewModel(detail, entryState, {
+    chillers: activeChillerIds,
+    coolingTowers: activeCTIds,
+  });
 
   const handleSave = () => {
     if (isLocked) {
@@ -335,29 +337,11 @@ export default function LogSheetDetailPage() {
             onClearMachines={handleClearMachines}
           />
 
-          {isMobileView && (
-            <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/30">
-              <input
-                type="checkbox"
-                id="option-a-toggle"
-                checked={useOptionAMobile}
-                onChange={e => setUseOptionAMobile(e.target.checked)}
-                className="h-4 w-4"
-              />
-              <label
-                htmlFor="option-a-toggle"
-                className="text-sm cursor-pointer"
-              >
-                Tampilan Unit Baru (Beta)
-              </label>
-            </div>
-          )}
-
           <EntryStateProvider
             entryState={entryState}
             setEntryState={setEntryState}
           >
-            {isMobileView && useOptionAMobile && mobileViewModel ? (
+            {isMobileView && mobileViewModel ? (
               <MobileLayoutWrapper
                 viewModel={mobileViewModel}
                 disabled={isLocked || isPending}
@@ -369,7 +353,18 @@ export default function LogSheetDetailPage() {
                 machinesForCategory={machinesForCategory}
                 activeCTIds={activeCTIds}
                 coolingTowers={detail.machines.coolingTowers}
-                isMobileView={isMobileView}
+              />
+            )}
+            {isMobileView && (
+              <ConsumptionSection
+                parameters={(parametersByCategory.get('CONSUMPTION') ?? []).map(
+                  p => ({
+                    id: p.id,
+                    name: p.name,
+                    unit: p.unit,
+                  })
+                )}
+                disabled={isLocked || isPending}
               />
             )}
           </EntryStateProvider>

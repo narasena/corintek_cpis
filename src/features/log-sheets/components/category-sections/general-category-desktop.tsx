@@ -14,7 +14,6 @@ interface IGeneralCategoryDesktopProps {
   category: string;
   params: TParameter[];
   machines: TMachine[];
-  hasNotes: boolean;
   cat: TParameter['category'];
 }
 
@@ -22,7 +21,6 @@ export function GeneralCategoryDesktop({
   category,
   params,
   machines,
-  hasNotes,
   cat,
 }: IGeneralCategoryDesktopProps) {
   return (
@@ -50,11 +48,6 @@ export function GeneralCategoryDesktop({
                   Nilai
                 </TableHead>
               )}
-              {hasNotes && (
-                <TableHead className="min-w-[260px] text-center">
-                  Catatan
-                </TableHead>
-              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -63,7 +56,6 @@ export function GeneralCategoryDesktop({
                 key={param.id}
                 param={param}
                 machines={machines}
-                hasNotes={hasNotes}
                 cat={cat}
               />
             ))}
