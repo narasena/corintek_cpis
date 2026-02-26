@@ -1,7 +1,8 @@
 'use client';
 
-import { ChevronsUpDown, LogOut } from 'lucide-react';
+import { ChevronsUpDown, LogOut, User } from 'lucide-react';
 import * as React from 'react';
+import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -90,6 +91,12 @@ export function NavUser({ user }: { user: User }) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/my-profile">
+                <User />
+                Profil
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem
               disabled={isPending}
               onSelect={event => {

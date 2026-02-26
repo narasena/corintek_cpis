@@ -10,6 +10,7 @@ export const UserRole = {
   TECHNICIAN: 'TECHNICIAN',
   REPORTING: 'REPORTING',
   DIRECTOR: 'DIRECTOR',
+  CLIENT: 'CLIENT',
   CLIENT_TECHNICIAN: 'CLIENT_TECHNICIAN',
   CLIENT_SUPERVISOR: 'CLIENT_SUPERVISOR',
 } as const;
@@ -101,6 +102,13 @@ export const userLoginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+export const profileUpdateSchema = z.object({
+  firstName: z.string().min(1, 'Nama depan wajib diisi').max(100),
+  lastName: z.string().max(100).optional().nullable(),
+  phoneNumber: z.string().min(1, 'Nomor telepon wajib diisi').max(20),
+  avatarUrl: z.url().optional().nullable(),
+});
+
 /**
  * Schema for listing users with pagination
  */
@@ -132,6 +140,21 @@ export type TUserResponse = z.infer<typeof userResponseSchema>;
 
 /** Login credentials */
 export type TUserLoginInput = z.infer<typeof userLoginSchema>;
+
+/** Profile update input (self-service, excludes admin fields) */
+export type TProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+
+/** Profile response type (safe to expose for self-service) */
+export interface ICurrentUserProfile {
+  id: string;
+  firstName: string;
+  lastName: string | null;
+  email: string;
+  phoneNumber: string;
+  avatarUrl: string | null;
+  role: TUserRole;
+  employmentStatus: TEmploymentStatus;
+}
 
 /** User list query parameters */
 export type TUserListParams = z.infer<typeof userListParamsSchema>;

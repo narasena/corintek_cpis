@@ -1,5 +1,10 @@
 import { prisma } from '@/lib/prisma';
-import { TUserCreateInput, TUserUpdateInput } from '@/@types/user.type';
+import {
+  TUserCreateInput,
+  TUserUpdateInput,
+  TProfileUpdateInput,
+  ICurrentUserProfile,
+} from '@/@types/user.type';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { canAccess, RbacResource } from '@/lib/rbac';
 import bcrypt from 'bcrypt';
@@ -283,4 +288,80 @@ export async function deleteUser(actor: IJwtPayload, id: string) {
   });
 
   return { success: true };
+}
+
+export async function getCurrentUserProfile(
+  userId: string
+): Promise<ICurrentUserProfile> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId, deletedAt: null },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phoneNumber: true,
+      avatarUrl: true,
+      role: true,
+      employmentStatus: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error('Pengguna tidak ditemukan');
+  }
+
+  return user as ICurrentUserProfile;
+}
+
+export async function updateCurrentUserProfile(
+  userId: string,
+  data: TProfileUpdateInput
+): Promise<ICurrentUserProfile> {
+  const existingUser = await prisma.user.findUnique({
+    where: { id: userId, deletedAt: null },
+  });
+
+  if (!existingUser) {
+    throw new Error('Pengguna tidak ditemukan');
+  }
+
+  if (data.phoneNumber && data.phoneNumber !== existingUser.phoneNumber) {
+    await ensurePhoneNumberIsUnique(data.phoneNumber, userId);
+  }
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      firstName: data.firstName,
+      lastName: data.lastName ?? null,
+      phoneNumber: data.phoneNumber,
+      avatarUrl: data.avatarUrl ?? null,
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phoneNumber: true,
+      avatarUrl: true,
+      role: true,
+      employmentStatus: true,
+    },
+  });
+
+  return user as ICurrentUserProfile;
+}
+
+async function ensurePhoneNumberIsUnique(
+  phoneNumber: string,
+  excludeUserId: string
+) {
+  const duplicate = await prisma.user.findFirst({
+    where: { phoneNumber, deletedAt: null, NOT: { id: excludeUserId } },
+  });
+
+  if (duplicate) {
+    throw new Error('Nomor telepon sudah digunakan');
+  }
 }

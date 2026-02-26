@@ -21,6 +21,7 @@ export function isProjectScopedRole(role: string): boolean {
   return (
     role === 'SUPERVISOR' ||
     role === 'TECHNICIAN' ||
+    role === 'CLIENT' ||
     role === 'CLIENT_SUPERVISOR' ||
     role === 'CLIENT_TECHNICIAN'
   );

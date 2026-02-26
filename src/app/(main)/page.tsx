@@ -15,6 +15,7 @@ export default async function Page() {
   const isScopedRole =
     user.role === 'SUPERVISOR' ||
     user.role === 'TECHNICIAN' ||
+    user.role === 'CLIENT' ||
     user.role === 'CLIENT_SUPERVISOR' ||
     user.role === 'CLIENT_TECHNICIAN';
 

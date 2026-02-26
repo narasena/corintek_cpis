@@ -5,6 +5,13 @@ import { prisma } from '@/lib/prisma';
 import { TUserRole } from '@/@types/user.type';
 import bcrypt from 'bcrypt';
 
+export class AuthenticationError extends Error {
+  constructor(message: string = 'Unauthorized') {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
+
 const AUTH_COOKIE_NAME = 'auth_token';
 const SALT_ROUNDS = 10;
 
@@ -95,4 +102,24 @@ export async function comparePassword(
  */
 export function getAuthCookieName(): string {
   return AUTH_COOKIE_NAME;
+}
+
+/**
+ * Require authenticated user - throws if not authenticated
+ * Use this in Server Actions to get actor payload or fail fast
+ */
+export async function requireActor(): Promise<IJwtPayload> {
+  const user = await getCurrentUserDetails();
+  if (!user) throw new AuthenticationError();
+  return { id: user.id, email: user.email, role: user.role };
+}
+
+/**
+ * Get actor or null - returns null if not authenticated
+ * Use this when authentication is optional
+ */
+export async function getActorOrNull(): Promise<IJwtPayload | null> {
+  const user = await getCurrentUserDetails();
+  if (!user) return null;
+  return { id: user.id, email: user.email, role: user.role };
 }
