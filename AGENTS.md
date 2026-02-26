@@ -598,7 +598,7 @@ export async function action(formData: FormData) {
 | Main / Development | **STOP**                 | Branch first!        |
 
 **Atomic Commits:** One logical change = one commit.
-**No Direct Commit in `main`/`master`, `development`, `staging`** Always create new branch first before executing anything!!!
+**No Direct Commit in `main`/`master`/`production`, `dev**`/`development**`, `stage/staging`** Always create new branch first before executing anything!!! **MANDATORY!!!**
 
 ### 2. TDD (Test Later)
 
