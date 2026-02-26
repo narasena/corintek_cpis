@@ -18,6 +18,7 @@ export function buildProjectFormDefaultValues(
         : undefined,
     startDate: project?.startDate ? new Date(project.startDate) : new Date(),
     endDate: project?.endDate ? new Date(project.endDate) : undefined,
+    parameterLimitCategoryId: project?.parameterLimitCategoryId ?? null,
     machines: project?.machines || [],
   };
 }

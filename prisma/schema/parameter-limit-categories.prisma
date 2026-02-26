@@ -1,0 +1,41 @@
+// =============================================================================
+// Parameter Limit Categories Schema
+// =============================================================================
+
+model ParameterLimitCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  isDefault   Boolean  @default(false)
+  
+  limits      ParameterLimit[]
+  projects    Project[]
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  
+  @@map("parameter_limit_categories")
+}
+
+model ParameterLimit {
+  id         String  @id @default(uuid())
+  categoryId String
+  category   ParameterLimitCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  parameterId String
+  parameter   Parameter @relation(fields: [parameterId], references: [id], onDelete: Cascade)
+  
+  minValue         Float?
+  maxValue         Float?
+  rawWaterMinValue Float?
+  rawWaterMaxValue Float?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([categoryId, parameterId])
+  @@index([categoryId])
+  @@index([parameterId])
+  @@map("parameter_limits")
+}

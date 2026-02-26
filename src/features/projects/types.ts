@@ -66,6 +66,11 @@ export const CreateProjectSchema = z.object({
     .uuid('Project utama tidak valid')
     .optional()
     .nullable(),
+  parameterLimitCategoryId: z
+    .string()
+    .uuid('ID kategori limit tidak valid')
+    .optional()
+    .nullable(),
   // Machines are optional at project creation
   machines: z
     .array(
@@ -107,6 +112,7 @@ export interface IProject {
   workCategory: TProjectWorkCategory;
   contractType: TProjectContractType;
   warrantyMonths?: number | null;
+  parameterLimitCategoryId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

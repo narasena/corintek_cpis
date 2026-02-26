@@ -11,6 +11,7 @@ import {
   FlaskConical,
   LayoutDashboard,
   Microscope,
+  Settings2,
   SlidersHorizontal,
   Users,
 } from 'lucide-react';
@@ -80,6 +81,11 @@ const navMain = [
     title: 'Parameter Limits',
     url: '/parameters/limits',
     icon: SlidersHorizontal,
+  },
+  {
+    title: 'Kategori Limit (Admin)',
+    url: '/admin/parameter-limits',
+    icon: Settings2,
   },
   {
     title: 'Users',
