@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -10,49 +10,49 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { getCategoriesForSelectAction } from '../actions';
-import type { IParameterLimitCategory } from '../types';
+import { getProfilesForSelectAction } from '../actions';
+import type { IParameterLimitProfile } from '../types';
 
-interface ICategorySelectorProps {
+interface IProfileSelectorProps {
   value: string | null;
   onChange: (value: string | null) => void;
   disabled?: boolean;
   placeholder?: string;
 }
 
-export function CategorySelector({
+export function ProfileSelector({
   value,
   onChange,
   disabled = false,
-  placeholder = 'Pilih kategori limit',
-}: ICategorySelectorProps) {
-  const [categories, setCategories] = useState<
-    Array<Pick<IParameterLimitCategory, 'id' | 'name' | 'isDefault'>>
+  placeholder = 'Pilih profil limit',
+}: IProfileSelectorProps) {
+  const [profiles, setProfiles] = useState<
+    Array<Pick<IParameterLimitProfile, 'id' | 'name' | 'isDefault'>>
   >([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchCategories() {
+    async function fetchProfiles() {
       try {
-        const result = await getCategoriesForSelectAction();
+        const result = await getProfilesForSelectAction();
         if (result.success) {
-          setCategories(result.data);
+          setProfiles(result.data);
         }
       } catch (error) {
-        console.error('[CPIS-ERROR] CategorySelector.fetchCategories:', error);
+        console.error('[CPIS-ERROR] ProfileSelector.fetchProfiles:', error);
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchCategories();
+    fetchProfiles();
   }, []);
 
   if (isLoading) {
     return <Skeleton className="h-10 w-full" />;
   }
 
-  const selectedCategory = categories.find(c => c.id === value);
+  const selectedProfile = profiles.find(p => p.id === value);
 
   return (
     <Select
@@ -62,10 +62,10 @@ export function CategorySelector({
     >
       <SelectTrigger>
         <SelectValue placeholder={placeholder}>
-          {selectedCategory && (
+          {selectedProfile && (
             <span className="flex items-center gap-2">
-              {selectedCategory.name}
-              {selectedCategory.isDefault && (
+              {selectedProfile.name}
+              {selectedProfile.isDefault && (
                 <Badge variant="secondary" className="text-xs">
                   Default
                 </Badge>
@@ -75,11 +75,11 @@ export function CategorySelector({
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {categories.map(category => (
-          <SelectItem key={category.id} value={category.id}>
+        {profiles.map(profile => (
+          <SelectItem key={profile.id} value={profile.id}>
             <span className="flex items-center gap-2">
-              {category.name}
-              {category.isDefault && (
+              {profile.name}
+              {profile.isDefault && (
                 <Badge variant="secondary" className="text-xs">
                   Default
                 </Badge>

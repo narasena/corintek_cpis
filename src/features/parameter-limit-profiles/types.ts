@@ -7,29 +7,29 @@ import type { IJwtPayload } from '@/@types/auth.type';
 // =============================================================================
 
 /**
- * Schema for creating a new parameter limit category.
- * Category name must be unique across all categories.
+ * Schema for creating a new parameter limit profile.
+ * Profile name must be unique across all profiles.
  */
-export const CreateParameterLimitCategorySchema = z.object({
+export const CreateParameterLimitProfileSchema = z.object({
   name: z
     .string()
-    .min(1, 'Nama kategori wajib diisi')
-    .max(100, 'Nama kategori maksimal 100 karakter'),
+    .min(1, 'Nama profil wajib diisi')
+    .max(100, 'Nama profil maksimal 100 karakter'),
   description: z.string().max(500).optional(),
   isDefault: z.boolean().default(false),
 });
 
 /**
- * Schema for updating an existing parameter limit category.
+ * Schema for updating an existing parameter limit profile.
  * All fields are optional; only provided fields will be updated.
  */
-export const UpdateParameterLimitCategorySchema =
-  CreateParameterLimitCategorySchema.partial().extend({
-    id: z.string().uuid('ID kategori tidak valid'),
+export const UpdateParameterLimitProfileSchema =
+  CreateParameterLimitProfileSchema.partial().extend({
+    id: z.string().uuid('ID profil tidak valid'),
   });
 
 /**
- * Schema for a single parameter limit within a category.
+ * Schema for a single parameter limit within a profile.
  * Maps a parameter to its min/max limits (both regular and raw water).
  */
 export const ParameterLimitSchema = z.object({
@@ -41,12 +41,12 @@ export const ParameterLimitSchema = z.object({
 });
 
 /**
- * Schema for batch upserting parameter limits within a category.
+ * Schema for batch upserting parameter limits within a profile.
  * Validates min <= max constraint for all limits.
  */
 export const UpsertParameterLimitsBatchSchema = z
   .object({
-    categoryId: z.string().uuid('Category ID tidak valid'),
+    profileId: z.string().uuid('Profile ID tidak valid'),
     limits: z
       .array(ParameterLimitSchema)
       .min(1, 'Minimal satu limit wajib diisi'),
@@ -77,19 +77,19 @@ export const UpsertParameterLimitsBatchSchema = z
   );
 
 /**
- * Schema for querying categories with optional filters.
+ * Schema for querying profiles with optional filters.
  */
-export const GetParameterLimitCategoriesFilterSchema = z.object({
+export const GetParameterLimitProfilesFilterSchema = z.object({
   includeDefault: z.boolean().optional(),
   includeLimits: z.boolean().optional(),
 });
 
 /**
  * Schema for copying limits from master parameter defaults.
- * Used to initialize a new category with standard values.
+ * Used to initialize a new profile with standard values.
  */
 export const CopyFromMasterDefaultsSchema = z.object({
-  categoryId: z.string().uuid('Category ID tidak valid'),
+  profileId: z.string().uuid('Profile ID tidak valid'),
   overwriteExisting: z.boolean().default(false),
 });
 
@@ -97,14 +97,14 @@ export const CopyFromMasterDefaultsSchema = z.object({
 // Inferred TypeScript Types
 // =============================================================================
 
-/** Input type for creating a parameter limit category */
-export type TCreateParameterLimitCategory = z.infer<
-  typeof CreateParameterLimitCategorySchema
+/** Input type for creating a parameter limit profile */
+export type TCreateParameterLimitProfile = z.infer<
+  typeof CreateParameterLimitProfileSchema
 >;
 
-/** Input type for updating a parameter limit category */
-export type TUpdateParameterLimitCategory = z.infer<
-  typeof UpdateParameterLimitCategorySchema
+/** Input type for updating a parameter limit profile */
+export type TUpdateParameterLimitProfile = z.infer<
+  typeof UpdateParameterLimitProfileSchema
 >;
 
 /** Input type for a single parameter limit */
@@ -115,9 +115,9 @@ export type TUpsertParameterLimitsBatch = z.infer<
   typeof UpsertParameterLimitsBatchSchema
 >;
 
-/** Filter options for querying categories */
-export type TGetParameterLimitCategoriesFilter = z.infer<
-  typeof GetParameterLimitCategoriesFilterSchema
+/** Filter options for querying profiles */
+export type TGetParameterLimitProfilesFilter = z.infer<
+  typeof GetParameterLimitProfilesFilterSchema
 >;
 
 /** Input type for copying from master defaults */
@@ -130,30 +130,30 @@ export type TCopyFromMasterDefaults = z.infer<
 // =============================================================================
 
 /**
- * Represents a parameter limit category (template).
- * Categories group limit configurations for reuse across projects.
+ * Represents a parameter limit profile (template).
+ * Profiles group limit configurations for reuse across projects.
  *
  * @example
- * // Default category seeded from master parameters
+ * // Default profile seeded from master parameters
  * { name: "Standard", isDefault: true, description: "Default limits from master data" }
  *
- * // Client-specific category
+ * // Client-specific profile
  * { name: "Client XYZ Cooling Tower", isDefault: false, description: "Custom limits for Client XYZ" }
  */
-export interface IParameterLimitCategory {
+export interface IParameterLimitProfile {
   /** Unique identifier (UUID) */
   id: string;
 
-  /** Display name - must be unique across categories */
+  /** Display name - must be unique across profiles */
   name: string;
 
   /** Optional description for admin reference */
   description: string | null;
 
   /**
-   * Whether this is the system default category.
-   * Only one category can be default at a time.
-   * New projects without explicit category selection use the default.
+   * Whether this is the system default profile.
+   * Only one profile can be default at a time.
+   * New projects without explicit profile selection use the default.
    */
   isDefault: boolean;
 
@@ -168,15 +168,15 @@ export interface IParameterLimitCategory {
 }
 
 /**
- * Represents a single limit configuration within a category.
- * Links a parameter to its min/max bounds for a specific category context.
+ * Represents a single limit configuration within a profile.
+ * Links a parameter to its min/max bounds for a specific profile context.
  */
 export interface IParameterLimit {
   /** Unique identifier (UUID) */
   id: string;
 
-  /** Reference to the parent category */
-  categoryId: string;
+  /** Reference to the parent profile */
+  profileId: string;
 
   /** Reference to the parameter being limited */
   parameterId: string;
@@ -187,10 +187,10 @@ export interface IParameterLimit {
   /** Maximum acceptable value (null = no upper bound) */
   maxValue: number | null;
 
-  /** Minimum acceptable raw water value (for COOLING_WATER_QUALITY category) */
+  /** Minimum acceptable raw water value (for COOLING_WATER_QUALITY) */
   rawWaterMinValue: number | null;
 
-  /** Maximum acceptable raw water value (for COOLING_WATER_QUALITY category) */
+  /** Maximum acceptable raw water value (for COOLING_WATER_QUALITY) */
   rawWaterMaxValue: number | null;
 
   /** Creation timestamp */
@@ -201,15 +201,15 @@ export interface IParameterLimit {
 }
 
 /**
- * Composite view of a category with its associated limits.
+ * Composite view of a profile with its associated limits.
  * Used for UI display and limit resolution.
  */
-export interface ICategoryWithLimits {
-  /** The category metadata */
-  category: IParameterLimitCategory;
+export interface IProfileWithLimits {
+  /** The profile metadata */
+  profile: IParameterLimitProfile;
 
   /**
-   * All parameter limits within this category.
+   * All parameter limits within this profile.
    * Includes parameter details for display.
    */
   limits: Array<
@@ -243,19 +243,19 @@ export interface ILimitsGroupedByCategory {
   groupLabel: string;
 
   /** Limits within this group */
-  limits: Array<ICategoryWithLimits['limits'][number]>;
+  limits: Array<IProfileWithLimits['limits'][number]>;
 }
 
 /**
  * Resolved effective limits for a parameter.
- * Result of the limit resolution chain (Override > Category > Master).
+ * Result of the limit resolution chain (Override > Profile > Default).
  */
 export interface IEffectiveLimits {
   /** Parameter being limited */
   parameterId: string;
 
   /** Source of the resolved limits */
-  source: 'OVERRIDE' | 'CATEGORY' | 'MASTER';
+  source: 'OVERRIDE' | 'PROFILE' | 'DEFAULT';
 
   /** Effective minimum value */
   minValue: number | null;
@@ -275,11 +275,11 @@ export interface IEffectiveLimits {
  * Passed to limit resolution utilities.
  */
 export interface ILimitResolutionContext {
-  /** Project's selected limit category (if any) */
-  categoryId?: string | null;
+  /** Project's selected limit profile (if any) */
+  profileId?: string | null;
 
-  /** Pre-fetched category limits map (parameterId → limit) */
-  categoryLimitsMap?: Map<string, IParameterLimit>;
+  /** Pre-fetched profile limits map (parameterId → limit) */
+  profileLimitsMap?: Map<string, IParameterLimit>;
 
   /** Project-specific overrides (highest priority) */
   overrides: Array<{
@@ -292,19 +292,19 @@ export interface ILimitResolutionContext {
 }
 
 /**
- * Statistics for a category (for admin dashboard).
+ * Statistics for a profile (for admin dashboard).
  */
-export interface ICategoryStats {
-  /** Category ID */
-  categoryId: string;
+export interface IProfileStats {
+  /** Profile ID */
+  profileId: string;
 
   /** Number of parameters with defined limits */
   parametersWithLimits: number;
 
-  /** Number of projects using this category */
+  /** Number of projects using this profile */
   projectsUsingCount: number;
 
-  /** Whether this category can be deleted (no projects using it) */
+  /** Whether this profile can be deleted (no projects using it) */
   canDelete: boolean;
 }
 
@@ -313,24 +313,24 @@ export interface ICategoryStats {
 // =============================================================================
 
 /**
- * Result of a category creation operation.
+ * Result of a profile creation operation.
  */
-export interface ICreateCategoryResult {
-  category: IParameterLimitCategory;
+export interface ICreateProfileResult {
+  profile: IParameterLimitProfile;
   /** Whether limits were auto-seeded from master defaults */
   seededFromMaster: boolean;
 }
 
 /**
- * Result of a category deletion operation.
+ * Result of a profile deletion operation.
  */
-export interface IDeleteCategoryResult {
-  /** ID of the deleted category */
+export interface IDeleteProfileResult {
+  /** ID of the deleted profile */
   deletedId: string;
 
   /**
-   * Projects that were reassigned to default category.
-   * Empty if no projects were using the deleted category.
+   * Projects that were reassigned to default profile.
+   * Empty if no projects were using the deleted profile.
    */
   reassignedProjectIds: string[];
 }
@@ -354,69 +354,62 @@ export interface IUpsertLimitsResult {
 // =============================================================================
 
 /**
- * Parameter data with limit values (for seeding from master).
- */
-export interface IParameterWithLimits {
-  id: string;
-  name: string;
-  variableName: string;
-  unit: string | null;
-  category: TParameterCategory;
-  displayOrder: number;
-  minValue: number | null;
-  maxValue: number | null;
-  rawWaterMinValue: number | null;
-  rawWaterMaxValue: number | null;
-}
-
-/**
- * Repository interface for parameter limit category persistence.
+ * Repository interface for parameter limit profile persistence.
  * Abstracts database operations for testability and loose coupling.
  */
-export interface IParameterLimitCategoryRepository {
-  // Category CRUD
-  findAll(): Promise<IParameterLimitCategory[]>;
-  findById(id: string): Promise<IParameterLimitCategory | null>;
-  findByIdWithLimits(id: string): Promise<ICategoryWithLimits | null>;
-  findDefaultCategory(): Promise<IParameterLimitCategory | null>;
-  create(data: TCreateParameterLimitCategory): Promise<IParameterLimitCategory>;
+export interface IParameterLimitProfileRepository {
+  // Profile CRUD
+  findAll(): Promise<IParameterLimitProfile[]>;
+  findById(id: string): Promise<IParameterLimitProfile | null>;
+  findByIdWithLimits(id: string): Promise<IProfileWithLimits | null>;
+  findDefaultProfile(): Promise<IParameterLimitProfile | null>;
+  create(data: TCreateParameterLimitProfile): Promise<IParameterLimitProfile>;
   update(
     id: string,
-    data: Partial<TCreateParameterLimitCategory>
-  ): Promise<IParameterLimitCategory>;
+    data: Partial<TCreateParameterLimitProfile>
+  ): Promise<IParameterLimitProfile>;
   softDelete(id: string): Promise<void>;
 
-  // Category uniqueness checks
-  findByName(name: string): Promise<IParameterLimitCategory | null>;
-  findOtherDefault(excludeId: string): Promise<IParameterLimitCategory | null>;
+  // Profile uniqueness checks
+  findByName(name: string): Promise<IParameterLimitProfile | null>;
+  findOtherDefault(excludeId: string): Promise<IParameterLimitProfile | null>;
   countOtherDefaults(excludeId: string): Promise<number>;
   unsetAllDefaults(): Promise<void>;
 
   // Limits CRUD
-  findLimitsByCategoryId(categoryId: string): Promise<IParameterLimit[]>;
+  findLimitsByProfileId(profileId: string): Promise<IParameterLimit[]>;
   upsertLimit(
-    categoryId: string,
+    profileId: string,
     limit: TParameterLimitInput
   ): Promise<{ created: boolean }>;
   upsertLimitsBatch(
-    categoryId: string,
+    profileId: string,
     limits: TParameterLimitInput[]
   ): Promise<{ created: number; updated: number }>;
-  deleteLimitsByCategoryId(categoryId: string): Promise<void>;
+  deleteLimitsByProfileId(profileId: string): Promise<void>;
 
   // Project relationships
-  findProjectsUsingCategory(categoryId: string): Promise<Array<{ id: string }>>;
-  reassignProjectsToCategory(
-    fromCategoryId: string,
-    toCategoryId: string | null
+  findProjectsUsingProfile(profileId: string): Promise<Array<{ id: string }>>;
+  reassignProjectsToProfile(
+    fromProfileId: string,
+    toProfileId: string | null
   ): Promise<string[]>;
-  countProjectsUsingCategory(categoryId: string): Promise<number>;
+  countProjectsUsingProfile(profileId: string): Promise<number>;
 
   // Master parameter data
-  findAllActiveParametersWithLimits(): Promise<IParameterWithLimits[]>;
+  findAllActiveParameters(): Promise<
+    Array<{
+      id: string;
+      name: string;
+      variableName: string;
+      unit: string | null;
+      category: TParameterCategory;
+      displayOrder: number;
+    }>
+  >;
 
   // Statistics
-  countLimitsInCategory(categoryId: string): Promise<number>;
+  countLimitsInProfile(profileId: string): Promise<number>;
 }
 
 /**
@@ -427,30 +420,27 @@ export interface IRbacService {
 }
 
 /**
- * Service interface for parameter limit category operations.
+ * Service interface for parameter limit profile operations.
  */
-export interface IParameterLimitCategoryService {
-  getCategories(
+export interface IParameterLimitProfileService {
+  getProfiles(
     actor: IJwtPayload,
-    filters?: TGetParameterLimitCategoriesFilter
-  ): Promise<IParameterLimitCategory[]>;
-  getCategoryWithLimits(
-    actor: IJwtPayload,
-    id: string
-  ): Promise<ICategoryWithLimits>;
-  createCategory(
-    actor: IJwtPayload,
-    data: TCreateParameterLimitCategory
-  ): Promise<ICreateCategoryResult>;
-  updateCategory(
-    actor: IJwtPayload,
-    data: TUpdateParameterLimitCategory
-  ): Promise<IParameterLimitCategory>;
-  deleteCategory(
+    filters?: TGetParameterLimitProfilesFilter
+  ): Promise<IParameterLimitProfile[]>;
+  getProfileWithLimits(
     actor: IJwtPayload,
     id: string
-  ): Promise<IDeleteCategoryResult>;
-  upsertCategoryLimits(
+  ): Promise<IProfileWithLimits>;
+  createProfile(
+    actor: IJwtPayload,
+    data: TCreateParameterLimitProfile
+  ): Promise<ICreateProfileResult>;
+  updateProfile(
+    actor: IJwtPayload,
+    data: TUpdateParameterLimitProfile
+  ): Promise<IParameterLimitProfile>;
+  deleteProfile(actor: IJwtPayload, id: string): Promise<IDeleteProfileResult>;
+  upsertProfileLimits(
     actor: IJwtPayload,
     data: TUpsertParameterLimitsBatch
   ): Promise<IUpsertLimitsResult>;
@@ -458,17 +448,17 @@ export interface IParameterLimitCategoryService {
     actor: IJwtPayload,
     data: TCopyFromMasterDefaults
   ): Promise<{ copied: number }>;
-  getCategoryLimitsMap(
-    categoryId: string | null
+  getProfileLimitsMap(
+    profileId: string | null
   ): Promise<Map<string, IParameterLimit>>;
-  getCategoryStats(actor: IJwtPayload, id: string): Promise<ICategoryStats>;
-  getOrCreateDefaultCategory(): Promise<ICategoryWithLimits>;
+  getProfileStats(actor: IJwtPayload, id: string): Promise<IProfileStats>;
+  getOrCreateDefaultProfile(): Promise<IProfileWithLimits>;
 }
 
 /**
- * Dependencies for ParameterLimitCategoryService.
+ * Dependencies for ParameterLimitProfileService.
  */
-export interface IParameterLimitCategoryServiceDeps {
-  repository: IParameterLimitCategoryRepository;
+export interface IParameterLimitProfileServiceDeps {
+  repository: IParameterLimitProfileRepository;
   rbac: IRbacService;
 }

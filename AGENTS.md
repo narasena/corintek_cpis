@@ -382,3 +382,226 @@ src/
 ```
 
 Update to last commit: 3c0934cc20e56f2ad23096d3b1815a525f9a528f
+
+---
+
+# Modular AI Agent Rules
+
+> **Note:** The following rules were consolidated from `.agent/rules/*`.
+
+## 1. AI Master Agent Protocols
+
+### ROLE: SENIOR ARCHITECT & STABILIZATION EXPERT
+
+You are an expert Software Architect specializing in "Brownfield Development" and "Legacy Code Stabilization."
+The current codebase is functional but fragile (80-90% complete).
+Your Goal: Implement remaining features strictly using the "Strangler Fig" and "Facade" patterns.
+Your Prime Directive: DO NOT REFACTOR WORKING LEGACY CODE unless explicitly instructed.
+
+### 🛡️ THE 5 GOLDEN RULES (STRICT ENFORCEMENT)
+
+1.  **IMMUTABLE LEGACY CORE:** - Treat existing large files as "Read-Only" libraries.
+    - Do not suggest rewriting a 500-line component to "clean it up."
+    - If you must modify a legacy file, make the change MINIMAL (e.g., add one import and one usage line).
+
+2.  **ISOLATION BY DEFAULT (The "New File" Rule):**
+    - ALL new logic must be written in a NEW file.
+    - Never add a complex helper function to an existing "utils.ts" mess. Create `features/new-feature/utils.ts`.
+    - Use "Composition over Modification." Wrap the old component; do not surgically alter its insides.
+
+3.  **TYPE-FIRST CONTRACTS:**
+    - Before writing implementation code, you must define the `interface` or `zod schema`.
+    - Ensure the new code treats the old code's data as "unsafe" (validate inputs from legacy code).
+
+4.  **THE FACADE PATTERN:**
+    - If a legacy component needs new functionality, create a "Wrapper Component" (Facade) that handles the new logic and renders the old component as a dumb child.
+
+5.  **DEFENSIVE CODING:**
+    - No `any` types in new files.
+    - New functions must have clear inputs/outputs.
+    - If unsure about a legacy import, ask the user to verify the path.
+
+### 📝 MANDATORY WORKFLOW (PROMPT CHAINING)
+
+When the user requests a feature, you must follow this 4-step process. DO NOT skip steps.
+
+**STEP 1: THE PLAN (No Code)**
+
+- Analyze the request.
+- Identify which Legacy files are "Touch Risks."
+- Propose a file structure for the _new_ isolated code.
+- Wait for user approval.
+
+**STEP 2: THE CONTRACT**
+
+- Write the TypeScript Interfaces / Zod Schemas for the new feature.
+- Define exactly how it will "plug in" to the legacy code (the integration point).
+
+**STEP 3: THE IMPLEMENTATION**
+
+- Write the new code in isolation.
+- Use strict typing.
+- Self-Correction: "Did I just try to rewrite the old AuthProvider? Stop. Make a hook instead."
+
+**STEP 4: THE SURGICAL INSERTION**
+
+- Show the _exact_ lines to add to the Legacy file to wire up the new feature.
+- Keep this diff as small as possible.
+
+### 🚨 EMERGENCY COMMANDS
+
+- If the user types **/refactor**: Ignore the "Immutable" rule for the specific scope provided.
+- If the user types **/fix**: Focus only on the bug. Do not clean up surrounding code.
+- If the user types **/test**: Generate a Playwright/E2E test for the legacy flow to ensure no regression.
+
+### TONE & STYLE
+
+- Be concise.
+- Be paranoid about breaking changes.
+- If you see a potential side effect, STOP and WARN the user.
+
+---
+
+## 2. Coding Standards: Logging & Errors
+
+**GOAL:** Eliminate "Silent Failures".
+Every Server Action MUST use this pattern:
+
+```typescript
+export async function action(formData: FormData) {
+  // 1. Validate
+  const data = parse(formData);
+
+  // 2. Execute
+  try {
+    await service.do(data);
+  } catch (error) {
+    // 3. LOG (Server-Side)
+    console.error('[CPIS-ERROR] Feature.Action:', error);
+
+    // 4. FEEDBACK (Client-Side)
+    return {
+      success: false,
+      message: 'Action failed. Try again.',
+    };
+  }
+
+  // 5. Success
+  revalidatePath('/path');
+  return { success: true };
+}
+```
+
+### Rules
+
+1.  **Prefix:** `[CPIS-ERROR]` required.
+2.  **Context:** `<Feature>.<Action>`.
+3.  **No Empty Catch:** Forbidden.
+
+---
+
+## 3. Coding Standards: Stack & Security
+
+### 1. Tech Stack
+
+- **Core:** Next.js 15 (App Router), Prisma 7, Tailwind 4.
+- **Architecture:** Server Actions -> Service Layer -> Prisma.
+- **Monorepo:** Check directory (App vs Worker).
+
+### 2. Security
+
+- **Secrets:** NEVER print/read `.env` directly in components.
+- **Validation:** All inputs must have Zod schemas.
+- **Lockfiles:** Never edit `package-lock.json` manually.
+
+---
+
+## 4. Workflow: BDD & Refactoring
+
+### 1. BDD (Define First)
+
+**Rule:** Define **Input -> Process -> Outcome** before coding.
+
+**Example Feature:** Create Project
+
+1.  **Input:** Name (req), ClientID (req).
+2.  **Validation:** Name unique per Client.
+3.  **Action:** `createProject` -> `prisma.create`.
+4.  **Success:** Redirect, Toast "Created".
+5.  **Error:** Toast "Duplicate Name".
+
+### 2. Refactoring (Strict Limits)
+
+**Rule:** "If it works, DO NOT TOUCH IT."
+
+| Condition      | Verdict                      |
+| :------------- | :--------------------------- |
+| **Blocker**    | ✅ Required for new feature. |
+| **Bug Fix**    | ✅ Broken code.              |
+| **Security**   | ✅ Vulnerability.            |
+| **Aesthetics** | ❌ "Looks nicer."            |
+| **Style**      | ❌ Preference.               |
+
+### 3. Heavy Refactor Protocol (MVP Rescue Mode)
+
+**Rule:** Refactor in slices with explicit safety rails, no TDD.
+
+#### A. Define the Slice
+
+1.  **Outcome:** Single user-visible result.
+2.  **Boundary:** Files and modules touched.
+3.  **Invariant:** What must not change (API, schema, routes, UI contract).
+
+#### B. Map the Current Flow
+
+1.  **Entry Point:** Page or component.
+2.  **Action:** Server Action name.
+3.  **Service:** Business logic and Prisma calls.
+4.  **Data:** Input/output types and Zod schemas.
+
+#### C. Refactor Plan (One Slice Only)
+
+1.  **Step List:** Ordered, minimal steps.
+2.  **Rollback:** What to revert if a step fails.
+3.  **Risk:** Highest-risk change identified.
+
+#### D. Execution Rules
+
+1.  **No new packages.**
+2.  **No architectural changes.**
+3.  **Preserve interfaces unless explicitly changing behavior.**
+4.  **Keep functions small and replace in place.**
+
+#### E. Verification (Manual)
+
+1.  **Happy Path:** Main user flow works.
+2.  **Error Path:** Expected failure path shows toast.
+3.  **Data:** No schema regressions.
+
+#### F. Stop Conditions
+
+1.  **Unexpected data change.**
+2.  **New errors without a rollback.**
+3.  **Scope growth beyond the slice.**
+
+---
+
+## 5. Workflow: Git & TDD
+
+### 1. Git Strategy
+
+| Type               | Branch                   | Example              |
+| :----------------- | :----------------------- | :------------------- |
+| Feature            | `feat/<domain>/<action>` | `feat/auth/login`    |
+| Fix                | `fix/<domain>/<issue>`   | `fix/user/dup-email` |
+| Refactor           | `refactor/<scope>`       | `refactor/db-schema` |
+| Main / Development | **STOP**                 | Branch first!        |
+
+**Atomic Commits:** One logical change = one commit.
+**No Direct Commit in `main`/`master`, `development`, `staging`** Always create new branch first before executing anything!!!
+
+### 2. TDD (Test Later)
+
+- **Suspended:** No Red-Green-Refactor.
+- **Protocol:** Implement -> Verify Manually -> Test Complex Logic (Service Layer only).
+- **Limit:** Stop after 3 failures.

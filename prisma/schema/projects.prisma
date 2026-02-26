@@ -33,15 +33,15 @@ model Project {
   parameterOverrides ProjectParameterOverride[]
   assignments        ProjectAssignment[]
   
-  parameterLimitCategoryId String?
-  parameterLimitCategory   ParameterLimitCategory? @relation(fields: [parameterLimitCategoryId], references: [id])
+  parameterLimitProfileId String?
+  parameterLimitProfile   ParameterLimitProfile? @relation(fields: [parameterLimitProfileId], references: [id])
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@index([clientId])
-  @@index([parameterLimitCategoryId])
+  @@index([parameterLimitProfileId])
   @@map("projects")
 }
 

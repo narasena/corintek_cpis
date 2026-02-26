@@ -325,3 +325,28 @@ Project → parameterLimitCategoryId (nullable, defaults to "Standard")
 - Implement Limit Evaluation Adapter for Log Sheets
 - Integrate Notifications into Log Sheet submission flow
 - Expose Notifications in UI (Header Bell/Dropdown)
+
+### 8.5 Parameter Limit UX Refactoring - 2026-02-26
+
+**Branch:** `refactor/parameter-limit-ux` (in progress)
+
+**Changes:**
+
+- Renamed `ParameterLimitCategory` model → `ParameterLimitProfile` (clearer naming)
+- Renamed table `parameter_limit_categories` → `parameter_limit_profiles`
+- Removed redundant `minValue`, `maxValue`, `rawWaterMinValue`, `rawWaterMaxValue` from `Parameter` model
+- All limits now stored in `ParameterLimit` table (single source of truth)
+- Consolidated sidebar: merged 3 entries into 1 (`Parameters`)
+- Updated project schema to use `parameterLimitProfileId`
+- Created new feature module `src/features/parameter-limit-profiles/`
+
+**TODO / NEXT STEPS:**
+
+- [ ] Run `npm run prisma:migrate` to apply schema changes to database
+- [ ] Fix remaining TypeScript build errors in:
+  - [ ] `src/features/log-sheets/service.ts` - Update Parameter references
+  - [ ] `src/features/summary-reports/service.ts` - Update Parameter references
+  - [ ] `src/features/parameters/limits-service.ts` - Update Parameter references
+  - [ ] `src/app/(main)/lab-analyses/[projectId]/[labAnalysisId]/edit/page.tsx` - Update ParameterLite type
+- [ ] Recreate tabs UI for Parameters page (Parameter, Limit Defaults, Profiles)
+- [ ] Test that existing projects work with new profile system

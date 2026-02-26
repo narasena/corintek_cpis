@@ -28,21 +28,13 @@ model Parameter {
   valueType    ValueType
   unit         String? // e.g., "°C", "ppm", "µS"
 
-  // Optional limit range for NUMBER type
-  minValue Float?
-  maxValue Float?
-
-  // Optional raw-water limit range (used by COOLING_WATER_QUALITY)
-  rawWaterMinValue Float?
-  rawWaterMaxValue Float?
-
   // Display metadata
   displayOrder       Int                        @default(0)
   isActive           Boolean                    @default(true)
   logSheetEntries    LogSheetEntry[]
   labAnalysisEntries LabAnalysisEntry[]
   projectOverrides   ProjectParameterOverride[]
-  categoryLimits     ParameterLimit[]
+  profileLimits      ParameterLimit[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

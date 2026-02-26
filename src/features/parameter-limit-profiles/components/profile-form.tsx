@@ -20,31 +20,31 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { z } from 'zod/v4';
 import {
-  CreateParameterLimitCategorySchema,
-  UpdateParameterLimitCategorySchema,
-  type IParameterLimitCategory,
+  CreateParameterLimitProfileSchema,
+  UpdateParameterLimitProfileSchema,
+  type IParameterLimitProfile,
 } from '../types';
-import { createCategoryAction, updateCategoryAction } from '../actions';
+import { createProfileAction, updateProfileAction } from '../actions';
 
 const formSchema = z.object({
-  name: z.string().min(1, 'Nama kategori wajib diisi').max(100),
+  name: z.string().min(1, 'Nama profil wajib diisi').max(100),
   description: z.string().max(500).optional(),
   isDefault: z.boolean(),
 });
 
 type TFormValues = z.infer<typeof formSchema>;
 
-interface ICategoryFormProps {
-  initialData?: IParameterLimitCategory | null;
-  onSuccess?: (category: IParameterLimitCategory) => void;
+interface IProfileFormProps {
+  initialData?: IParameterLimitProfile | null;
+  onSuccess?: (profile: IParameterLimitProfile) => void;
   onCancel?: () => void;
 }
 
-export function CategoryForm({
+export function ProfileForm({
   initialData,
   onSuccess,
   onCancel,
-}: ICategoryFormProps) {
+}: IProfileFormProps) {
   const [isPending, startTransition] = useTransition();
   const isEditMode = !!initialData;
 
@@ -61,22 +61,22 @@ export function CategoryForm({
     startTransition(async () => {
       let result;
       if (isEditMode && initialData) {
-        result = await updateCategoryAction({
+        result = await updateProfileAction({
           id: initialData.id,
           ...data,
         });
       } else {
-        result = await createCategoryAction(data);
+        result = await createProfileAction(data);
       }
 
       if (result.success) {
-        toast.success(isEditMode ? 'Kategori diperbarui' : 'Kategori dibuat', {
-          description: `Kategori "${data.name}" berhasil ${isEditMode ? 'diperbarui' : 'dibuat'}.`,
+        toast.success(isEditMode ? 'Profil diperbarui' : 'Profil dibuat', {
+          description: `Profil "${data.name}" berhasil ${isEditMode ? 'diperbarui' : 'dibuat'}.`,
         });
-        if ('category' in result.data) {
-          onSuccess?.(result.data.category);
+        if ('profile' in result.data) {
+          onSuccess?.(result.data.profile);
         } else {
-          onSuccess?.(result.data as IParameterLimitCategory);
+          onSuccess?.(result.data as IParameterLimitProfile);
         }
       } else {
         toast.error('Gagal menyimpan', {
@@ -94,7 +94,7 @@ export function CategoryForm({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nama Kategori</FormLabel>
+              <FormLabel>Nama Profil</FormLabel>
               <FormControl>
                 <Input
                   placeholder="contoh: Standard, Client XYZ Custom"
@@ -103,7 +103,7 @@ export function CategoryForm({
                 />
               </FormControl>
               <FormDescription>
-                Nama unik untuk kategori limit parameter
+                Nama unik untuk profil batas parameter
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -118,7 +118,7 @@ export function CategoryForm({
               <FormLabel>Deskripsi</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Deskripsi opsional untuk kategori ini"
+                  placeholder="Deskripsi opsional untuk profil ini"
                   {...field}
                   value={field.value ?? ''}
                   disabled={isPending}
@@ -143,9 +143,9 @@ export function CategoryForm({
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>Kategori Default</FormLabel>
+                <FormLabel>Profil Default</FormLabel>
                 <FormDescription>
-                  Kategori ini akan digunakan sebagai default untuk proyek baru
+                  Profil ini akan digunakan sebagai default untuk proyek baru
                 </FormDescription>
               </div>
             </FormItem>
@@ -165,7 +165,7 @@ export function CategoryForm({
           )}
           <Button type="submit" disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEditMode ? 'Perbarui' : 'Buat'} Kategori
+            {isEditMode ? 'Perbarui' : 'Buat'} Profil
           </Button>
         </div>
       </form>

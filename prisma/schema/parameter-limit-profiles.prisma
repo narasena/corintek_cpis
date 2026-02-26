@@ -1,8 +1,8 @@
 // =============================================================================
-// Parameter Limit Categories Schema
+// Parameter Limit Profiles Schema
 // =============================================================================
 
-model ParameterLimitCategory {
+model ParameterLimitProfile {
   id          String   @id @default(uuid())
   name        String   @unique
   description String?
@@ -15,13 +15,13 @@ model ParameterLimitCategory {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
   
-  @@map("parameter_limit_categories")
+  @@map("parameter_limit_profiles")
 }
 
 model ParameterLimit {
   id         String  @id @default(uuid())
-  categoryId String
-  category   ParameterLimitCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  profileId String
+  profile   ParameterLimitProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   
   parameterId String
   parameter   Parameter @relation(fields: [parameterId], references: [id], onDelete: Cascade)
@@ -34,8 +34,8 @@ model ParameterLimit {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  @@unique([categoryId, parameterId])
-  @@index([categoryId])
+  @@unique([profileId, parameterId])
+  @@index([profileId])
   @@index([parameterId])
   @@map("parameter_limits")
 }

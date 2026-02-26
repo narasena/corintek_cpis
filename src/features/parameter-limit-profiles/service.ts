@@ -1,40 +1,40 @@
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import type { IJwtPayload } from '@/@types/auth.type';
+import type { TParameterCategory } from '@/features/parameters/types';
 import type {
-  IParameterLimitCategory,
-  ICategoryWithLimits,
-  ICategoryStats,
-  ICreateCategoryResult,
-  IDeleteCategoryResult,
+  IParameterLimitProfile,
+  IProfileWithLimits,
+  IProfileStats,
+  ICreateProfileResult,
+  IDeleteProfileResult,
   IUpsertLimitsResult,
   IParameterLimit,
-  IParameterLimitCategoryService,
-  IParameterLimitCategoryServiceDeps,
+  IParameterLimitProfileService,
+  IParameterLimitProfileServiceDeps,
+  IParameterLimitProfileRepository,
   IRbacService,
-  IParameterLimitCategoryRepository,
-  TCreateParameterLimitCategory,
-  TUpdateParameterLimitCategory,
+  TCreateParameterLimitProfile,
+  TUpdateParameterLimitProfile,
   TUpsertParameterLimitsBatch,
-  TGetParameterLimitCategoriesFilter,
+  TGetParameterLimitProfilesFilter,
   TCopyFromMasterDefaults,
   TParameterLimitInput,
-  IParameterWithLimits,
 } from './types';
-import { createPrismaParameterLimitCategoryRepository } from './repository-prisma';
+import { createPrismaParameterLimitProfileRepository } from './repository-prisma';
 
 // =============================================================================
-// Parameter Limit Category Service
+// Parameter Limit Profile Service
 // =============================================================================
 
 /**
- * Service class for parameter limit category operations.
+ * Service class for parameter limit profile operations.
  * Uses constructor injection for testability and loose coupling.
  */
-class ParameterLimitCategoryService implements IParameterLimitCategoryService {
-  private readonly repository: IParameterLimitCategoryRepository;
+class ParameterLimitProfileService implements IParameterLimitProfileService {
+  private readonly repository: IParameterLimitProfileRepository;
   private readonly rbac: IRbacService;
 
-  constructor(deps: IParameterLimitCategoryServiceDeps) {
+  constructor(deps: IParameterLimitProfileServiceDeps) {
     this.repository = deps.repository;
     this.rbac = deps.rbac;
   }
@@ -43,30 +43,30 @@ class ParameterLimitCategoryService implements IParameterLimitCategoryService {
   // CRUD Operations
   // ---------------------------------------------------------------------------
 
-  async getCategories(
+  async getProfiles(
     actor: IJwtPayload,
-    _filters?: TGetParameterLimitCategoriesFilter
-  ): Promise<IParameterLimitCategory[]> {
+    _filters?: TGetParameterLimitProfilesFilter
+  ): Promise<IParameterLimitProfile[]> {
     this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
     return this.repository.findAll();
   }
 
-  async getCategoryWithLimits(
+  async getProfileWithLimits(
     actor: IJwtPayload,
     id: string
-  ): Promise<ICategoryWithLimits> {
+  ): Promise<IProfileWithLimits> {
     this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
-    const category = await this.repository.findByIdWithLimits(id);
-    if (!category) {
-      throw new Error('Kategori tidak ditemukan');
+    const profile = await this.repository.findByIdWithLimits(id);
+    if (!profile) {
+      throw new Error('Profil tidak ditemukan');
     }
-    return category;
+    return profile;
   }
 
-  async createCategory(
+  async createProfile(
     actor: IJwtPayload,
-    data: TCreateParameterLimitCategory
-  ): Promise<ICreateCategoryResult> {
+    data: TCreateParameterLimitProfile
+  ): Promise<ICreateProfileResult> {
     this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'create');
     await this.validateNameUnique(data.name);
 
@@ -74,14 +74,14 @@ class ParameterLimitCategoryService implements IParameterLimitCategoryService {
       await this.repository.unsetAllDefaults();
     }
 
-    const category = await this.repository.create(data);
-    return { category, seededFromMaster: false };
+    const profile = await this.repository.create(data);
+    return { profile, seededFromMaster: false };
   }
 
-  async updateCategory(
+  async updateProfile(
     actor: IJwtPayload,
-    data: TUpdateParameterLimitCategory
-  ): Promise<IParameterLimitCategory> {
+    data: TUpdateParameterLimitProfile
+  ): Promise<IParameterLimitProfile> {
     this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
     await this.validateExists(data.id);
 
@@ -104,20 +104,20 @@ class ParameterLimitCategoryService implements IParameterLimitCategoryService {
     });
   }
 
-  async deleteCategory(
+  async deleteProfile(
     actor: IJwtPayload,
     id: string
-  ): Promise<IDeleteCategoryResult> {
+  ): Promise<IDeleteProfileResult> {
     this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'delete');
     await this.validateCanDelete(id);
 
-    const defaultCategory = await this.repository.findDefaultCategory();
-    const reassigned = await this.repository.reassignProjectsToCategory(
+    const defaultProfile = await this.repository.findDefaultProfile();
+    const reassigned = await this.repository.reassignProjectsToProfile(
       id,
-      defaultCategory?.id ?? null
+      defaultProfile?.id ?? null
     );
 
-    await this.repository.deleteLimitsByCategoryId(id);
+    await this.repository.deleteLimitsByProfileId(id);
     await this.repository.softDelete(id);
 
     return { deletedId: id, reassignedProjectIds: reassigned };
@@ -127,19 +127,19 @@ class ParameterLimitCategoryService implements IParameterLimitCategoryService {
   // Limit Management Operations
   // ---------------------------------------------------------------------------
 
-  async upsertCategoryLimits(
+  async upsertProfileLimits(
     actor: IJwtPayload,
     data: TUpsertParameterLimitsBatch
   ): Promise<IUpsertLimitsResult> {
     this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
-    await this.validateExists(data.categoryId);
+    await this.validateExists(data.profileId);
 
     for (const limit of data.limits) {
       this.validateLimitValue(limit);
     }
 
     const result = await this.repository.upsertLimitsBatch(
-      data.categoryId,
+      data.profileId,
       data.limits
     );
 
@@ -155,40 +155,39 @@ class ParameterLimitCategoryService implements IParameterLimitCategoryService {
     data: TCopyFromMasterDefaults
   ): Promise<{ copied: number }> {
     this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
-    await this.validateExists(data.categoryId);
+    await this.validateExists(data.profileId);
 
-    const parameters =
-      await this.repository.findAllActiveParametersWithLimits();
-    const limits = await this.mapParametersToLimits(parameters);
+    const parameters = await this.repository.findAllActiveParameters();
+    const limits = this.mapParametersToEmptyLimits(parameters);
 
     if (!data.overwriteExisting) {
-      const existing = await this.repository.findLimitsByCategoryId(
-        data.categoryId
+      const existing = await this.repository.findLimitsByProfileId(
+        data.profileId
       );
       const existingIds = new Set(existing.map(l => l.parameterId));
       const newLimits = limits.filter(l => !existingIds.has(l.parameterId));
 
       if (newLimits.length > 0) {
-        await this.repository.upsertLimitsBatch(data.categoryId, newLimits);
+        await this.repository.upsertLimitsBatch(data.profileId, newLimits);
       }
       return { copied: newLimits.length };
     }
 
-    await this.repository.deleteLimitsByCategoryId(data.categoryId);
+    await this.repository.deleteLimitsByProfileId(data.profileId);
 
     if (limits.length > 0) {
-      await this.repository.upsertLimitsBatch(data.categoryId, limits);
+      await this.repository.upsertLimitsBatch(data.profileId, limits);
     }
 
     return { copied: limits.length };
   }
 
-  async getCategoryLimitsMap(
-    categoryId: string | null
+  async getProfileLimitsMap(
+    profileId: string | null
   ): Promise<Map<string, IParameterLimit>> {
-    if (!categoryId) return new Map();
+    if (!profileId) return new Map();
 
-    const limits = await this.repository.findLimitsByCategoryId(categoryId);
+    const limits = await this.repository.findLimitsByProfileId(profileId);
     const map = new Map<string, IParameterLimit>();
     for (const limit of limits) {
       map.set(limit.parameterId, limit);
@@ -200,43 +199,43 @@ class ParameterLimitCategoryService implements IParameterLimitCategoryService {
   // Statistics & Utility Operations
   // ---------------------------------------------------------------------------
 
-  async getCategoryStats(
+  async getProfileStats(
     actor: IJwtPayload,
     id: string
-  ): Promise<ICategoryStats> {
+  ): Promise<IProfileStats> {
     this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
-    const category = await this.validateExists(id);
+    const profile = await this.validateExists(id);
 
-    const paramsCount = await this.repository.countLimitsInCategory(id);
-    const projectsCount = await this.repository.countProjectsUsingCategory(id);
+    const paramsCount = await this.repository.countLimitsInProfile(id);
+    const projectsCount = await this.repository.countProjectsUsingProfile(id);
 
     return {
-      categoryId: id,
+      profileId: id,
       parametersWithLimits: paramsCount,
       projectsUsingCount: projectsCount,
-      canDelete: projectsCount === 0 && !category.isDefault,
+      canDelete: projectsCount === 0 && !profile.isDefault,
     };
   }
 
-  async getOrCreateDefaultCategory(): Promise<ICategoryWithLimits> {
-    const existing = await this.repository.findDefaultCategory();
+  async getOrCreateDefaultProfile(): Promise<IProfileWithLimits> {
+    const existing = await this.repository.findDefaultProfile();
     if (existing) {
       const withLimits = await this.repository.findByIdWithLimits(existing.id);
       if (withLimits) return withLimits;
     }
-    return this.createDefaultCategory();
+    return this.createDefaultProfile();
   }
 
   // ---------------------------------------------------------------------------
   // Private Validation Helpers
   // ---------------------------------------------------------------------------
 
-  private async validateExists(id: string): Promise<IParameterLimitCategory> {
-    const category = await this.repository.findById(id);
-    if (!category) {
-      throw new Error('Kategori tidak ditemukan');
+  private async validateExists(id: string): Promise<IParameterLimitProfile> {
+    const profile = await this.repository.findById(id);
+    if (!profile) {
+      throw new Error('Profil tidak ditemukan');
     }
-    return category;
+    return profile;
   }
 
   private async validateNameUnique(
@@ -245,7 +244,7 @@ class ParameterLimitCategoryService implements IParameterLimitCategoryService {
   ): Promise<void> {
     const existing = await this.repository.findByName(name);
     if (existing && existing.id !== excludeId) {
-      throw new Error('Kategori dengan nama tersebut sudah ada');
+      throw new Error('Profil dengan nama tersebut sudah ada');
     }
   }
 
@@ -253,21 +252,19 @@ class ParameterLimitCategoryService implements IParameterLimitCategoryService {
     const otherDefaults = await this.repository.countOtherDefaults(id);
     if (otherDefaults === 0) {
       throw new Error(
-        'Tidak dapat menghapus status default. Minimal harus ada satu kategori default.'
+        'Tidak dapat menghapus status default. Minimal harus ada satu profil default.'
       );
     }
   }
 
-  private async validateCanDelete(
-    id: string
-  ): Promise<IParameterLimitCategory> {
-    const category = await this.validateExists(id);
-    if (category.isDefault) {
+  private async validateCanDelete(id: string): Promise<IParameterLimitProfile> {
+    const profile = await this.validateExists(id);
+    if (profile.isDefault) {
       throw new Error(
-        'Tidak dapat menghapus kategori default. Tentukan kategori default lain terlebih dahulu.'
+        'Tidak dapat menghapus profil default. Tentukan profil default lain terlebih dahulu.'
       );
     }
-    return category;
+    return profile;
   }
 
   private validateLimitValue(limit: TParameterLimitInput): void {
@@ -293,44 +290,42 @@ class ParameterLimitCategoryService implements IParameterLimitCategoryService {
     }
   }
 
-  private async mapParametersToLimits(
-    parameters: IParameterWithLimits[]
-  ): Promise<TParameterLimitInput[]> {
-    return parameters
-      .filter(
-        p =>
-          p.minValue !== null ||
-          p.maxValue !== null ||
-          p.rawWaterMinValue !== null ||
-          p.rawWaterMaxValue !== null
-      )
-      .map(p => ({
-        parameterId: p.id,
-        minValue: p.minValue,
-        maxValue: p.maxValue,
-        rawWaterMinValue: p.rawWaterMinValue,
-        rawWaterMaxValue: p.rawWaterMaxValue,
-      }));
+  private mapParametersToEmptyLimits(
+    parameters: Array<{
+      id: string;
+      name: string;
+      variableName: string;
+      unit: string | null;
+      category: TParameterCategory;
+      displayOrder: number;
+    }>
+  ): TParameterLimitInput[] {
+    return parameters.map(p => ({
+      parameterId: p.id,
+      minValue: null,
+      maxValue: null,
+      rawWaterMinValue: null,
+      rawWaterMaxValue: null,
+    }));
   }
 
-  private async createDefaultCategory(): Promise<ICategoryWithLimits> {
-    const category = await this.repository.create({
+  private async createDefaultProfile(): Promise<IProfileWithLimits> {
+    const profile = await this.repository.create({
       name: 'Standard',
-      description: 'Default parameter limits from master data',
+      description: 'Default parameter limits profile',
       isDefault: true,
     });
 
-    const parameters =
-      await this.repository.findAllActiveParametersWithLimits();
-    const limits = await this.mapParametersToLimits(parameters);
+    const parameters = await this.repository.findAllActiveParameters();
+    const limits = this.mapParametersToEmptyLimits(parameters);
 
     if (limits.length > 0) {
-      await this.repository.upsertLimitsBatch(category.id, limits);
+      await this.repository.upsertLimitsBatch(profile.id, limits);
     }
 
-    const result = await this.repository.findByIdWithLimits(category.id);
+    const result = await this.repository.findByIdWithLimits(profile.id);
     if (!result) {
-      throw new Error('Failed to create default category');
+      throw new Error('Failed to create default profile');
     }
     return result;
   }
@@ -348,19 +343,19 @@ const defaultRbac: IRbacService = {
 // Composition Root (Factory Function)
 // =============================================================================
 
-export function createParameterLimitCategoryService(
-  deps?: Partial<IParameterLimitCategoryServiceDeps>
-): IParameterLimitCategoryService {
+export function createParameterLimitProfileService(
+  deps?: Partial<IParameterLimitProfileServiceDeps>
+): IParameterLimitProfileService {
   const repository =
-    deps?.repository ?? createPrismaParameterLimitCategoryRepository();
+    deps?.repository ?? createPrismaParameterLimitProfileRepository();
   const rbac = deps?.rbac ?? defaultRbac;
 
-  return new ParameterLimitCategoryService({ repository, rbac });
+  return new ParameterLimitProfileService({ repository, rbac });
 }
 
 // =============================================================================
 // Singleton Instance (for direct import)
 // =============================================================================
 
-export const parameterLimitCategoryService =
-  createParameterLimitCategoryService();
+export const parameterLimitProfileService =
+  createParameterLimitProfileService();

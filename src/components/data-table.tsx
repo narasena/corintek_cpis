@@ -28,22 +28,43 @@ import {
   CardAction,
 } from '@/components/ui/card';
 import { ArrowUpDown } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+export interface ITableTab<TData> {
+  value: string;
+  label: string;
+  data: TData[];
+  columns: ColumnDef<TData, unknown>[];
+  addNewRow?: React.ReactNode;
+  filters?: React.ReactNode;
+}
 
 interface IDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   emptyMessage?: string;
+  tabs?: ITableTab<TData>[];
+  tab?: string;
+  onTabChange?: (value: string) => void;
 }
 
 export function DataTable<TData, TValue>({
-  columns,
+  columns: cols,
   data,
   emptyMessage = 'Belum ada data.',
+  tabs,
+  tab,
+  onTabChange,
 }: IDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
+  // If tabs are provided, use the tab's data and columns
+  const activeTab = tabs?.find(t => t.value === tab);
+  const columns = activeTab ? activeTab.columns : cols;
+  const tableData = activeTab ? activeTab.data : data;
+
   const table = useReactTable({
-    data,
+    data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -54,6 +75,67 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  // If tabs are provided, render with tabs
+  if (tabs && tabs.length > 0) {
+    return (
+      <Tabs value={tab} onValueChange={onTabChange} className="w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <TabsList>
+            {tabs.map(t => (
+              <TabsTrigger key={t.value} value={t.value}>
+                {t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {activeTab?.addNewRow}
+        </div>
+
+        {activeTab?.filters && <div className="mb-4">{activeTab.filters}</div>}
+
+        {tabs.map(t => (
+          <TabsContent key={t.value} value={t.value} className="mt-0">
+            <DataTableInner
+              columns={t.columns}
+              data={t.data}
+              emptyMessage={emptyMessage}
+              table={useReactTable({
+                data: t.data,
+                columns: t.columns,
+                getCoreRowModel: getCoreRowModel(),
+                getPaginationRowModel: getPaginationRowModel(),
+                onSortingChange: setSorting,
+                getSortedRowModel: getSortedRowModel(),
+                state: { sorting },
+              })}
+            />
+          </TabsContent>
+        ))}
+      </Tabs>
+    );
+  }
+
+  // No tabs - render simple table
+  return (
+    <DataTableInner
+      columns={columns}
+      data={tableData}
+      emptyMessage={emptyMessage}
+      table={table}
+    />
+  );
+}
+
+function DataTableInner<TData, TValue>({
+  columns,
+  data,
+  emptyMessage,
+  table,
+}: {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  emptyMessage?: string;
+  table: any;
+}) {
   return (
     <div className="space-y-4">
       <div className="hidden md:block rounded-md border overflow-hidden">
@@ -136,7 +218,6 @@ export function DataTable<TData, TValue>({
               .getVisibleCells()
               .filter(cell => cell.column.id !== 'actions');
 
-            // Try to find a suitable title cell (first non-action cell)
             const titleCell = contentCells[0];
             const otherCells = contentCells.slice(1);
 
@@ -163,9 +244,6 @@ export function DataTable<TData, TValue>({
                   )}
                 </CardHeader>
                 <CardContent className="grid gap-2">
-                  {/* If we moved the first cell to title, we might want to also show its label? 
-                        Usually titles don't need labels. 
-                        Let's render remaining cells. */}
                   {otherCells.map(cell => {
                     const header = table
                       .getFlatHeaders()

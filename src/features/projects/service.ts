@@ -463,7 +463,7 @@ export async function createProject(
         workCategory: projectData.workCategory,
         warrantyMonths: projectData.warrantyMonths ?? null,
         parentProjId: projectData.parentProjId ?? null,
-        parameterLimitCategoryId: projectData.parameterLimitCategoryId ?? null,
+        parameterLimitProfileId: projectData.parameterLimitProfileId ?? null,
       },
       include: {
         client: {

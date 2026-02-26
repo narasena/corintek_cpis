@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 
@@ -16,6 +17,15 @@ import {
 import { IParameter } from '@/features/parameters/types';
 
 export default function ParametersPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab') || 'parameter';
+
+  const onTabChange = (value: string) => {
+    router.push(`${pathname}?tab=${value}`);
+  };
+
   const [parameters, setParameters] = useState<IParameter[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedParameter, setSelectedParameter] = useState<
@@ -27,7 +37,6 @@ export default function ParametersPage() {
     setLoading(true);
     try {
       const result = await getParametersAction();
-
       if (result.success && result.data) {
         setParameters(result.data as IParameter[]);
       } else {
@@ -37,13 +46,6 @@ export default function ParametersPage() {
       toast.error('Terjadi kesalahan saat memuat data');
     } finally {
       setLoading(false);
-    }
-  }, []);
-
-  const refreshParameters = useCallback(async () => {
-    const result = await getParametersAction();
-    if (result.success && result.data) {
-      setParameters(result.data as IParameter[]);
     }
   }, []);
 
@@ -60,7 +62,7 @@ export default function ParametersPage() {
     const result = await deleteParameterAction(id);
     if (result.success) {
       toast.success('Parameter berhasil dihapus');
-      refreshParameters();
+      fetchData();
     } else {
       toast.error(result.error);
     }
@@ -70,17 +72,17 @@ export default function ParametersPage() {
   const handleSuccess = () => {
     setShowEditDialog(false);
     setSelectedParameter(undefined);
-    refreshParameters();
+    fetchData();
   };
 
   const columns = useMemo(
     () =>
       getParameterColumns({
         onEdit: handleEdit,
-        onRefresh: refreshParameters,
+        onRefresh: fetchData,
         onDelete: handleDelete,
       }),
-    [refreshParameters] // eslint-disable-line react-hooks/exhaustive-deps
+    [fetchData]
   );
 
   return (

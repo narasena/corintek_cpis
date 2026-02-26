@@ -78,16 +78,6 @@ const navMain = [
     icon: SlidersHorizontal,
   },
   {
-    title: 'Parameter Limits',
-    url: '/parameters/limits',
-    icon: SlidersHorizontal,
-  },
-  {
-    title: 'Kategori Limit (Admin)',
-    url: '/admin/parameter-limits',
-    icon: Settings2,
-  },
-  {
     title: 'Users',
     url: '/users',
     icon: Users,

@@ -1,11 +1,11 @@
 import { prisma } from '@/lib/prisma';
+import type { TParameterCategory } from '@/features/parameters/types';
 import type {
-  IParameterLimitCategory,
-  IParameterLimitCategoryRepository,
-  ICategoryWithLimits,
+  IParameterLimitProfile,
+  IParameterLimitProfileRepository,
+  IProfileWithLimits,
   IParameterLimit,
-  IParameterWithLimits,
-  TCreateParameterLimitCategory,
+  TCreateParameterLimitProfile,
   TParameterLimitInput,
 } from './types';
 
@@ -13,7 +13,7 @@ import type {
 // Mapping Functions
 // =============================================================================
 
-function mapRowToCategory(row: {
+function mapRowToProfile(row: {
   id: string;
   name: string;
   description: string | null;
@@ -21,7 +21,7 @@ function mapRowToCategory(row: {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
-}): IParameterLimitCategory {
+}): IParameterLimitProfile {
   return {
     id: row.id,
     name: row.name,
@@ -35,7 +35,7 @@ function mapRowToCategory(row: {
 
 function mapRowToParameterLimit(row: {
   id: string;
-  categoryId: string;
+  profileId: string;
   parameterId: string;
   minValue: number | null;
   maxValue: number | null;
@@ -46,7 +46,7 @@ function mapRowToParameterLimit(row: {
 }): IParameterLimit {
   return {
     id: row.id,
-    categoryId: row.categoryId,
+    profileId: row.profileId,
     parameterId: row.parameterId,
     minValue: row.minValue,
     maxValue: row.maxValue,
@@ -61,30 +61,30 @@ function mapRowToParameterLimit(row: {
 // Prisma Repository Factory
 // =============================================================================
 
-export function createPrismaParameterLimitCategoryRepository(): IParameterLimitCategoryRepository {
+export function createPrismaParameterLimitProfileRepository(): IParameterLimitProfileRepository {
   return {
     // -------------------------------------------------------------------------
-    // Category CRUD
+    // Profile CRUD
     // -------------------------------------------------------------------------
 
     async findAll() {
-      const rows = await (prisma as any).parameterLimitCategory.findMany({
+      const rows = await prisma.parameterLimitProfile.findMany({
         where: { deletedAt: null },
         orderBy: { name: 'asc' },
       });
-      return rows.map(mapRowToCategory);
+      return rows.map(mapRowToProfile);
     },
 
     async findById(id) {
-      const row = await (prisma as any).parameterLimitCategory.findUnique({
+      const row = await prisma.parameterLimitProfile.findUnique({
         where: { id },
       });
       if (!row || row.deletedAt) return null;
-      return mapRowToCategory(row);
+      return mapRowToProfile(row);
     },
 
     async findByIdWithLimits(id) {
-      const row = await (prisma as any).parameterLimitCategory.findUnique({
+      const row = await prisma.parameterLimitProfile.findUnique({
         where: { id },
         include: {
           limits: {
@@ -112,8 +112,8 @@ export function createPrismaParameterLimitCategoryRepository(): IParameterLimitC
       if (!row || row.deletedAt) return null;
 
       return {
-        category: mapRowToCategory(row),
-        limits: row.limits.map((limit: any) => ({
+        profile: mapRowToProfile(row),
+        limits: row.limits.map(limit => ({
           ...mapRowToParameterLimit(limit),
           parameterName: limit.parameter.name,
           parameterVariableName: limit.parameter.variableName,
@@ -125,23 +125,23 @@ export function createPrismaParameterLimitCategoryRepository(): IParameterLimitC
       };
     },
 
-    async findDefaultCategory() {
-      const row = await (prisma as any).parameterLimitCategory.findFirst({
+    async findDefaultProfile() {
+      const row = await prisma.parameterLimitProfile.findFirst({
         where: { isDefault: true, deletedAt: null },
       });
       if (!row) return null;
-      return mapRowToCategory(row);
+      return mapRowToProfile(row);
     },
 
     async create(data) {
-      const row = await (prisma as any).parameterLimitCategory.create({
+      const row = await prisma.parameterLimitProfile.create({
         data: {
           name: data.name,
           description: data.description ?? null,
           isDefault: data.isDefault ?? false,
         },
       });
-      return mapRowToCategory(row);
+      return mapRowToProfile(row);
     },
 
     async update(id, data) {
@@ -151,48 +151,48 @@ export function createPrismaParameterLimitCategoryRepository(): IParameterLimitC
         updateData.description = data.description ?? null;
       if (data.isDefault !== undefined) updateData.isDefault = data.isDefault;
 
-      const row = await (prisma as any).parameterLimitCategory.update({
+      const row = await prisma.parameterLimitProfile.update({
         where: { id },
         data: updateData,
       });
-      return mapRowToCategory(row);
+      return mapRowToProfile(row);
     },
 
     async softDelete(id) {
-      await (prisma as any).parameterLimitCategory.update({
+      await prisma.parameterLimitProfile.update({
         where: { id },
         data: { deletedAt: new Date() },
       });
     },
 
     // -------------------------------------------------------------------------
-    // Category Uniqueness Checks
+    // Profile Uniqueness Checks
     // -------------------------------------------------------------------------
 
     async findByName(name) {
-      const row = await (prisma as any).parameterLimitCategory.findFirst({
+      const row = await prisma.parameterLimitProfile.findFirst({
         where: { name, deletedAt: null },
       });
       if (!row) return null;
-      return mapRowToCategory(row);
+      return mapRowToProfile(row);
     },
 
     async findOtherDefault(excludeId) {
-      const row = await (prisma as any).parameterLimitCategory.findFirst({
+      const row = await prisma.parameterLimitProfile.findFirst({
         where: { isDefault: true, deletedAt: null, id: { not: excludeId } },
       });
       if (!row) return null;
-      return mapRowToCategory(row);
+      return mapRowToProfile(row);
     },
 
     async countOtherDefaults(excludeId) {
-      return (prisma as any).parameterLimitCategory.count({
+      return prisma.parameterLimitProfile.count({
         where: { isDefault: true, deletedAt: null, id: { not: excludeId } },
       });
     },
 
     async unsetAllDefaults() {
-      await (prisma as any).parameterLimitCategory.updateMany({
+      await prisma.parameterLimitProfile.updateMany({
         where: { isDefault: true, deletedAt: null },
         data: { isDefault: false },
       });
@@ -202,28 +202,28 @@ export function createPrismaParameterLimitCategoryRepository(): IParameterLimitC
     // Limits CRUD
     // -------------------------------------------------------------------------
 
-    async findLimitsByCategoryId(categoryId) {
-      const rows = await (prisma as any).parameterLimit.findMany({
-        where: { categoryId },
+    async findLimitsByProfileId(profileId) {
+      const rows = await prisma.parameterLimit.findMany({
+        where: { profileId },
       });
       return rows.map(mapRowToParameterLimit);
     },
 
-    async upsertLimit(categoryId, limit) {
-      const existing = await (prisma as any).parameterLimit.findUnique({
+    async upsertLimit(profileId, limit) {
+      const existing = await prisma.parameterLimit.findUnique({
         where: {
-          categoryId_parameterId: {
-            categoryId,
+          profileId_parameterId: {
+            profileId,
             parameterId: limit.parameterId,
           },
         },
       });
 
       if (existing) {
-        await (prisma as any).parameterLimit.update({
+        await prisma.parameterLimit.update({
           where: {
-            categoryId_parameterId: {
-              categoryId,
+            profileId_parameterId: {
+              profileId,
               parameterId: limit.parameterId,
             },
           },
@@ -236,9 +236,9 @@ export function createPrismaParameterLimitCategoryRepository(): IParameterLimitC
         });
         return { created: false };
       } else {
-        await (prisma as any).parameterLimit.create({
+        await prisma.parameterLimit.create({
           data: {
-            categoryId,
+            profileId,
             parameterId: limit.parameterId,
             minValue: limit.minValue ?? null,
             maxValue: limit.maxValue ?? null,
@@ -250,25 +250,25 @@ export function createPrismaParameterLimitCategoryRepository(): IParameterLimitC
       }
     },
 
-    async upsertLimitsBatch(categoryId, limits) {
-      const existingLimits = await (prisma as any).parameterLimit.findMany({
-        where: { categoryId },
+    async upsertLimitsBatch(profileId, limits) {
+      const existingLimits = await prisma.parameterLimit.findMany({
+        where: { profileId },
         select: { parameterId: true },
       });
       const existingParameterIds = new Set(
-        existingLimits.map((l: any) => l.parameterId)
+        existingLimits.map(l => l.parameterId)
       );
 
       let created = 0;
       let updated = 0;
 
-      await (prisma as any).$transaction(async (tx: any) => {
+      await prisma.$transaction(async tx => {
         for (const limit of limits) {
           if (existingParameterIds.has(limit.parameterId)) {
             await tx.parameterLimit.update({
               where: {
-                categoryId_parameterId: {
-                  categoryId,
+                profileId_parameterId: {
+                  profileId,
                   parameterId: limit.parameterId,
                 },
               },
@@ -283,7 +283,7 @@ export function createPrismaParameterLimitCategoryRepository(): IParameterLimitC
           } else {
             await tx.parameterLimit.create({
               data: {
-                categoryId,
+                profileId,
                 parameterId: limit.parameterId,
                 minValue: limit.minValue ?? null,
                 maxValue: limit.maxValue ?? null,
@@ -299,9 +299,9 @@ export function createPrismaParameterLimitCategoryRepository(): IParameterLimitC
       return { created, updated };
     },
 
-    async deleteLimitsByCategoryId(categoryId) {
-      await (prisma as any).parameterLimit.deleteMany({
-        where: { categoryId },
+    async deleteLimitsByProfileId(profileId) {
+      await prisma.parameterLimit.deleteMany({
+        where: { profileId },
       });
     },
 
@@ -309,33 +309,33 @@ export function createPrismaParameterLimitCategoryRepository(): IParameterLimitC
     // Project Relationships
     // -------------------------------------------------------------------------
 
-    async findProjectsUsingCategory(categoryId) {
-      return (prisma as any).project.findMany({
-        where: { parameterLimitCategoryId: categoryId, deletedAt: null },
+    async findProjectsUsingProfile(profileId) {
+      return prisma.project.findMany({
+        where: { parameterLimitProfileId: profileId, deletedAt: null },
         select: { id: true },
       });
     },
 
-    async reassignProjectsToCategory(fromCategoryId, toCategoryId) {
-      const projects = await (prisma as any).project.findMany({
-        where: { parameterLimitCategoryId: fromCategoryId, deletedAt: null },
+    async reassignProjectsToProfile(fromProfileId, toProfileId) {
+      const projects = await prisma.project.findMany({
+        where: { parameterLimitProfileId: fromProfileId, deletedAt: null },
         select: { id: true },
       });
-      const projectIds = projects.map((p: any) => p.id);
+      const projectIds = projects.map(p => p.id);
 
       if (projectIds.length > 0) {
-        await (prisma as any).project.updateMany({
+        await prisma.project.updateMany({
           where: { id: { in: projectIds } },
-          data: { parameterLimitCategoryId: toCategoryId },
+          data: { parameterLimitProfileId: toProfileId },
         });
       }
 
       return projectIds;
     },
 
-    async countProjectsUsingCategory(categoryId) {
-      return (prisma as any).project.count({
-        where: { parameterLimitCategoryId: categoryId, deletedAt: null },
+    async countProjectsUsingProfile(profileId) {
+      return prisma.project.count({
+        where: { parameterLimitProfileId: profileId, deletedAt: null },
       });
     },
 
@@ -343,8 +343,8 @@ export function createPrismaParameterLimitCategoryRepository(): IParameterLimitC
     // Master Parameter Data
     // -------------------------------------------------------------------------
 
-    async findAllActiveParametersWithLimits() {
-      const rows = await (prisma as any).parameter.findMany({
+    async findAllActiveParameters() {
+      const rows = await prisma.parameter.findMany({
         where: {
           deletedAt: null,
           isActive: true,
@@ -356,24 +356,27 @@ export function createPrismaParameterLimitCategoryRepository(): IParameterLimitC
           unit: true,
           category: true,
           displayOrder: true,
-          minValue: true,
-          maxValue: true,
-          rawWaterMinValue: true,
-          rawWaterMaxValue: true,
         },
         orderBy: { displayOrder: 'asc' },
       });
 
-      return rows as IParameterWithLimits[];
+      return rows as Array<{
+        id: string;
+        name: string;
+        variableName: string;
+        unit: string | null;
+        category: TParameterCategory;
+        displayOrder: number;
+      }>;
     },
 
     // -------------------------------------------------------------------------
     // Statistics
     // -------------------------------------------------------------------------
 
-    async countLimitsInCategory(categoryId) {
-      return (prisma as any).parameterLimit.count({
-        where: { categoryId },
+    async countLimitsInProfile(profileId) {
+      return prisma.parameterLimit.count({
+        where: { profileId },
       });
     },
   };

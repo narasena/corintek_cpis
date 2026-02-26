@@ -22,7 +22,7 @@ import { ProjectTypeSelect } from './project-type-select';
 import { ProjectParentSelect } from './project-parent-select';
 import { ProjectContractTypeSelect } from './project-contract-type-select';
 import { ProjectWorkCategorySelect } from './project-work-category-select';
-import { CategorySelector } from '@/features/parameter-limit-categories/components/category-selector';
+import { ProfileSelector } from '@/features/parameter-limit-profiles/components/profile-selector';
 
 interface ProjectMetaSectionProps {
   form: UseFormReturn<TCreateProject>;
@@ -302,16 +302,16 @@ export function ProjectMetaSection({ form, clients }: ProjectMetaSectionProps) {
 
       <FormField
         control={form.control}
-        name="parameterLimitCategoryId"
+        name="parameterLimitProfileId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Kategori Limit Parameter</FormLabel>
+            <FormLabel>Profil Limit Parameter</FormLabel>
             <FormControl>
-              <CategorySelector
+              <ProfileSelector
                 value={field.value ?? null}
                 onChange={field.onChange}
                 disabled={false}
-                placeholder="Pilih kategori limit (opsional)"
+                placeholder="Pilih profil limit (opsional)"
               />
             </FormControl>
             <FormMessage />
