@@ -3,7 +3,6 @@ import { ParameterCategory, ValueType } from '@/generated/prisma/client';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import type {
-  IParameter,
   IParameterLimitMasterItem,
   TParameterLimitListInput,
   TUpdateParameterLimitInput,
@@ -12,14 +11,19 @@ import type {
 
 function buildWhere(filters?: TParameterLimitListInput) {
   const where: {
-    deletedAt: null;
-    category?: ParameterCategory;
-    valueType?: ValueType;
-    isActive?: boolean;
-  } = { deletedAt: null };
-  if (filters?.category) where.category = filters.category as ParameterCategory;
-  if (filters?.valueType) where.valueType = filters.valueType as ValueType;
-  if (filters?.isActive !== undefined) where.isActive = filters.isActive;
+    parameter: {
+      deletedAt: null;
+      category?: ParameterCategory;
+      valueType?: ValueType;
+      isActive?: boolean;
+    };
+  } = { parameter: { deletedAt: null } };
+  if (filters?.category)
+    where.parameter.category = filters.category as ParameterCategory;
+  if (filters?.valueType)
+    where.parameter.valueType = filters.valueType as ValueType;
+  if (filters?.isActive !== undefined)
+    where.parameter.isActive = filters.isActive;
   return where;
 }
 
@@ -56,35 +60,46 @@ function assertValidLimit(input: TUpdateParameterLimitInput) {
   }
 }
 
-function mapParameterLimitItem(
-  parameter: IParameter
-): IParameterLimitMasterItem {
-  return {
-    parameterId: parameter.id,
-    name: parameter.name,
-    variableName: parameter.variableName,
-    category: parameter.category,
-    valueType: parameter.valueType,
-    unit: parameter.unit,
-    minValue: parameter.minValue ?? null,
-    maxValue: parameter.maxValue ?? null,
-    rawWaterMinValue: parameter.rawWaterMinValue ?? null,
-    rawWaterMaxValue: parameter.rawWaterMaxValue ?? null,
-    displayOrder: parameter.displayOrder,
-    isActive: parameter.isActive,
-  };
-}
-
 async function updateParameterLimitCore(input: TUpdateParameterLimitInput) {
   assertValidLimit(input);
   const data = buildUpdateData(input);
   if (Object.keys(data).length === 0) {
     throw new Error('Tidak ada nilai limit yang diubah');
   }
-  return prisma.parameter.update({
-    where: { id: input.parameterId },
-    data,
+
+  // Find the default profile first
+  const defaultProfile = await prisma.parameterLimitProfile.findFirst({
+    where: { isDefault: true, deletedAt: null },
   });
+
+  if (!defaultProfile) {
+    throw new Error(
+      'Tidak ada profil default. Silakan buat profil default terlebih dahulu.'
+    );
+  }
+
+  // Update or create the limit
+  const existingLimit = await prisma.parameterLimit.findFirst({
+    where: {
+      profileId: defaultProfile.id,
+      parameterId: input.parameterId,
+    },
+  });
+
+  if (existingLimit) {
+    return prisma.parameterLimit.update({
+      where: { id: existingLimit.id },
+      data,
+    });
+  } else {
+    return prisma.parameterLimit.create({
+      data: {
+        profileId: defaultProfile.id,
+        parameterId: input.parameterId,
+        ...data,
+      },
+    });
+  }
 }
 
 export async function getParameterLimits(
@@ -92,11 +107,105 @@ export async function getParameterLimits(
   filters?: TParameterLimitListInput
 ): Promise<IParameterLimitMasterItem[]> {
   ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+
+  // Find the default profile with its limits
+  const defaultProfileWithLimits = await prisma.parameterLimitProfile.findFirst(
+    {
+      where: { isDefault: true, deletedAt: null },
+      include: {
+        limits: {
+          orderBy: { parameter: { displayOrder: 'asc' } },
+          include: {
+            parameter: true,
+          },
+        },
+      },
+    }
+  );
+
+  // If no default profile, return empty array
+  if (!defaultProfileWithLimits) {
+    return [];
+  }
+
+  // Fetch all parameters to get display order
   const parameters = await prisma.parameter.findMany({
-    where: buildWhere(filters),
+    where: buildWhere(filters).parameter,
     orderBy: [{ displayOrder: 'asc' }, { createdAt: 'desc' }],
   });
-  return parameters.map(mapParameterLimitItem);
+
+  // Create a map of variableName -> parameter (to match old limits to new params)
+  const paramByVariableName = new Map(parameters.map(p => [p.variableName, p]));
+
+  // Check if we need to migrate (if limits have old parameter IDs that don't match)
+  const limitsWithOldIds = defaultProfileWithLimits.limits.filter(
+    limit => !paramByVariableName.has(limit.parameter.variableName)
+  );
+
+  if (limitsWithOldIds.length > 0) {
+    // Migrate limits to new parameter IDs
+    for (const limit of limitsWithOldIds) {
+      const newParam = paramByVariableName.get(limit.parameter.variableName);
+      if (newParam) {
+        await prisma.parameterLimit.update({
+          where: { id: limit.id },
+          data: { parameterId: newParam.id },
+        });
+      }
+    }
+
+    // Re-fetch parameters and limits after migration
+    const refreshedLimits = await prisma.parameterLimit.findMany({
+      where: { profileId: defaultProfileWithLimits.id },
+    });
+
+    // Create new map from refreshed limits
+    const limitMap = new Map(
+      refreshedLimits.map(limit => [limit.parameterId, limit])
+    );
+
+    return parameters.map(param => {
+      const limit = limitMap.get(param.id);
+      return {
+        parameterId: param.id,
+        name: param.name,
+        variableName: param.variableName,
+        category: param.category,
+        valueType: param.valueType,
+        unit: param.unit,
+        minValue: limit?.minValue ?? null,
+        maxValue: limit?.maxValue ?? null,
+        rawWaterMinValue: limit?.rawWaterMinValue ?? null,
+        rawWaterMaxValue: limit?.rawWaterMaxValue ?? null,
+        displayOrder: param.displayOrder,
+        isActive: param.isActive,
+      };
+    });
+  }
+
+  // Create a map of parameterId -> limit (no migration needed)
+  const limitMap = new Map(
+    defaultProfileWithLimits.limits.map(limit => [limit.parameterId, limit])
+  );
+
+  // Map parameters to include their limits
+  return parameters.map(param => {
+    const limit = limitMap.get(param.id);
+    return {
+      parameterId: param.id,
+      name: param.name,
+      variableName: param.variableName,
+      category: param.category,
+      valueType: param.valueType,
+      unit: param.unit,
+      minValue: limit?.minValue ?? null,
+      maxValue: limit?.maxValue ?? null,
+      rawWaterMinValue: limit?.rawWaterMinValue ?? null,
+      rawWaterMaxValue: limit?.rawWaterMaxValue ?? null,
+      displayOrder: param.displayOrder,
+      isActive: param.isActive,
+    };
+  });
 }
 
 export async function updateParameterLimit(
@@ -112,15 +221,37 @@ export async function updateParameterLimitBatch(
   input: TUpdateParameterLimitBatchInput
 ) {
   ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
+
+  // Find the default profile first
+  const defaultProfile = await prisma.parameterLimitProfile.findFirst({
+    where: { isDefault: true, deletedAt: null },
+  });
+
+  if (!defaultProfile) {
+    throw new Error(
+      'Tidak ada profil default. Silakan buat profil default terlebih dahulu.'
+    );
+  }
+
   const updates = input.items.map(item => {
     assertValidLimit(item);
     const data = buildUpdateData(item);
     if (Object.keys(data).length === 0) {
       throw new Error('Tidak ada nilai limit yang diubah');
     }
-    return prisma.parameter.update({
-      where: { id: item.parameterId },
-      data,
+    return prisma.parameterLimit.upsert({
+      where: {
+        profileId_parameterId: {
+          profileId: defaultProfile.id,
+          parameterId: item.parameterId,
+        },
+      },
+      update: data,
+      create: {
+        profileId: defaultProfile.id,
+        parameterId: item.parameterId,
+        ...data,
+      },
     });
   });
   return prisma.$transaction(updates);
