@@ -2,6 +2,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import type { IParameterLimitMasterItem } from '../../parameters/types';
 import type { IParameterLimitProfile } from '../types';
 
@@ -135,7 +136,16 @@ export function getProfileColumns(
     {
       accessorKey: 'isDefault',
       header: 'Default',
-      cell: ({ row }) => (row.getValue('isDefault') ? 'Ya' : 'Tidak'),
+      cell: ({ row }) => {
+        const isDefault = row.getValue('isDefault') as boolean;
+        return isDefault ? (
+          <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+            Default
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        );
+      },
     },
     {
       id: 'actions',

@@ -12,21 +12,12 @@ export async function getNotificationsAction(
   const user = await getCurrentUserDetails();
   if (!user) throw new Error('Unauthorized');
 
-  console.log(
-    '[DEBUG] getNotificationsAction fetching for:',
-    user.id,
-    user.email
-  );
   try {
     const result = await notificationService.listUserNotifications({
       userId: user.id,
       page,
       pageSize,
     });
-    console.log(
-      '[DEBUG] getNotificationsAction result count:',
-      result.items.length
-    );
     return result;
   } catch (error) {
     console.error('[DEBUG] getNotificationsAction error:', error);

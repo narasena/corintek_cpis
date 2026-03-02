@@ -85,24 +85,6 @@ export const getParameterColumns = ({
       },
     },
     {
-      id: 'range',
-      header: 'Rentang',
-      cell: ({ row }) => {
-        const { valueType, minValue, maxValue } = row.original;
-        if (
-          valueType !== 'NUMBER' ||
-          (minValue === null && maxValue === null)
-        ) {
-          return <span className="text-muted-foreground">-</span>;
-        }
-        return (
-          <span className="text-sm">
-            {minValue ?? '∞'} - {maxValue ?? '∞'}
-          </span>
-        );
-      },
-    },
-    {
       accessorKey: 'isActive',
       header: 'Status',
       cell: ({ row }) => {

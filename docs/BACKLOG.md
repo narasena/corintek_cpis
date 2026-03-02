@@ -1,0 +1,157 @@
+# Backlog — BACKLOG.md
+
+> CPIS — Corintek Project Information System
+
+**Purpose:** Detailed specs for upcoming features.  
+**Usage:** Reference with `@BACKLOG.md` when implementing specific scope IDs.
+
+---
+
+## PARAM-CAT-01 — Parameter Limit Profile Refactor
+
+**Source:** ROADMAP.md v0.2.0  
+**Priority:** 🚨 P0 (Critical)  
+**Status:** In Progress
+
+### Background
+
+Current implementation stores global limits directly on `Parameter` model. FSD Section 7.1 requires reusable limit categories (profiles) that can be assigned per-project.
+
+### Schema Changes (COMPLETED)
+
+- [x] Renamed `ParameterLimitCategory` → `ParameterLimitProfile` (clearer naming)
+- [x] Renamed table `parameter_limit_categories` → `parameter_limit_profiles`
+- [x] Removed `minValue`, `maxValue`, `rawWaterMinValue`, `rawWaterMaxValue` from `Parameter` model
+- [x] All limits now stored in `ParameterLimit` table linked to `ParameterLimitProfile`
+- [x] Added `parameterLimitProfileId` to `Project` schema
+
+### Immediate TODO
+
+- [ ] Run `npm run prisma:migrate` to apply schema to database
+- [ ] Fix TypeScript build errors:
+  - [ ] `src/features/log-sheets/service.ts` — Update Parameter references
+  - [ ] `src/features/summary-reports/service.ts` — Update Parameter references
+  - [ ] `src/features/parameters/limits-service.ts` — Update Parameter references
+  - [ ] `src/app/(main)/lab-analyses/[projectId]/[labAnalysisId]/edit/page.tsx` — Update `ParameterLite` type
+- [ ] Recreate tabs UI for Parameters page:
+  - Tab 1: Parameter List
+  - Tab 2: Limit Defaults (per-parameter)
+  - Tab 3: Profiles (category management)
+- [ ] Test existing projects with new profile system
+
+### Acceptance Criteria
+
+- [ ] All existing projects continue to work after migration
+- [ ] New "Standard" profile created as default
+- [ ] Project form includes profile selection dropdown
+- [ ] Log sheets resolve limits from assigned profile (or override)
+
+---
+
+## QA — Browser UI Tests (MP-01, CP-01)
+
+**Source:** ROADMAP.md v0.2.0  
+**Priority:** 🟢 P1  
+**Status:** Not Started
+
+### My Profile (MP-01) Test Cases
+
+- [ ] Avatar upload displays preview before save
+- [ ] Form submission updates user profile
+- [ ] Role-based fields hidden for CLIENT users
+- [ ] Validation errors show inline (not toast)
+
+### Client Portal (CP-01) Test Cases
+
+- [ ] CLIENT user sees only assigned projects in dashboard
+- [ ] CLIENT user cannot access admin routes (URL guessing returns 403/redirect)
+- [ ] CLIENT user has read-only access (no edit buttons on Log Sheets)
+- [ ] Navigation shows only permitted items
+
+---
+
+## DB-01 — Dashboard Recent Activity
+
+**Source:** ROADMAP.md v0.2.0 | FSD Section 1  
+**Priority:** 🟡 P1  
+**Status:** Not Started
+
+### Tasks
+
+- [ ] Create activity feed component (`dashboard/components/activity-feed.tsx`)
+- [ ] Query recent log sheets, work reports, approvals (last 7 days)
+- [ ] Display timestamped activity list with icons
+- [ ] Filter by project scope for non-admin roles (SUPERVISOR/TECHNICIAN/CLIENT)
+
+---
+
+## SR-02 — Summary Report Analytics
+
+**Source:** ROADMAP.md v0.2.0 | FSD Section D  
+**Priority:** 🟡 P1  
+**Status:** Not Started
+
+### Tasks
+
+- [ ] Aggregate water quality data (avg/min/max per parameter per month)
+- [ ] Aggregate condenser approach data (avg/min/max per unit per month)
+- [ ] Create data access patterns in `summary-reports/analytics-service.ts`
+- [ ] Display analytics in summary report print view
+
+---
+
+## LS-ADJ — Log Sheet Adjustments
+
+**Source:** ROADMAP.md v0.2.0 | FSD Section 3  
+**Priority:** 🟡 P2  
+**Status:** Not Started
+
+### Tasks
+
+- [ ] Optional video attachment upload (before/after sections)
+- [ ] Verify final A4 print fit for all log sheet variants
+- [ ] Inline min/max limit warnings (lightweight form validation)
+- [ ] Mandatory fields mapping review vs FSD (unit selection, notes)
+
+---
+
+## CLIENT-FIELDS — Client Data Completeness
+
+**Source:** ROADMAP.md v0.2.0 | FSD Form Data Klien  
+**Priority:** 🟢 P3  
+**Status:** Not Started
+
+### Tasks
+
+- [ ] Add `website` field to `Client` schema
+- [ ] Update Client form UI with website input
+- [ ] Update Client list columns to show website
+
+---
+
+## USER-FIELDS — User Data Completeness
+
+**Source:** ROADMAP.md v0.2.0 | FSD Form User  
+**Priority:** 🟢 P3  
+**Status:** Not Started
+
+### Tasks
+
+- [ ] Add `company` field to `User` schema (for client accounts)
+- [ ] Add `address` field to `User` schema
+- [ ] Update User form UI
+- [ ] Update User list columns
+
+---
+
+## PRJ-FIELDS-02 — Work Types Multi-select
+
+**Source:** ROADMAP.md v0.2.0 | FSD Form Project  
+**Priority:** 🟢 P3  
+**Status:** Not Started
+
+### Tasks
+
+- [ ] Evaluate operational requirement for multi-select (vs current single-select)
+- [ ] If needed: Create `ProjectWorkType` junction table
+- [ ] Update Project form with multi-select UI (checkboxes or multi-select dropdown)

@@ -114,10 +114,18 @@ export default function ParametersPage() {
 
       <Tabs value={tab} onValueChange={onTabChange} className="w-full">
         <TabsList>
-          <TabsTrigger value="parameter">Parameter</TabsTrigger>
           <TabsTrigger value="limits">Batas Default</TabsTrigger>
           <TabsTrigger value="profiles">Profil</TabsTrigger>
+          <TabsTrigger value="parameter">Parameter</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="limits" className="mt-4">
+          <ParameterLimitsContent />
+        </TabsContent>
+
+        <TabsContent value="profiles" className="mt-4">
+          <ProfilesContent />
+        </TabsContent>
 
         <TabsContent value="parameter" className="mt-4">
           {loading && parameters.length === 0 ? (
@@ -143,14 +151,6 @@ export default function ParametersPage() {
             onOpenChange={setShowEditDialog}
             onSuccess={handleSuccess}
           />
-        </TabsContent>
-
-        <TabsContent value="limits" className="mt-4">
-          <ParameterLimitsContent />
-        </TabsContent>
-
-        <TabsContent value="profiles" className="mt-4">
-          <ProfilesContent />
         </TabsContent>
       </Tabs>
     </div>
