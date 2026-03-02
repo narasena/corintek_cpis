@@ -41,9 +41,9 @@
 
 **Immediate TODO:**
 
-- [ ] Run `prisma:migrate` for `ParameterLimitProfile` schema
-- [ ] Fix TS build errors in: log-sheets/service, summary-reports/service, parameters/limits-service, lab-analyses edit page
-- [ ] Recreate tabs UI for Parameters page (Parameter, Limit Defaults, Profiles)
+- [x] Run `prisma:migrate` for `ParameterLimitProfile` schema
+- [x] Fix TS build errors in: log-sheets/option-a/mobile-view-adapter, log-sheets/entry-cells
+- [x] Recreate tabs UI for Parameters page (Parameter, Limit Defaults, Profiles)
 - [ ] Test existing projects with new profile system
 
 ---

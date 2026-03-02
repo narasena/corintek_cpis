@@ -24,6 +24,7 @@ export function buildMobileUnitViewModelForLogSheet(
       units: [],
       activeUnitId: null,
       categoriesByUnit: new Map(),
+      rawWaterParameters: [],
       summaryFields: [],
     };
   }
