@@ -36,12 +36,14 @@ import {
   ParameterCategoryEnum,
   ValueTypeEnum,
 } from '@/features/parameters/types';
+import { AlertCircle } from 'lucide-react';
 
 interface ParameterFormProps {
   mode: 'create' | 'edit';
   defaultValues?: IParameter;
   onSuccess: () => void;
   onCancel: () => void;
+  hasExistingLimits?: boolean;
 }
 
 // Indonesian labels for enums
@@ -66,6 +68,7 @@ export function ParameterForm({
   defaultValues,
   onSuccess,
   onCancel,
+  hasExistingLimits = false,
 }: ParameterFormProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -89,6 +92,7 @@ export function ParameterForm({
 
   const selectedValueType = form.watch('valueType');
   const selectedCategory = form.watch('category');
+  const hasLimits = form.watch('hasLimits');
 
   const onSubmit = (data: TCreateParameter) => {
     startTransition(async () => {
@@ -265,117 +269,135 @@ export function ParameterForm({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="minValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nilai Minimum (Opsional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="any"
-                        placeholder="0"
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={e =>
-                          field.onChange(
-                            e.target.value
-                              ? parseFloat(e.target.value)
-                              : undefined
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+            {mode === 'edit' && !hasLimits && hasExistingLimits && (
+              <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <p className="font-medium">Perhatian</p>
+                  <p className="text-amber-700">
+                    Parameter ini memiliki data limit yang tersimpan.
+                    Menonaktifkan batas limit akan menghapus data tersebut saat
+                    disimpan.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {hasLimits && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="minValue"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nilai Minimum (Opsional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="0"
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={e =>
+                              field.onChange(
+                                e.target.value
+                                  ? parseFloat(e.target.value)
+                                  : undefined
+                              )
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="maxValue"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nilai Maksimum (Opsional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="100"
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={e =>
+                              field.onChange(
+                                e.target.value
+                                  ? parseFloat(e.target.value)
+                                  : undefined
+                              )
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {selectedCategory === 'COOLING_WATER_QUALITY' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="rawWaterMinValue"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Min Raw Water (Opsional)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="any"
+                              placeholder="0"
+                              {...field}
+                              value={field.value ?? ''}
+                              onChange={e =>
+                                field.onChange(
+                                  e.target.value
+                                    ? parseFloat(e.target.value)
+                                    : undefined
+                                )
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="rawWaterMaxValue"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Max Raw Water (Opsional)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="any"
+                              placeholder="100"
+                              {...field}
+                              value={field.value ?? ''}
+                              onChange={e =>
+                                field.onChange(
+                                  e.target.value
+                                    ? parseFloat(e.target.value)
+                                    : undefined
+                                )
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 )}
-              />
-
-              <FormField
-                control={form.control}
-                name="maxValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nilai Maksimum (Opsional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="any"
-                        placeholder="100"
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={e =>
-                          field.onChange(
-                            e.target.value
-                              ? parseFloat(e.target.value)
-                              : undefined
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {selectedCategory === 'COOLING_WATER_QUALITY' && (
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="rawWaterMinValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Min Raw Water (Opsional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="any"
-                          placeholder="0"
-                          {...field}
-                          value={field.value ?? ''}
-                          onChange={e =>
-                            field.onChange(
-                              e.target.value
-                                ? parseFloat(e.target.value)
-                                : undefined
-                            )
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="rawWaterMaxValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Max Raw Water (Opsional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="any"
-                          placeholder="100"
-                          {...field}
-                          value={field.value ?? ''}
-                          onChange={e =>
-                            field.onChange(
-                              e.target.value
-                                ? parseFloat(e.target.value)
-                                : undefined
-                            )
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
             )}
           </div>

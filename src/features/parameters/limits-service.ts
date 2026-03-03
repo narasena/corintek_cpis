@@ -262,3 +262,21 @@ export async function updateParameterLimitBatch(
   });
   return prisma.$transaction(updates);
 }
+
+/**
+ * Check if a parameter has existing limits in any profile
+ */
+export async function checkParameterHasLimits(
+  actor: IJwtPayload,
+  parameterId: string
+): Promise<boolean> {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+
+  const count = await prisma.parameterLimit.count({
+    where: {
+      parameterId,
+    },
+  });
+
+  return count > 0;
+}
