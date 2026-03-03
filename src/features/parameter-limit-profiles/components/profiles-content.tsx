@@ -19,6 +19,7 @@ export function ProfilesContent() {
     IParameterLimitProfile | undefined
   >(undefined);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editDialogTab, setEditDialogTab] = useState<'info' | 'limits'>('info');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -42,6 +43,13 @@ export function ProfilesContent() {
 
   const handleEdit = (profile: IParameterLimitProfile) => {
     setSelectedProfile(profile);
+    setEditDialogTab('info');
+    setShowEditDialog(true);
+  };
+
+  const handleEditLimits = (profile: IParameterLimitProfile) => {
+    setSelectedProfile(profile);
+    setEditDialogTab('limits');
     setShowEditDialog(true);
   };
 
@@ -64,6 +72,7 @@ export function ProfilesContent() {
 
   const columns = getProfileColumns({
     onEdit: handleEdit,
+    onEditLimits: handleEditLimits,
     onRefresh: fetchData,
     onDelete: handleDelete,
   });
@@ -103,6 +112,7 @@ export function ProfilesContent() {
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
         onSuccess={handleSuccess}
+        initialTab={editDialogTab}
       />
     </div>
   );

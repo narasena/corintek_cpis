@@ -370,6 +370,35 @@ export function createPrismaParameterLimitProfileRepository(): IParameterLimitPr
       }>;
     },
 
+    async findParametersWithLimits() {
+      const rows = await prisma.parameter.findMany({
+        where: {
+          deletedAt: null,
+          isActive: true,
+          hasLimits: true,
+          valueType: 'NUMBER',
+        },
+        select: {
+          id: true,
+          name: true,
+          variableName: true,
+          unit: true,
+          category: true,
+          displayOrder: true,
+        },
+        orderBy: { displayOrder: 'asc' },
+      });
+
+      return rows as Array<{
+        id: string;
+        name: string;
+        variableName: string;
+        unit: string | null;
+        category: TParameterCategory;
+        displayOrder: number;
+      }>;
+    },
+
     // -------------------------------------------------------------------------
     // Statistics
     // -------------------------------------------------------------------------

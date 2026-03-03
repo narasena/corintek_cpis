@@ -407,6 +407,16 @@ export interface IParameterLimitProfileRepository {
       displayOrder: number;
     }>
   >;
+  findParametersWithLimits(): Promise<
+    Array<{
+      id: string;
+      name: string;
+      variableName: string;
+      unit: string | null;
+      category: TParameterCategory;
+      displayOrder: number;
+    }>
+  >;
 
   // Statistics
   countLimitsInProfile(profileId: string): Promise<number>;

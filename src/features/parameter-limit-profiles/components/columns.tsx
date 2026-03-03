@@ -85,6 +85,7 @@ export function getParameterLimitColumns(
 
 type TProfileColumnDeps = {
   onEdit: (profile: IParameterLimitProfile) => void;
+  onEditLimits: (profile: IParameterLimitProfile) => void;
   onRefresh: () => void;
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>;
 };
@@ -152,13 +153,20 @@ export function getProfileColumns(
       cell: ({ row }) => {
         const profile = row.original;
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => deps.onEdit(profile)}
             >
               Ubah
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => deps.onEditLimits(profile)}
+            >
+              Batas
             </Button>
             <Button
               variant="ghost"

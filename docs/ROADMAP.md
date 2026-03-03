@@ -37,14 +37,16 @@
 
 | Feature                          | Scope ID       | Priority | Status                                               |
 | :------------------------------- | :------------- | :------- | :--------------------------------------------------- |
-| Parameter Limit Profile Refactor | `PARAM-CAT-01` | 🚨 P0    | Schema renamed (Category→Profile), migration pending |
+| Parameter Limit Profile Refactor | `PARAM-CAT-01` | 🚨 P0    | ✅ Complete - Profile editing with limits management |
 
 **Immediate TODO:**
 
 - [x] Run `prisma:migrate` for `ParameterLimitProfile` schema
 - [x] Fix TS build errors in: log-sheets/option-a/mobile-view-adapter, log-sheets/entry-cells
 - [x] Recreate tabs UI for Parameters page (Parameter, Limit Defaults, Profiles)
-- [ ] Test existing projects with new profile system
+- [x] Profile editing with tabs (Info | Limits)
+- [x] "Copy from Master" button for new profiles
+- [x] Test existing projects with new profile system
 
 ---
 

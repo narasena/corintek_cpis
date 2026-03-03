@@ -11,7 +11,7 @@
 
 **Source:** ROADMAP.md v0.2.0  
 **Priority:** 🚨 P0 (Critical)  
-**Status:** In Progress
+**Status:** ✅ Complete
 
 ### Background
 
@@ -25,26 +25,28 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 - [x] All limits now stored in `ParameterLimit` table linked to `ParameterLimitProfile`
 - [x] Added `parameterLimitProfileId` to `Project` schema
 
-### Immediate TODO
+### Implementation Complete
 
-- [ ] Run `npm run prisma:migrate` to apply schema to database
-- [ ] Fix TypeScript build errors:
-  - [ ] `src/features/log-sheets/service.ts` — Update Parameter references
-  - [ ] `src/features/summary-reports/service.ts` — Update Parameter references
-  - [ ] `src/features/parameters/limits-service.ts` — Update Parameter references
-  - [ ] `src/app/(main)/lab-analyses/[projectId]/[labAnalysisId]/edit/page.tsx` — Update `ParameterLite` type
-- [ ] Recreate tabs UI for Parameters page:
+- [x] Run `npm run prisma:migrate` to apply schema to database
+- [x] Fix TypeScript build errors in all affected files
+- [x] Recreate tabs UI for Parameters page:
   - Tab 1: Parameter List
-  - Tab 2: Limit Defaults (per-parameter)
-  - Tab 3: Profiles (category management)
-- [ ] Test existing projects with new profile system
+  - Tab 2: Limit Defaults (per-parameter master defaults)
+  - Tab 3: Profiles (profile management with tabs)
+- [x] Profile dialog with tabs (Info | Limits):
+  - Info tab: Edit profile metadata (name, description, isDefault)
+  - Limits tab: Manage per-parameter limits for this profile
+  - "Batas" button in table opens dialog directly to Limits tab
+- [x] "Salin dari Master" button to seed limits from master defaults
+- [x] Grouped by category with accordion (mobile-friendly)
+- [x] Tested: Existing projects continue to work with profile system
 
 ### Acceptance Criteria
 
-- [ ] All existing projects continue to work after migration
-- [ ] New "Standard" profile created as default
-- [ ] Project form includes profile selection dropdown
-- [ ] Log sheets resolve limits from assigned profile (or override)
+- [x] All existing projects continue to work after migration
+- [x] New "Standard" profile created as default
+- [x] Project form includes profile selection dropdown
+- [x] Log sheets resolve limits from assigned profile (or override)
 
 ---
 

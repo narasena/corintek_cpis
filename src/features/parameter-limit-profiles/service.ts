@@ -157,15 +157,49 @@ class ParameterLimitProfileService implements IParameterLimitProfileService {
     this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
     await this.validateExists(data.profileId);
 
-    const parameters = await this.repository.findAllActiveParameters();
-    const limits = this.mapParametersToEmptyLimits(parameters);
+    // Get default profile with its limits (the "master" values)
+    const defaultProfile = await this.repository.findDefaultProfile();
+    if (!defaultProfile) {
+      throw new Error(
+        'Tidak ada profil default. Silakan buat profil default terlebih dahulu.'
+      );
+    }
+
+    // Fetch limits from default profile - these are the "master" values
+    const defaultProfileWithLimits = await this.repository.findByIdWithLimits(
+      defaultProfile.id
+    );
+    if (!defaultProfileWithLimits) {
+      throw new Error('Gagal mengambil data batas dari profil default.');
+    }
+
+    // Map the default profile's limits to the target profile
+    // Only copy parameters that have limits defined in the default profile
+    const limitsToCopy: TParameterLimitInput[] = defaultProfileWithLimits.limits
+      .filter(
+        limit =>
+          // Only copy if at least one limit value is set
+          limit.minValue !== null ||
+          limit.maxValue !== null ||
+          limit.rawWaterMinValue !== null ||
+          limit.rawWaterMaxValue !== null
+      )
+      .map(limit => ({
+        parameterId: limit.parameterId,
+        minValue: limit.minValue,
+        maxValue: limit.maxValue,
+        rawWaterMinValue: limit.rawWaterMinValue,
+        rawWaterMaxValue: limit.rawWaterMaxValue,
+      }));
 
     if (!data.overwriteExisting) {
       const existing = await this.repository.findLimitsByProfileId(
         data.profileId
       );
       const existingIds = new Set(existing.map(l => l.parameterId));
-      const newLimits = limits.filter(l => !existingIds.has(l.parameterId));
+      const newLimits = limitsToCopy.filter(
+        l => !existingIds.has(l.parameterId)
+      );
 
       if (newLimits.length > 0) {
         await this.repository.upsertLimitsBatch(data.profileId, newLimits);
@@ -175,11 +209,11 @@ class ParameterLimitProfileService implements IParameterLimitProfileService {
 
     await this.repository.deleteLimitsByProfileId(data.profileId);
 
-    if (limits.length > 0) {
-      await this.repository.upsertLimitsBatch(data.profileId, limits);
+    if (limitsToCopy.length > 0) {
+      await this.repository.upsertLimitsBatch(data.profileId, limitsToCopy);
     }
 
-    return { copied: limits.length };
+    return { copied: limitsToCopy.length };
   }
 
   async getProfileLimitsMap(
@@ -316,7 +350,8 @@ class ParameterLimitProfileService implements IParameterLimitProfileService {
       isDefault: true,
     });
 
-    const parameters = await this.repository.findAllActiveParameters();
+    // Only create limit entries for parameters that have hasLimits=true
+    const parameters = await this.repository.findParametersWithLimits();
     const limits = this.mapParametersToEmptyLimits(parameters);
 
     if (limits.length > 0) {
