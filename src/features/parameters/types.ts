@@ -40,6 +40,7 @@ export const CreateParameterSchema = z.object({
   rawWaterMaxValue: z.number().optional(),
   displayOrder: z.number().int().default(0),
   isActive: z.boolean().default(true),
+  hasLimits: z.boolean().default(true),
 });
 
 export const UpdateParameterSchema = CreateParameterSchema.partial().extend({
@@ -93,6 +94,7 @@ export interface IParameter {
   rawWaterMaxValue?: number | null;
   displayOrder: number;
   isActive: boolean;
+  hasLimits: boolean;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -111,6 +113,7 @@ export interface IParameterLimitMasterItem {
   rawWaterMaxValue: number | null;
   displayOrder: number;
   isActive: boolean;
+  hasLimits: boolean;
 }
 
 export interface IGetParameterLimitMasterResult {

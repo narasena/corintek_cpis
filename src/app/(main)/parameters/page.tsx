@@ -14,6 +14,7 @@ import { ParameterDialog } from '@/features/parameters/components/parameter-dial
 import {
   getParametersAction,
   deleteParameterAction,
+  checkParameterHasLimitsAction,
 } from '@/features/parameters/actions';
 import { IParameter } from '@/features/parameters/types';
 import { ParameterLimitsContent } from '@/features/parameter-limit-profiles/components/parameter-limits-content';
@@ -23,7 +24,7 @@ export default function ParametersPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const tab = searchParams.get('tab') || 'parameter';
+  const tab = searchParams.get('tab') || 'limits';
 
   const onTabChange = (value: string) => {
     router.push(`${pathname}?tab=${value}`);
@@ -35,6 +36,7 @@ export default function ParametersPage() {
     IParameter | undefined
   >(undefined);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [hasExistingLimits, setHasExistingLimits] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -56,9 +58,19 @@ export default function ParametersPage() {
     fetchData();
   }, [fetchData]);
 
-  const handleEdit = (parameter: IParameter) => {
+  const handleEdit = async (parameter: IParameter) => {
     setSelectedParameter(parameter);
     setShowEditDialog(true);
+
+    // Check if parameter has existing limits
+    if (parameter.valueType === 'NUMBER') {
+      const result = await checkParameterHasLimitsAction(parameter.id);
+      if (result.success) {
+        setHasExistingLimits(result.hasLimits || false);
+      }
+    } else {
+      setHasExistingLimits(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -75,6 +87,7 @@ export default function ParametersPage() {
   const handleSuccess = () => {
     setShowEditDialog(false);
     setSelectedParameter(undefined);
+    setHasExistingLimits(false);
     fetchData();
   };
 
@@ -148,8 +161,12 @@ export default function ParametersPage() {
             mode="edit"
             parameter={selectedParameter}
             open={showEditDialog}
-            onOpenChange={setShowEditDialog}
+            onOpenChange={open => {
+              setShowEditDialog(open);
+              if (!open) setHasExistingLimits(false);
+            }}
             onSuccess={handleSuccess}
+            hasExistingLimits={hasExistingLimits}
           />
         </TabsContent>
       </Tabs>

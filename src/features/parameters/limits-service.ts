@@ -128,9 +128,13 @@ export async function getParameterLimits(
     return [];
   }
 
-  // Fetch all parameters to get display order
+  // Fetch only numeric parameters with limits
   const parameters = await prisma.parameter.findMany({
-    where: buildWhere(filters).parameter,
+    where: {
+      ...buildWhere(filters).parameter,
+      valueType: 'NUMBER',
+      hasLimits: true,
+    },
     orderBy: [{ displayOrder: 'asc' }, { createdAt: 'desc' }],
   });
 
@@ -179,6 +183,7 @@ export async function getParameterLimits(
         rawWaterMaxValue: limit?.rawWaterMaxValue ?? null,
         displayOrder: param.displayOrder,
         isActive: param.isActive,
+        hasLimits: param.hasLimits,
       };
     });
   }
@@ -204,6 +209,7 @@ export async function getParameterLimits(
       rawWaterMaxValue: limit?.rawWaterMaxValue ?? null,
       displayOrder: param.displayOrder,
       isActive: param.isActive,
+      hasLimits: param.hasLimits,
     };
   });
 }
@@ -255,4 +261,22 @@ export async function updateParameterLimitBatch(
     });
   });
   return prisma.$transaction(updates);
+}
+
+/**
+ * Check if a parameter has existing limits in any profile
+ */
+export async function checkParameterHasLimits(
+  actor: IJwtPayload,
+  parameterId: string
+): Promise<boolean> {
+  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+
+  const count = await prisma.parameterLimit.count({
+    where: {
+      parameterId,
+    },
+  });
+
+  return count > 0;
 }

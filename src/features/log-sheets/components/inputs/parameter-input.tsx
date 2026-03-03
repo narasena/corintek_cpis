@@ -15,6 +15,7 @@ export interface IParameterInputProps {
   isWaterMeter?: boolean;
   placeholder?: string;
   disabled?: boolean;
+  showClearButton?: boolean;
 }
 
 export function ParameterInput({
@@ -25,6 +26,7 @@ export function ParameterInput({
   isWaterMeter = false,
   placeholder,
   disabled = false,
+  showClearButton = false,
 }: IParameterInputProps) {
   const { getEntry, updateNumber, updateBoolean, updateText, updateCamera } =
     useEntryStateContext();
@@ -37,6 +39,7 @@ export function ParameterInput({
         entryKey={entryKey}
         state={state}
         disabled={disabled}
+        showClearButton={showClearButton}
         updateBoolean={updateBoolean}
       />
     );
@@ -52,8 +55,10 @@ export function ParameterInput({
         isWaterMeter={isWaterMeter}
         placeholder={placeholder}
         disabled={disabled}
+        showClearButton={showClearButton}
         updateNumber={updateNumber}
         updateCamera={updateCamera}
+        clearNumber={() => updateNumber(entryKey, '')}
       />
     );
   }
@@ -64,7 +69,9 @@ export function ParameterInput({
       state={state}
       placeholder={placeholder}
       disabled={disabled}
+      showClearButton={showClearButton}
       updateText={updateText}
+      clearText={() => updateText(entryKey, '')}
     />
   );
 }
@@ -73,6 +80,7 @@ interface IBooleanInputProps {
   entryKey: string;
   state: { boolValue?: boolean | null } | undefined;
   disabled: boolean;
+  showClearButton: boolean;
   updateBoolean: (key: string, value: boolean | null) => void;
 }
 
@@ -80,6 +88,7 @@ function BooleanInput({
   entryKey,
   state,
   disabled,
+  showClearButton,
   updateBoolean,
 }: IBooleanInputProps) {
   const checked = state?.boolValue === true;
@@ -96,6 +105,18 @@ function BooleanInput({
       <span className="text-sm">
         {isIndeterminate ? 'Pilih...' : checked ? 'Ya' : 'Tidak'}
       </span>
+      {showClearButton &&
+        state?.boolValue !== null &&
+        state?.boolValue !== undefined && (
+          <button
+            type="button"
+            onClick={() => updateBoolean(entryKey, null)}
+            disabled={disabled}
+            className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 ml-1"
+          >
+            Hapus
+          </button>
+        )}
     </div>
   );
 }
@@ -108,8 +129,10 @@ interface INumberInputProps {
   isWaterMeter: boolean;
   placeholder?: string;
   disabled: boolean;
+  showClearButton: boolean;
   updateNumber: (key: string, value: string) => void;
   updateCamera: (key: string, url: string | null, file: File | null) => void;
+  clearNumber: () => void;
 }
 
 function NumberInput({
@@ -120,28 +143,46 @@ function NumberInput({
   isWaterMeter,
   placeholder,
   disabled,
+  showClearButton,
   updateNumber,
   updateCamera,
+  clearNumber,
 }: INumberInputProps) {
   const hasError = isOutOfRange(state?.numericValue, minValue, maxValue);
   const displayValue =
     state?.numericValue === null || state?.numericValue === undefined
       ? ''
       : String(state.numericValue);
+  const hasValue =
+    state?.numericValue !== null && state?.numericValue !== undefined;
 
   return (
     <div className="flex flex-col gap-2">
-      <Input
-        type="number"
-        inputMode="decimal"
-        placeholder={placeholder ?? 'Nilai...'}
-        className={
-          hasError ? 'border-red-500 focus-visible:ring-red-500 bg-red-50' : ''
-        }
-        value={displayValue}
-        onChange={e => updateNumber(entryKey, e.target.value)}
-        disabled={disabled}
-      />
+      <div className="flex items-center gap-2">
+        <Input
+          type="number"
+          inputMode="decimal"
+          placeholder={placeholder ?? 'Nilai...'}
+          className={
+            hasError
+              ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
+              : ''
+          }
+          value={displayValue}
+          onChange={e => updateNumber(entryKey, e.target.value)}
+          disabled={disabled}
+        />
+        {showClearButton && hasValue && (
+          <button
+            type="button"
+            onClick={clearNumber}
+            disabled={disabled}
+            className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap disabled:opacity-50"
+          >
+            Hapus
+          </button>
+        )}
+      </div>
       {isWaterMeter && (
         <CameraInput
           value={state?.fileUrl}
@@ -157,7 +198,9 @@ interface ITextInputProps {
   state: { textValue?: string | null } | undefined;
   placeholder?: string;
   disabled: boolean;
+  showClearButton: boolean;
   updateText: (key: string, value: string) => void;
+  clearText: () => void;
 }
 
 function TextInput({
@@ -165,14 +208,33 @@ function TextInput({
   state,
   placeholder,
   disabled,
+  showClearButton,
   updateText,
+  clearText,
 }: ITextInputProps) {
+  const hasValue =
+    state?.textValue !== null &&
+    state?.textValue !== undefined &&
+    state.textValue !== '';
+
   return (
-    <Input
-      placeholder={placeholder ?? 'Keterangan...'}
-      value={state?.textValue ?? ''}
-      onChange={e => updateText(entryKey, e.target.value)}
-      disabled={disabled}
-    />
+    <div className="flex items-center gap-2">
+      <Input
+        placeholder={placeholder ?? 'Keterangan...'}
+        value={state?.textValue ?? ''}
+        onChange={e => updateText(entryKey, e.target.value)}
+        disabled={disabled}
+      />
+      {showClearButton && hasValue && (
+        <button
+          type="button"
+          onClick={clearText}
+          disabled={disabled}
+          className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap disabled:opacity-50"
+        >
+          Hapus
+        </button>
+      )}
+    </div>
   );
 }

@@ -204,3 +204,25 @@ export async function updateParameterLimitBatchAction(
     };
   }
 }
+
+/**
+ * Check if a parameter has existing limits in any profile
+ */
+export async function checkParameterHasLimitsAction(parameterId: string) {
+  const actor = await getCurrentUser();
+  if (!actor) return { success: false, error: 'Unauthorized' };
+
+  try {
+    const hasLimits = await limitService.checkParameterHasLimits(
+      actor,
+      parameterId
+    );
+    return { success: true, hasLimits };
+  } catch (error: any) {
+    console.error('[CPIS-ERROR] Parameters.CheckHasLimits:', error);
+    return {
+      success: false,
+      error: error.message || 'Gagal memeriksa data limit',
+    };
+  }
+}

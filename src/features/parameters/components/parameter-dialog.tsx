@@ -11,6 +11,7 @@ interface IParameterDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSuccess?: () => void;
+  hasExistingLimits?: boolean;
 }
 
 export function ParameterDialog({
@@ -20,6 +21,7 @@ export function ParameterDialog({
   open,
   onOpenChange,
   onSuccess,
+  hasExistingLimits = false,
 }: IParameterDialogProps) {
   const title =
     mode === 'create' ? 'Tambah Parameter Baru' : 'Ubah Data Parameter';
@@ -39,6 +41,7 @@ export function ParameterDialog({
           defaultValues={parameter}
           onSuccess={handleSuccess}
           onCancel={onCancel}
+          hasExistingLimits={hasExistingLimits}
         />
       )}
     </CrudDialog>
