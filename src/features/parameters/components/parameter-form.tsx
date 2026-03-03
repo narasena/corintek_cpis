@@ -101,14 +101,6 @@ export function ParameterForm({
         if (mode === 'create') {
           result = await createParameterAction(data);
         } else {
-          // DEBUG: Log the defaultValues and id
-          console.log('[DEBUG] Edit mode - defaultValues:', defaultValues);
-          console.log(
-            '[DEBUG] Edit mode - defaultValues.id:',
-            defaultValues?.id
-          );
-          console.log('[DEBUG] Edit mode - id type:', typeof defaultValues?.id);
-
           if (!defaultValues?.id) {
             toast.error('ID parameter tidak ditemukan');
             return;
