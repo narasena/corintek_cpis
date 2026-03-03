@@ -64,6 +64,7 @@ export async function createParameter(
       unit: data.unit,
       displayOrder: data.displayOrder ?? 0,
       isActive: data.isActive ?? true,
+      hasLimits: data.hasLimits ?? true,
     },
   });
 
