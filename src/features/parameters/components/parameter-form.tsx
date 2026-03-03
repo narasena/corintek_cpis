@@ -83,6 +83,7 @@ export function ParameterForm({
       rawWaterMaxValue: defaultValues?.rawWaterMaxValue || undefined,
       displayOrder: defaultValues?.displayOrder || 0,
       isActive: defaultValues?.isActive ?? true,
+      hasLimits: defaultValues?.hasLimits ?? true,
     },
   });
 
@@ -243,6 +244,27 @@ export function ParameterForm({
 
         {selectedValueType === 'NUMBER' && (
           <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="hasLimits"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Memiliki Batas Limit</FormLabel>
+                    <FormDescription>
+                      Parameter ini memiliki nilai minimum dan maksimum
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

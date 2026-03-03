@@ -31,6 +31,7 @@ model Parameter {
   // Display metadata
   displayOrder       Int                        @default(0)
   isActive           Boolean                    @default(true)
+  hasLimits          Boolean                    @default(true) // Whether this numeric parameter has min/max limits
   logSheetEntries    LogSheetEntry[]
   labAnalysisEntries LabAnalysisEntry[]
   projectOverrides   ProjectParameterOverride[]

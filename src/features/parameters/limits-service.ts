@@ -128,11 +128,12 @@ export async function getParameterLimits(
     return [];
   }
 
-  // Fetch only numeric parameters to get display order
+  // Fetch only numeric parameters with limits
   const parameters = await prisma.parameter.findMany({
     where: {
       ...buildWhere(filters).parameter,
       valueType: 'NUMBER',
+      hasLimits: true,
     },
     orderBy: [{ displayOrder: 'asc' }, { createdAt: 'desc' }],
   });
@@ -182,6 +183,7 @@ export async function getParameterLimits(
         rawWaterMaxValue: limit?.rawWaterMaxValue ?? null,
         displayOrder: param.displayOrder,
         isActive: param.isActive,
+        hasLimits: param.hasLimits,
       };
     });
   }
@@ -207,6 +209,7 @@ export async function getParameterLimits(
       rawWaterMaxValue: limit?.rawWaterMaxValue ?? null,
       displayOrder: param.displayOrder,
       isActive: param.isActive,
+      hasLimits: param.hasLimits,
     };
   });
 }
