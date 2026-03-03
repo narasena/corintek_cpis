@@ -23,7 +23,7 @@ export default function ParametersPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const tab = searchParams.get('tab') || 'parameter';
+  const tab = searchParams.get('tab') || 'limits';
 
   const onTabChange = (value: string) => {
     router.push(`${pathname}?tab=${value}`);

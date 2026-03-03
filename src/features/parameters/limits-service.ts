@@ -128,9 +128,12 @@ export async function getParameterLimits(
     return [];
   }
 
-  // Fetch all parameters to get display order
+  // Fetch only numeric parameters to get display order
   const parameters = await prisma.parameter.findMany({
-    where: buildWhere(filters).parameter,
+    where: {
+      ...buildWhere(filters).parameter,
+      valueType: 'NUMBER',
+    },
     orderBy: [{ displayOrder: 'asc' }, { createdAt: 'desc' }],
   });
 
