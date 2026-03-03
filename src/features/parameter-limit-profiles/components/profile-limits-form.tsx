@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod/v4';
-import { Loader2, Copy, Save } from 'lucide-react';
+import { Loader2, Copy, Save, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,12 +25,20 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 
 import {
   getProfileWithLimitsAction,
   upsertProfileLimitsAction,
   copyFromDefaultProfileAction,
 } from '../actions';
+import { getParametersAction } from '@/features/parameters/actions';
 import type { IParameterLimitProfile, IProfileWithLimits } from '../types';
 import type { TParameterCategory } from '@/features/parameters/types';
 
@@ -95,6 +103,13 @@ interface ILimitItem {
   rawWaterMaxValue: number | null;
 }
 
+interface IAvailableParameter {
+  id: string;
+  name: string;
+  category: TParameterCategory;
+  unit: string | null;
+}
+
 // =============================================================================
 // Component
 // =============================================================================
@@ -109,6 +124,16 @@ export function ProfileLimitsForm({
   const [profileData, setProfileData] = useState<IProfileWithLimits | null>(
     null
   );
+
+  // Add Parameter Dialog State
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [availableParams, setAvailableParams] = useState<IAvailableParameter[]>(
+    []
+  );
+  const [selectedParamIds, setSelectedParamIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [isAdding, setIsAdding] = useState(false);
 
   const form = useForm<TProfileLimitsFormValues>({
     resolver: zodResolver(ProfileLimitsFormSchema),
@@ -148,6 +173,28 @@ export function ProfileLimitsForm({
     fetchProfileData();
   }, [fetchProfileData]);
 
+  // Fetch available parameters for adding to profile
+  const fetchAvailableParameters = useCallback(async () => {
+    const result = await getParametersAction();
+    if (result.success && result.data) {
+      const existingIds = new Set(
+        profileData?.limits.map(l => l.parameterId) || []
+      );
+      const available = result.data
+        .filter(
+          (p: any) =>
+            p.hasLimits && p.valueType === 'NUMBER' && !existingIds.has(p.id)
+        )
+        .map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          category: p.category as TParameterCategory,
+          unit: p.unit,
+        }));
+      setAvailableParams(available);
+    }
+  }, [profileData]);
+
   // Group limits by category (only show limits with at least one value set)
   const groupedLimits = useMemo(() => {
     if (!profileData) return [];
@@ -155,14 +202,8 @@ export function ProfileLimitsForm({
     const groups = new Map<TParameterCategory, ILimitItem[]>();
 
     profileData.limits.forEach(limit => {
-      // Skip limits with all null values (empty entries for non-numeric params)
-      const hasAnyValue =
-        limit.minValue !== null ||
-        limit.maxValue !== null ||
-        limit.rawWaterMinValue !== null ||
-        limit.rawWaterMaxValue !== null;
-
-      if (!hasAnyValue) return;
+      // Only skip if parameter info is missing (shouldn't happen)
+      if (!limit.parameterId) return;
 
       const item: ILimitItem = {
         parameterId: limit.parameterId,
@@ -226,6 +267,41 @@ export function ProfileLimitsForm({
     });
   };
 
+  // Handle add parameters to profile
+  const handleAddParameters = async () => {
+    if (selectedParamIds.size === 0) return;
+
+    setIsAdding(true);
+    try {
+      const limitsToAdd = Array.from(selectedParamIds).map(paramId => ({
+        parameterId: paramId,
+        minValue: null,
+        maxValue: null,
+        rawWaterMinValue: null,
+        rawWaterMaxValue: null,
+      }));
+
+      const result = await upsertProfileLimitsAction({
+        profileId: profile.id,
+        limits: limitsToAdd,
+      });
+
+      if (result.success) {
+        toast.success(`${result.data.created} parameter berhasil ditambahkan`);
+        setShowAddDialog(false);
+        setSelectedParamIds(new Set());
+        fetchProfileData();
+        onSuccess?.();
+      } else {
+        toast.error(result.error || 'Gagal menambahkan parameter');
+      }
+    } catch {
+      toast.error('Gagal menambahkan parameter');
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   // Handle save
   const onSubmit = (data: TProfileLimitsFormValues) => {
     startTransition(async () => {
@@ -285,16 +361,90 @@ export function ProfileLimitsForm({
           <p className="text-muted-foreground mb-4">
             Belum ada batas parameter untuk profil ini.
           </p>
-          <Button
-            variant="outline"
-            onClick={handleCopyFromMaster}
-            disabled={isCopying}
-          >
-            {isCopying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            <Copy className="mr-2 h-4 w-4" />
-            Salin dari Master Default
-          </Button>
+          <div className="flex justify-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCopyFromMaster}
+              disabled={isCopying}
+            >
+              {isCopying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Copy className="mr-2 h-4 w-4" />
+              Salin dari Master Default
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                fetchAvailableParameters();
+                setShowAddDialog(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Parameter
+            </Button>
+          </div>
         </div>
+
+        {/* Add Parameter Dialog */}
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Tambah Parameter ke Profil</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {availableParams.length === 0 ? (
+                <p className="text-muted-foreground">
+                  Tidak ada parameter tersedia.
+                </p>
+              ) : (
+                <>
+                  <div className="max-h-[300px] overflow-y-auto space-y-2">
+                    {availableParams.map(param => (
+                      <div
+                        key={param.id}
+                        className="flex items-center space-x-2 p-2 border rounded"
+                      >
+                        <Checkbox
+                          checked={selectedParamIds.has(param.id)}
+                          onCheckedChange={checked => {
+                            const newSet = new Set(selectedParamIds);
+                            if (checked) newSet.add(param.id);
+                            else newSet.delete(param.id);
+                            setSelectedParamIds(newSet);
+                          }}
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{param.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {CATEGORY_LABELS[param.category]}
+                            {param.unit && ` • ${param.unit}`}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowAddDialog(false)}
+                    >
+                      Batal
+                    </Button>
+                    <Button
+                      onClick={handleAddParameters}
+                      disabled={selectedParamIds.size === 0 || isAdding}
+                    >
+                      {isAdding && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Tambah ({selectedParamIds.size})
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -308,6 +458,18 @@ export function ProfileLimitsForm({
             Kelola batas untuk setiap parameter dalam profil ini.
           </p>
           <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                fetchAvailableParameters();
+                setShowAddDialog(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Parameter
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -503,6 +665,68 @@ export function ProfileLimitsForm({
           </Button>
         </div>
       </form>
+
+      {/* Add Parameter Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tambah Parameter ke Profil</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {availableParams.length === 0 ? (
+              <p className="text-muted-foreground">
+                Tidak ada parameter tersedia.
+              </p>
+            ) : (
+              <>
+                <div className="max-h-[300px] overflow-y-auto space-y-2">
+                  {availableParams.map(param => (
+                    <div
+                      key={param.id}
+                      className="flex items-center space-x-2 p-2 border rounded"
+                    >
+                      <Checkbox
+                        checked={selectedParamIds.has(param.id)}
+                        onCheckedChange={checked => {
+                          const newSet = new Set(selectedParamIds);
+                          if (checked) newSet.add(param.id);
+                          else newSet.delete(param.id);
+                          setSelectedParamIds(newSet);
+                        }}
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{param.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {CATEGORY_LABELS[param.category]}
+                          {param.unit && ` • ${param.unit}`}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAddDialog(false)}
+                  >
+                    Batal
+                  </Button>
+                  <Button
+                    onClick={handleAddParameters}
+                    disabled={selectedParamIds.size === 0 || isAdding}
+                  >
+                    {isAdding && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Tambah ({selectedParamIds.size})
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Form>
   );
 }
