@@ -4,6 +4,56 @@ This document tracks the high-level progress and standards for the CPIS project 
 
 ---
 
+## 0. How to Use This System (Quick Start)
+
+**Cold start?** Read this section first, then check the Progress Dashboard and Tracker.
+
+### For Mechanical Phases (1, 3, 6) — Use the Workflow
+
+```
+/cpis-refactor m-04 phase-1
+/cpis-refactor m-04 phase-3
+/cpis-refactor m-04 phase-6
+```
+
+The agent will read this roadmap, load the correct template, analyze the code, fill the template, and save it to `docs/refactoring/modules/[module-name]/`.
+
+### For Judgment-Heavy Phases (2, 4, 5) — Use Prompt Chaining
+
+These phases require iteration and creative decisions. Use sequential prompts:
+
+**Phase 2 (Characterize) — 5-prompt chain:**
+
+1. `"Read BASELINE_INVENTORY for M-XX. Write characterization tests for the top 5 riskiest functions."`
+2. `"Review results. Document surprising behaviors in CHARACTERIZATION_FINDINGS."`
+3. `"Identify 3 critical user journeys. Write E2E test scenarios."`
+4. `"Run coverage analysis. What % are we at? Write more tests for gaps."`
+5. `"Coverage check: above 75% for critical paths? If not, iterate."`
+
+**Phase 4 (Plan) — 2-prompt chain:**
+
+1. `"Read the DEPENDENCY_MAP and CHARACTERIZATION_FINDINGS for M-XX. Create a priority matrix (Risk/Value) and fill RISK_MATRIX.md."`
+2. `"Based on the risk matrix, create a phased REFACTORING_PLAN.md with file-level work items. Wait for my approval."`
+
+**Phase 5 (Execute) — per-file loop:**
+
+1. `"In [FILE], identify the single worst code smell. Propose ONE refactoring."`
+2. `"Apply the approved refactoring. Run tests. Show diff."`
+3. `"Next smell in [FILE]..."` _(repeat until file is clean)_
+4. `"Find cross-file duplication. Design an abstraction."` _(after all files are clean)_
+
+### Key Documents
+
+| Document                             | What It Is                                      |
+| ------------------------------------ | ----------------------------------------------- |
+| `REFACTORING_ROADMAP.md` (this file) | Rules, phases, DoD checklists, coding standards |
+| `PROGRESS_TRACKER.md`                | Checklist of all 20 modules and their status    |
+| `docs/refactoring/templates/`        | 7 templates the agent must fill per phase       |
+| `docs/refactoring/modules/[name]/`   | Filled outputs per module                       |
+| `.agent/workflows/cpis-refactor.md`  | Workflow automation for the agent               |
+
+---
+
 ## 1. Global Progress Dashboard
 
 | Metric                     | Target |   Current | Progress |
