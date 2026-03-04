@@ -9,6 +9,8 @@ import { resolveTargetProjectIds } from './utils';
 import type { IJwtPayload } from '@/@types/auth.type';
 import type { IGetRecentActivitiesActionResult } from './types';
 import { getVisibleActivityTypes } from './config';
+import { composeDashboardModule, type IActivityRepository } from './di';
+import { prisma } from '@/lib/prisma';
 
 async function requireActor(): Promise<IJwtPayload> {
   const user = await getCurrentUserDetails();
@@ -123,12 +125,9 @@ export async function getRecentActivitiesAction(
       };
     }
 
-    const service = dashboardService.createActivityService({
-      assertCanAccessProject: projectService.assertCanAccessProject,
-      getAccessibleProjectIds: projectService.getAccessibleProjectIds,
-    });
+    const { activityService } = composeDashboardModule(prisma);
 
-    const result = await service.getRecentActivities({
+    const result = await activityService.getRecentActivities({
       actor,
       projectIds: targetIds ?? undefined,
       timeRange: validated.timeRange,
