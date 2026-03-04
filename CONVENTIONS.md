@@ -49,6 +49,9 @@ UI Component → Server Action (actions.ts) → Service (service.ts) → Prisma 
 4. **All existing tests must pass** after every change.
 5. **No behavior changes.** Refactoring must not alter observable behavior.
 6. **Update SSOT Docs.** If changes alter file structure or public exports, update the related `docs/refactoring/modules/` markdown files. Stale docs are not allowed.
+7. **Cross-Module Impact.** Do NOT modify files outside the current module boundary unless absolutely necessary for shared types/actions. Flag any external impact to user.
+8. **Preserve Characterization.** Surprising behaviors documented in `CHARACTERIZATION_FINDINGS.md` MUST be preserved. Do not "fix" bugs during refactoring.
+9. **Atomic Commits.** One smell/refactoring = one commit. Commit immediately after successful test run.
 
 ## Hard Constraints
 
@@ -67,3 +70,4 @@ UI Component → Server Action (actions.ts) → Service (service.ts) → Prisma 
 - **Indonesian UI text:** Ubah=Edit, Hapus=Delete, Tambah=Add
 - **Error prefix:** `[CPIS-ERROR] <Feature>.<Action>:` in all catch blocks
 - **Pre-code:** Check `src/types` + `prisma/schema.prisma` before coding
+- **Validate Input:** Treat all data from legacy code as "unsafe" in Server Actions
