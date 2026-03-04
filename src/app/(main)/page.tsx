@@ -4,6 +4,7 @@ import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { getDashboardProjects } from '@/features/projects/service';
 import { DashboardScoped } from './components/dashboard-scoped';
 import { AnalyticsDashboard } from './_components/analytics-dashboard';
+import { RecentActivitySection } from './_components/recent-activity-section';
 
 export default async function Page() {
   const user = await getCurrentUserDetails();
@@ -28,7 +29,14 @@ export default async function Page() {
 
     return (
       <DashboardScoped user={user} projects={projects}>
-        <AnalyticsDashboard />
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="md:col-span-2">
+            <AnalyticsDashboard />
+          </div>
+          <div className="md:col-span-1">
+            <RecentActivitySection />
+          </div>
+        </div>
       </DashboardScoped>
     );
   }
@@ -82,7 +90,14 @@ export default async function Page() {
       </div>
 
       {/* Admin/Director global analytics view */}
-      <AnalyticsDashboard />
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <AnalyticsDashboard />
+        </div>
+        <div className="md:col-span-1">
+          <RecentActivitySection />
+        </div>
+      </div>
     </div>
   );
 }
