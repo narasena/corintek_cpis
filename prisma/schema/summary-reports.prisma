@@ -27,6 +27,7 @@ model SummaryReport {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   @@unique([projectId, period]) // One report per project per month
   @@map("summary_reports")

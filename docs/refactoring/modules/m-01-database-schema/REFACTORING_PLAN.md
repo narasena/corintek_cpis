@@ -1,6 +1,6 @@
-# {Module Name} — Refactoring Plan
+# M-01: Database Schema — Refactoring Plan
 
-{Brief description of the module's current state and goals.}
+The database schema is currently split into 14 domain-specific files. While this provides good separation, there are inconsistencies in soft-delete implementation and heavy coupling in core domains (Log Sheets and Users). The goal is to standardize the schema foundations without breaking existing relations.
 
 ---
 
@@ -8,9 +8,12 @@
 
 Priority = f(Pain, Risk, Value)
 
-| Area | Pain Level | Risk Level | Business Value | Priority | Evidence |
-| ---- | ---------- | ---------- | -------------- | :------: | -------- |
-| {e.g. Service Layer} | {High} | {High} | {Critical} | P2 | {e.g. God module, 1000+ LOC} |
+| Area                       | Pain Level | Risk Level | Business Value | Priority | Evidence                                      |
+| -------------------------- | ---------- | ---------- | -------------- | :------: | --------------------------------------------- |
+| Soft-Delete Consistency    | Medium     | Low        | High           |    P1    | Inconsistent `deletedAt` fields across models |
+| Timestamp Standardization  | Low        | Low        | Medium         |    P2    | Ensure all models have `createdAt`/`updatedAt`|
+| Log Sheet Relation Cleanup | High       | High       | Medium         |    P3    | 5x relations to User is a maintenance burden  |
+| Schema Documentation       | Low        | Low        | High           |    P1    | Lack of comments explaining implicit contracts|
 
 ---
 
@@ -18,9 +21,10 @@ Priority = f(Pain, Risk, Value)
 
 > **LOW risk → MEDIUM risk → HIGH risk**
 
-1. {Step 1: Isolated leaf modules}
-2. {Step 2: Utility consolidation}
-3. {Step 3: Core logic extraction}
+1. **Foundation (Low Risk)**: Standardize `deletedAt` and timestamps in Leaf domains (Attendance, Notifications, Summary Reports).
+2. **Master Data (Low/Medium Risk)**: Verify and standardize Parameters, Clients, and Machines.
+3. **Complex Transactions (Medium Risk)**: Lab Analyses and Chemicals.
+4. **Core Anchors (High Risk)**: Projects, Users, and finally Log Sheets.
 
 ---
 
@@ -30,26 +34,36 @@ Priority = f(Pain, Risk, Value)
 
 ### What to test first
 
-| Priority | What | Why | Type |
-| :------: | ---- | --- | ---- |
-| 1 | {e.g. Utils} | {High fan-out, pure functions} | Unit |
+| Priority | What              | Why                                        | Type        |
+| :------: | ----------------- | ------------------------------------------ | ----------- |
+|    1     | Schema Validation | Ensure `npx prisma validate` passes        | Tooling     |
+|    2     | Relation Integrity| Verify foreign keys aren't broken by shifts| Integration |
+|    3     | Seed Consistency  | Ensure `prisma db seed` still works        | E2E/Data    |
 
 ---
 
 ## 4. Phased Execution
 
-### Phase 1: Foundation — Tests + Quick Wins
-- [ ] {Task 1.1}
-- [ ] {Task 1.2}
+### Phase 1: Foundation — Consistency & Documentation
 
-### Phase 2: Deduplication & Clean-up
-- [ ] {Task 2.1}
+- [ ] Add `deletedAt` to `notifications.prisma` and `summary-reports.prisma`.
+- [ ] Add missing comments to models explaining their purpose and relations.
+- [ ] Standardize `@map` naming conventions across all files if any drift exists.
 
-### Phase 3: Structural Refactoring
-- [ ] {Task 3.1}
+### Phase 2: Structural Verification
+
+- [ ] Resolve the `prisma.config.ts` loading issue to enable `prisma validate`.
+- [ ] Run `npx prisma format` to ensure consistent indentation and style.
+
+### Phase 3: Relation Optimization (High Risk - Requires Caution)
+
+- [ ] Evaluate if `LogSheet` relations to `User` can be grouped or simplified (e.g., using a single "Signatories" table) — **Only if deemed necessary after M-02 analysis.**
 
 ---
 
 ## 5. Verification Plan
-- [ ] {Checklist item 1}
-- [ ] {Checklist item 2}
+
+- [ ] `npm run prisma:validate` passes without errors.
+- [ ] `npm run prisma:generate` produces correct types.
+- [ ] `npm run prisma:seed` executes successfully on a fresh DB (if possible in env).
+- [ ] All existing repository tests (Prisma-based) pass.

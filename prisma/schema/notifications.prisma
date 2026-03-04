@@ -23,6 +23,7 @@ model Notification {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   @@index([userId, isRead])
   @@map("notifications")
