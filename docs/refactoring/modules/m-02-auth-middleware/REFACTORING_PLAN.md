@@ -52,7 +52,10 @@ Priority = f(Pain, Risk, Value)
 - [x] **src/features/auth/service.ts**: Prevented timing/enumeration attacks via `FAKE_PASSWORD_HASH` and generic errors.
 - [x] **src/features/auth/service.ts**: Centralized user status validation via `isUserAuthValid` guard.
 - [x] **src/features/auth/service.ts**: Removed direct dependency on `auth-helpers` for core logic.
-- [ ] **src/features/auth/actions.ts**: Extract cookie configuration to constants to avoid "Magic Numbers" (e.g., maxAge).
+- [x] **src/features/auth/actions.ts**: Extracted cookie configuration and session management to centralized helpers (`src/lib/auth-helpers.ts`) and constants.
+- [x] **src/features/auth/actions.ts**: Centralized all route paths into `AUTH_ROUTES` constant to eliminate magic strings and reduce feature coupling.
+- [x] **src/features/auth/actions.ts**: Centralized all UI feedback strings (Indonesian) into `SUCCESS_MESSAGES` and `ERROR_MESSAGES` constants.
+- [x] **src/features/auth/actions.ts**: Decoupled feature-specific cache revalidation (`/users`) from the authentication lifecycle.
 
 ### Phase 2: RBAC Granularity (F1)
 

@@ -10,6 +10,7 @@ export const JWT_CONFIG = {
 export const AUTH_CONFIG = {
   COOKIE_NAME: 'auth_token',
   SALT_ROUNDS: 10,
+  COOKIE_MAX_AGE: 60 * 60 * 24 * 7, // 7 days
 } as const;
 
 export const ERROR_MESSAGES = {
@@ -17,6 +18,11 @@ export const ERROR_MESSAGES = {
   TOKEN_INVALID: 'Token tidak valid atau kedaluwarsa',
   PAYLOAD_VALIDATION_FAILED: 'Payload validation failed',
   AUTHENTICATION_FAILED: 'Email atau kata sandi tidak valid',
+  LOGIN_FAILED: 'Login gagal',
+} as const;
+
+export const SUCCESS_MESSAGES = {
+  LOGIN_SUCCESS: 'Login berhasil',
 } as const;
 
 /**
@@ -24,3 +30,10 @@ export const ERROR_MESSAGES = {
  * used to prevent timing attacks during authentication for non-existent users.
  */
 export const FAKE_PASSWORD_HASH = '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6L6s57WyHYy6H.mK';
+
+export const AUTH_ROUTES = {
+  HOME: '/',
+  LOGIN: '/login',
+  FORBIDDEN: '/forbidden',
+  USERS: '/users',
+} as const;

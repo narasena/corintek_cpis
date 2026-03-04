@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { verifyToken } from './jwt';
+import { verifyToken, generateToken } from './jwt';
 import { IJwtPayload } from '@/@types/auth.type';
 import { TUserRole } from '@/@types/user.type';
 import { AUTH_CONFIG } from '@/features/auth/constants';
@@ -33,6 +33,33 @@ export async function getCurrentUser(): Promise<IJwtPayload | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Set an authenticated session cookie
+ * @param payload - User data to store in JWT
+ */
+export async function setAuthSession(
+  payload: Omit<IJwtPayload, 'iat' | 'exp'>
+): Promise<void> {
+  const token = await generateToken(payload);
+  const cookieStore = await cookies();
+
+  cookieStore.set(AUTH_CONFIG.COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: AUTH_CONFIG.COOKIE_MAX_AGE,
+    path: '/',
+  });
+}
+
+/**
+ * Delete the authenticated session cookie
+ */
+export async function deleteAuthSession(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(AUTH_CONFIG.COOKIE_NAME);
 }
 
 export interface ICurrentUserDetails {

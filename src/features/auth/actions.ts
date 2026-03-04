@@ -1,13 +1,12 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { authenticateUser } from './service';
-import { generateToken } from '@/lib/jwt';
-import { getAuthCookieName } from '@/lib/auth-helpers';
+import { setAuthSession, deleteAuthSession } from '@/lib/auth-helpers';
 import { authLoginSchema, TAuthLoginResponse } from '@/@types/auth.type';
 import { TUserRole } from '@/@types/user.type';
+import { AUTH_ROUTES, ERROR_MESSAGES, SUCCESS_MESSAGES } from './constants';
 
 /**
  * Server action for user login
@@ -29,31 +28,20 @@ export async function loginAction(
     // Authenticate user
     const user = await authenticateUser(validatedData);
 
-    // Generate JWT token
-    const token = await generateToken({
+    // Create session (encapsulates JWT generation and cookie management)
+    await setAuthSession({
       id: user.id,
       email: user.email,
       role: user.role as TUserRole,
     });
 
-    // Set httpOnly cookie
-    const cookieStore = await cookies();
-    cookieStore.set(getAuthCookieName(), token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    });
-
     // Revalidate paths
-    revalidatePath('/');
-    revalidatePath('/users');
+    revalidatePath(AUTH_ROUTES.HOME);
 
     // Return success - client will handle redirect
     return {
       success: true,
-      message: 'Login berhasil',
+      message: SUCCESS_MESSAGES.LOGIN_SUCCESS,
       user: {
         id: user.id,
         email: user.email,
@@ -63,9 +51,12 @@ export async function loginAction(
       },
     };
   } catch (error) {
+    const message = error instanceof Error ? error.message : ERROR_MESSAGES.LOGIN_FAILED;
+    console.error(`[CPIS-ERROR] Auth.loginAction: ${message}`);
+
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Login gagal',
+      message,
     };
   }
 }
@@ -74,8 +65,7 @@ export async function loginAction(
  * Server action for user logout
  */
 export async function logoutAction(): Promise<void> {
-  const cookieStore = await cookies();
-  cookieStore.delete(getAuthCookieName());
-  revalidatePath('/');
-  redirect('/login');
+  await deleteAuthSession();
+  revalidatePath(AUTH_ROUTES.HOME);
+  redirect(AUTH_ROUTES.LOGIN);
 }
