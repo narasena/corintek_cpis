@@ -60,6 +60,7 @@ export async function createUser(
       phoneNumber: data.phoneNumber,
       password: hashedPassword,
       avatarUrl: data.avatarUrl ?? null,
+      address: data.address ?? null,
       role: data.role as any, // Already validated by Zod
       employmentStatus: data.employmentStatus as any, // Already validated by Zod
       clientId: data.clientId ?? null,
@@ -72,6 +73,7 @@ export async function createUser(
       email: true,
       phoneNumber: true,
       avatarUrl: true,
+      address: true,
       role: true,
       employmentStatus: true,
       isActive: true,
@@ -142,6 +144,7 @@ export async function getAllUsers(actor: IJwtPayload) {
       email: true,
       phoneNumber: true,
       avatarUrl: true,
+      address: true,
       role: true,
       employmentStatus: true,
       isActive: true,
@@ -183,6 +186,7 @@ export async function getUserById(actor: IJwtPayload, id: string) {
       email: true,
       phoneNumber: true,
       avatarUrl: true,
+      address: true,
       role: true,
       employmentStatus: true,
       isActive: true,
@@ -264,6 +268,7 @@ export async function updateUser(
     where: { id },
     data: {
       ...updateData,
+      address: data.address ?? null,
       clientId: data.clientId ?? null,
     },
     select: {
@@ -274,6 +279,7 @@ export async function updateUser(
       email: true,
       phoneNumber: true,
       avatarUrl: true,
+      address: true,
       role: true,
       employmentStatus: true,
       isActive: true,

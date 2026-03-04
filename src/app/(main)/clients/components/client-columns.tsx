@@ -6,7 +6,7 @@ import { TClientResponse } from '@/@types/client.type';
 import { ActionCell } from '@/components/action-cell';
 import { deleteClientAction } from '@/features/clients/actions';
 import { Button } from '@/components/ui/button';
-import { Users } from 'lucide-react';
+import { Users, ExternalLink } from 'lucide-react';
 
 interface IClientColumnsProps {
   onEdit: (client: TClientResponse) => void;
@@ -42,6 +42,27 @@ export const getClientColumns = ({
         {row.original.address || '-'}
       </span>
     ),
+  },
+  {
+    accessorKey: 'website',
+    header: 'Website',
+    cell: ({ row }) => {
+      const website = row.original.website;
+      if (!website) return '-';
+      return (
+        <a
+          href={website}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 text-blue-600 hover:underline"
+        >
+          <span className="truncate max-w-[150px]">
+            {website.replace(/^https?:\/\//, '')}
+          </span>
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      );
+    },
   },
   {
     id: 'personnel',

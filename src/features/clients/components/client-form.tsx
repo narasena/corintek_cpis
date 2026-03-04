@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { useTransition } from 'react';
+import { useTransition, useCallback } from 'react';
 import {
   clientCreateSchema,
   clientUpdateSchema,
@@ -33,6 +33,19 @@ interface IClientFormProps {
   onCancel?: () => void;
 }
 
+function normalizeWebsite(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `http://${trimmed}`;
+}
+
+function isValidWebsite(value: string): boolean {
+  if (!value) return true;
+  const domainPart = value.replace(/^https?:\/\//i, '');
+  return domainPart.includes('.') && domainPart.length > 2;
+}
+
 export function ClientForm({
   mode,
   defaultValues,
@@ -52,21 +65,45 @@ export function ClientForm({
             email: '',
             phoneNumber: '',
             address: '',
+            website: '',
           }
         : {
             name: defaultValues?.name || '',
             email: defaultValues?.email || '',
             phoneNumber: defaultValues?.phoneNumber || '',
             address: defaultValues?.address || '',
+            website: defaultValues?.website || '',
           },
   });
 
+  const processWebsite = useCallback(
+    (website: string | null | undefined): string => {
+      if (!website) return '';
+      const normalized = normalizeWebsite(website);
+      if (!isValidWebsite(normalized)) {
+        toast.error('Nilai website tampaknya tidak valid');
+        return '';
+      }
+      return normalized;
+    },
+    []
+  );
+
   const onSubmit = async (data: TClientCreateInput | TClientUpdateInput) => {
     startTransition(async () => {
+      const processedData = {
+        ...data,
+        website: processWebsite(data.website),
+      };
+
+      if (processedData.website === '' && data.website) {
+        return;
+      }
+
       let result;
 
       if (mode === 'create') {
-        result = await createClientAction(data as TClientCreateInput);
+        result = await createClientAction(processedData as TClientCreateInput);
       } else {
         if (!defaultValues?.id) {
           toast.error('Kesalahan Implementasi', {
@@ -76,7 +113,7 @@ export function ClientForm({
         }
         result = await updateClientAction(
           defaultValues.id,
-          data as TClientUpdateInput
+          processedData as TClientUpdateInput
         );
       }
 
@@ -170,6 +207,25 @@ export function ClientForm({
               <FormControl>
                 <Input
                   placeholder="Jl. Contoh No. 123, Jakarta"
+                  {...field}
+                  value={field.value || ''}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Website */}
+        <FormField
+          control={form.control}
+          name="website"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Website (Opsional)</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="example.com"
                   {...field}
                   value={field.value || ''}
                 />
