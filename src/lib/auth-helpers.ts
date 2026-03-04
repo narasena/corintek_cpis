@@ -4,6 +4,7 @@ import { IJwtPayload } from '@/@types/auth.type';
 import { prisma } from '@/lib/prisma';
 import { TUserRole } from '@/@types/user.type';
 import bcrypt from 'bcrypt';
+import { AUTH_CONFIG } from '@/features/auth/constants';
 
 export class AuthenticationError extends Error {
   constructor(message: string = 'Unauthorized') {
@@ -12,9 +13,6 @@ export class AuthenticationError extends Error {
   }
 }
 
-const AUTH_COOKIE_NAME = 'auth_token';
-const SALT_ROUNDS = 10;
-
 /**
  * Get the current authenticated user from cookies
  * @returns User payload from JWT or null if not authenticated
@@ -22,7 +20,7 @@ const SALT_ROUNDS = 10;
 export async function getCurrentUser(): Promise<IJwtPayload | null> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+    const token = cookieStore.get(AUTH_CONFIG.COOKIE_NAME)?.value;
 
     if (!token) {
       return null;
@@ -81,7 +79,7 @@ export async function getCurrentUserDetails(): Promise<ICurrentUserDetails | nul
  * @returns Hashed password
  */
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, SALT_ROUNDS);
+  return bcrypt.hash(password, AUTH_CONFIG.SALT_ROUNDS);
 }
 
 /**
@@ -101,7 +99,7 @@ export async function comparePassword(
  * Get auth cookie name (for consistency)
  */
 export function getAuthCookieName(): string {
-  return AUTH_COOKIE_NAME;
+  return AUTH_CONFIG.COOKIE_NAME;
 }
 
 /**

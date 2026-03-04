@@ -44,7 +44,10 @@ Priority = f(Pain, Risk, Value)
 
 ### Phase 1: Foundation & Service Cleanup (F4, F5, F6)
 
-- [ ] **src/lib/jwt.ts**: Add `T` prefix to JWT payload types if missing; standardize exports.
+- [x] **src/lib/jwt.ts**: Refactored secret handling into `getEncodedSecret()` helper; added full characterization tests.
+- [x] **src/lib/jwt.ts**: Implemented runtime payload validation using Zod (`jwtPayloadSchema`).
+- [x] **src/lib/jwt.ts**: Centralized JWT configuration and magic strings in `src/features/auth/constants.ts`.
+- [x] **src/lib/jwt.ts**: Implemented memoization for encoded JWT secret to improve performance.
 - [ ] **src/features/auth/service.ts**: Remove direct dependency on `auth-helpers` if possible; unify user status validation.
 - [ ] **src/features/auth/actions.ts**: Extract cookie configuration to constants to avoid "Magic Numbers" (e.g., maxAge).
 

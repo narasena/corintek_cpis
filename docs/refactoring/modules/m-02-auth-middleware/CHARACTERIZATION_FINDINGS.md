@@ -58,17 +58,30 @@ This document captures surprising behavior discovered during the characterizatio
 
 | File             | Stmt Coverage | Branch Coverage | Status    |
 | ---------------- | ------------: | --------------: | --------- |
+| jwt.ts           |        100.0% |          100.0% | **DONE**  |
 | middleware.ts    |         96.1% |           96.0% | **READY** |
 | service.ts       |        100.0% |          100.0% | **READY** |
 | auth-helpers.ts  |         90.0% |          100.0% | **READY** |
 | rbac.ts          |         76.9% |           82.7% | **READY** |
 
-**Total:** 62 characterization tests passed. 
+**Total:** 67 characterization tests passed. 
 Threshold (75% for critical paths) has been met for all core auth files.
 
 ---
 
-## 6. E2E / Critical User Journeys (CUJs)
+## 6. Refactoring Improvements
+
+### 6.1 Runtime JWT Validation
+**Behavior:** JWT payloads are now validated against a Zod schema during verification and decoding.
+**Benefit:** Ensures that the application never processes a malformed or "type-confused" session token.
+
+### 6.2 Centralized Configuration
+**Behavior:** JWT and Auth configuration (expiry, cookie name, salt rounds) is now moved to a centralized constants file.
+**Benefit:** Compliance with project coding standards and easier maintenance of security policies.
+
+### 6.3 Performance Optimization: Secret Memoization
+**Behavior:** The encoded `JWT_SECRET` is now memoized at the module level.
+**Benefit:** Reduces CPU overhead by eliminating redundant string-to-bytes encoding on every request.
 
 These journeys are critical to system integrity and must be verified before and after refactoring.
 

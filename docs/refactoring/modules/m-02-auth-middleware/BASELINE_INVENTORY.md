@@ -8,14 +8,14 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) |    635 |     0 |      — |
-| Code Files (.ts/.tsx)        |      6 |     0 |      — |
-| Largest File (LOC)           |    232 |     0 |      — |
-| Files >500 lines             |      0 |     0 |      — |
-| Methods >50 lines            |      1 |     0 |      — |
-| TODO/FIXME/HACK Comments     |      0 |     0 |      — |
-| Est. Cyclomatic Complexity   | Medium |     0 |      — |
-| Tests Passing                |     35 |     0 |      — |
+| Total Lines of Code (ts/tsx) |    635 |   665 |     +30 |
+| Code Files (.ts/.tsx)        |      6 |      6 |      0 |
+| Largest File (LOC)           |    232 |    232 |      0 |
+| Files >500 lines             |      0 |      0 |      0 |
+| Methods >50 lines            |      1 |      1 |      0 |
+| TODO/FIXME/HACK Comments     |      0 |      0 |      0 |
+| Est. Cyclomatic Complexity   | Medium |   Low* | -1 (jwt) |
+| Tests Passing                |     35 |     67 |    +32 |
 
 ---
 

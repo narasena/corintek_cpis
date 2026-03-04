@@ -1,9 +1,26 @@
 import { SignJWT, jwtVerify, decodeJwt } from 'jose';
-import { IJwtPayload } from '@/@types/auth.type';
+import { IJwtPayload, jwtPayloadSchema } from '@/@types/auth.type';
+import { JWT_CONFIG, ERROR_MESSAGES } from '@/features/auth/constants';
 
-// Ensure secret is encoded as Uint8Array for jose
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = '7d';
+let cachedSecret: Uint8Array | null = null;
+
+/**
+ * Internal helper to get and encode JWT_SECRET (memoized)
+ * @param context - Function name for error reporting
+ */
+function getEncodedSecret(context: string): Uint8Array {
+  if (cachedSecret) return cachedSecret;
+
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      `[CPIS-ERROR] ${context}: ${ERROR_MESSAGES.JWT_SECRET_REQUIRED}`
+    );
+  }
+
+  cachedSecret = new TextEncoder().encode(secret);
+  return cachedSecret;
+}
 
 /**
  * Generate a JWT token for authenticated user
@@ -14,17 +31,12 @@ const JWT_EXPIRES_IN = '7d';
 export async function generateToken(
   payload: Omit<IJwtPayload, 'iat' | 'exp'>
 ): Promise<string> {
-  if (!JWT_SECRET) {
-    throw new Error(
-      '[CPIS-ERROR] JWT.generateToken: JWT_SECRET environment variable is required'
-    );
-  }
-  const SECRET_KEY = new TextEncoder().encode(JWT_SECRET);
+  const SECRET_KEY = getEncodedSecret('JWT.generateToken');
 
   return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: 'HS256' })
+    .setProtectedHeader({ alg: JWT_CONFIG.ALGORITHM })
     .setIssuedAt()
-    .setExpirationTime(JWT_EXPIRES_IN)
+    .setExpirationTime(JWT_CONFIG.EXPIRES_IN)
     .sign(SECRET_KEY);
 }
 
@@ -35,19 +47,19 @@ export async function generateToken(
  * @throws Error if token is invalid or expired or JWT_SECRET is not configured
  */
 export async function verifyToken(token: string): Promise<IJwtPayload> {
-  if (!JWT_SECRET) {
-    throw new Error(
-      '[CPIS-ERROR] JWT.verifyToken: JWT_SECRET environment variable is required'
-    );
-  }
-  const SECRET_KEY = new TextEncoder().encode(JWT_SECRET);
+  const SECRET_KEY = getEncodedSecret('JWT.verifyToken');
 
   try {
     const { payload } = await jwtVerify(token, SECRET_KEY);
-    return payload as unknown as IJwtPayload;
-  } catch {
+    return jwtPayloadSchema.parse(payload);
+  } catch (error) {
+    if (error instanceof Error && error.name === 'ZodError') {
+      throw new Error(
+        `[CPIS-ERROR] JWT.verifyToken: ${ERROR_MESSAGES.PAYLOAD_VALIDATION_FAILED}: ${error.message}`
+      );
+    }
     throw new Error(
-      '[CPIS-ERROR] JWT.verifyToken: Token tidak valid atau kedaluwarsa'
+      `[CPIS-ERROR] JWT.verifyToken: ${ERROR_MESSAGES.TOKEN_INVALID}`
     );
   }
 }
@@ -59,7 +71,9 @@ export async function verifyToken(token: string): Promise<IJwtPayload> {
  */
 export function decodeToken(token: string): IJwtPayload | null {
   try {
-    return decodeJwt(token) as unknown as IJwtPayload;
+    const payload = decodeJwt(token);
+    const result = jwtPayloadSchema.safeParse(payload);
+    return result.success ? result.data : null;
   } catch {
     return null;
   }
