@@ -2,52 +2,63 @@
 
 > Snapshot: {YYYY-MM-DD}
 
+<!-- PROMPT FOR AI AGENT:
+"Create an inventory of the current module:
+- Total lines of code
+- Number of files/classes
+- Largest files (>500 lines)
+- Longest methods (>50 lines)
+- Estimated cyclomatic complexity score
+- Number of TODO/FIXME comments
+This is our baseline. We'll measure improvement against this."
+-->
+
 ---
 
 ## 1. Summary Dashboard
 
-| Metric | Before | After | Change |
-| ------ | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) | 0 | 0 | — |
-| Code Files (.ts/.tsx) | 0 | 0 | — |
-| Largest File (LOC) | 0 | 0 | — |
-| Files >500 lines | 0 | 0 | — |
-| Methods >50 lines | 0 | 0 | — |
-| TODO/FIXME/HACK Comments | 0 | 0 | — |
-| Est. Cyclomatic Complexity | 0 | 0 | — |
-| Tests Passing | 0 | 0 | — |
+| Metric                       | Before | After | Change |
+| ---------------------------- | -----: | ----: | -----: |
+| Total Lines of Code (ts/tsx) |      0 |     0 |      — |
+| Code Files (.ts/.tsx)        |      0 |     0 |      — |
+| Largest File (LOC)           |      0 |     0 |      — |
+| Files >500 lines             |      0 |     0 |      — |
+| Methods >50 lines            |      0 |     0 |      — |
+| TODO/FIXME/HACK Comments     |      0 |     0 |      — |
+| Est. Cyclomatic Complexity   |      0 |     0 |      — |
+| Tests Passing                |      0 |     0 |      — |
 
 ---
 
 ## 2. Lines of Code by File (sorted ascending)
 
-| # | File | Lines | Notes |
-| - | ---- | ----: | ----- |
-| 1 | {file_path} | 0 | |
+| #   | File        | Lines | Notes |
+| --- | ----------- | ----: | ----- |
+| 1   | {file_path} |     0 |       |
 
 ---
 
 ## 3. Largest Files (>500 lines)
 
-| File | Lines | Functions | Description |
-| ---- | ----: | :-------: | ----------- |
-| {file_path} | 0 | 0 | {Why it is large} |
+| File        | Lines | Functions | Description       |
+| ----------- | ----: | :-------: | ----------------- |
+| {file_path} |     0 |     0     | {Why it is large} |
 
 ---
 
 ## 4. Longest Methods (>50 lines)
 
-| # | File | Method | Lines | Notes |
-| - | ---- | ------ | ----: | ----- |
-| 1 | {file} | {method} | 0 | |
+| #   | File   | Method   | Lines | Notes |
+| --- | ------ | -------- | ----: | ----- |
+| 1   | {file} | {method} |     0 |       |
 
 ---
 
 ## 5. Cyclomatic Complexity Hotspots
 
-| File | Est. CC | Hotspots |
-| ---- | ------: | -------- |
-| {file} | 0 | {Complex logic description} |
+| File   | Est. CC | Hotspots                    |
+| ------ | ------: | --------------------------- |
+| {file} |       0 | {Complex logic description} |
 
 ---
 

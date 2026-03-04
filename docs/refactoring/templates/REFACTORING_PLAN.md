@@ -2,15 +2,24 @@
 
 {Brief description of the module's current state and goals.}
 
+<!-- PROMPT FOR AI AGENT:
+"Based on the dependency map, baseline, and characterization findings:
+1. Categorize files by risk level (HIGH, MEDIUM, LOW)
+2. Create a priority matrix based on Pain, Risk, and Business Value
+3. Define the refactoring order (Always LOW risk to HIGH risk)
+4. Outline the phased execution steps using the Micro-Refactoring Loop
+Wait for user approval before executing the plan."
+-->
+
 ---
 
 ## 1. Refactoring Priority Matrix
 
 Priority = f(Pain, Risk, Value)
 
-| Area | Pain Level | Risk Level | Business Value | Priority | Evidence |
-| ---- | ---------- | ---------- | -------------- | :------: | -------- |
-| {e.g. Service Layer} | {High} | {High} | {Critical} | P2 | {e.g. God module, 1000+ LOC} |
+| Area                 | Pain Level | Risk Level | Business Value | Priority | Evidence                     |
+| -------------------- | ---------- | ---------- | -------------- | :------: | ---------------------------- |
+| {e.g. Service Layer} | {High}     | {High}     | {Critical}     |    P2    | {e.g. God module, 1000+ LOC} |
 
 ---
 
@@ -30,26 +39,30 @@ Priority = f(Pain, Risk, Value)
 
 ### What to test first
 
-| Priority | What | Why | Type |
-| :------: | ---- | --- | ---- |
-| 1 | {e.g. Utils} | {High fan-out, pure functions} | Unit |
+| Priority | What         | Why                            | Type |
+| :------: | ------------ | ------------------------------ | ---- |
+|    1     | {e.g. Utils} | {High fan-out, pure functions} | Unit |
 
 ---
 
 ## 4. Phased Execution
 
 ### Phase 1: Foundation — Tests + Quick Wins
+
 - [ ] {Task 1.1}
 - [ ] {Task 1.2}
 
 ### Phase 2: Deduplication & Clean-up
+
 - [ ] {Task 2.1}
 
 ### Phase 3: Structural Refactoring
+
 - [ ] {Task 3.1}
 
 ---
 
 ## 5. Verification Plan
+
 - [ ] {Checklist item 1}
 - [ ] {Checklist item 2}
