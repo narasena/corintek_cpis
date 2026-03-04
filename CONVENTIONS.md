@@ -48,7 +48,7 @@ UI Component → Server Action (actions.ts) → Service (service.ts) → Prisma 
 3. **Scope to ONE file.** Don't refactor multiple files in a single change.
 4. **All existing tests must pass** after every change.
 5. **No behavior changes.** Refactoring must not alter observable behavior.
-6. **Update SSOT Docs.** If changes alter file structure or public exports, update the related `docs/refactoring/modules/` markdown files. Stale docs are not allowed.
+6. **Update SSOT Docs.** After EVERY code change, you MUST also edit the matching `docs/refactoring/modules/<module>.md` file in the SAME response. Update the file's function list, exports, or notes to match your code change. If the module doc is not in your editable files, STOP and ask the user to `/add` it. Do NOT commit code without updating its module doc. Stale docs = rejected change.
 7. **Cross-Module Impact.** Do NOT modify files outside the current module boundary unless absolutely necessary for shared types/actions. Flag any external impact to user.
 8. **Preserve Characterization.** Surprising behaviors documented in `CHARACTERIZATION_FINDINGS.md` MUST be preserved. Do not "fix" bugs during refactoring.
 9. **Atomic Commits.** One smell/refactoring = one commit. Commit immediately after successful test run.
