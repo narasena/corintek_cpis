@@ -48,6 +48,7 @@ UI Component → Server Action (actions.ts) → Service (service.ts) → Prisma 
 3. **Scope to ONE file.** Don't refactor multiple files in a single change.
 4. **All existing tests must pass** after every change.
 5. **No behavior changes.** Refactoring must not alter observable behavior.
+6. **Update SSOT Docs.** If changes alter file structure or public exports, update the related `docs/refactoring/modules/` markdown files. Stale docs are not allowed.
 
 ## Hard Constraints
 
