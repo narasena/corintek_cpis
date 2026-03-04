@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { getRecentActivitiesAction } from '@/features/dashboard/actions';
 import type { IActivity, TActivityTimeRange } from '@/features/dashboard/types';
 
@@ -45,6 +45,9 @@ export function useRecentActivities(
     options.timeRange ?? '7d'
   );
 
+  // Track if initial load has happened
+  const isInitialMount = useRef(true);
+
   const fetchActivities = useCallback(
     async (cursorParam?: string) => {
       setLoading(true);
@@ -77,6 +80,15 @@ export function useRecentActivities(
     [options.projectId, timeRange]
   );
 
+  // Fetch when timeRange changes (but not on initial mount)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    void fetchActivities();
+  }, [timeRange, fetchActivities]);
+
   const loadMore = useCallback(async () => {
     if (cursor && !loading) await fetchActivities(cursor);
   }, [cursor, loading, fetchActivities]);
@@ -87,8 +99,6 @@ export function useRecentActivities(
 
   const setTimeRange = useCallback((range: TActivityTimeRange) => {
     setTimeRangeState(range);
-    setActivities([]);
-    setCursor(null);
   }, []);
 
   return {
