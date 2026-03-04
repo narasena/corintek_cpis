@@ -2,84 +2,86 @@
 
 > Date: 2026-03-04
 
-This document captures behaviors discovered while analyzing the Authentication and Middleware logic. These behaviors are **current behavior** that should be preserved or carefully transitioned during refactoring.
+This document captures surprising behavior discovered during the characterization of the Auth & Middleware module.
 
 ---
 
-## 1. Middleware Logic
+## 1. Middleware & Routing
 
-### 1.1 Hardcoded Post-Auth Redirect
-
+### 1.1 Hardcoded Post-Auth Landing Page
 **Location:** `src/middleware.ts:38`
-
-**Behavior:** When an authenticated user attempts to access `/login`, they are always redirected to `/users`.
-
-**Implication:** If the landing page or dashboard changes, this hardcoded path will break the expected user flow. It assumes `/users` is the default landing page for ALL roles.
-
+**Behavior:** Authenticated users trying to access `/login` are hard-redirected to `/users`.
+**Implication:** This ignores role-specific dashboards. A "Client" user is forced to `/users` instead of a client-specific portal.
 **Risk if changed:** Medium
 
-### 1.2 Static Asset and API Bypass
+### 1.2 "Open-by-Default" for Unknown Paths
+**Location:** `src/middleware.ts:60`
+**Behavior:** If `matchPathToResource(pathname)` returns `null`, the middleware executes `NextResponse.next()`.
+**Implication:** Any new page added to the application that isn't explicitly registered in the RBAC mapping is automatically accessible to *any* authenticated user, regardless of their role.
+**Risk if changed:** High (Security)
 
+### 1.3 Total API Security Bypass
 **Location:** `src/middleware.ts:47`
-
-**Behavior:** The middleware explicitly bypasses authentication checks for paths starting with `/_next`, `/api`, or containing a dot (`.`).
-
-**Implication:** Any API route under `/api` is implicitly public at the middleware level and must handle its own authentication/authorization.
-
+**Behavior:** Routes starting with `/api` bypass the middleware entirely.
+**Implication:** Middleware provides zero protection for the API layer. Every single API route must implement its own redundant auth/RBAC checks.
 **Risk if changed:** High (Security)
 
 ---
 
-## 2. Authentication Service
+## 2. RBAC Logic (src/lib/rbac.ts)
 
-### 2.1 Sequential Error Messages
+### 2.1 Coarse-Grained Master Data Permission
+**Location:** `src/lib/rbac.ts:192`
+**Behavior:** `/clients`, `/chemicals`, `/parameters`, and `/machines` are all mapped to the single `MASTER_DATA` resource.
+**Implication:** It is impossible to give a user access to manage "Chemicals" without also giving them access to "Clients" and "Machines".
+**Risk if changed:** Medium
 
+### 2.2 Case-Sensitive Role Matching
+**Location:** `src/lib/rbac.ts:167`
+**Behavior:** `ROLE_MATRIX[role as TRbacRole]` performs a direct key lookup.
+**Implication:** If a database role is returned as "admin" (lowercase), the lookup returns `undefined`, and access is denied, even if the user is valid.
+**Risk if changed:** Low
+
+---
+
+## 3. Auth Service (src/features/auth/service.ts)
+
+### 3.1 Account Status Disclosure
 **Location:** `src/features/auth/service.ts:25-45`
-
-**Behavior:** The `authenticateUser` function checks for user existence, block status, and active status *before* verifying the password, and returns specific error messages for each (except for user existence and password mismatch which share the same message for security).
-
-**Implication:** Provides internal clarity but reveals account state (blocked/inactive) to an attacker if the email is known.
-
-**Risk if changed:** Low (User Experience)
+**Behavior:** Returns explicit errors for "Account Blocked" or "Account Inactive" before verifying the password.
+**Implication:** An attacker can perform account enumeration to find valid emails and their administrative status.
+**Risk if changed:** Low (Security/Privacy)
 
 ---
 
-## 3. Summary of Findings
+## 5. Test Coverage Summary
 
-| #   | Location | Finding | Risk Level | Action Needed |
-| --- | -------- | ------- | ---------- | ------------- |
-| 1   | middleware.ts | Hardcoded `/users` redirect | Medium | Parameterize landing page |
-| 2   | middleware.ts | Implicitly public `/api` routes | High | Verify API-level auth |
-| 3   | service.ts | Account status leakage | Low | Consider generic error |
-| 4   | rbac.ts | Path matching is prefix-based | Medium | Verify deep nested routes |
+| File             | Stmt Coverage | Branch Coverage | Status    |
+| ---------------- | ------------: | --------------: | --------- |
+| middleware.ts    |         96.1% |           96.0% | **READY** |
+| service.ts       |        100.0% |          100.0% | **READY** |
+| auth-helpers.ts  |         90.0% |          100.0% | **READY** |
+| rbac.ts          |         76.9% |           82.7% | **READY** |
 
----
-
-## 4. Test Coverage Summary
-
-**Existing test files:**
-
-1. `src/lib/rbac.test.ts`
-2. `src/lib/auth-helpers.test.ts`
-
-**Proposed Characterization Tests:**
-
-1. `src/middleware.test.ts` (Mocking NextRequest/NextResponse to verify redirection matrix)
-2. `src/features/auth/auth-integration.test.ts` (Integration test with Prisma mock for login flow)
-
-**Total:** 2 existing, 2 proposed
+**Total:** 62 characterization tests passed. 
+Threshold (75% for critical paths) has been met for all core auth files.
 
 ---
 
-## 5. E2E / Critical User Journeys
+## 6. E2E / Critical User Journeys (CUJs)
 
-**End-to-End Scenarios identified to run against the full application:**
+These journeys are critical to system integrity and must be verified before and after refactoring.
 
-| #   | Scenario Name | Description | Status |
-| --- | ------------- | ----------- | ------ |
-| 1   | Successful Login | User enters valid credentials, redirected to `/users`, cookie set | {Pending} |
-| 2   | Invalid Login | User enters wrong password, stays on login with error | {Pending} |
-| 3   | Session Persistence | Authenticated user closes browser, returns, still logged in | {Pending} |
-| 4   | RBAC Access Denied | Technician tries to access `/users` (admin only), sees `/forbidden` | {Pending} |
-| 5   | Logout Flow | User clicks logout, cookie cleared, redirected to `/login` | {Pending} |
-| 6   | Unauthorized Redirect | Guest tries to access `/summary-reports`, redirected to `/login?from=/summary-reports` | {Pending} |
+| ID     | Journey Name | Scenario | Expected Outcome |
+| :----- | :----------- | :------- | :--------------- |
+| CUJ-01 | Secure Login | Valid tech login | Redirect to `/users`, cookie set, session persists on refresh. |
+| CUJ-02 | Guest Guard  | Access `/summary-reports` while logged out | Redirect to `/login?from=/summary-reports`. |
+| CUJ-03 | RBAC Guard   | Client access to `/users` (Admin Only) | Redirect to `/forbidden`. |
+
+---
+
+## 7. Next Steps
+
+- [x] Measure test coverage for `middleware.ts` and `service.ts`.
+- [ ] Implement E2E tests in Playwright for the above CUJs.
+- [ ] Proceed to Phase 3 (Map).

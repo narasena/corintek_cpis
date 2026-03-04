@@ -8,8 +8,8 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts)     |    635 |     0 |      — |
-| Code Files (.ts)             |      6 |     0 |      — |
+| Total Lines of Code (ts/tsx) |    635 |     0 |      — |
+| Code Files (.ts/.tsx)        |      6 |     0 |      — |
 | Largest File (LOC)           |    232 |     0 |      — |
 | Files >500 lines             |      0 |     0 |      — |
 | Methods >50 lines            |      1 |     0 |      — |
@@ -23,12 +23,12 @@
 
 | #   | File                     | Lines | Notes                                     |
 | --- | ------------------------ | ----: | ----------------------------------------- |
-| 1   | src/lib/jwt.ts           |    51 | JWT utilities (jose)                      |
-| 2   | src/features/auth/service.ts |    67 | Database-level authentication checks      |
-| 3   | src/middleware.ts        |    76 | Next.js Middleware (Auth/RBAC)            |
+| 1   | src/lib/jwt.ts           |    51 | JWT utilities                             |
+| 2   | src/features/auth/service.ts |    67 | Auth business logic                       |
+| 3   | src/middleware.ts        |    76 | Next.js Middleware                        |
 | 4   | src/features/auth/actions.ts |    84 | Server Actions (Login/Logout)             |
-| 5   | src/lib/auth-helpers.ts  |   125 | Session retrieval & password hashing      |
-| 6   | src/lib/rbac.ts          |   232 | Role-Based Access Control matrix & logic  |
+| 5   | src/lib/auth-helpers.ts  |   125 | Shared auth helpers                       |
+| 6   | src/lib/rbac.ts          |   232 | RBAC Matrix & Logic                       |
 
 ---
 
@@ -42,10 +42,9 @@
 
 ## 4. Longest Methods (>50 lines)
 
-| #   | File                     | Method        | Lines | Notes                                      |
-| --- | ------------------------ | ------------- | ----: | ------------------------------------------ |
-| 1   | src/middleware.ts        | middleware    |    58 | Contains multiple conditional redirections |
-| 2   | src/features/auth/actions.ts | loginAction   |    48 | Close to 50 lines limit                    |
+| #   | File              | Method     | Lines | Notes                                     |
+| --- | ----------------- | ---------- | ----: | ----------------------------------------- |
+| 1   | src/middleware.ts | middleware |    58 | Contains multiple redirection branches    |
 
 ---
 
@@ -53,8 +52,8 @@
 
 | File             | Est. CC | Hotspots                                      |
 | ---------------- | ------: | --------------------------------------------- |
-| src/lib/rbac.ts  | Medium  | `matchPathToResource` (large switch/if-else)  |
-| src/middleware.ts | Medium  | Multiple nested auth/rbac redirect conditions |
+| src/middleware.ts | Medium  | Complex nested if-else for auth/rbac routing |
+| src/lib/rbac.ts  | Medium  | Large switch/if-else in `matchPathToResource` |
 
 ---
 
@@ -64,7 +63,7 @@
 ┌──────────────────────────────┬──────────┐
 │ Metric                       │ Baseline │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (ts)               │      635 │
+│ Total LOC (ts/tsx)           │      635 │
 │ File count                   │        6 │
 │ Max file size                │      232 │
 │ Max method size              │       58 │
