@@ -3,7 +3,6 @@ import { IJwtPayload } from '@/@types/auth.type';
 
 // Ensure secret is encoded as Uint8Array for jose
 const JWT_SECRET = process.env.JWT_SECRET;
-const SECRET_KEY = new TextEncoder().encode(JWT_SECRET);
 const JWT_EXPIRES_IN = '7d';
 
 /**
@@ -20,6 +19,7 @@ export async function generateToken(
       '[CPIS-ERROR] JWT.generateToken: JWT_SECRET environment variable is required'
     );
   }
+  const SECRET_KEY = new TextEncoder().encode(JWT_SECRET);
 
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: 'HS256' })
@@ -40,6 +40,7 @@ export async function verifyToken(token: string): Promise<IJwtPayload> {
       '[CPIS-ERROR] JWT.verifyToken: JWT_SECRET environment variable is required'
     );
   }
+  const SECRET_KEY = new TextEncoder().encode(JWT_SECRET);
 
   try {
     const { payload } = await jwtVerify(token, SECRET_KEY);
