@@ -2,7 +2,7 @@
 
 > CPIS — Corintek Project Information System
 
-**Last Updated:** 2026-03-02
+**Last Updated:** 2026-03-04
 
 ## Active Gotchas ⚠️
 
@@ -13,23 +13,29 @@
 - **Mobile-first:** Technicians use low-budget Android phones. Test mobile viewport FIRST, desktop second.
 - **PDF:** NO backend PDF generation — use browser-native print with `@media print` / Tailwind `print:` modifiers only.
 - **Error Logging:** ALL catch blocks MUST prefix with `[CPIS-ERROR] <Feature>.<Action>:`
+- **Dashboard Activity:** No real-time updates — users must refresh page to see new activities
 
 ## Active Decisions 🤔
 
 - **Evaluating:** Whether to add video attachments to Log Sheet (Scope `LS-ADJ`) — decision pending cost analysis
-- **Blocker:** `ParameterLimitProfile` refactor in progress — migration pending, TS build errors expected until fixed
+- **Next Priority:** Browser UI Tests (`QA`) or Summary Report Analytics (`SR-02`)
+
+## Completed Recently ✅
+
+- **DB-01 Dashboard Recent Activity** — Fully implemented with RBAC, 7d/30d range, infinite scroll
 
 ## Corrections & Preferences 🔧
 
 - Use `sonner` for ALL toasts — NOT custom toast implementations
 - Use Indonesian labels: "Ubah" (Edit), "Hapus" (Delete), "Tambah" (Add)
-- **Interfaces:** `I*` prefix | **Types:** `T*` prefix (e.g., `IUser`, `TCreateInput`)
+- **Interfaces:** `I*` prefix | **Types:** `T*` prefix (e.g., `IUser`, `TComponentProps`)
 - **Files:** kebab-case | **Functions:** camelCase | **Components:** PascalCase
 - **Server Actions:** `[verb][Noun]Action` | **Services:** `[verb][Noun]`
 - NO `any` types — use `unknown` if uncertain
 
 ## Current Sprint Focus 🎯
 
-- **Sprint:** Parameter Limit Profile Refactor
-- **Focus:** `PARAM-CAT-01` — Schema renamed (Category→Profile), migration pending
+- **Sprint:** Stabilization & QA
+- **Focus:** Testing Dashboard Activity Feed (`DB-01`) in production
+- **Next:** Browser UI Tests (`QA`) or Summary Report Analytics (`SR-02`)
 - **Off-limits:** Do NOT touch Log Sheet detail page (~437 lines) — already refactored in LS-STAB
