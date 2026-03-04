@@ -1,5 +1,12 @@
 # Corintek Project Information System (CPIS) Web Application
 
+> **Last Updated:** 2026-03-04
+> **Legend:**
+>
+> - **[IMPLEMENTED]** = Feature is built and functional
+> - **[NOT IMPLEMENTED]** = Feature is in FSD but NOT built
+> - **[IMPLEMENTED - PARTIAL]** = Feature is partially built
+
 ---
 
 ## 1. Deskripsi Proyek
@@ -27,118 +34,125 @@ Kebutuhan bisnis ini harus dipenuhi untuk memastikan bahwa Sistem Informasi Proy
 
 ## 4. Berikut adalah daftar halaman utama yang akan ada dalam CPIS:
 
-1. Dashboard
+1. Dashboard **[IMPLEMENTED]**
    Fitur dashboard akan memuat:
-   - Data chart yang memberikan visualisasi data logsheet historis pada proyek yang sedang dibuka. Data yang ditampilkan dalam chart grafik:
-     - Data Approach Unit Condenser
-     - Data Ampere Unit Condenser
-     - Data Approach Unit Evaporator
-     - Data Ampere Unit Evaporator
-   - Gallery foto yang menampilkan foto-foto yang diambil saat pengisian Logsheet, diurutkan dari tanggal terbaru.
-   - Parameter akan menampilkan data parameter yang diaplikasikan pada proyek terkait.
+   - Data chart yang memberikan visualisasi data logsheet historis pada proyek yang sedang dibuka. Data yang ditampilkan dalam chart grafik **[IMPLEMENTED]**:
+     - Data Approach Unit Condenser **[IMPLEMENTED]**
+     - Data Ampere Unit Condenser **[IMPLEMENTED]**
+     - Data Approach Unit Evaporator **[IMPLEMENTED]**
+     - Data Ampere Unit Evaporator **[IMPLEMENTED]**
+   - Gallery foto yang menampilkan foto-foto yang diambil saat pengisian Logsheet, diurutkan dari tanggal terbaru **[IMPLEMENTED]**.
+   - Recent Activity Feed dengan filter 7d/30d dan RBAC **[IMPLEMENTED]**.
+   - Parameter akan menampilkan data parameter yang diaplikasikan pada proyek terkait **[NOT IMPLEMENTED]**.
 
-2. Summary Reports
-   - Menampilkan laporan keseluruhan pada akhir periode proyek terkait.
-   - Menampilkan daftar proyek keseluruhan bagi internal.
-   - Menampilkan daftar proyek terbatas bagi klien.
-   - Admin atau internal dapat melakukan upload file scan PDF pada bagian:
-     _ Data temuan
-     _ Data blowdown silang
-     _ Data suhu
-     _ Data surat jalan
-     Data scan PDF akan ditampilkan pada bagian dari summary reports akhir.
+2. Summary Reports **[IMPLEMENTED]**
+   - Menampilkan laporan keseluruhan pada akhir periode proyek terkait **[IMPLEMENTED]**.
+   - Menampilkan daftar proyek keseluruhan bagi internal **[IMPLEMENTED]**.
+   - Menampilkan daftar proyek terbatas bagi klien **[IMPLEMENTED]**.
+   - Admin atau internal dapat melakukan upload file scan PDF pada bagian **[IMPLEMENTED]**:
+     _ Data temuan **[IMPLEMENTED]**
+     _ Data blowdown silang **[IMPLEMENTED]**
+     _ Data suhu **[IMPLEMENTED]**
+     _ Data surat jalan **[IMPLEMENTED]**
+     Data scan PDF akan ditampilkan pada bagian dari summary reports akhir **[IMPLEMENTED]**.
 
-3. Form Laporan Kerja (Logsheet)
+3. Form Laporan Kerja (Logsheet) **[IMPLEMENTED]**
 
-   Log Sheet Daily/Weekly/Scheduled
-   Adminstrasi pilih jenis unit
-   - Unit Condenser \*
-   - Unit Evaporator \*
-   - Check Water Quality \*\*
-   - General Condition \*\*
-   - Job Description \*\*
-   - Consumption Water Meter
-   - Fill Up Chemical \*\*\*
-   - Note
+   Log Sheet Daily/Weekly/Scheduled **[IMPLEMENTED]**
+   Adminstrasi pilih jenis unit **[IMPLEMENTED]**
+   - Unit Condenser \* **[IMPLEMENTED]**
+   - Unit Evaporator \* **[IMPLEMENTED]**
+   - Check Water Quality \*\* **[IMPLEMENTED]**
+   - General Condition \*\* **[IMPLEMENTED]**
+   - Job Description \*\* **[IMPLEMENTED]**
+   - Consumption Water Meter **[IMPLEMENTED]**
+   - Fill Up Chemical **\* **[IMPLEMENTED]\*\*
+   - Note **[IMPLEMENTED]**
 
-   Pengisian Log Sheet disesuaikan pada:
-   - (\*) Semua Unit Chiller
-   - (\*\*) Semua Unit Cooling Tower
-   - (\*\*\*) Jenis / nama chemical yang digunakan dan Unit Cooling Tower
+   Pengisian Log Sheet disesuaikan pada **[IMPLEMENTED]**:
+   - (\*) Semua Unit Chiller **[IMPLEMENTED]**
+   - (**) Semua Unit Cooling Tower **[IMPLEMENTED]\*\*
+   - (**\*) Jenis / nama chemical yang digunakan dan Unit Cooling Tower **[IMPLEMENTED]\*\*
 
-   Log Sheet Request
-   - Situasi Saat Ini
-   - Pekerjaan yang Dilakukan
-   - Hasil Pekerjaan
+   Log Sheet Request **[NOT IMPLEMENTED]**
+   - Situasi Saat Ini **[NOT IMPLEMENTED]**
+   - Pekerjaan yang Dilakukan **[NOT IMPLEMENTED]**
+   - Hasil Pekerjaan **[NOT IMPLEMENTED]**
 
-   Dengan fitur:
-   - Kemampuan untuk mengisi dan menyimpan data logsheet ke database CPIS.
-   - Pengisian parsial dan dapat disimpan sebagai draft
-   - Pengisian data lapangan, dengan format teks dan angka desimal, dan dengan validasi:
-     - Parameter Limit
-     - Batasan Minimal dan Maksimal
-   - Mengunggah lampiran berupa foto sebelum dan sesudah.
-   - Mengunggah lampiran video sebelum dan sesudah (opsional).
-     Pada menu Logsheet juga disediakan fitur untuk laporan teknisi yang tidak bisa masuk dan dapat digantikan
+   Dengan fitur **[IMPLEMENTED]**:
+   - Kemampuan untuk mengisi dan menyimpan data logsheet ke database CPIS **[IMPLEMENTED]**.
+   - Pengisian parsial dan dapat disimpan sebagai draft **[IMPLEMENTED]**
+   - Pengisian data lapangan, dengan format teks dan angka desimal, dan dengan validasi **[IMPLEMENTED]**:
+     - Parameter Limit **[IMPLEMENTED]**
+     - Batasan Minimal dan Maksimal **[IMPLEMENTED]**
+   - Mengunggah lampiran berupa foto sebelum dan sesudah **[IMPLEMENTED]**.
+   - Mengunggah lampiran video sebelum dan sesudah (opsional) **[NOT IMPLEMENTED]**.
+     Pada menu Logsheet juga disediakan fitur untuk laporan teknisi yang tidak bisa masuk dan dapat digantikan **[IMPLEMENTED]**
 
-4. Daftar Laporan (Reports)
+4. Daftar Laporan (Reports) **[IMPLEMENTED]**
 
-   Fitur daftar laporan akan memberikan:
-   - Tampilan yang memuat data logsheet yang telah diinputkan.
-   - Kemampuan untuk menyortir, mencari, dan memfilter laporan berdasarkan klien, proyek, dan tanggal.
+   Fitur daftar laporan akan memberikan **[IMPLEMENTED]**:
+   - Tampilan yang memuat data logsheet yang telah diinputkan **[IMPLEMENTED]**.
+   - Kemampuan untuk menyortir, mencari, dan memfilter laporan berdasarkan klien, proyek, dan tanggal **[IMPLEMENTED]**.
 
-5. Hasil Analisa Lab
+5. Hasil Analisa Lab **[IMPLEMENTED]**
 
-   Berupa form isian data hasil Analisa lab yang diisi oleh internal.
+   Berupa form isian data hasil Analisa lab yang diisi oleh internal **[IMPLEMENTED]**.
 
-6. Absensi
+6. Absensi **[IMPLEMENTED]**
 
-   Melingkupi fungsi absensi:
-   - Fitur absensi bagi teknisi
-   - Absensi masuk : mencatat waktu masuk dengan validasi foto
-   - Absensi keluar : mencatan waktu keluar dengan validasi foto
-   - Total jam kerja (Absensi Keluar - Absensi Masuk)
-   - Export Data Excel
+   Melingkupi fungsi absensi **[IMPLEMENTED]**:
+   - Fitur absensi bagi teknisi **[IMPLEMENTED]**
+   - Absensi masuk : mencatat waktu masuk dengan validasi foto **[IMPLEMENTED]**
+   - Absensi keluar : mencatan waktu keluar dengan validasi foto **[IMPLEMENTED]**
+   - Total jam kerja (Absensi Keluar - Absensi Masuk) **[IMPLEMENTED]**
+   - Export Data Excel **[NOT IMPLEMENTED]** - CSV only
 
-7. Administrasi:
-   1. Manajemen Proyek (CRUD)
+7. Administrasi **[IMPLEMENTED]**:
+   1. Manajemen Proyek (CRUD) **[IMPLEMENTED]**
 
-      Fitur manajemen proyek akan memungkinkan:
-      - Pembuatan proyek baru dengan mengisi detail seperti nama proyek, deskripsi, dan tim yang terlibat.
-      - Pembaruan informasi proyek seperti status, tanggal mulai, atau tanggal selesai.
-      - Menghapus proyek yang sudah selesai atau tidak relevan.
-      - Pengaturan parameter Log sheet (limit, Batasan minimal dan maksimal, daftar mesin) untuk proyek
+      Fitur manajemen proyek akan memungkinkan **[IMPLEMENTED]**:
+      - Pembuatan proyek baru dengan mengisi detail seperti nama proyek, deskripsi, dan tim yang terlibat **[IMPLEMENTED]**.
+      - Pembaruan informasi proyek seperti status, tanggal mulai, atau tanggal selesai **[IMPLEMENTED]**.
+      - Menghapus proyek yang sudah selesai atau tidak relevan **[IMPLEMENTED]**.
+      - Pengaturan parameter Log sheet (limit, Batasan minimal dan maksimal, daftar mesin) untuk proyek **[IMPLEMENTED]**
+      - Addendum project support **[IMPLEMENTED]**
 
-   2. Manajemen User
+   2. Manajemen User **[IMPLEMENTED]**
 
-      Fitur manajemen user akan melibatkan:
-      - Pembuatan akun pengguna baru dengan mengatur username dan password.
-      - Penetapan peran atau hak akses untuk setiap pengguna, seperti admin, teknisi, atau klien.
-      - Pengelolaan informasi pengguna seperti nama, alamat email, dan kontak untuk internal.
-      - Pengelolaan informasi pengguna seperti nama, alamat email, kontak, dana nama perusahaan untuk eksternal (Klien).
+      Fitur manajemen user akan melibatkan **[IMPLEMENTED]**:
+      - Pembuatan akun pengguna baru dengan mengatur username dan password **[IMPLEMENTED]**.
+      - Penetapan peran atau hak akses untuk setiap pengguna, seperti admin, teknisi, atau klien **[IMPLEMENTED]**.
+      - Pengelolaan informasi pengguna seperti nama, alamat email, dan kontak untuk internal **[IMPLEMENTED]**.
+      - Pengelolaan informasi pengguna seperti nama, alamat email, kontak, dana nama perusahaan untuk eksternal (Klien) **[IMPLEMENTED]**.
+      - Avatar upload ke R2 storage **[IMPLEMENTED]**
 
-   3. Setting Master
+   3. Setting Master **[IMPLEMENTED - PARTIAL]**
 
-      Fitur setting akan mencakup:
-      - Pengaturan Log Sheet (Master)
-      - Pengaturan Daftar Mesin (Master)
-      - Pengaturan Daftar Parameter (Master)
+      Fitur setting akan mencakup **[IMPLEMENTED - PARTIAL]**:
+      - Pengaturan Log Sheet (Master) **[NOT IMPLEMENTED]** - Configuration is per-project
+      - Pengaturan Daftar Mesin (Master) **[NOT IMPLEMENTED]** - Machines managed via Projects only
+      - Pengaturan Daftar Parameter (Master) **[IMPLEMENTED]** - Full CRUD at `/parameters`
 
    Berikut adalah daftar fitur yang akan disediakan di dalam CPIS:
-   1. Notifikasi
+   1. Notifikasi **[IMPLEMENTED]**
 
       Notifikasi yang menampilkan pemberitahuan terkait data angka isian logsheet yang
-      di atas/bawah limit parameter normal dan butuh perhatian dari teknisi.
+      di atas/bawah limit parameter normal dan butuh perhatian dari teknisi **[IMPLEMENTED]**.
 
-   2. Tanda tangan digital
+   2. Tanda tangan digital **[IMPLEMENTED]**
 
-      Fitur untuk tanda tangan pada form web logsheet.
+      Fitur untuk tanda tangan pada form web logsheet **[IMPLEMENTED]**.
+      - Log Sheet signatures (Technician + Client) **[IMPLEMENTED]**
+      - Work Report signatures **[IMPLEMENTED]**
 
-   3. My Profile
+   3. My Profile **[IMPLEMENTED]**
 
-      Fitur my profile akan memungkinkan pengguna untuk:
-      - Melihat informasi profil.
-      - Melihat proyek yang terkait dengan pengguna dan peran yang ditugaskan.
+      Fitur my profile akan memungkinkan pengguna untuk **[IMPLEMENTED]**:
+      - Melihat informasi profil **[IMPLEMENTED]**.
+      - Melihat proyek yang terkait dengan pengguna dan peran yang ditugaskan **[IMPLEMENTED]**.
+      - Edit profile data **[IMPLEMENTED]**
+      - Avatar upload **[IMPLEMENTED]**
 
 ## 5. Alur Kerja
 
@@ -392,8 +406,9 @@ Kebutuhan bisnis ini harus dipenuhi untuk memastikan bahwa Sistem Informasi Proy
   </tbody>
 </table>
 
+### B. Work Report Cooling Tower **[IMPLEMENTED - Generic Work Report]**
 
-### B. Work Report Cooling Tower 
+> **Note:** Work Report form is generic and handles both Cooling Tower and Condenser reports. No separate form types exist.
 
 <table>
 <thead>
@@ -407,7 +422,80 @@ Kebutuhan bisnis ini harus dipenuhi untuk memastikan bahwa Sistem Informasi Proy
 </thead>
 <tbody>
   <tr>
-    <td colspan="5">Administrasi</td>
+    <td colspan="5">Administrasi **[IMPLEMENTED]**</td>
+  </tr>
+  <tr>
+    <td>Tanggal **[IMPLEMENTED]**</td>
+    <td>Date</td>
+    <td>-</td>
+    <td>-</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td>Zone **[IMPLEMENTED]**</td>
+    <td>Text</td>
+    <td>-</td>
+    <td>-</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td>unit **[IMPLEMENTED]**</td>
+    <td>Checkbox (Button)</td>
+    <td>-</td>
+    <td>-</td>
+    <td>Yes (Min. 1)</td>
+  </tr>
+  <tr>
+    <td colspan="5">Laporan Pekerjaan **[IMPLEMENTED]**</td>
+  </tr>
+  <tr>
+    <td>Situasi saat ini **[IMPLEMENTED]**</td>
+    <td>Text</td>
+    <td>-</td>
+    <td>-</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td>Pekerjaan yang dilakukan **[IMPLEMENTED]**</td>
+    <td>Text</td>
+    <td>-</td>
+    <td>-</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td>Hasil Pekerjaan **[IMPLEMENTED]**</td>
+    <td>Text</td>
+    <td>-</td>
+    <td>-</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td>Foto Pekerjaan **[IMPLEMENTED]**</td>
+    <td>Foto Sebelum & Sesudah</td>
+    <td>-</td>
+    <td>-</td>
+    <td>Yes (Max. 8 Foto)</td>
+  </tr>
+  </tbody>
+  </table>
+
+### C. Work Report Condenser **[NOT IMPLEMENTED - Uses Generic Work Report]**
+
+> **Note:** Separate Condenser-specific work report form does NOT exist. All work reports use the generic form (Section B above).
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Field Type</th>
+<th>Parameter Limit</th>
+<th>Validasi Rentang</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+  <tr>
+    <td colspan="5"><b>Administrasi</b> **[NOT IMPLEMENTED]**</td>
   </tr>
   <tr>
     <td>Tanggal</td>
@@ -431,7 +519,7 @@ Kebutuhan bisnis ini harus dipenuhi untuk memastikan bahwa Sistem Informasi Proy
     <td>Yes (Min. 1)</td>
   </tr>
   <tr>
-    <td colspan="5">Laporan Pekerjaan</td>
+    <td colspan="5"><b>Laporan Pekerjaan</b> **[NOT IMPLEMENTED]**</td>
   </tr>
   <tr>
     <td>Situasi saat ini</td>
@@ -464,179 +552,111 @@ Kebutuhan bisnis ini harus dipenuhi untuk memastikan bahwa Sistem Informasi Proy
   </tbody>
   </table>
 
-  ### C. Work Report Condenser 
+### D. Form
 
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Field Type</th>
-<th>Parameter Limit</th>
-<th>Validasi Rentang</th>
-<th>Required</th>
-</tr>
-</thead>
-<tbody>
-  <tr>
-    <td colspan="5"><b>Administrasi</b></td>
-  </tr>
-  <tr>
-    <td>Tanggal</td>
-    <td>Date</td>
-    <td>-</td>
-    <td>-</td>
-    <td>Yes</td>
-  </tr>
-  <tr>
-    <td>Zone</td>
-    <td>Text</td>
-    <td>-</td>
-    <td>-</td>
-    <td>No</td>
-  </tr>
-  <tr>
-    <td>unit</td>
-    <td>Checkbox (Button)</td>
-    <td>-</td>
-    <td>-</td>
-    <td>Yes (Min. 1)</td>
-  </tr>
-  <tr>
-    <td colspan="5"><b>Laporan Pekerjaan</b></td>
-  </tr>
-  <tr>
-    <td>Situasi saat ini</td>
-    <td>Text</td>
-    <td>-</td>
-    <td>-</td>
-    <td>Yes</td>
-  </tr>
-  <tr>
-    <td>Pekerjaan yang dilakukan</td>
-    <td>Text</td>
-    <td>-</td>
-    <td>-</td>
-    <td>Yes</td>
-  </tr>
-  <tr>
-    <td>Hasil Pekerjaan</td>
-    <td>Text</td>
-    <td>-</td>
-    <td>-</td>
-    <td>Yes</td>
-  </tr>
-  <tr>
-    <td>Foto Pekerjaan</td>
-    <td>Foto Sebelum & Sesudah</td>
-    <td>-</td>
-    <td>-</td>
-    <td>Yes (Max. 8 Foto)</td>
-  </tr>
-  </tbody>
-  </table>
+#### Form Data Klien **[IMPLEMENTED]**
 
-  ### D. Form
+| **Field**       | **Field Type** | **Required** | **Status**            |
+| --------------- | -------------- | ------------ | --------------------- |
+| Nama Perusahaan | Text           | Yes          | **[IMPLEMENTED]**     |
+| Alamat          | Text           | Yes          | **[IMPLEMENTED]**     |
+| No. Telp        | Number         | Yes          | **[IMPLEMENTED]**     |
+| Email           | Email          | Yes          | **[IMPLEMENTED]**     |
+| Website         | Text           | No           | **[NOT IMPLEMENTED]** |
 
-  #### Form Data Klien
+#### Form Data Project **[IMPLEMENTED]**
 
-  |**Field**|**Field Type**|**Required**|
-  |---|---|---|
-  |Nama Perusahaan|Text|Yes|
-  |Alamat|Text|Yes|
-  |No. Telp|Number|Yes|
-  |Email|Email|Yes|
-  |Website|Text|No|
-
-  #### Form Data Project
-
-   |**Field**|**Field Type**|**Required**|
-  |---|---|---|
-  |Perusahaan|Text|Yes|
-  |Nama Project|Text|Yes|
-  |Tipe Project|Select: (Utama; Addendum)|Yes|
-  |Jenis Project |Select: (Langsung; Subcon)|Yes|
-  |Pekerjaan|Select: (Operasional; Proyek/Konstruksi; Ad Hoc) |Yes|
-  |No. Penawaran|Text|Yes|
-  |No. PO / SPK|Text|Yes (optional)|
-  |Jenis Pekerjaan|Multiselect|Yes|
-  |Tanggal Mulai|Date|Yes|
-  |Tanggal Selesai|Date|Yes|
-  |Warranty|Number (Satuan dalam X bulan)|Yes|
-  |Notes|Text|No|
-  |PIC Corintek|Select (User Corintek)|Yes|
-  |PIC Klien|Select (User Client)|Yes|
-  |Limit Parameter|Dari data setting master (default atau per project)|Yes|
-  |Mesin|Dari data setting master|Yes|
-  |Chemical|Dari data setting master|Yes|
+| **Field**       | **Field Type**                                      | **Required**   | **Status**                          |
+| --------------- | --------------------------------------------------- | -------------- | ----------------------------------- |
+| Perusahaan      | Text                                                | Yes            | **[IMPLEMENTED]**                   |
+| Nama Project    | Text                                                | Yes            | **[IMPLEMENTED]**                   |
+| Tipe Project    | Select: (Utama; Addendum)                           | Yes            | **[IMPLEMENTED]**                   |
+| Jenis Project   | Select: (Langsung; Subcon)                          | Yes            | **[IMPLEMENTED]**                   |
+| Pekerjaan       | Select: (Operasional; Proyek/Konstruksi; Ad Hoc)    | Yes            | **[IMPLEMENTED]** (Single select)   |
+| No. Penawaran   | Text                                                | Yes            | **[IMPLEMENTED]**                   |
+| No. PO / SPK    | Text                                                | Yes (optional) | **[IMPLEMENTED]**                   |
+| Jenis Pekerjaan | Multiselect                                         | Yes            | **[NOT IMPLEMENTED]** (Single only) |
+| Tanggal Mulai   | Date                                                | Yes            | **[IMPLEMENTED]**                   |
+| Tanggal Selesai | Date                                                | Yes            | **[IMPLEMENTED]**                   |
+| Warranty        | Number (Satuan dalam X bulan)                       | Yes            | **[IMPLEMENTED]**                   |
+| Notes           | Text                                                | No             | **[IMPLEMENTED]**                   |
+| PIC Corintek    | Select (User Corintek)                              | Yes            | **[IMPLEMENTED]**                   |
+| PIC Klien       | Select (User Client)                                | Yes            | **[IMPLEMENTED]**                   |
+| Limit Parameter | Dari data setting master (default atau per project) | Yes            | **[IMPLEMENTED]**                   |
+| Mesin           | Dari data setting master                            | Yes            | **[IMPLEMENTED]** (via project)     |
+| Chemical        | Dari data setting master                            | Yes            | **[IMPLEMENTED]** (via log sheet)   |
 
     Catatan data project:
-* Jika tipe project adalah **Utama** --> maka semua data adalah baru
-* Jika tipe project adalah **Addendum** ==> maka data report melanjutkan data project utamanya
 
-#### Form Pendaftaran / Edit User
+- Jika tipe project adalah **Utama** --> maka semua data adalah baru
+- Jika tipe project adalah **Addendum** ==> maka data report melanjutkan data project utamanya
 
-  |**Field**|**Field Type**|**Required**|
-	|---|---|---|
-	|Akun|Select (Corintek; Client)|Yes|
-	|Perusahaan (Khusus Akun Klien)|Text|Yes|
-	|Nama|Text|Yes|
-	|No. ID|Text|Yes|
-	|No. Telp|Number|Yes|
-	|Email|Email|Yes|
-	|Alamat|Text Area|Yes|
-	|Role|Text|Yes|
-	|Status Kepegawaian (Corintek)|Select: (Permanen; Kontrak; Pekerja Lepas)|Yes|
-	|Status Kerja|Select (Actif; Non Aktif)|Yes|
+#### Form Pendaftaran / Edit User **[IMPLEMENTED]**
 
-  Catatan:
+| **Field**                      | **Field Type**                             | **Required** | **Status**        |
+| ------------------------------ | ------------------------------------------ | ------------ | ----------------- |
+| Akun                           | Select (Corintek; Client)                  | Yes          | **[IMPLEMENTED]** |
+| Perusahaan (Khusus Akun Klien) | Text                                       | Yes          | **[IMPLEMENTED]** |
+| Nama                           | Text                                       | Yes          | **[IMPLEMENTED]** |
+| No. ID                         | Text                                       | Yes          | **[IMPLEMENTED]** |
+| No. Telp                       | Number                                     | Yes          | **[IMPLEMENTED]** |
+| Email                          | Email                                      | Yes          | **[IMPLEMENTED]** |
+| Alamat                         | Text Area                                  | Yes          | **[IMPLEMENTED]** |
+| Role                           | Text                                       | Yes          | **[IMPLEMENTED]** |
+| Status Kepegawaian (Corintek)  | Select: (Permanen; Kontrak; Pekerja Lepas) | Yes          | **[IMPLEMENTED]** |
+| Status Kerja                   | Select (Actif; Non Aktif)                  | Yes          | **[IMPLEMENTED]** |
 
-  Status kerja akan menentukan terutama untuk Role Teknisi:
-* Jika aktif maka bisa di assign project / log sheet
-* Jika non aktif maka tidak bisa di assign project / log sheet
+Catatan:
 
-### D. Summary Report
-    Struktur Summary Report:
-1.	Summary Report
-    *	Executive Summary Water Quality
-    *	Executive Summary Condenser Approach
-2.	Hasil Analisa Air / Laboratorium
-    *	Form isian manual
-3.	Logsheet
-    *	Data semua logsheet yang sudah diisi pada project terkait
-4.	Lampiran Foto
-    *	Data foto dari semua logsheet diurutkan berdasarkan tanggal
-5.	Pemakaian Chemical
-    *	Form isian manual
+Status kerja akan menentukan terutama untuk Role Teknisi:
 
-#### Executive Summary Water Quality
+- Jika aktif maka bisa di assign project / log sheet
+- Jika non aktif maka tidak bisa di assign project / log sheet
 
-Tampilkan data per nama kelompok mesin
+### D. Summary Report **[IMPLEMENTED]**
 
-#### Hasil Analisa Laboratorium 
+    Struktur Summary Report **[IMPLEMENTED]**:
 
-   |**Field**|**Field Type**|**Required**|
-  |---|---|---|
-  |Attn|Text|Yes|
-  |Cc|Text|No|
-  |Customer|Nama Perusahaan|Yes|
-  |Alamat|Alamat Perusahaan|Yes|
-  |Fax No|Number|No|
-  |No|Text|Yes|
-  |Tanggal|Date|Yes|
-  |---|
-  |Parameter|Text|Yes|
-  |Test Result|
+1. Summary Report **[IMPLEMENTED]**
+   - Executive Summary Water Quality **[IMPLEMENTED]**
+   - Executive Summary Condenser Approach **[IMPLEMENTED]**
+2. Hasil Analisa Air / Laboratorium **[IMPLEMENTED]**
+   - Form isian manual **[IMPLEMENTED]**
+3. Logsheet **[IMPLEMENTED]**
+   - Data semua logsheet yang sudah diisi pada project terkait **[IMPLEMENTED]**
+4. Lampiran Foto **[IMPLEMENTED]**
+   - Data foto dari semua logsheet diurutkan berdasarkan tanggal **[IMPLEMENTED]**
+5. Pemakaian Chemical **[IMPLEMENTED]**
+   - Form isian manual **[IMPLEMENTED]**
 
-  ## 10. User Matrix
+#### Executive Summary Water Quality **[IMPLEMENTED]**
 
-  |User Role|Dashboard|Summary Reports|Log Sheets|View Reports|Hasil Analisa Lab|Absensi|Administrasi User|Administrasi Project|Administrasi Setting Master|Permission|
-  |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
-  |Super Admin|✓|✓|✓|✓|✓|✓|✓|✓|✓|CRUD|
-  |PIC Project|✓|✓|✓|✓|✓|✓|-|✓|-|CRUD|
-  |Teknisi|✓|-|✓|✓|-|✓|-|-|-|CRU|
-  |Reporting|✓|✓|✓|✓|-|-|-|-|-|CRU|
-  |Direksi|✓|✓|✓|✓|-|-|-|-|-|R|
-  |Klien|✓|✓|✓|✓|-|-|-|-|-|R|
+Tampilkan data per nama kelompok mesin **[IMPLEMENTED]**
 
-  * User role **Reporting** untuk melakukan finalisasi data laporan
+#### Hasil Analisa Laboratorium **[IMPLEMENTED]**
 
+| **Field**   | **Field Type**    | **Required** | **Status**            |
+| ----------- | ----------------- | ------------ | --------------------- |
+| Attn        | Text              | Yes          | **[IMPLEMENTED]**     |
+| Cc          | Text              | No           | **[IMPLEMENTED]**     |
+| Customer    | Nama Perusahaan   | Yes          | **[IMPLEMENTED]**     |
+| Alamat      | Alamat Perusahaan | Yes          | **[IMPLEMENTED]**     |
+| Fax No      | Number            | No           | **[NOT IMPLEMENTED]** |
+| No          | Text              | Yes          | **[IMPLEMENTED]**     |
+| Tanggal     | Date              | Yes          | **[IMPLEMENTED]**     |
+| ---         |
+| Parameter   | Text              | Yes          | **[IMPLEMENTED]**     |
+| Test Result |                   |              | **[IMPLEMENTED]**     |
+
+## 10. User Matrix
+
+|  User Role  | Dashboard | Summary Reports | Log Sheets | View Reports | Hasil Analisa Lab | Absensi | Administrasi User | Administrasi Project | Administrasi Setting Master | Permission |
+| :---------: | :-------: | :-------------: | :--------: | :----------: | :---------------: | :-----: | :---------------: | :------------------: | :-------------------------: | ---------- |
+| Super Admin |     ✓     |        ✓        |     ✓      |      ✓       |         ✓         |    ✓    |         ✓         |          ✓           |              ✓              | CRUD       |
+| PIC Project |     ✓     |        ✓        |     ✓      |      ✓       |         ✓         |    ✓    |         -         |          ✓           |              -              | CRUD       |
+|   Teknisi   |     ✓     |        -        |     ✓      |      ✓       |         -         |    ✓    |         -         |          -           |              -              | CRU        |
+|  Reporting  |     ✓     |        ✓        |     ✓      |      ✓       |         -         |    -    |         -         |          -           |              -              | CRU        |
+|   Direksi   |     ✓     |        ✓        |     ✓      |      ✓       |         -         |    -    |         -         |          -           |              -              | R          |
+|    Klien    |     ✓     |        ✓        |     ✓      |      ✓       |         -         |    -    |         -         |          -           |              -              | R          |
+
+- User role **Reporting** untuk melakukan finalisasi data laporan
