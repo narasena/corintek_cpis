@@ -16,6 +16,11 @@ import {
   getMonthlyWorkReports,
   getProjectLogSheetConfig,
 } from '@/features/summary-reports/service';
+import { getAnalyticsData } from '@/features/summary-reports/analytics-service';
+import {
+  WaterQualityTable,
+  CondenserApproachTable,
+} from '@/features/summary-reports/components';
 import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-preview';
 import { makeEntryKey } from '@/features/log-sheets/utils';
 import type {
@@ -72,6 +77,8 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
     periodDate
   );
 
+  const analytics = await getAnalyticsData(projectId, periodDate);
+
   const periodLabel = format(periodDate, 'MMMM yyyy', { locale: idLocale });
   const tocItems = [
     summaryReport.includeExecutiveSummary
@@ -84,260 +91,325 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
   ].filter(Boolean) as string[];
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8 print:p-0 print:bg-white">
-      <div className="max-w-[210mm] mx-auto mb-6 flex items-center justify-between print:hidden">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" asChild>
-            <Link href="/summary-reports">Kembali</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link
-              href={`/summary-reports/${projectId}/${period}/attachments/print`}
-            >
-              Lampiran
-            </Link>
-          </Button>
-        </div>
-        <PrintButton />
-      </div>
-
-      <div className="bg-white text-black text-sm leading-tight w-[210mm] mx-auto shadow-xl print:shadow-none print:w-full print:mx-0">
-        <div className="min-h-[297mm] p-8 print:p-0 flex flex-col items-center justify-center text-center">
-          <div className="space-y-3">
-            <div className="text-xs uppercase tracking-[0.3em] text-gray-500">
-              Summary Report
-            </div>
-            <h1 className="text-3xl font-bold uppercase">
-              Laporan Ringkas Bulanan
-            </h1>
-            <div className="text-lg font-semibold">{project.name}</div>
-            <div className="text-sm text-gray-600">
-              {project.client?.name ?? '-'}
-            </div>
-            <div className="text-base">{periodLabel}</div>
+    <>
+      <style>{`
+        @media print {
+          .print\\:landscape-page {
+            page: landscape;
+            width: 297mm !important;
+            min-height: 210mm !important;
+            padding: 10mm !important;
+          }
+          @page landscape {
+            size: landscape;
+            margin: 10mm;
+          }
+          .analytics-table {
+            font-size: 7pt;
+            width: 100%;
+            border-collapse: collapse;
+          }
+          .analytics-table th,
+          .analytics-table td {
+            padding: 1px 2px;
+            text-align: center;
+            border: 0.5px solid #ccc;
+          }
+          .water-quality-section,
+          .condenser-approach-section {
+            width: 100%;
+          }
+        }
+      `}</style>
+      <div className="min-h-screen bg-gray-100 p-8 print:p-0 print:bg-white">
+        <div className="max-w-[210mm] mx-auto mb-6 flex items-center justify-between print:hidden">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" asChild>
+              <Link href="/summary-reports">Kembali</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link
+                href={`/summary-reports/${projectId}/${period}/attachments/print`}
+              >
+                Lampiran
+              </Link>
+            </Button>
           </div>
+          <PrintButton />
         </div>
 
-        <div className="break-before-page min-h-[297mm] p-8 print:p-0">
-          <h2 className="text-xl font-bold mb-4 uppercase">Table of Content</h2>
-          <ol className="list-decimal pl-6 space-y-2">
-            {tocItems.map(item => (
-              <li key={item}>{item}</li>
-            ))}
-          </ol>
-        </div>
+        <div className="bg-white text-black text-sm leading-tight w-[210mm] mx-auto shadow-xl print:shadow-none print:w-full print:mx-0">
+          <div className="min-h-[297mm] p-8 print:p-0 flex flex-col items-center justify-center text-center">
+            <div className="space-y-3">
+              <div className="text-xs uppercase tracking-[0.3em] text-gray-500">
+                Summary Report
+              </div>
+              <h1 className="text-3xl font-bold uppercase">
+                Laporan Ringkas Bulanan
+              </h1>
+              <div className="text-lg font-semibold">{project.name}</div>
+              <div className="text-sm text-gray-600">
+                {project.client?.name ?? '-'}
+              </div>
+              <div className="text-base">{periodLabel}</div>
+            </div>
+          </div>
 
-        {summaryReport.includeExecutiveSummary && (
           <div className="break-before-page min-h-[297mm] p-8 print:p-0">
-            <h2 className="text-xl font-bold uppercase mb-4">
-              Bab I — Executive Summary Report
+            <h2 className="text-xl font-bold mb-4 uppercase">
+              Table of Content
             </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="border p-3">
-                <div className="text-xs uppercase text-gray-500">
-                  Total Log Sheet
-                </div>
-                <div className="text-2xl font-semibold">{logSheets.length}</div>
-              </div>
-              <div className="border p-3">
-                <div className="text-xs uppercase text-gray-500">
-                  Total Lab Analisa
-                </div>
-                <div className="text-2xl font-semibold">
-                  {labAnalyses.length}
-                </div>
-              </div>
-              <div className="border p-3">
-                <div className="text-xs uppercase text-gray-500">
-                  Total Work Report
-                </div>
-                <div className="text-2xl font-semibold">
-                  {workReports.length}
-                </div>
-              </div>
-              <div className="border p-3">
-                <div className="text-xs uppercase text-gray-500">
-                  Total Chemical Usage
-                </div>
-                <div className="text-2xl font-semibold">
-                  {chemicalSummary.length}
-                </div>
-              </div>
-            </div>
-
-            {summaryReport.notes && (
-              <div className="mt-6 border p-4">
-                <div className="text-xs uppercase text-gray-500 mb-2">
-                  Catatan
-                </div>
-                <div className="text-sm">{summaryReport.notes}</div>
-              </div>
-            )}
+            <ol className="list-decimal pl-6 space-y-2">
+              {tocItems.map(item => (
+                <li key={item}>{item}</li>
+              ))}
+            </ol>
           </div>
-        )}
 
-        {summaryReport.includeLogSheets && (
-          <>
-            <div className="break-before-page min-h-[297mm] p-8 print:p-0 flex flex-col justify-center text-center">
-              <h2 className="text-3xl font-bold uppercase mb-4">
-                Bab II — Log Sheet Reports
+          {summaryReport.includeExecutiveSummary && (
+            <div className="break-before-page min-h-[297mm] p-8 print:p-0">
+              <h2 className="text-xl font-bold uppercase mb-4">
+                Bab I — Executive Summary Report
               </h2>
-              {logSheets.length === 0 && (
-                <div className="text-sm text-gray-500">
-                  Tidak ada log sheet pada periode ini.
+              <div className="grid grid-cols-2 gap-4">
+                <div className="border p-3">
+                  <div className="text-xs uppercase text-gray-500">
+                    Total Log Sheet
+                  </div>
+                  <div className="text-2xl font-semibold">
+                    {logSheets.length}
+                  </div>
+                </div>
+                <div className="border p-3">
+                  <div className="text-xs uppercase text-gray-500">
+                    Total Lab Analisa
+                  </div>
+                  <div className="text-2xl font-semibold">
+                    {labAnalyses.length}
+                  </div>
+                </div>
+                <div className="border p-3">
+                  <div className="text-xs uppercase text-gray-500">
+                    Total Work Report
+                  </div>
+                  <div className="text-2xl font-semibold">
+                    {workReports.length}
+                  </div>
+                </div>
+                <div className="border p-3">
+                  <div className="text-xs uppercase text-gray-500">
+                    Total Chemical Usage
+                  </div>
+                  <div className="text-2xl font-semibold">
+                    {chemicalSummary.length}
+                  </div>
+                </div>
+              </div>
+
+              {summaryReport.notes && (
+                <div className="mt-6 border p-4">
+                  <div className="text-xs uppercase text-gray-500 mb-2">
+                    Catatan
+                  </div>
+                  <div className="text-sm">{summaryReport.notes}</div>
                 </div>
               )}
             </div>
+          )}
 
-            {logSheets.map(ls => {
-              const valuesByKey: Record<string, TEntryState> = {};
-              ls.entries.forEach(entry => {
-                const key = makeEntryKey(
-                  entry.parameterId,
-                  entry.machineId,
-                  entry.role as TLogSheetEntryRole
+          {/* Analytics - Water Quality */}
+          {summaryReport.includeExecutiveSummary &&
+            analytics.waterQuality.length > 0 && (
+              <div className="break-before-page print:landscape-page">
+                <WaterQualityTable
+                  data={analytics.waterQuality}
+                  limits={analytics.limits}
+                  daysInMonth={analytics.daysInMonth}
+                  projectName={project.name}
+                  clientName={project.client?.name ?? undefined}
+                  periodLabel={periodLabel}
+                />
+              </div>
+            )}
+
+          {/* Analytics - Condenser Approach */}
+          {summaryReport.includeExecutiveSummary &&
+            analytics.condenserApproach.length > 0 && (
+              <div className="break-before-page print:landscape-page">
+                <CondenserApproachTable
+                  data={analytics.condenserApproach}
+                  limits={analytics.limits}
+                  daysInMonth={analytics.daysInMonth}
+                  projectName={project.name}
+                  clientName={project.client?.name ?? undefined}
+                  periodLabel={periodLabel}
+                />
+              </div>
+            )}
+
+          {summaryReport.includeLogSheets && (
+            <>
+              <div className="break-before-page min-h-[297mm] p-8 print:p-0 flex flex-col justify-center text-center">
+                <h2 className="text-3xl font-bold uppercase mb-4">
+                  Bab II — Log Sheet Reports
+                </h2>
+                {logSheets.length === 0 && (
+                  <div className="text-sm text-gray-500">
+                    Tidak ada log sheet pada periode ini.
+                  </div>
+                )}
+              </div>
+
+              {logSheets.map(ls => {
+                const valuesByKey: Record<string, TEntryState> = {};
+                ls.entries.forEach(entry => {
+                  const key = makeEntryKey(
+                    entry.parameterId,
+                    entry.machineId,
+                    entry.role as TLogSheetEntryRole
+                  );
+                  valuesByKey[key] = {
+                    valueType: entry.parameter.valueType,
+                    numericValue: entry.numericValue,
+                    boolValue: entry.boolValue,
+                    textValue: entry.textValue,
+                    fileUrl: entry.fileUrl,
+                  };
+                });
+
+                return (
+                  <div
+                    key={ls.id}
+                    className="break-before-page min-h-[297mm] print:p-0"
+                  >
+                    <LogSheetPreview
+                      customerName={project.client?.name ?? '-'}
+                      date={ls.date}
+                      byName="Operator" // This should probably be fetched or hardcoded if unknown
+                      replacedByName={
+                        ls.replacedBy
+                          ? `${ls.replacedBy.firstName} ${ls.replacedBy.lastName}`
+                          : null
+                      }
+                      notes={ls.notes}
+                      machines={logSheetConfig.machines}
+                      parameters={logSheetConfig.parameters as TParameter[]}
+                      valuesByKey={valuesByKey}
+                      photos={ls.photos.map(p => ({
+                        id: p.id,
+                        type: p.type as 'BEFORE' | 'AFTER',
+                        url: p.url,
+                        caption: p.caption,
+                      }))}
+                      chemicalUsages={ls.chemicalUsages.map(u => ({
+                        chemicalName: u.chemical.name,
+                        amount: u.amount ?? 0,
+                        unit: u.chemical.unit ?? '',
+                      }))}
+                    />
+                  </div>
                 );
-                valuesByKey[key] = {
-                  valueType: entry.parameter.valueType,
-                  numericValue: entry.numericValue,
-                  boolValue: entry.boolValue,
-                  textValue: entry.textValue,
-                  fileUrl: entry.fileUrl,
-                };
-              });
+              })}
+            </>
+          )}
 
-              return (
+          {summaryReport.includeLabAnalysis && (
+            <>
+              <div className="break-before-page min-h-[297mm] p-8 print:p-0 flex flex-col justify-center text-center">
+                <h2 className="text-3xl font-bold uppercase mb-4">
+                  Bab III — Analisa Laboratorium
+                </h2>
+                {labAnalyses.length === 0 && (
+                  <div className="text-sm text-gray-500">
+                    Tidak ada analisa laboratorium pada periode ini.
+                  </div>
+                )}
+              </div>
+
+              {labAnalyses.map(la => (
                 <div
-                  key={ls.id}
+                  key={la.id}
                   className="break-before-page min-h-[297mm] print:p-0"
                 >
-                  <LogSheetPreview
-                    customerName={project.client?.name ?? '-'}
-                    date={ls.date}
-                    byName="Operator" // This should probably be fetched or hardcoded if unknown
-                    replacedByName={
-                      ls.replacedBy
-                        ? `${ls.replacedBy.firstName} ${ls.replacedBy.lastName}`
-                        : null
-                    }
-                    notes={ls.notes}
-                    machines={logSheetConfig.machines}
-                    parameters={logSheetConfig.parameters as TParameter[]}
-                    valuesByKey={valuesByKey}
-                    photos={ls.photos.map(p => ({
-                      id: p.id,
-                      type: p.type as 'BEFORE' | 'AFTER',
-                      url: p.url,
-                      caption: p.caption,
-                    }))}
-                    chemicalUsages={ls.chemicalUsages.map(u => ({
-                      chemicalName: u.chemical.name,
-                      amount: u.amount ?? 0,
-                      unit: u.chemical.unit ?? '',
-                    }))}
+                  <LabAnalysisPrint
+                    labAnalysis={la}
+                    parameters={logSheetConfig.labParameters as any}
                   />
                 </div>
-              );
-            })}
-          </>
-        )}
+              ))}
+            </>
+          )}
 
-        {summaryReport.includeLabAnalysis && (
-          <>
-            <div className="break-before-page min-h-[297mm] p-8 print:p-0 flex flex-col justify-center text-center">
-              <h2 className="text-3xl font-bold uppercase mb-4">
-                Bab III — Analisa Laboratorium
-              </h2>
-              {labAnalyses.length === 0 && (
-                <div className="text-sm text-gray-500">
-                  Tidak ada analisa laboratorium pada periode ini.
-                </div>
-              )}
-            </div>
-
-            {labAnalyses.map(la => (
-              <div
-                key={la.id}
-                className="break-before-page min-h-[297mm] print:p-0"
-              >
-                <LabAnalysisPrint
-                  labAnalysis={la}
-                  parameters={logSheetConfig.labParameters as any}
-                />
-              </div>
-            ))}
-          </>
-        )}
-
-        {summaryReport.includeWorkReports && (
-          <>
-            <div className="break-before-page min-h-[297mm] p-8 print:p-0 flex flex-col justify-center text-center">
-              <h2 className="text-3xl font-bold uppercase mb-4">
-                Bab IV — Work Reports
-              </h2>
-              {workReports.length === 0 && (
-                <div className="text-sm text-gray-500">
-                  Tidak ada work report pada periode ini.
-                </div>
-              )}
-            </div>
-
-            {workReports.map(wr => (
-              <div
-                key={wr.id}
-                className="break-before-page min-h-[297mm] print:p-0"
-              >
-                <WorkReportPreview
-                  data={{
-                    project,
-                    date: wr.date,
-                    situation: wr.situation,
-                    workDone: wr.workDone,
-                    workResult: wr.workResult,
-                    machines: wr.machines.map(m => ({
-                      type: m.type,
-                      unitNumber: m.unitNumber,
-                      brand: m.brand,
-                    })),
-                    photos: wr.photos.map(p => ({
-                      url: p.url,
-                      caption: p.caption,
-                      type: p.type as WorkReportPhotoType,
-                    })),
-                  }}
-                />
-              </div>
-            ))}
-          </>
-        )}
-
-        {summaryReport.includeChemicalReports && (
-          <div className="break-before-page min-h-[297mm] p-8 print:p-0">
-            <h2 className="text-xl font-bold uppercase mb-4">
-              Bab V — Chemical Reports
-            </h2>
-            {chemicalSummary.length === 0 ? (
-              <div className="text-sm text-gray-500">
-                Tidak ada pemakaian chemical pada periode ini.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {chemicalSummary.map(item => (
-                  <div
-                    key={item.chemicalId}
-                    className="border p-3 flex items-center justify-between"
-                  >
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-sm">
-                      {item.total} {item.unit}
-                    </div>
+          {summaryReport.includeWorkReports && (
+            <>
+              <div className="break-before-page min-h-[297mm] p-8 print:p-0 flex flex-col justify-center text-center">
+                <h2 className="text-3xl font-bold uppercase mb-4">
+                  Bab IV — Work Reports
+                </h2>
+                {workReports.length === 0 && (
+                  <div className="text-sm text-gray-500">
+                    Tidak ada work report pada periode ini.
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
-        )}
+
+              {workReports.map(wr => (
+                <div
+                  key={wr.id}
+                  className="break-before-page min-h-[297mm] print:p-0"
+                >
+                  <WorkReportPreview
+                    data={{
+                      project,
+                      date: wr.date,
+                      situation: wr.situation,
+                      workDone: wr.workDone,
+                      workResult: wr.workResult,
+                      machines: wr.machines.map(m => ({
+                        type: m.type,
+                        unitNumber: m.unitNumber,
+                        brand: m.brand,
+                      })),
+                      photos: wr.photos.map(p => ({
+                        url: p.url,
+                        caption: p.caption,
+                        type: p.type as WorkReportPhotoType,
+                      })),
+                    }}
+                  />
+                </div>
+              ))}
+            </>
+          )}
+
+          {summaryReport.includeChemicalReports && (
+            <div className="break-before-page min-h-[297mm] p-8 print:p-0">
+              <h2 className="text-xl font-bold uppercase mb-4">
+                Bab V — Chemical Reports
+              </h2>
+              {chemicalSummary.length === 0 ? (
+                <div className="text-sm text-gray-500">
+                  Tidak ada pemakaian chemical pada periode ini.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {chemicalSummary.map(item => (
+                    <div
+                      key={item.chemicalId}
+                      className="border p-3 flex items-center justify-between"
+                    >
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-sm">
+                        {item.total} {item.unit}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
