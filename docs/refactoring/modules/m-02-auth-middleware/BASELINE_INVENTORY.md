@@ -15,9 +15,9 @@
 | Methods >50 lines            |      1 |      1 |       0 |
 | TODO/FIXME/HACK Comments     |      0 |      0 |       0 |
 | Est. Cyclomatic Complexity   | Medium |   Low |      -1 |
-| Tests Passing                |     35 |    80+ |    +45 |
+| Tests Passing                |     35 |    65 |    +30 |
 
-*Note: Code files now include src/features/auth/crypto.ts, src/features/auth/constants.ts, and src/features/users/utils.ts (shared).*
+*Note: Code files now include src/features/auth/crypto.ts, src/features/auth/constants.ts, and src/features/users/utils.ts (shared). Note that 8 tests are currently failing due to Zod schema mismatches in mocks.*
 
 ---
 
@@ -69,7 +69,7 @@
 │ Metric                       │ Post-Ref │
 ├──────────────────────────────┼──────────┤
 │ Total LOC (ts/tsx)           │      802 │
-│ File count                   │       11 │
+│ File count                   │        9 │
 │ Max file size                │      232 │
 │ Max method size              │       58 │
 │ Total cyclomatic complexity  │      Low │

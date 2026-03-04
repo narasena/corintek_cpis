@@ -55,17 +55,26 @@ This document captures behaviors and improvements in the Auth & Middleware modul
 
 ---
 
+## 4. Known Regressions & Integration Issues
+
+### 4.1 Zod Validation Mismatch in Test Mocks
+**Issue:** Several tests in `auth-integration.test.ts`, `auth-utils.test.ts`, and `auth-helpers.test.ts` are currently failing.
+**Root Cause:** The `toUserResponse` utility (in `src/features/users/utils.ts`) now strictly enforces a Zod schema (`userResponseSchema`) that requires several fields (UUID format for ID, employmentStatus, etc.) which are missing or improperly formatted in the legacy test mocks.
+**Impact:** 8 tests are failing, preventing a clean baseline for Phase 2.
+
+---
+
 ## 5. Test Coverage Summary
 
 | File             | Stmt Coverage | Branch Coverage | Status    |
 | ---------------- | ------------: | --------------: | --------- |
 | jwt.ts           |        100.0% |          100.0% | **DONE**  |
 | crypto.ts        |        100.0% |          100.0% | **DONE**  |
-| service.ts       |        100.0% |          100.0% | **DONE**  |
-| auth-helpers.ts  |        100.0% |          100.0% | **DONE**  |
+| service.ts       |         95.0% |           90.0% | **FIXME** |
+| auth-helpers.ts  |         85.0% |           80.0% | **FIXME** |
 | rbac.ts          |         76.9% |           82.7% | **READY** |
 
-**Total:** 80+ tests passing. 
+**Total:** 73 tests passing (65 success, 8 failed due to schema mismatches). 
 
 ---
 

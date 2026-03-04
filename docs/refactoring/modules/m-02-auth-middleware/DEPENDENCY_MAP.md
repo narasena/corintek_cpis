@@ -10,10 +10,10 @@
 
 | #   | File                         | Lines | Role                                  |
 | --- | ---------------------------- | ----: | ------------------------------------- |
-| 1   | src/features/auth/actions.ts |    81 | Server Actions for Login/Logout       |
+| 1   | src/features/auth/actions.ts |    71 | Server Actions for Login/Logout       |
 | 2   | src/features/auth/service.ts |    82 | Auth business flow (Prisma)           |
 | 3   | src/features/auth/crypto.ts  |    46 | Crypto primitives (bcrypt)            |
-| 4   | src/features/auth/constants.ts |   26 | Auth configuration & messages         |
+| 4   | src/features/auth/constants.ts |   39 | Auth configuration & messages         |
 
 ### Auth Utilities (Library Layer)
 
@@ -22,7 +22,7 @@
 | 5   | src/middleware.ts           |    76 | Global Next.js Middleware             |
 | 6   | src/lib/jwt.ts              |    80 | JWT signing & verification (jose)     |
 | 7   | src/lib/rbac.ts             |   232 | RBAC Matrix and Permission Checking   |
-| 8   | src/lib/auth-helpers.ts     |    91 | Session retrieval & auth re-exports   |
+| 8   | src/lib/auth-helpers.ts     |   118 | Session retrieval & auth re-exports   |
 | 9   | src/features/users/utils.ts |    58 | User status validation & mapping      |
 
 ---

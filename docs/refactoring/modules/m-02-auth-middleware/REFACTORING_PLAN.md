@@ -56,6 +56,7 @@ Priority = f(Pain, Risk, Value)
 - [x] **src/features/auth/actions.ts**: Centralized all route paths into `AUTH_ROUTES` constant to eliminate magic strings and reduce feature coupling.
 - [x] **src/features/auth/actions.ts**: Centralized all UI feedback strings (Indonesian) into `SUCCESS_MESSAGES` and `ERROR_MESSAGES` constants.
 - [x] **src/features/auth/actions.ts**: Decoupled feature-specific cache revalidation (`/users`) from the authentication lifecycle.
+- [ ] **Tests**: Fix test mocks in `src/features/auth/__tests__` and `src/lib/__tests__` to match new Zod schemas in `src/features/users/utils.ts`.
 
 ### Phase 2: RBAC Granularity (F1)
 
