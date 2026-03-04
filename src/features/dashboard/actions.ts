@@ -7,6 +7,8 @@ import * as dashboardService from './service';
 import * as projectService from '@/features/projects/service';
 import { resolveTargetProjectIds } from './utils';
 import type { IJwtPayload } from '@/@types/auth.type';
+import type { IGetRecentActivitiesActionResult } from './types';
+import { getVisibleActivityTypes } from './config';
 
 async function requireActor(): Promise<IJwtPayload> {
   const user = await getCurrentUserDetails();
@@ -16,17 +18,19 @@ async function requireActor(): Promise<IJwtPayload> {
 
 const GetDashboardMetricsSchema = z.object({
   projectId: z.string().uuid().optional(),
-  range: z
-    .object({
-      start: z.coerce.date(),
-      end: z.coerce.date(),
-    })
-    .optional(),
+  range: z.object({ start: z.coerce.date(), end: z.coerce.date() }).optional(),
 });
 
 const GetRecentPhotosSchema = z.object({
   projectId: z.string().uuid().optional(),
   limit: z.number().int().min(1).max(100).default(50),
+});
+
+const GetRecentActivitiesSchema = z.object({
+  projectId: z.string().uuid().optional(),
+  timeRange: z.enum(['7d', '30d']).default('7d'),
+  limit: z.number().int().min(1).max(50).default(15),
+  cursor: z.string().optional(),
 });
 
 export async function getDashboardMetricsAction(data: unknown) {
@@ -35,7 +39,6 @@ export async function getDashboardMetricsAction(data: unknown) {
     ensureAccess(actor.role, RbacResource.DASHBOARD, 'read');
 
     const validatedData = GetDashboardMetricsSchema.parse(data || {});
-
     const targetProjectIds = await resolveTargetProjectIds(
       actor,
       validatedData.projectId,
@@ -69,7 +72,6 @@ export async function getRecentPhotosAction(data: unknown) {
     ensureAccess(actor.role, RbacResource.DASHBOARD, 'read');
 
     const validatedData = GetRecentPhotosSchema.parse(data || {});
-
     const targetProjectIds = await resolveTargetProjectIds(
       actor,
       validatedData.projectId,
@@ -93,6 +95,63 @@ export async function getRecentPhotosAction(data: unknown) {
         error instanceof Error
           ? error.message
           : 'Gagal mengambil foto terbaru dashboard',
+    };
+  }
+}
+
+export async function getRecentActivitiesAction(
+  data: unknown
+): Promise<IGetRecentActivitiesActionResult> {
+  try {
+    const validated = GetRecentActivitiesSchema.parse(data || {});
+    const actor = await requireActor();
+    ensureAccess(actor.role, RbacResource.DASHBOARD, 'read');
+
+    const targetIds = await resolveTargetProjectIds(
+      actor,
+      validated.projectId,
+      {
+        assertCanAccessProject: projectService.assertCanAccessProject,
+        getAccessibleProjectIds: projectService.getAccessibleProjectIds,
+      }
+    );
+
+    if (targetIds === 'empty') {
+      return {
+        success: true,
+        data: { activities: [], hasMore: false, nextCursor: null },
+      };
+    }
+
+    const service = dashboardService.createActivityService({
+      assertCanAccessProject: projectService.assertCanAccessProject,
+      getAccessibleProjectIds: projectService.getAccessibleProjectIds,
+    });
+
+    const result = await service.getRecentActivities({
+      actor,
+      projectIds: targetIds ?? undefined,
+      timeRange: validated.timeRange,
+      limit: validated.limit,
+      types: getVisibleActivityTypes(actor.role),
+    });
+
+    return {
+      success: true,
+      data: {
+        activities: result.activities,
+        hasMore: result.hasMore,
+        nextCursor: result.nextCursor,
+      },
+    };
+  } catch (error) {
+    console.error('[CPIS-ERROR] Dashboard.GetRecentActivities:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal mengambil aktivitas terbaru',
     };
   }
 }
