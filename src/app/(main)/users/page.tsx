@@ -1,18 +1,29 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
+import Link from 'next/link';
 
 import { getAllUsersAction } from '@/features/users/actions';
+import { getClientByIdAction } from '@/features/clients/actions';
 import { TUserResponse } from '@/@types/user.type';
+import { TClientResponse } from '@/@types/client.type';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
 import { getUserColumns } from './components/user-columns';
 import { UserDialog } from '@/features/users/components/user-dialog';
 
 export default function UsersPage() {
+  const searchParams = useSearchParams();
+  const clientIdFilter = searchParams.get('clientId');
+
   const [users, setUsers] = useState<TUserResponse[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<TUserResponse[]>([]);
+  const [clientFilter, setClientFilter] = useState<TClientResponse | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<TUserResponse | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -32,6 +43,24 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  useEffect(() => {
+    if (clientIdFilter) {
+      // Filter users by clientId
+      const filtered = users.filter(u => u.clientId === clientIdFilter);
+      setFilteredUsers(filtered);
+
+      // Fetch client info for display
+      getClientByIdAction(clientIdFilter).then(result => {
+        if (result.success && result.data) {
+          setClientFilter(result.data as TClientResponse);
+        }
+      });
+    } else {
+      setFilteredUsers(users);
+      setClientFilter(null);
+    }
+  }, [clientIdFilter, users]);
 
   const handleEdit = (user: TUserResponse) => {
     setSelectedUser(user);
@@ -71,6 +100,21 @@ export default function UsersPage() {
         />
       </div>
 
+      {/* Filter Badge */}
+      {clientFilter && (
+        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <span className="text-sm text-blue-800">
+            Menampilkan personel untuk: <strong>{clientFilter.name}</strong>
+          </span>
+          <Button variant="ghost" size="sm" asChild className="h-6 px-2">
+            <Link href="/users">
+              <X className="h-3 w-3 mr-1" />
+              Hapus filter
+            </Link>
+          </Button>
+        </div>
+      )}
+
       {loading && users.length === 0 ? (
         <div className="flex items-center justify-center p-8 border rounded-lg h-64 bg-muted/20">
           <div className="flex flex-col items-center gap-2">
@@ -81,8 +125,12 @@ export default function UsersPage() {
       ) : (
         <DataTable
           columns={columns}
-          data={users}
-          emptyMessage="Belum ada data pengguna."
+          data={filteredUsers}
+          emptyMessage={
+            clientFilter
+              ? `Belum ada personel untuk klien ${clientFilter.name}.`
+              : 'Belum ada data pengguna.'
+          }
         />
       )}
 

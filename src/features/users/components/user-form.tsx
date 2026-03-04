@@ -1,9 +1,9 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { useTransition } from 'react';
+import { useTransition, useEffect, useState } from 'react';
 import {
   userCreateSchema,
   userUpdateSchema,
@@ -12,8 +12,10 @@ import {
   TUserResponse,
   UserRole,
   EmploymentStatus,
+  TUserRole,
 } from '@/@types/user.type';
 import { createUserAction, updateUserAction } from '@/features/users/actions';
+import { getAllClientsAction } from '@/features/clients/actions';
 import {
   Form,
   FormControl,
@@ -39,6 +41,12 @@ interface IUserFormProps {
   onCancel?: () => void;
 }
 
+const CLIENT_ROLES: TUserRole[] = [
+  'CLIENT',
+  'CLIENT_TECHNICIAN',
+  'CLIENT_SUPERVISOR',
+];
+
 export function UserForm({
   mode,
   defaultValues,
@@ -46,6 +54,8 @@ export function UserForm({
   onCancel,
 }: IUserFormProps) {
   const [isPending, startTransition] = useTransition();
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const [isLoadingClients, setIsLoadingClients] = useState(false);
 
   const form = useForm<TUserCreateInput | TUserUpdateInput>({
     resolver: zodResolver(
@@ -63,6 +73,7 @@ export function UserForm({
             confirmPassword: '',
             role: undefined,
             employmentStatus: undefined,
+            clientId: null,
           }
         : {
             firstName: defaultValues?.firstName || '',
@@ -72,8 +83,29 @@ export function UserForm({
             phoneNumber: defaultValues?.phoneNumber || '',
             role: defaultValues?.role,
             employmentStatus: defaultValues?.employmentStatus,
+            clientId: defaultValues?.clientId || null,
           },
   });
+
+  const selectedRole = useWatch({ control: form.control, name: 'role' });
+  const isClientRole =
+    selectedRole && CLIENT_ROLES.includes(selectedRole as TUserRole);
+
+  useEffect(() => {
+    if (isClientRole) {
+      setIsLoadingClients(true);
+      getAllClientsAction()
+        .then(result => {
+          if (result.success && result.data) {
+            setClients(result.data);
+          } else {
+            toast.error('Gagal memuat data klien');
+          }
+        })
+        .catch(() => toast.error('Gagal memuat data klien'))
+        .finally(() => setIsLoadingClients(false));
+    }
+  }, [isClientRole]);
 
   const onSubmit = async (data: TUserCreateInput | TUserUpdateInput) => {
     startTransition(async () => {
@@ -294,6 +326,47 @@ export function UserForm({
             </FormItem>
           )}
         />
+
+        {/* Client Selection (only for CLIENT* roles) */}
+        {isClientRole && (
+          <FormField
+            control={form.control}
+            name="clientId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Client (Perusahaan)</FormLabel>
+                <Select
+                  onValueChange={value =>
+                    field.onChange(value === 'none' ? null : value)
+                  }
+                  value={field.value || 'none'}
+                  disabled={isLoadingClients}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          isLoadingClients
+                            ? 'Memuat data klien...'
+                            : 'Pilih klien'
+                        }
+                      />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">- Tidak Ada -</SelectItem>
+                    {clients.map(client => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Form Actions */}
         <div className="flex gap-2 pt-4">

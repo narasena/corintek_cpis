@@ -54,21 +54,21 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 
 **Source:** ROADMAP.md v0.2.0  
 **Priority:** 🟢 P1  
-**Status:** Not Started
+**Status:** ✅ Complete
 
 ### My Profile (MP-01) Test Cases
 
-- [ ] Avatar upload displays preview before save
-- [ ] Form submission updates user profile
-- [ ] Role-based fields hidden for CLIENT users
-- [ ] Validation errors show inline (not toast)
+- [x] Avatar upload displays preview before save
+- [x] Form submission updates user profile
+- [x] Role-based fields hidden for CLIENT users
+- [x] Validation errors show inline (not toast)
 
 ### Client Portal (CP-01) Test Cases
 
-- [ ] CLIENT user sees only assigned projects in dashboard
-- [ ] CLIENT user cannot access admin routes (URL guessing returns 403/redirect)
-- [ ] CLIENT user has read-only access (no edit buttons on Log Sheets)
-- [ ] Navigation shows only permitted items
+- [x] CLIENT user sees only assigned projects in dashboard
+- [x] CLIENT user cannot access admin routes (URL guessing returns 403/redirect)
+- [x] CLIENT user has read-only access (no edit buttons on Log Sheets)
+- [x] Navigation shows only permitted items
 
 ---
 

@@ -30,6 +30,12 @@ export type TEmploymentStatus =
 // Zod Schemas
 // =============================================================================
 
+const CLIENT_ROLES: string[] = [
+  'CLIENT',
+  'CLIENT_TECHNICIAN',
+  'CLIENT_SUPERVISOR',
+];
+
 /**
  * Schema for creating a new user
  */
@@ -47,30 +53,59 @@ export const userCreateSchema = z
     employmentStatus: z.enum(
       EmploymentStatus as unknown as { [k: string]: string }
     ),
+    clientId: z.uuid().optional().nullable(),
   })
   .refine(data => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
-  });
+  })
+  .refine(
+    data => {
+      // Client roles must have a clientId
+      if (CLIENT_ROLES.includes(data.role)) {
+        return data.clientId != null && data.clientId !== '';
+      }
+      return true;
+    },
+    {
+      message: 'Klien wajib dipilih untuk role klien',
+      path: ['clientId'],
+    }
+  );
 
 /**
  * Schema for updating a user (all fields optional except id)
  */
-export const userUpdateSchema = z.object({
-  firstName: z.string().min(1).max(100).optional(),
-  lastName: z.string().max(100).optional().nullable(),
-  idNumber: z.string().max(50).optional().nullable(),
-  email: z.email().optional(),
-  phoneNumber: z.string().min(1).max(20).optional(),
-  password: z.string().min(8).optional(),
-  avatarUrl: z.url().optional().nullable(),
-  role: z.enum(UserRole as unknown as { [k: string]: string }).optional(),
-  employmentStatus: z
-    .enum(EmploymentStatus as unknown as { [k: string]: string })
-    .optional(),
-  isActive: z.boolean().optional(),
-  isBlocked: z.boolean().optional(),
-});
+export const userUpdateSchema = z
+  .object({
+    firstName: z.string().min(1).max(100).optional(),
+    lastName: z.string().max(100).optional().nullable(),
+    idNumber: z.string().max(50).optional().nullable(),
+    email: z.email().optional(),
+    phoneNumber: z.string().min(1).max(20).optional(),
+    password: z.string().min(8).optional(),
+    avatarUrl: z.url().optional().nullable(),
+    role: z.enum(UserRole as unknown as { [k: string]: string }).optional(),
+    employmentStatus: z
+      .enum(EmploymentStatus as unknown as { [k: string]: string })
+      .optional(),
+    isActive: z.boolean().optional(),
+    isBlocked: z.boolean().optional(),
+    clientId: z.uuid().optional().nullable(),
+  })
+  .refine(
+    data => {
+      // Client roles must have a clientId when role is being updated
+      if (data.role && CLIENT_ROLES.includes(data.role)) {
+        return data.clientId != null && data.clientId !== '';
+      }
+      return true;
+    },
+    {
+      message: 'Klien wajib dipilih untuk role klien',
+      path: ['clientId'],
+    }
+  );
 
 /**
  * Schema for user response (excludes sensitive data like password)
@@ -89,6 +124,13 @@ export const userResponseSchema = z.object({
   ),
   isActive: z.boolean(),
   isBlocked: z.boolean(),
+  clientId: z.uuid().nullable(),
+  client: z
+    .object({
+      id: z.uuid(),
+      name: z.string(),
+    })
+    .nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   deletedAt: z.coerce.date().nullable(),
@@ -121,6 +163,7 @@ export const userListParamsSchema = z.object({
     .enum(EmploymentStatus as unknown as { [k: string]: string })
     .optional(),
   isActive: z.coerce.boolean().optional(),
+  clientId: z.uuid().optional(),
   sortBy: z.enum(['firstName', 'lastName', 'email', 'createdAt']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
 });
