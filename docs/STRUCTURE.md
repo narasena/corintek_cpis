@@ -103,6 +103,7 @@ cpis/
 | `CrudDialog`           | Generic dialog for create/edit forms                     | `src/components/crud-dialog.tsx`      |
 | `ActionCell`           | Dropdown menu with Ubah/Hapus                            | `src/components/action-cell.tsx`      |
 | `rbac`                 | Role-based permission checking                           | `src/lib/rbac.ts`                     |
+| `toUserResponse()`     | Standard user data mapper (strips sensitive fields)      | `src/features/users/utils.ts`         |
 | `useNotificationStore` | Zustand store for notification bell                      | `src/features/notifications/hooks.ts` |
 
 ## Integration Points

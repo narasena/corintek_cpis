@@ -7,6 +7,8 @@
 ## Active Gotchas ⚠️
 
 - **Prisma:** The `Parameter` model NO LONGER has `minValue`/`maxValue` — all limits now live in `ParameterLimit` table via `ParameterLimitProfile`. Old code referencing `parameter.minValue` will break.
+- **Auth Service:** Use `toUserResponse()` and `userResponseSelect` from `src/features/users/utils.ts` for ALL user data retrieval to ensure security and type safety.
+- **Auth Primitives:** Use `hashPassword()` and `comparePassword()` from `src/features/auth/service.ts` (re-exported via `lib/auth-helpers.ts`).
 - **Auth:** `requireActor()` and `getActorOrNull()` from `auth-helpers.ts` — don't use bare `getServerSession()`
 - **Mobile-first:** Technicians use low-budget Android phones. Test mobile viewport FIRST, desktop second.
 - **PDF:** NO backend PDF generation — use browser-native print with `@media print` / Tailwind `print:` modifiers only.

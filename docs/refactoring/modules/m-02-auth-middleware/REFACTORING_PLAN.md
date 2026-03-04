@@ -48,7 +48,10 @@ Priority = f(Pain, Risk, Value)
 - [x] **src/lib/jwt.ts**: Implemented runtime payload validation using Zod (`jwtPayloadSchema`).
 - [x] **src/lib/jwt.ts**: Centralized JWT configuration and magic strings in `src/features/auth/constants.ts`.
 - [x] **src/lib/jwt.ts**: Implemented memoization for encoded JWT secret to improve performance.
-- [ ] **src/features/auth/service.ts**: Remove direct dependency on `auth-helpers` if possible; unify user status validation.
+- [x] **src/features/auth/service.ts**: Standardized user data transformation via `toUserResponse` and `userResponseSelect`.
+- [x] **src/features/auth/service.ts**: Prevented timing/enumeration attacks via `FAKE_PASSWORD_HASH` and generic errors.
+- [x] **src/features/auth/service.ts**: Centralized user status validation via `isUserAuthValid` guard.
+- [x] **src/features/auth/service.ts**: Removed direct dependency on `auth-helpers` for core logic.
 - [ ] **src/features/auth/actions.ts**: Extract cookie configuration to constants to avoid "Magic Numbers" (e.g., maxAge).
 
 ### Phase 2: RBAC Granularity (F1)
@@ -65,7 +68,7 @@ Priority = f(Pain, Risk, Value)
 
 ### Phase 4: Dependency Resolution (F3)
 
-- [ ] **src/lib/auth-helpers.ts**: Break circularity by moving shared password hashing/comparison to a separate `src/lib/crypto.ts` or `src/features/auth/domain-helpers.ts`.
+- [x] **src/lib/auth-helpers.ts**: Break circularity by moving shared password hashing/comparison to `src/features/auth/service.ts` and re-exporting.
 
 ---
 

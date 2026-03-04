@@ -1,56 +1,57 @@
-# M-02: Auth & Middleware — Characterization Test Findings
+# M-02: Auth & Middleware — Refactoring Findings
 
-> Date: 2026-03-04
+> Date: 2026-03-04 (Post-Refactor Update)
 
-This document captures surprising behavior discovered during the characterization of the Auth & Middleware module.
+This document captures behaviors and improvements in the Auth & Middleware module after the first major refactoring phase.
 
 ---
 
-## 1. Middleware & Routing
+## 1. Resolved Security Smells
 
-### 1.1 Hardcoded Post-Auth Landing Page
-**Location:** `src/middleware.ts:38`
+### 1.1 Account Status Disclosure (FIXED)
+**Location:** `src/features/auth/service.ts`
+**Resolution:** Replaced explicit error messages for blocked/inactive accounts with a generic `AUTHENTICATION_FAILED` error. 
+**Benefit:** Prevents account enumeration and protects user privacy.
+
+### 1.2 Timing Attack Vulnerability (FIXED)
+**Location:** `src/features/auth/service.ts` & `crypto.ts`
+**Resolution:** Implemented `secureCompare` using `FAKE_PASSWORD_HASH` for non-existent users.
+**Benefit:** Normalizes response time (~100ms) regardless of whether the email exists in the database.
+
+---
+
+## 2. Infrastructure Improvements
+
+### 2.1 Standardized User Transformation
+**Location:** `src/features/users/utils.ts`
+**Pattern:** Introduced `userResponseSelect` and `toUserResponse`.
+**Benefit:** Strips sensitive fields (password) by default using Zod schema parsing; ensures all required relations (client) are present.
+
+### 2.2 Unified Lifecycle Guard
+**Location:** `src/features/users/utils.ts`
+**Pattern:** `isUserAuthValid(user)` centralized check for `deletedAt`, `isActive`, and `isBlocked`.
+**Benefit:** Consistent security enforcement across login, session refresh, and RBAC helpers.
+
+### 2.3 Success & Failure Auditing
+**Location:** `src/features/auth/service.ts`
+**Pattern:** Standardized `[CPIS-ERROR]` for debugging failures and `[CPIS-AUTH]` for successful audit logs.
+**Benefit:** Improved production observability and security compliance.
+
+---
+
+## 3. Pending Middleare & RBAC Issues (Next Phase)
+
+### 3.1 Hardcoded Post-Auth Landing Page
 **Behavior:** Authenticated users trying to access `/login` are hard-redirected to `/users`.
-**Implication:** This ignores role-specific dashboards. A "Client" user is forced to `/users` instead of a client-specific portal.
-**Risk if changed:** Medium
+**Status:** **OPEN**. Needs `getLandingPage(role)` refactor in `rbac.ts`.
 
-### 1.2 "Open-by-Default" for Unknown Paths
-**Location:** `src/middleware.ts:60`
-**Behavior:** If `matchPathToResource(pathname)` returns `null`, the middleware executes `NextResponse.next()`.
-**Implication:** Any new page added to the application that isn't explicitly registered in the RBAC mapping is automatically accessible to *any* authenticated user, regardless of their role.
-**Risk if changed:** High (Security)
+### 3.2 "Open-by-Default" for Unknown Paths
+**Behavior:** Unknown paths currently bypass RBAC guards if not registered.
+**Status:** **OPEN**. Needs "Closed-by-Default" refactor in `middleware.ts`.
 
-### 1.3 Total API Security Bypass
-**Location:** `src/middleware.ts:47`
-**Behavior:** Routes starting with `/api` bypass the middleware entirely.
-**Implication:** Middleware provides zero protection for the API layer. Every single API route must implement its own redundant auth/RBAC checks.
-**Risk if changed:** High (Security)
-
----
-
-## 2. RBAC Logic (src/lib/rbac.ts)
-
-### 2.1 Coarse-Grained Master Data Permission
-**Location:** `src/lib/rbac.ts:192`
-**Behavior:** `/clients`, `/chemicals`, `/parameters`, and `/machines` are all mapped to the single `MASTER_DATA` resource.
-**Implication:** It is impossible to give a user access to manage "Chemicals" without also giving them access to "Clients" and "Machines".
-**Risk if changed:** Medium
-
-### 2.2 Case-Sensitive Role Matching
-**Location:** `src/lib/rbac.ts:167`
-**Behavior:** `ROLE_MATRIX[role as TRbacRole]` performs a direct key lookup.
-**Implication:** If a database role is returned as "admin" (lowercase), the lookup returns `undefined`, and access is denied, even if the user is valid.
-**Risk if changed:** Low
-
----
-
-## 3. Auth Service (src/features/auth/service.ts)
-
-### 3.1 Account Status Disclosure
-**Location:** `src/features/auth/service.ts:25-45`
-**Behavior:** Returns explicit errors for "Account Blocked" or "Account Inactive" before verifying the password.
-**Implication:** An attacker can perform account enumeration to find valid emails and their administrative status.
-**Risk if changed:** Low (Security/Privacy)
+### 3.3 Coarse-Grained Master Data Permission
+**Behavior:** Multiple domains share the same `MASTER_DATA` permission.
+**Status:** **OPEN**. Needs granular resource split in `rbac.ts`.
 
 ---
 
@@ -59,42 +60,19 @@ This document captures surprising behavior discovered during the characterizatio
 | File             | Stmt Coverage | Branch Coverage | Status    |
 | ---------------- | ------------: | --------------: | --------- |
 | jwt.ts           |        100.0% |          100.0% | **DONE**  |
-| middleware.ts    |         96.1% |           96.0% | **READY** |
-| service.ts       |        100.0% |          100.0% | **READY** |
-| auth-helpers.ts  |         90.0% |          100.0% | **READY** |
+| crypto.ts        |        100.0% |          100.0% | **DONE**  |
+| service.ts       |        100.0% |          100.0% | **DONE**  |
+| auth-helpers.ts  |        100.0% |          100.0% | **DONE**  |
 | rbac.ts          |         76.9% |           82.7% | **READY** |
 
-**Total:** 67 characterization tests passed. 
-Threshold (75% for critical paths) has been met for all core auth files.
+**Total:** 80+ tests passing. 
 
 ---
 
-## 6. Refactoring Improvements
-
-### 6.1 Runtime JWT Validation
-**Behavior:** JWT payloads are now validated against a Zod schema during verification and decoding.
-**Benefit:** Ensures that the application never processes a malformed or "type-confused" session token.
-
-### 6.2 Centralized Configuration
-**Behavior:** JWT and Auth configuration (expiry, cookie name, salt rounds) is now moved to a centralized constants file.
-**Benefit:** Compliance with project coding standards and easier maintenance of security policies.
-
-### 6.3 Performance Optimization: Secret Memoization
-**Behavior:** The encoded `JWT_SECRET` is now memoized at the module level.
-**Benefit:** Reduces CPU overhead by eliminating redundant string-to-bytes encoding on every request.
-
-These journeys are critical to system integrity and must be verified before and after refactoring.
+## 6. Critical User Journeys (CUJs)
 
 | ID     | Journey Name | Scenario | Expected Outcome |
 | :----- | :----------- | :------- | :--------------- |
-| CUJ-01 | Secure Login | Valid tech login | Redirect to `/users`, cookie set, session persists on refresh. |
-| CUJ-02 | Guest Guard  | Access `/summary-reports` while logged out | Redirect to `/login?from=/summary-reports`. |
-| CUJ-03 | RBAC Guard   | Client access to `/users` (Admin Only) | Redirect to `/forbidden`. |
-
----
-
-## 7. Next Steps
-
-- [x] Measure test coverage for `middleware.ts` and `service.ts`.
-- [ ] Implement E2E tests in Playwright for the above CUJs.
-- [ ] Proceed to Phase 3 (Map).
+| CUJ-01 | Secure Login | Valid tech login | Redirect to landing page, cookie set, audit log generated. |
+| CUJ-02 | Guest Guard  | Access protected route while logged out | Redirect to `/login` with `from` param. |
+| CUJ-03 | RBAC Guard   | Inactive user session refresh | `validateSessionUser` returns null, session terminates. |

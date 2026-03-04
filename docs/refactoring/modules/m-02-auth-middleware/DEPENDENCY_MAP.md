@@ -1,6 +1,6 @@
 # M-02: Auth & Middleware — Dependency Map
 
-> Generated: 2026-03-04
+> Updated: 2026-03-04 (Post-Refactor Update)
 
 ---
 
@@ -10,17 +10,20 @@
 
 | #   | File                         | Lines | Role                                  |
 | --- | ---------------------------- | ----: | ------------------------------------- |
-| 1   | src/features/auth/actions.ts |    84 | Server Actions for Login/Logout       |
-| 2   | src/features/auth/service.ts |    67 | Core Auth business logic (Prisma)     |
+| 1   | src/features/auth/actions.ts |    81 | Server Actions for Login/Logout       |
+| 2   | src/features/auth/service.ts |    82 | Auth business flow (Prisma)           |
+| 3   | src/features/auth/crypto.ts  |    46 | Crypto primitives (bcrypt)            |
+| 4   | src/features/auth/constants.ts |   26 | Auth configuration & messages         |
 
 ### Auth Utilities (Library Layer)
 
 | #   | File                        | Lines | Role                                  |
 | --- | --------------------------- | ----: | ------------------------------------- |
-| 3   | src/middleware.ts           |    76 | Global Next.js Middleware             |
-| 4   | src/lib/jwt.ts              |    51 | JWT signing and verification (jose)   |
-| 5   | src/lib/rbac.ts             |   232 | RBAC Matrix and Permission Checking   |
-| 6   | src/lib/auth-helpers.ts     |   125 | Session retrieval & password hashing  |
+| 5   | src/middleware.ts           |    76 | Global Next.js Middleware             |
+| 6   | src/lib/jwt.ts              |    80 | JWT signing & verification (jose)     |
+| 7   | src/lib/rbac.ts             |   232 | RBAC Matrix and Permission Checking   |
+| 8   | src/lib/auth-helpers.ts     |    91 | Session retrieval & auth re-exports   |
+| 9   | src/features/users/utils.ts |    58 | User status validation & mapping      |
 
 ---
 
@@ -28,20 +31,23 @@
 
 ```mermaid
 graph TD
-    subgraph "Auth Feature"
+    subgraph "Auth Feature Domain"
         Actions[actions.ts] --> Service[service.ts]
-        Actions --> JWT[lib/jwt.ts]
-        Actions --> Helpers[lib/auth-helpers.ts]
+        Service --> Crypto[crypto.ts]
+        Service --> Constants[constants.ts]
+        Service --> UserUtils[users/utils.ts]
+        Crypto --> Constants
     end
 
     subgraph "Middleware & Guard"
-        MW[middleware.ts] --> JWT
+        MW[middleware.ts] --> JWT[lib/jwt.ts]
         MW --> RBAC[lib/rbac.ts]
     end
 
-    subgraph "Libraries"
-        Helpers --> JWT
-        Service --> Helpers
+    subgraph "Libraries & Helpers"
+        Helpers[lib/auth-helpers.ts] --> Service
+        Helpers --> Crypto
+        JWT --> Constants
     end
 
     subgraph "External"
@@ -54,11 +60,11 @@ graph TD
 
 ## 3. Circular Dependency Analysis
 
-**Result: 1 module-level circular dependency identified.**
+**Result: 0 module-level circular dependencies identified.**
 
 | ID   | Cycle Path    | Severity | Resolution |
 | ---- | ------------- | -------- | ---------- |
-| CD-1 | `service.ts` -> `auth-helpers.ts` -> `jwt.ts` -> `service.ts` | Medium | `service.ts` uses `comparePassword` from `auth-helpers`, while `auth-helpers` uses `prisma` from `lib`. This is a tight coupling between the feature and the library helper. |
+| CD-1 | `service.ts` -> `auth-helpers.ts` -> `service.ts` | **RESOLVED** | Removed dependency of `service.ts` on `auth-helpers.ts`. Primitives moved to `crypto.ts`. Helpers now re-export from domain. |
 
 ---
 
@@ -66,8 +72,8 @@ graph TD
 
 | File | Lines | Exports | Verdict |
 | ---- | ----: | :-----: | ------- |
-| src/lib/rbac.ts | 232 | 10 | **COMPLEX LOGIC**: Contains a large static matrix and prefix-based matching. |
-| src/middleware.ts | 76 | 2 | **GOD MIDDLEWARE**: Handles auth, redirects, and RBAC in a single sequential function. |
+| src/lib/rbac.ts | 232 | 10 | **COMPLEX LOGIC**: Contains a large static matrix. Target for Phase 2 refactor. |
+| src/middleware.ts | 76 | 2 | **GOD MIDDLEWARE**: Handles all routing security. Target for Phase 3 refactor. |
 
 ---
 
@@ -76,7 +82,7 @@ graph TD
 | ID    | Description | Locations | Status |
 | ----- | ----------- | --------- | ------ |
 | DUP-1 | Token verification logic (try-catch block) | `middleware.ts`, `auth-helpers.ts` | OPEN |
-| DUP-2 | User status check (active/blocked) | `service.ts`, `auth-helpers.ts` | OPEN |
+| DUP-2 | User status check (active/blocked) | `service.ts`, `auth-helpers.ts` | **RESOLVED** (isUserAuthValid) |
 
 ---
 
@@ -86,10 +92,8 @@ graph TD
 
 | Direction       | External Module         | Files Affected | Impact                                      |
 | --------------- | ----------------------- | -------------- | ------------------------------------------- |
-| **Imports**     | `@/lib/prisma`          | `service.ts`, `auth-helpers.ts` | Direct DB access for session/auth validation |
-| **Imported By** | `@/features/clients`    | `service.ts`, `actions.ts` | Uses `ensureAccess` and `getCurrentUser`    |
-| **Imported By** | `@/features/log-sheets` | `service.ts`, `actions.ts` | Uses `ensureAccess` and `getCurrentUserDetails` |
-| **Imported By** | `@/features/projects`   | `actions.ts`   | Uses `getCurrentUser`                       |
-| **Imported By** | `@/features/attendance` | `actions.ts`   | Uses `getCurrentUser`                       |
+| **Imports**     | `@/lib/prisma`          | `service.ts`   | Direct DB access for authentication          |
+| **Imported By** | ALL FEATURE MODULES     | `*.actions.ts` | All actions use `requireActor()` from helpers |
+| **Imported By** | `@/features/users`      | `service.ts`   | Uses `hashPassword` from `auth/crypto`       |
 
-**Rule:** `rbac.ts` and `auth-helpers.ts` are high-fan-out modules. Any change to their exported signatures will break almost every feature in the application.
+**Rule:** `rbac.ts` and `auth-helpers.ts` remain high-fan-out. Signature changes must be carefully coordinated.

@@ -1,6 +1,6 @@
 # M-02: Auth & Middleware — Baseline Inventory
 
-> Snapshot: 2026-03-04
+> Snapshot: 2026-03-04 (Post-Refactor Update)
 
 ---
 
@@ -8,27 +8,32 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) |    635 |   665 |     +30 |
-| Code Files (.ts/.tsx)        |      6 |      6 |      0 |
-| Largest File (LOC)           |    232 |    232 |      0 |
-| Files >500 lines             |      0 |      0 |      0 |
-| Methods >50 lines            |      1 |      1 |      0 |
-| TODO/FIXME/HACK Comments     |      0 |      0 |      0 |
-| Est. Cyclomatic Complexity   | Medium |   Low* | -1 (jwt) |
-| Tests Passing                |     35 |     67 |    +32 |
+| Total Lines of Code (ts/tsx) |    635 |   638 |      +3 |
+| Code Files (.ts/.tsx)        |      6 |      8 |      +2 |
+| Largest File (LOC)           |    232 |    232 |       0 |
+| Files >500 lines             |      0 |      0 |       0 |
+| Methods >50 lines            |      1 |      1 |       0 |
+| TODO/FIXME/HACK Comments     |      0 |      0 |       0 |
+| Est. Cyclomatic Complexity   | Medium |   Low |      -1 |
+| Tests Passing                |     35 |    80+ |    +45 |
+
+*Note: Code files now include src/features/auth/crypto.ts and src/features/users/utils.ts (shared).*
 
 ---
 
 ## 2. Lines of Code by File (sorted ascending)
 
-| #   | File                     | Lines | Notes                                     |
-| --- | ------------------------ | ----: | ----------------------------------------- |
-| 1   | src/lib/jwt.ts           |    51 | JWT utilities                             |
-| 2   | src/features/auth/service.ts |    67 | Auth business logic                       |
-| 3   | src/middleware.ts        |    76 | Next.js Middleware                        |
-| 4   | src/features/auth/actions.ts |    84 | Server Actions (Login/Logout)             |
-| 5   | src/lib/auth-helpers.ts  |   125 | Shared auth helpers                       |
-| 6   | src/lib/rbac.ts          |   232 | RBAC Matrix & Logic                       |
+| #   | File                             | Lines | Notes                                     |
+| --- | -------------------------------- | ----: | ----------------------------------------- |
+| 1   | src/features/auth/constants.ts   |    26 | Centralized auth constants                |
+| 2   | src/features/auth/crypto.ts      |    46 | Password primitives (bcrypt)              |
+| 3   | src/features/users/utils.ts      |    58 | Shared user mappers & guards              |
+| 4   | src/lib/jwt.ts                   |    80 | JWT utilities (jose)                      |
+| 5   | src/features/auth/actions.ts     |    81 | Server Actions (Login/Logout)             |
+| 6   | src/features/auth/service.ts     |    82 | Auth business logic                       |
+| 7   | src/lib/auth-helpers.ts          |    91 | Shared session helpers                    |
+| 8   | src/middleware.ts                |    76 | Next.js Middleware                        |
+| 9   | src/lib/rbac.ts                  |   232 | RBAC Matrix & Logic                       |
 
 ---
 
@@ -61,13 +66,13 @@
 
 ```
 ┌──────────────────────────────┬──────────┐
-│ Metric                       │ Baseline │
+│ Metric                       │ Post-Ref │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (ts/tsx)           │      635 │
-│ File count                   │        6 │
+│ Total LOC (ts/tsx)           │      638 │
+│ File count                   │        9 │
 │ Max file size                │      232 │
 │ Max method size              │       58 │
-│ Total cyclomatic complexity  │   Medium │
-│ Duplicated code blocks       │      Low │
+│ Total cyclomatic complexity  │      Low │
+│ Duplicated code blocks       │     None │
 └──────────────────────────────┴──────────┘
 ```

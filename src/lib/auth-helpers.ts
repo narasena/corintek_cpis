@@ -1,10 +1,12 @@
 import { cookies } from 'next/headers';
 import { verifyToken } from './jwt';
 import { IJwtPayload } from '@/@types/auth.type';
-import { prisma } from '@/lib/prisma';
 import { TUserRole } from '@/@types/user.type';
-import bcrypt from 'bcrypt';
 import { AUTH_CONFIG } from '@/features/auth/constants';
+import * as authService from '@/features/auth/service';
+
+// Re-export password primitives from crypto for compatibility
+export { comparePassword, hashPassword } from '@/features/auth/crypto';
 
 export class AuthenticationError extends Error {
   constructor(message: string = 'Unauthorized') {
@@ -46,22 +48,10 @@ export async function getCurrentUserDetails(): Promise<ICurrentUserDetails | nul
   const payload = await getCurrentUser();
   if (!payload) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: payload.id },
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      avatarUrl: true,
-      role: true,
-      isActive: true,
-      isBlocked: true,
-      deletedAt: true,
-    },
-  });
+  // Validate session user status using the centralized auth service
+  const user = await authService.validateSessionUser(payload.id);
 
-  if (!user || user.deletedAt || !user.isActive || user.isBlocked) return null;
+  if (!user) return null;
 
   return {
     id: user.id,
@@ -71,28 +61,6 @@ export async function getCurrentUserDetails(): Promise<ICurrentUserDetails | nul
     avatarUrl: user.avatarUrl,
     role: user.role as TUserRole,
   };
-}
-
-/**
- * Hash a password using bcrypt
- * @param password - Plain text password
- * @returns Hashed password
- */
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, AUTH_CONFIG.SALT_ROUNDS);
-}
-
-/**
- * Compare a plain text password with a hashed password
- * @param password - Plain text password
- * @param hashedPassword - Hashed password from database
- * @returns True if passwords match
- */
-export async function comparePassword(
-  password: string,
-  hashedPassword: string
-): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword);
 }
 
 /**

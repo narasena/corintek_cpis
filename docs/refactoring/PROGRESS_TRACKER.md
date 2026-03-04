@@ -7,12 +7,12 @@ Status: `[B] Baseline` | `[C] Characterized` | `[R] Refactored` | `[V] Verified`
 ## Group A: Foundation
 
 - [V] **M-01: Database Schema** — `prisma/schema/`
-- [B] **M-02: Auth & Middleware** — `src/features/auth/`
+- [R] **M-02: Auth & Middleware** — `src/features/auth/`
 - [B] **M-03: Shared Components** — `src/components/`
 
 ## Group B: Master Data CRUD
 
-- [ ] **M-04: Users** — `src/features/users/`
+- [C] **M-04: Users** — `src/features/users/`
 - [ ] **M-05: Clients** — `src/features/clients/`
 - [ ] **M-06: Chemicals** — `src/features/chemicals/`
 - [ ] **M-07: Parameters & Limits** — `src/features/parameters/`

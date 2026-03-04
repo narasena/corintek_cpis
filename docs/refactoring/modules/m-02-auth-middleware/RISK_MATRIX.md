@@ -1,6 +1,6 @@
 # M-02: Auth & Middleware — Risk Matrix
 
-> Updated 2026-03-04
+> Updated 2026-03-04 (Post-Refactor Update)
 
 ---
 
@@ -18,12 +18,13 @@
 
 | ID | File | Lines | Risk | Reason |
 | --- | --- | ---: | :--: | --- |
-| F1 | src/lib/rbac.ts | 232 | 🔴 | **High Fan-out**: Imported by almost all features. Contains critical access control matrix. Complexity in path matching. |
-| F2 | src/middleware.ts | 76 | 🔴 | **Security Guard**: Single point of failure for routing security. Contains complex sequential redirection logic. |
-| F3 | src/lib/auth-helpers.ts | 125 | 🔴 | **Session Anchor**: Used for all server-side session checks. High cross-module impact. Part of a circular dependency. |
-| F4 | src/features/auth/service.ts | 67 | 🟡 | **Business Logic**: Core authentication logic. Coupled to Prisma and auth-helpers. |
-| F5 | src/features/auth/actions.ts | 84 | 🟡 | **Entry Point**: Public server actions. Manages cookies and cache revalidation. |
-| F6 | src/lib/jwt.ts | 51 | 🟢 | **Isolated Util**: Pure wrapper around 'jose'. Stable API, low complexity. |
+| F1 | src/lib/rbac.ts | 232 | 🔴 | **High Fan-out**: Imported by almost all features. Contains critical access control matrix. Complexity in path matching. Target for next refactor phase. |
+| F2 | src/middleware.ts | 76 | 🔴 | **Security Guard**: Single point of failure for routing security. Contains complex sequential redirection logic. Target for next refactor phase. |
+| F3 | src/lib/auth-helpers.ts | 91 | 🟡 | **Session Anchor**: Decoupled from core implementation. Now re-exports from auth service. Risk reduced from HIGH to MEDIUM after resolving circularity. |
+| F4 | src/features/auth/service.ts | 82 | 🟢 | **Business Logic**: Now declarative and clean. Security mechanisms (timing/enumeration) encapsulated in utilities. Risk reduced from MEDIUM to LOW. |
+| F5 | src/features/auth/actions.ts | 81 | 🟡 | **Entry Point**: Public server actions. Manages cookies and cache revalidation. |
+| F6 | src/features/auth/crypto.ts | 46 | 🟢 | **Isolated Util**: Pure wrapper around 'bcrypt' and timing normalization. High test coverage. |
+| F7 | src/lib/jwt.ts | 80 | 🟢 | **Isolated Util**: Pure wrapper around 'jose'. Stable API, low complexity. |
 
 ---
 
@@ -31,6 +32,6 @@
 
 | Risk Level | Count | Files |
 | :--------: | :---: | ----- |
-|  🔴 HIGH   |   3   | rbac.ts, middleware.ts, auth-helpers.ts |
-| 🟡 MEDIUM  |   2   | service.ts, actions.ts |
-|   🟢 LOW   |   1   | jwt.ts |
+|  🔴 HIGH   |   2   | rbac.ts, middleware.ts |
+| 🟡 MEDIUM  |   2   | auth-helpers.ts, actions.ts |
+|   🟢 LOW   |   3   | service.ts, crypto.ts, jwt.ts |

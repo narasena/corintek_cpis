@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getUserById } from './service';
+import { validateSessionUser } from './service';
 import { getCurrentUser, getCurrentUserDetails, requireActor, getActorOrNull } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
@@ -26,22 +26,37 @@ describe('Auth Utilities & Helpers', () => {
     vi.clearAllMocks();
   });
 
-  describe('getUserById', () => {
-    it('returns user without password when found', async () => {
+  describe('validateSessionUser', () => {
+    it('returns user without password when valid session exists', async () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: '123',
         email: 'test@test.com',
-        password: 'secret',
+        isActive: true,
+        isBlocked: false,
+        deletedAt: null,
+        client: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       } as any);
 
-      const result = await getUserById('123');
+      const result = await validateSessionUser('123');
       expect(result?.id).toBe('123');
       expect((result as any).password).toBeUndefined();
     });
 
     it('returns null when user not found', async () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
-      const result = await getUserById('non-existent');
+      const result = await validateSessionUser('non-existent');
+      expect(result).toBeNull();
+    });
+
+    it('returns null when user status is invalid', async () => {
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: '123',
+        isActive: false, // Inactive
+      } as any);
+      
+      const result = await validateSessionUser('123');
       expect(result).toBeNull();
     });
   });

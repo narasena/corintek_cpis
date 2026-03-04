@@ -27,10 +27,7 @@ export async function loginAction(
     const validatedData = authLoginSchema.parse({ email, password });
 
     // Authenticate user
-    const user = await authenticateUser(
-      validatedData.email,
-      validatedData.password
-    );
+    const user = await authenticateUser(validatedData);
 
     // Generate JWT token
     const token = await generateToken({

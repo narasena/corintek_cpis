@@ -7,9 +7,8 @@ import {
 } from '@/@types/user.type';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { canAccess, RbacResource } from '@/lib/rbac';
-import bcrypt from 'bcrypt';
-
-const SALT_ROUNDS = 10;
+import { hashPassword } from '@/features/auth/crypto';
+import { toUserResponse, userResponseSelect } from './utils';
 
 function ensureUsersAccess(
   actor: IJwtPayload,
@@ -48,7 +47,7 @@ export async function createUser(
   }
 
   // Hash password
-  const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
+  const hashedPassword = await hashPassword(data.password);
 
   // Create user
   const user = await prisma.user.create({
@@ -64,26 +63,10 @@ export async function createUser(
       employmentStatus: data.employmentStatus as any, // Already validated by Zod
       clientId: data.clientId ?? null,
     },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      idNumber: true,
-      email: true,
-      phoneNumber: true,
-      avatarUrl: true,
-      role: true,
-      employmentStatus: true,
-      isActive: true,
-      isBlocked: true,
-      clientId: true,
-      createdAt: true,
-      updatedAt: true,
-      deletedAt: true,
-    },
+    select: userResponseSelect,
   });
 
-  return user;
+  return toUserResponse(user);
 }
 
 /**
@@ -134,35 +117,13 @@ export async function getAllUsers(actor: IJwtPayload) {
     where: {
       deletedAt: null,
     },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      idNumber: true,
-      email: true,
-      phoneNumber: true,
-      avatarUrl: true,
-      role: true,
-      employmentStatus: true,
-      isActive: true,
-      isBlocked: true,
-      clientId: true,
-      client: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      createdAt: true,
-      updatedAt: true,
-      deletedAt: true,
-    },
+    select: userResponseSelect,
     orderBy: {
       createdAt: 'desc',
     },
   });
 
-  return users;
+  return users.map(toUserResponse);
 }
 
 /**
@@ -175,29 +136,7 @@ export async function getUserById(actor: IJwtPayload, id: string) {
     where: {
       id,
     },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      idNumber: true,
-      email: true,
-      phoneNumber: true,
-      avatarUrl: true,
-      role: true,
-      employmentStatus: true,
-      isActive: true,
-      isBlocked: true,
-      clientId: true,
-      client: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      createdAt: true,
-      updatedAt: true,
-      deletedAt: true,
-    },
+    select: userResponseSelect,
   });
 
   if (!user) {
@@ -208,7 +147,7 @@ export async function getUserById(actor: IJwtPayload, id: string) {
     throw new Error('Pengguna telah dihapus');
   }
 
-  return user;
+  return toUserResponse(user);
 }
 
 /**
@@ -257,7 +196,7 @@ export async function updateUser(
   // Hash password if it's being updated
   const updateData = { ...data } as any; // Type-safe update
   if (data.password) {
-    updateData.password = await bcrypt.hash(data.password, SALT_ROUNDS);
+    updateData.password = await hashPassword(data.password);
   }
 
   const user = await prisma.user.update({
@@ -266,32 +205,10 @@ export async function updateUser(
       ...updateData,
       clientId: data.clientId ?? null,
     },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      idNumber: true,
-      email: true,
-      phoneNumber: true,
-      avatarUrl: true,
-      role: true,
-      employmentStatus: true,
-      isActive: true,
-      isBlocked: true,
-      clientId: true,
-      client: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      createdAt: true,
-      updatedAt: true,
-      deletedAt: true,
-    },
+    select: userResponseSelect,
   });
 
-  return user;
+  return toUserResponse(user);
 }
 
 /**
