@@ -11,6 +11,7 @@ model User {
   phoneNumber String  @unique
   password    String
   avatarUrl   String?
+  address     String? @db.VarChar(255)
 
   role             UserRole
   employmentStatus EmploymentStatus

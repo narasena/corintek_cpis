@@ -71,6 +71,7 @@ export function UserForm({
             phoneNumber: '',
             password: '',
             confirmPassword: '',
+            address: '',
             role: undefined,
             employmentStatus: undefined,
             clientId: null,
@@ -81,6 +82,7 @@ export function UserForm({
             idNumber: defaultValues?.idNumber || '',
             email: defaultValues?.email || '',
             phoneNumber: defaultValues?.phoneNumber || '',
+            address: defaultValues?.address || '',
             role: defaultValues?.role,
             employmentStatus: defaultValues?.employmentStatus,
             clientId: defaultValues?.clientId || null,
@@ -232,6 +234,25 @@ export function UserForm({
               <FormLabel>Phone Number</FormLabel>
               <FormControl>
                 <Input placeholder="+1234567890" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Address */}
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address (Optional)</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="123 Main St, City"
+                  {...field}
+                  value={field.value || ''}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

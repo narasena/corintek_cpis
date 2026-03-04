@@ -121,13 +121,13 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 
 **Source:** ROADMAP.md v0.2.0 | FSD Form Data Klien  
 **Priority:** 🟢 P3  
-**Status:** Not Started
+**Status:** ✅ Completed
 
 ### Tasks
 
-- [ ] Add `website` field to `Client` schema
-- [ ] Update Client form UI with website input
-- [ ] Update Client list columns to show website
+- [x] Add `website` field to `Client` schema
+- [x] Update Client form UI with website input
+- [x] Update Client list columns to show website
 
 ---
 
@@ -135,14 +135,14 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 
 **Source:** ROADMAP.md v0.2.0 | FSD Form User  
 **Priority:** 🟢 P3  
-**Status:** Not Started
+**Status:** ✅ Completed
 
 ### Tasks
 
-- [ ] Add `company` field to `User` schema (for client accounts)
-- [ ] Add `address` field to `User` schema
-- [ ] Update User form UI
-- [ ] Update User list columns
+- [x] Add `company` field to `User` schema (for client accounts) — Using linked Client name via `clientId`
+- [x] Add `address` field to `User` schema
+- [x] Update User form UI
+- [x] Update User list columns
 
 ---
 
