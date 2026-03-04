@@ -1,9 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { ColumnDef } from '@tanstack/react-table';
 import { TClientResponse } from '@/@types/client.type';
 import { ActionCell } from '@/components/action-cell';
 import { deleteClientAction } from '@/features/clients/actions';
+import { Button } from '@/components/ui/button';
+import { Users } from 'lucide-react';
 
 interface IClientColumnsProps {
   onEdit: (client: TClientResponse) => void;
@@ -38,6 +41,18 @@ export const getClientColumns = ({
       >
         {row.original.address || '-'}
       </span>
+    ),
+  },
+  {
+    id: 'personnel',
+    header: 'Personel',
+    cell: ({ row }) => (
+      <Button variant="outline" size="sm" asChild>
+        <Link href={`/users?clientId=${row.original.id}`}>
+          <Users className="h-4 w-4 mr-1" />
+          Personel
+        </Link>
+      </Button>
     ),
   },
   {

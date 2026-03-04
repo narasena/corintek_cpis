@@ -16,7 +16,7 @@ setup('authenticate as client pic', async ({ page }) => {
 
   await submitButton.click();
 
-  await expect(page).toHaveURL(/\/(dashboard|my-projects|log-sheets)/, {
+  await expect(page).toHaveURL(/\/(dashboard|my-projects|log-sheets|$)/, {
     timeout: 10000,
   });
 

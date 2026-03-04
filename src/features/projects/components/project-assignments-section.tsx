@@ -24,11 +24,13 @@ import type { TProjectAssignmentRole } from '@/features/projects/types';
 interface ProjectAssignmentsSectionProps {
   mode: 'create' | 'edit';
   projectId?: string;
+  projectClientId?: string;
 }
 
 export function ProjectAssignmentsSection({
   mode,
   projectId,
+  projectClientId,
 }: ProjectAssignmentsSectionProps) {
   const [isAssignmentPending, startAssignmentTransition] = useTransition();
   const [users, setUsers] = useState<TUserResponse[]>([]);
@@ -92,12 +94,16 @@ export function ProjectAssignmentsSection({
   const clientPicOptions = useMemo(
     () =>
       activeUsers
-        .filter(u => u.role === 'CLIENT_SUPERVISOR')
+        .filter(
+          u =>
+            u.role === 'CLIENT_SUPERVISOR' &&
+            (projectClientId ? u.clientId === projectClientId : true)
+        )
         .map(u => ({
           label: `${u.firstName} ${u.lastName || ''}`.trim(),
           value: u.id,
         })),
-    [activeUsers]
+    [activeUsers, projectClientId]
   );
 
   const technicianOptions = useMemo(
@@ -186,19 +192,29 @@ export function ProjectAssignmentsSection({
 
       <div className="space-y-2">
         <FormLabel>PIC Klien</FormLabel>
-        <Select value={clientPicUserId} onValueChange={setClientPicUserId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Pilih PIC Klien" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">- Tidak Ada -</SelectItem>
-            {clientPicOptions.map(opt => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {projectClientId && clientPicOptions.length === 0 ? (
+          <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+            <p className="font-medium">Tidak ada PIC Klien tersedia</p>
+            <p className="mt-1">
+              Buat pengguna dengan role CLIENT_SUPERVISOR untuk klien ini di
+              menu Users.
+            </p>
+          </div>
+        ) : (
+          <Select value={clientPicUserId} onValueChange={setClientPicUserId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih PIC Klien" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">- Tidak Ada -</SelectItem>
+              {clientPicOptions.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <Button

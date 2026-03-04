@@ -62,6 +62,7 @@ export async function createUser(
       avatarUrl: data.avatarUrl ?? null,
       role: data.role as any, // Already validated by Zod
       employmentStatus: data.employmentStatus as any, // Already validated by Zod
+      clientId: data.clientId ?? null,
     },
     select: {
       id: true,
@@ -75,6 +76,7 @@ export async function createUser(
       employmentStatus: true,
       isActive: true,
       isBlocked: true,
+      clientId: true,
       createdAt: true,
       updatedAt: true,
       deletedAt: true,
@@ -105,6 +107,13 @@ export async function getTechniciansList(actor: IJwtPayload) {
       lastName: true,
       email: true,
       role: true,
+      clientId: true,
+      client: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
       // Minimal fields for selection
     },
     orderBy: {
@@ -137,6 +146,13 @@ export async function getAllUsers(actor: IJwtPayload) {
       employmentStatus: true,
       isActive: true,
       isBlocked: true,
+      clientId: true,
+      client: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
       createdAt: true,
       updatedAt: true,
       deletedAt: true,
@@ -171,6 +187,13 @@ export async function getUserById(actor: IJwtPayload, id: string) {
       employmentStatus: true,
       isActive: true,
       isBlocked: true,
+      clientId: true,
+      client: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
       createdAt: true,
       updatedAt: true,
       deletedAt: true,
@@ -239,7 +262,10 @@ export async function updateUser(
 
   const user = await prisma.user.update({
     where: { id },
-    data: updateData,
+    data: {
+      ...updateData,
+      clientId: data.clientId ?? null,
+    },
     select: {
       id: true,
       firstName: true,
@@ -252,6 +278,13 @@ export async function updateUser(
       employmentStatus: true,
       isActive: true,
       isBlocked: true,
+      clientId: true,
+      client: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
       createdAt: true,
       updatedAt: true,
       deletedAt: true,

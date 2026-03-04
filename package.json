@@ -26,10 +26,10 @@
     "prisma:seed": "dotenv -e .env.development -- npx prisma db seed",
     "seed:export": "dotenv -e .env.development -- npx tsx prisma/seed-export.ts",
     "seed:import": "dotenv -e .env.development -- npx tsx prisma/seed-data.ts",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "playwright test --debug",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e": "dotenv -e .env.e2e.local -- playwright test",
+    "test:e2e:ui": "dotenv -e .env.e2e.local -- playwright test --ui",
+    "test:e2e:debug": "dotenv -e .env.e2e.local -- playwright test --debug",
+    "test:e2e:headed": "dotenv -e .env.e2e.local -- playwright test --headed"
   },
   "prisma": {
     "schema": "prisma/schema",

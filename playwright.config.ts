@@ -1,4 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
+import { config } from 'dotenv';
+
+// Load E2E environment variables if not already set
+if (!process.env.E2E_ADMIN_EMAIL) {
+  config({ path: '.env.e2e.local' });
+}
 
 const isCI = !!process.env.CI;
 
@@ -27,6 +33,10 @@ export default defineConfig({
     {
       name: 'setup:client-pic',
       testMatch: /client-pic\.setup\.ts/,
+    },
+    {
+      name: 'setup:client',
+      testMatch: /client\.setup\.ts/,
     },
     {
       name: 'log-sheet:happy-path',
@@ -90,6 +100,14 @@ export default defineConfig({
       dependencies: ['setup:technician'],
       use: {
         storageState: '.auth/technician.json',
+      },
+    },
+    {
+      name: 'client-portal',
+      testMatch: /client-portal\/.*\.spec\.ts/,
+      dependencies: ['setup:client'],
+      use: {
+        storageState: '.auth/client.json',
       },
     },
   ],

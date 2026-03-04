@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 
@@ -63,6 +63,11 @@ export function ProjectForm({
     defaultValues: buildProjectFormDefaultValues(defaultValues),
   });
 
+  const selectedClientId = useWatch({
+    control: form.control,
+    name: 'clientId',
+  });
+
   const onSubmit = (data: TCreateProject) => {
     startProjectTransition(async () => {
       try {
@@ -111,6 +116,7 @@ export function ProjectForm({
             <ProjectAssignmentsSection
               mode={mode}
               projectId={defaultValues?.id}
+              projectClientId={selectedClientId}
             />
           </div>
 
