@@ -4,9 +4,11 @@ import type {
   IGetRecentActivitiesResult,
   IActivity,
   IDashboardConfig,
+  TActivityType,
 } from './types';
 import type { TRbacRole } from '@/lib/rbac';
 import type { IProjectAccessServices } from './utils';
+import type { IActivityRepository } from './di';
 
 // ============================================================================
 // Legacy Exports (Preserved for backward compatibility)
@@ -116,20 +118,27 @@ export async function getRecentLogSheetPhotos(
  * Uses constructor injection for dependencies
  */
 export class ActivityService {
-  constructor(private readonly projectServices: IProjectAccessServices) {}
+  constructor(
+    private readonly repository: IActivityRepository,
+    private readonly projectServices: IProjectAccessServices
+  ) {}
 
   async getRecentActivities(
     input: IGetRecentActivitiesInput
   ): Promise<IGetRecentActivitiesResult> {
     const since = this.getSinceDate(input.timeRange ?? '7d');
     const limit = Math.min(input.limit ?? 15, 50);
+    const allowedTypes = input.types;
 
     const [logSheets, workReports] = await Promise.all([
-      this.queryLogSheetActivities(input.projectIds, since, limit),
-      this.queryWorkReportActivities(input.projectIds, since, limit),
+      this.repository.queryLogSheetActivities(input.projectIds, since, limit),
+      this.repository.queryWorkReportActivities(input.projectIds, since, limit),
     ]);
 
-    const activities = this.mapToActivities([...logSheets, ...workReports])
+    const activities = this.mapToActivities(
+      [...logSheets, ...workReports],
+      allowedTypes
+    )
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, limit);
 
@@ -261,89 +270,114 @@ export class ActivityService {
     });
   }
 
-  /**
-   * Map database rows to IActivity interface
-   * @param rows - Raw query results
-   * @returns Mapped activity objects
-   */
-  private mapToActivities(rows: any[]): IActivity[] {
-    return rows.flatMap(row => {
-      const activities: IActivity[] = [];
-      const base = {
-        projectId: row.project?.id ?? null,
-        projectName: row.project?.name ?? null,
-      };
+  private mapToActivities(
+    rows: unknown[],
+    allowedTypes?: TActivityType[]
+  ): IActivity[] {
+    return rows.flatMap(row =>
+      this.extractActivitiesFromRow(row, allowedTypes)
+    );
+  }
 
-      // Log sheet submitted
-      if (row.submittedAt && row.submittedBy) {
-        activities.push({
-          id: `ls:submit:${row.id}`,
-          type: 'LOG_SHEET_SUBMITTED',
-          severity: 'INFO',
-          title: 'Log Sheet Disubmit',
-          message:
-            `${row.submittedBy.firstName} ${row.submittedBy.lastName ?? ''}`.trim() +
-            ' mensubmit log sheet',
-          ...base,
-          userId: row.submittedBy.id,
-          userName:
-            `${row.submittedBy.firstName} ${row.submittedBy.lastName ?? ''}`.trim(),
-          userAvatarUrl: row.submittedBy.avatarUrl,
-          createdAt: row.submittedAt,
-          link: `/log-sheets/${row.id}`,
-          metadata: {
-            logSheetId: row.id,
-            logSheetDate: row.date.toISOString(),
-          },
-        });
-      }
+  private extractActivitiesFromRow(
+    row: any,
+    allowedTypes?: TActivityType[]
+  ): IActivity[] {
+    const activities: IActivity[] = [];
+    const base = this.buildBaseActivity(row);
 
-      // Log sheet approved
-      if (row.approvedAt && row.approvedBy) {
-        activities.push({
-          id: `ls:approve:${row.id}`,
-          type: 'LOG_SHEET_APPROVED',
-          severity: 'SUCCESS',
-          title: 'Log Sheet Disetujui',
-          message:
-            `${row.approvedBy.firstName} ${row.approvedBy.lastName ?? ''}`.trim() +
-            ' menyetujui log sheet',
-          ...base,
-          userId: row.approvedBy.id,
-          userName:
-            `${row.approvedBy.firstName} ${row.approvedBy.lastName ?? ''}`.trim(),
-          userAvatarUrl: row.approvedBy.avatarUrl,
-          createdAt: row.approvedAt,
-          link: `/log-sheets/${row.id}`,
-          metadata: {
-            logSheetId: row.id,
-            logSheetDate: row.date.toISOString(),
-          },
-        });
-      }
+    const candidates = [
+      this.buildLogSheetSubmittedActivity(row, base),
+      this.buildLogSheetApprovedActivity(row, base),
+      this.buildWorkReportActivity(row, base),
+    ].filter(Boolean) as IActivity[];
 
-      // Work report submitted
-      if (row.createdAt && !row.submittedAt && !row.approvedAt) {
-        activities.push({
-          id: `wr:${row.id}`,
-          type: 'WORK_REPORT_SUBMITTED',
-          severity: 'INFO',
-          title: 'Work Report Dibuat',
-          message:
-            'Work report baru dibuat' +
-            (row.zone ? ` untuk zona ${row.zone}` : ''),
-          ...base,
-          userId: 'system',
-          userName: 'Sistem',
-          userAvatarUrl: null,
-          createdAt: row.createdAt,
-          link: `/work-reports/${row.id}`,
-          metadata: { workReportId: row.id, zone: row.zone, machineCount: 0 },
-        });
-      }
+    return allowedTypes
+      ? candidates.filter(a => allowedTypes.includes(a.type))
+      : candidates;
+  }
 
-      return activities;
-    });
+  private buildBaseActivity(row: any) {
+    const isDeletedProject = row.project?.deletedAt != null;
+    return {
+      projectId: row.project?.id ?? null,
+      projectName: isDeletedProject
+        ? 'Proyek Terhapus'
+        : (row.project?.name ?? null),
+    };
+  }
+
+  private buildLogSheetSubmittedActivity(
+    row: any,
+    base: any
+  ): IActivity | null {
+    if (!row.submittedAt || !row.submittedBy) return null;
+    const user = this.formatUser(row.submittedBy);
+
+    return {
+      id: `ls:submit:${row.id}`,
+      type: 'LOG_SHEET_SUBMITTED',
+      severity: 'INFO',
+      title: 'Log Sheet Disubmit',
+      message: `${user.name} mensubmit log sheet`,
+      ...base,
+      userId: row.submittedBy.id,
+      userName: user.name,
+      userAvatarUrl: user.avatarUrl,
+      createdAt: row.submittedAt,
+      link: `/log-sheets/${row.id}`,
+      metadata: { logSheetId: row.id, logSheetDate: row.date.toISOString() },
+    };
+  }
+
+  private buildLogSheetApprovedActivity(row: any, base: any): IActivity | null {
+    if (!row.approvedAt || !row.approvedBy) return null;
+    const user = this.formatUser(row.approvedBy);
+
+    return {
+      id: `ls:approve:${row.id}`,
+      type: 'LOG_SHEET_APPROVED',
+      severity: 'SUCCESS',
+      title: 'Log Sheet Disetujui',
+      message: `${user.name} menyetujui log sheet`,
+      ...base,
+      userId: row.approvedBy.id,
+      userName: user.name,
+      userAvatarUrl: user.avatarUrl,
+      createdAt: row.approvedAt,
+      link: `/log-sheets/${row.id}`,
+      metadata: { logSheetId: row.id, logSheetDate: row.date.toISOString() },
+    };
+  }
+
+  private buildWorkReportActivity(row: any, base: any): IActivity | null {
+    if (!row.createdAt || row.submittedAt || row.approvedAt) return null;
+
+    return {
+      id: `wr:${row.id}`,
+      type: 'WORK_REPORT_SUBMITTED',
+      severity: 'INFO',
+      title: 'Work Report Dibuat',
+      message:
+        'Work report baru dibuat' + (row.zone ? ` untuk zona ${row.zone}` : ''),
+      ...base,
+      userId: 'system',
+      userName: 'Sistem',
+      userAvatarUrl: null,
+      createdAt: row.createdAt,
+      link: `/work-reports/${row.id}`,
+      metadata: { workReportId: row.id, zone: row.zone, machineCount: 0 },
+    };
+  }
+
+  private formatUser(user: any): { name: string; avatarUrl: string | null } {
+    const isDeleted = user.deletedAt != null;
+    return {
+      name: isDeleted
+        ? 'Pengguna Terhapus'
+        : `${user.firstName} ${user.lastName ?? ''}`.trim(),
+      avatarUrl: isDeleted ? null : user.avatarUrl,
+    };
   }
 }
 
@@ -352,7 +386,8 @@ export class ActivityService {
  * Uses default prisma client from lib/prisma
  */
 export function createActivityService(
+  repository: IActivityRepository,
   projectServices: IProjectAccessServices
 ): ActivityService {
-  return new ActivityService(projectServices);
+  return new ActivityService(repository, projectServices);
 }

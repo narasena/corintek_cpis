@@ -172,8 +172,7 @@ class ActivityServiceWithRepository implements IActivityService {
   async getRecentActivities(
     input: IGetRecentActivitiesInput
   ): Promise<IGetRecentActivitiesResult> {
-    // Delegate to the actual implementation
-    const service = new ActivityService({
+    const service = new ActivityService(this.repository, {
       assertCanAccessProject: this.projectAccess.assertCanAccessProject.bind(
         this.projectAccess
       ),
@@ -181,7 +180,6 @@ class ActivityServiceWithRepository implements IActivityService {
         this.projectAccess
       ),
     });
-
     return service.getRecentActivities(input);
   }
 
