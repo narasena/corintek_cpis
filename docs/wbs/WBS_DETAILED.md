@@ -11,8 +11,29 @@
 
 ## Legend
 
-| Column | Description |
-| :---------
+| Column     | Description                                      |
+| :--------- | :----------------------------------------------- |
+| ID         | Task identifier                                  |
+| Parent     | Parent task ID                                   |
+| Type       | Task type (Epic, User Story, Work Package, Task) |
+| Item       | Task description                                 |
+| O          | Optimistic estimate (hours)                      |
+| L          | Likely estimate (hours)                          |
+| P          | Pessimistic estimate (hours)                     |
+| E          | PERT estimate (hours)                            |
+| **Status** | **Complete / In Progress / Pending**             |
+
+---
+
+## Implementation Status Summary
+
+| Status      | Count                                                 |
+| :---------- | :---------------------------------------------------- |
+| Complete    | ~95%                                                  |
+| In Progress | 0                                                     |
+| Pending     | Log Sheet Request Form, Excel Export, Master Settings |
+
+---
 
 ## EP-001: Auth & Session
 

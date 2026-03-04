@@ -12,15 +12,31 @@
 - **PDF:** NO backend PDF generation — use browser-native print with `@media print` / Tailwind `print:` modifiers only.
 - **Error Logging:** ALL catch blocks MUST prefix with `[CPIS-ERROR] <Feature>.<Action>:`
 - **Dashboard Activity:** No real-time updates — users must refresh page to see new activities
+- **Attendance Export:** CSV only — Excel (.xlsx) NOT implemented despite FSD mentioning it
 
 ## Active Decisions 🤔
 
-- **Evaluating:** Whether to add video attachments to Log Sheet (Scope `LS-ADJ`) — decision pending cost analysis
-- **Next Priority:** Browser UI Tests (`QA`) or Summary Report Analytics (`SR-02`)
+- **Next Priority:** Browser UI Tests (`QA`)
+- **Deferred:** Video attachments to Log Sheet (Scope `LS-ADJ`) — decision pending cost analysis
+- **Deferred:** Summary Report Analytics (`SR-02`) — dashboard charts provide sufficient visibility
 
 ## Completed Recently ✅
 
+- **Dashboard Charts (DB-02/DB-03)** — Approach/Ampere charts for Condenser/Evaporator fully implemented
+- **Summary Report Attachments (SR-01)** — PDF uploads for Temuan, Blowdown, Suhu, Surat Jalan
+- **Limit Breach Notifications (NT-01)** — Bell UI with unread count, triggered on log sheet submission
+- **Work Reports** — Full approval workflow with signatures
 - **DB-01 Dashboard Recent Activity** — Fully implemented with RBAC, 7d/30d range, infinite scroll
+
+## NOT Implemented (For Reference) 🔴
+
+These features exist in FSD but are NOT built:
+
+| Feature                        | FSD Ref | Why Not Built                                     |
+| ------------------------------ | ------- | ------------------------------------------------- |
+| Log Sheet Request Form         | 4.3     | Requirements unclear — overlaps with Work Reports |
+| Master Settings - Daftar Mesin | 4.7.3   | Machines managed within project context only      |
+| Master Settings - Log Sheet    | 4.7.3   | No global log sheet settings needed               |
 
 ## Corrections & Preferences 🔧
 
@@ -35,5 +51,5 @@
 
 - **Sprint:** Stabilization & QA
 - **Focus:** Testing Dashboard Activity Feed (`DB-01`) in production
-- **Next:** Browser UI Tests (`QA`) or Summary Report Analytics (`SR-02`)
+- **Next:** Browser UI Tests (`QA`)
 - **Off-limits:** Do NOT touch Log Sheet detail page (~437 lines) — already refactored in LS-STAB
