@@ -3,14 +3,18 @@
 > Snapshot: {YYYY-MM-DD}
 
 <!-- PROMPT FOR AI AGENT:
-"Create an inventory of the current module:
+"Phase 1 (Baseline): Create an inventory of the current module:
 - Total lines of code
 - Number of files/classes
 - Largest files (>500 lines)
 - Longest methods (>50 lines)
 - Estimated cyclomatic complexity score
 - Number of TODO/FIXME comments
-This is our baseline. We'll measure improvement against this."
+Fill the 'Before' column. This is our baseline.
+
+Phase 6 (Verify): After refactoring is complete, re-run all metrics
+and fill the 'After' column. Calculate the 'Change' column.
+This proves the refactoring improved the codebase."
 -->
 
 ---

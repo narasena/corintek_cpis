@@ -9,6 +9,7 @@
 3. Find circular dependencies
 4. Identify god classes (>300 lines or >10 methods)
 5. Find duplicated code blocks
+6. List ALL imports from other modules (cross-module dependencies)
 Do NOT suggest fixes yet. Just map the current state."
 -->
 
@@ -62,3 +63,16 @@ graph TD
 | ID    | Description         | Locations        | Status |
 | ----- | ------------------- | ---------------- | ------ |
 | DUP-1 | {Logic description} | {File A, File B} | {Open} |
+
+---
+
+## 6. Cross-Module Impact
+
+**⚠️ External modules this module imports from or is imported by:**
+
+| Direction       | External Module            | Files Affected | Impact                    |
+| --------------- | -------------------------- | -------------- | ------------------------- |
+| **Imports**     | {e.g. @/features/users}    | {service.ts}   | {Fetches technician list} |
+| **Imported By** | {e.g. @/features/projects} | {types.ts}     | {Uses shared types}       |
+
+**Rule:** If refactoring changes any file listed here, flag the cross-module impact to the user before proceeding.
