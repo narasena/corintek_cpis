@@ -49,6 +49,7 @@ export const userCreateSchema = z
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
     avatarUrl: z.url().optional().nullable(),
+    address: z.string().max(255).optional().nullable(),
     role: z.enum(UserRole as unknown as { [k: string]: string }),
     employmentStatus: z.enum(
       EmploymentStatus as unknown as { [k: string]: string }
@@ -85,6 +86,7 @@ export const userUpdateSchema = z
     phoneNumber: z.string().min(1).max(20).optional(),
     password: z.string().min(8).optional(),
     avatarUrl: z.url().optional().nullable(),
+    address: z.string().max(255).optional().nullable(),
     role: z.enum(UserRole as unknown as { [k: string]: string }).optional(),
     employmentStatus: z
       .enum(EmploymentStatus as unknown as { [k: string]: string })
@@ -118,6 +120,7 @@ export const userResponseSchema = z.object({
   email: z.email(),
   phoneNumber: z.string(),
   avatarUrl: z.url().nullable(),
+  address: z.string().nullable(),
   role: z.enum(UserRole as unknown as { [k: string]: string }),
   employmentStatus: z.enum(
     EmploymentStatus as unknown as { [k: string]: string }

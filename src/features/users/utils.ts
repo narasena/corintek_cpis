@@ -13,6 +13,7 @@ export const userResponseSelect = {
   email: true,
   phoneNumber: true,
   avatarUrl: true,
+  address: true,
   role: true,
   employmentStatus: true,
   isActive: true,

@@ -8,6 +8,7 @@ model Client {
   email       String?
   phoneNumber String?
   address     String?
+  website     String? @db.VarChar(255)
 
   projects Project[]
   users    User[]

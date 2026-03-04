@@ -17,6 +17,7 @@ export const clientCreateSchema = z.object({
     .or(z.literal('')),
   phoneNumber: z.string().max(20).optional().nullable().or(z.literal('')),
   address: z.string().max(500).optional().nullable().or(z.literal('')),
+  website: z.string().max(255).optional().nullable().or(z.literal('')),
 });
 
 /**
@@ -32,6 +33,7 @@ export const clientUpdateSchema = z.object({
     .or(z.literal('')),
   phoneNumber: z.string().max(20).optional().nullable().or(z.literal('')),
   address: z.string().max(500).optional().nullable().or(z.literal('')),
+  website: z.string().max(255).optional().nullable().or(z.literal('')),
 });
 
 /**
@@ -43,6 +45,7 @@ export const clientResponseSchema = z.object({
   email: z.email().nullable(),
   phoneNumber: z.string().nullable(),
   address: z.string().nullable(),
+  website: z.string().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   deletedAt: z.coerce.date().nullable(),

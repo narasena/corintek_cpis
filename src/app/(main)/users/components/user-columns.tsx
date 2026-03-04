@@ -32,6 +32,18 @@ export const getUserColumns = ({
     cell: ({ row }) => row.original.phoneNumber || '-',
   },
   {
+    accessorKey: 'address',
+    header: 'Alamat',
+    cell: ({ row }) => (
+      <span
+        className="max-w-xs truncate block"
+        title={row.original.address || ''}
+      >
+        {row.original.address || '-'}
+      </span>
+    ),
+  },
+  {
     accessorKey: 'role',
     header: 'Peran',
     cell: ({ row }) => (
