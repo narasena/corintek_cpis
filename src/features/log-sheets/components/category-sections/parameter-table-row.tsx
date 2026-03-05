@@ -14,6 +14,7 @@ import {
 interface IParameterTableRowProps {
   param: TParameter;
   machines: TMachine[];
+  allMachines: TMachine[];
   cat: TParameter['category'];
   showLimitColumn?: boolean;
 }
@@ -21,31 +22,29 @@ interface IParameterTableRowProps {
 export function ParameterTableRow({
   param,
   machines,
+  allMachines,
   cat,
   showLimitColumn = true,
 }: IParameterTableRowProps) {
-  const targets = getTargetMachines(machines);
+  const activeMachineIds = new Set(machines.map(m => m.id));
+  const displayMachines = allMachines.length > 0 ? allMachines : machines;
 
   return (
     <TableRow>
       <ParameterNameCell param={param} />
       {showLimitColumn && <TargetCell param={param} />}
-      {targets.map(m => (
+      {displayMachines.map(m => (
         <ValueCell
           key={m.id}
           param={param}
           machine={m}
+          isActive={activeMachineIds.has(m.id)}
           hasMachines={machines.length > 0}
           cat={cat}
         />
       ))}
     </TableRow>
   );
-}
-
-function getTargetMachines(machines: TMachine[]): TMachine[] {
-  if (machines.length > 0) return machines;
-  return [{ id: 'null', unitNumber: 0, type: 'CHILLER' }] as TMachine[];
 }
 
 interface IParameterNameCellProps {
@@ -73,11 +72,26 @@ function TargetCell({ param }: ITargetCellProps) {
 interface IValueCellProps {
   param: TParameter;
   machine: TMachine;
+  isActive: boolean;
   hasMachines: boolean;
   cat: TParameter['category'];
 }
 
-function ValueCell({ param, machine, hasMachines, cat }: IValueCellProps) {
+function ValueCell({
+  param,
+  machine,
+  isActive,
+  hasMachines,
+  cat,
+}: IValueCellProps) {
+  if (!isActive) {
+    return (
+      <TableCell className="bg-muted/20 text-muted-foreground text-center">
+        -
+      </TableCell>
+    );
+  }
+
   const machineId = hasMachines ? machine.id : null;
   const key = entryKeys.value(param.id, machineId);
   const isWaterMeter = isWaterMeterParam(param.name, cat);

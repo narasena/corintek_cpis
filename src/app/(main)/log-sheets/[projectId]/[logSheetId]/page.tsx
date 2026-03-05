@@ -45,6 +45,7 @@ import { ConsumptionSection } from '@/features/log-sheets/option-a/components/co
 import { LogSheetToolbar } from '@/features/log-sheets/components/log-sheet-toolbar';
 import { MachineSelectionPanel } from '@/features/log-sheets/components/machine-selection-panel';
 import { LogSheetCategorySection } from '@/features/log-sheets/components/log-sheet-category-section';
+import { ConsumptionChemicalsSection } from '@/features/log-sheets/components/consumption-chemicals-section';
 import { EntryStateProvider } from '@/features/log-sheets/context';
 import { formatDate } from './utils';
 
@@ -265,34 +266,106 @@ export default function LogSheetDetailPage() {
           disabled={isLocked || isPending}
           className="space-y-6 print:hidden"
         >
-          <div className="grid gap-4 md:grid-cols-12">
-            <div className="md:col-span-3 space-y-2">
-              <label className="text-sm font-medium">Status</label>
-              <Input value={detail.logSheet.status} readOnly />
+          {/* Simplified Status Section */}
+          <div className="rounded-lg border bg-card p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-primary">
+                {detail.logSheet.status}
+              </span>
             </div>
-            <div className="md:col-span-3 space-y-2">
-              <label className="text-sm font-medium">Digantikan Oleh</label>
-              <Select
-                value={replacedByUserId ?? 'none'}
-                onValueChange={v =>
-                  setReplacedByUserId(v === 'none' ? null : v)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih Teknisi Pengganti" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">- Tidak Ada Pengganti -</SelectItem>
-                  {(detail?.technicians ?? []).map(t => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {formatUserName(t)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Petugas Hari Ini
+                </label>
+                <Select
+                  value={replacedByUserId ?? 'none'}
+                  onValueChange={v =>
+                    setReplacedByUserId(v === 'none' ? null : v)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih nama teknisi" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">- Saya Sendiri -</SelectItem>
+                    {(detail?.technicians ?? []).map(t => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {formatUserName(t)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Pilih nama jika ada pengganti
+                </p>
+              </div>
             </div>
           </div>
 
+          <MachineSelectionPanel
+            chillers={detail.machines.chillers}
+            coolingTowers={detail.machines.coolingTowers}
+            activeChillerIds={activeChillerIds}
+            activeCTIds={activeCTIds}
+            onToggleMachine={handleToggleMachine}
+            onSelectAllMachines={handleSelectAllMachines}
+            onClearMachines={handleClearMachines}
+          />
+
+          <EntryStateProvider
+            entryState={entryState}
+            setEntryState={setEntryState}
+          >
+            {isMobileView && mobileViewModel ? (
+              <MobileLayoutWrapper
+                viewModel={mobileViewModel}
+                disabled={isLocked || isPending}
+              />
+            ) : (
+              <LogSheetCategorySection
+                categories={categories}
+                parametersByCategory={parametersByCategory}
+                machinesForCategory={machinesForCategory}
+                activeCTIds={activeCTIds}
+                coolingTowers={detail.machines.coolingTowers}
+                allChillers={detail.machines.chillers}
+                allCoolingTowers={detail.machines.coolingTowers}
+              />
+            )}
+          </EntryStateProvider>
+
+          {/* Combined Consumption & Chemicals Section */}
+          <EntryStateProvider
+            entryState={entryState}
+            setEntryState={setEntryState}
+          >
+            <ConsumptionChemicalsSection
+              consumptionParams={(
+                parametersByCategory.get('CONSUMPTION') ?? []
+              ).map(p => ({
+                id: p.id,
+                name: p.name,
+                unit: p.unit,
+              }))}
+              chemicals={detail.chemicals}
+              chemicalUsages={chemicalState}
+              onChemicalUsagesChange={setChemicalState}
+              disabled={isLocked || isPending}
+            />
+          </EntryStateProvider>
+          <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <label className="text-sm font-medium">Catatan</label>
+            <Textarea
+              placeholder="Contoh: Unit chiller #1 mengalami noise tidak wajar saat startup. TDS air cooling tower meningkat, perlu dilakukan blowdown."
+              disabled={isLocked || isPending}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+
+          {/* Signature Section - Now at bottom */}
           <div className="rounded-lg border bg-card p-4 space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -325,66 +398,6 @@ export default function LogSheetDetailPage() {
                 onSigned={fetchData}
               />
             </div>
-          </div>
-
-          <MachineSelectionPanel
-            chillers={detail.machines.chillers}
-            coolingTowers={detail.machines.coolingTowers}
-            activeChillerIds={activeChillerIds}
-            activeCTIds={activeCTIds}
-            onToggleMachine={handleToggleMachine}
-            onSelectAllMachines={handleSelectAllMachines}
-            onClearMachines={handleClearMachines}
-          />
-
-          <EntryStateProvider
-            entryState={entryState}
-            setEntryState={setEntryState}
-          >
-            {isMobileView && mobileViewModel ? (
-              <MobileLayoutWrapper
-                viewModel={mobileViewModel}
-                disabled={isLocked || isPending}
-              />
-            ) : (
-              <LogSheetCategorySection
-                categories={categories}
-                parametersByCategory={parametersByCategory}
-                machinesForCategory={machinesForCategory}
-                activeCTIds={activeCTIds}
-                coolingTowers={detail.machines.coolingTowers}
-              />
-            )}
-            {isMobileView && (
-              <ConsumptionSection
-                parameters={(parametersByCategory.get('CONSUMPTION') ?? []).map(
-                  p => ({
-                    id: p.id,
-                    name: p.name,
-                    unit: p.unit,
-                  })
-                )}
-                disabled={isLocked || isPending}
-              />
-            )}
-          </EntryStateProvider>
-
-          <div className="rounded-lg border bg-card p-6 shadow-sm">
-            <ChemicalUsageSection
-              usages={chemicalState}
-              onChange={setChemicalState}
-              disabled={isPending || isLocked}
-              chemicals={detail.chemicals}
-            />
-          </div>
-          <div className="rounded-lg border bg-card p-6 shadow-sm">
-            <label className="text-sm font-medium">Catatan</label>
-            <Textarea
-              placeholder="Catatan singkat..."
-              disabled={isLocked || isPending}
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-            />
           </div>
         </fieldset>
       )}

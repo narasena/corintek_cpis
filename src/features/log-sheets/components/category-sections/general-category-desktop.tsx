@@ -20,6 +20,7 @@ interface IGeneralCategoryDesktopProps {
   category: string;
   params: TParameter[];
   machines: TMachine[];
+  allMachines: TMachine[];
   cat: TParameter['category'];
 }
 
@@ -27,13 +28,35 @@ function shouldShowLimitColumn(cat: TParameter['category']): boolean {
   return !CATEGORIES_WITHOUT_LIMIT_COLUMN.includes(cat);
 }
 
+function getMachineColumnHeader(
+  m: TMachine,
+  isActive: boolean
+): React.ReactNode {
+  const baseClass = 'min-w-[100px] text-center';
+  const className = isActive
+    ? baseClass
+    : `${baseClass} bg-muted/30 text-muted-foreground`;
+
+  return (
+    <TableHead key={m.id} className={className}>
+      {m.type === 'CHILLER' ? `#${m.unitNumber}` : `CT #${m.unitNumber}`}
+      {!isActive && <div className="text-[10px]">Tidak Aktif</div>}
+    </TableHead>
+  );
+}
+
 export function GeneralCategoryDesktop({
   category,
   params,
   machines,
+  allMachines,
   cat,
 }: IGeneralCategoryDesktopProps) {
   const showLimitColumn = shouldShowLimitColumn(cat);
+  const activeMachineIds = new Set(machines.map(m => m.id));
+
+  // Use allMachines if provided, otherwise fall back to machines
+  const displayMachines = allMachines.length > 0 ? allMachines : machines;
 
   return (
     <div className="space-y-3">
@@ -47,14 +70,10 @@ export function GeneralCategoryDesktop({
             <TableRow className="bg-muted/40">
               <TableHead className="w-max-plus!">Parameter</TableHead>
               {showLimitColumn && <TableHead className="">Limit</TableHead>}
-              {machines.length > 0 ? (
-                machines.map(m => (
-                  <TableHead key={m.id} className="min-w-[100px] text-center">
-                    {m.type === 'CHILLER'
-                      ? `#${m.unitNumber}`
-                      : `CT #${m.unitNumber}`}
-                  </TableHead>
-                ))
+              {displayMachines.length > 0 ? (
+                displayMachines.map(m =>
+                  getMachineColumnHeader(m, activeMachineIds.has(m.id))
+                )
               ) : (
                 <TableHead className="min-w-[140px] text-center">
                   Nilai
@@ -68,6 +87,7 @@ export function GeneralCategoryDesktop({
                 key={param.id}
                 param={param}
                 machines={machines}
+                allMachines={allMachines}
                 cat={cat}
                 showLimitColumn={showLimitColumn}
               />

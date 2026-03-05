@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { TMachine } from '../types';
 
 type TMachineType = 'CHILLER' | 'COOLING_TOWER';
@@ -16,6 +16,120 @@ interface IMachineSelectionPanelProps {
   onClearMachines: (type: TMachineType) => void;
 }
 
+interface IMachineCardProps {
+  machine: TMachine;
+  isActive: boolean;
+  onToggle: () => void;
+  type: TMachineType;
+}
+
+function MachineCard({ machine, isActive, onToggle, type }: IMachineCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={cn(
+        'relative flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 min-w-[80px]',
+        'active:scale-95 touch-manipulation',
+        isActive
+          ? 'border-primary bg-primary/10 text-primary'
+          : 'border-muted bg-muted/30 text-muted-foreground hover:border-muted-foreground/50'
+      )}
+    >
+      {isActive && (
+        <div className="absolute top-1 right-1">
+          <Check className="h-4 w-4 text-primary" />
+        </div>
+      )}
+      <span className="text-lg font-bold">#{machine.unitNumber}</span>
+      <span
+        className={cn(
+          'text-[10px] uppercase font-medium mt-1',
+          isActive ? 'text-primary' : 'text-muted-foreground'
+        )}
+      >
+        {isActive ? 'Aktif' : 'Nonaktif'}
+      </span>
+    </button>
+  );
+}
+
+interface IMachineGroupProps {
+  title: string;
+  machines: TMachine[];
+  activeIds: string[];
+  type: TMachineType;
+  onToggle: (id: string) => void;
+  onSelectAll: () => void;
+  onClear: () => void;
+}
+
+function MachineGroup({
+  title,
+  machines,
+  activeIds,
+  type,
+  onToggle,
+  onSelectAll,
+  onClear,
+}: IMachineGroupProps) {
+  const activeCount = activeIds.length;
+  const totalCount = machines.length;
+
+  if (totalCount === 0) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">{title}</span>
+        </div>
+        <p className="text-sm text-muted-foreground italic py-2">
+          Tidak ada {title.toLowerCase()} di proyek ini
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="text-sm font-medium">{title}</span>
+          <span className="text-xs text-muted-foreground ml-2">
+            ({activeCount}/{totalCount} aktif)
+          </span>
+        </div>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={onSelectAll}
+            className="text-xs px-2 py-1 text-primary hover:bg-primary/10 rounded transition-colors"
+          >
+            Semua
+          </button>
+          <button
+            type="button"
+            onClick={onClear}
+            className="text-xs px-2 py-1 text-destructive hover:bg-destructive/10 rounded transition-colors"
+          >
+            Kosong
+          </button>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {machines.map(m => (
+          <MachineCard
+            key={m.id}
+            machine={m}
+            isActive={activeIds.includes(m.id)}
+            onToggle={() => onToggle(m.id)}
+            type={type}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function MachineSelectionPanel({
   chillers,
   coolingTowers,
@@ -25,107 +139,41 @@ export function MachineSelectionPanel({
   onSelectAllMachines,
   onClearMachines,
 }: IMachineSelectionPanelProps) {
+  const totalActive = activeChillerIds.length + activeCTIds.length;
+  const totalMachines = chillers.length + coolingTowers.length;
+
   return (
     <div className="rounded-lg border bg-card p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Unit Mesin Aktif Hari Ini</h3>
-        <p className="text-xs text-muted-foreground">
-          Pilih unit yang beroperasi untuk menampilkan kolom input.
-        </p>
+      <div className="flex items-center justify-between border-b pb-3">
+        <div>
+          <h3 className="font-semibold">Unit Mesin Aktif</h3>
+          <p className="text-xs text-muted-foreground">
+            Ketuk unit untuk mengaktifkan/nonaktifkan ({totalActive}/
+            {totalMachines})
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Chillers</span>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => onSelectAllMachines('CHILLER')}
-              >
-                Pilih Semua
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs text-destructive"
-                onClick={() => onClearMachines('CHILLER')}
-              >
-                Kosongkan
-              </Button>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {chillers.map(m => (
-              <div key={m.id} className="flex items-center gap-2">
-                <Checkbox
-                  id={`chiller-${m.id}`}
-                  checked={activeChillerIds.includes(m.id)}
-                  onCheckedChange={() => onToggleMachine(m.id, 'CHILLER')}
-                />
-                <label
-                  htmlFor={`chiller-${m.id}`}
-                  className="text-sm cursor-pointer"
-                >
-                  #{m.unitNumber}
-                </label>
-              </div>
-            ))}
-            {chillers.length === 0 && (
-              <p className="text-sm text-muted-foreground italic">
-                Tidak ada chiller di proyek ini
-              </p>
-            )}
-          </div>
-        </div>
+        <MachineGroup
+          title="Chillers"
+          machines={chillers}
+          activeIds={activeChillerIds}
+          type="CHILLER"
+          onToggle={id => onToggleMachine(id, 'CHILLER')}
+          onSelectAll={() => onSelectAllMachines('CHILLER')}
+          onClear={() => onClearMachines('CHILLER')}
+        />
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Cooling Towers</span>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => onSelectAllMachines('COOLING_TOWER')}
-              >
-                Pilih Semua
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs text-destructive"
-                onClick={() => onClearMachines('COOLING_TOWER')}
-              >
-                Kosongkan
-              </Button>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {coolingTowers.map(m => (
-              <div key={m.id} className="flex items-center gap-2">
-                <Checkbox
-                  id={`ct-${m.id}`}
-                  checked={activeCTIds.includes(m.id)}
-                  onCheckedChange={() => onToggleMachine(m.id, 'COOLING_TOWER')}
-                />
-                <label
-                  htmlFor={`ct-${m.id}`}
-                  className="text-sm cursor-pointer"
-                >
-                  #{m.unitNumber}
-                </label>
-              </div>
-            ))}
-            {coolingTowers.length === 0 && (
-              <p className="text-sm text-muted-foreground italic">
-                Tidak ada cooling tower di proyek ini
-              </p>
-            )}
-          </div>
-        </div>
+        <MachineGroup
+          title="Cooling Towers"
+          machines={coolingTowers}
+          activeIds={activeCTIds}
+          type="COOLING_TOWER"
+          onToggle={id => onToggleMachine(id, 'COOLING_TOWER')}
+          onSelectAll={() => onSelectAllMachines('COOLING_TOWER')}
+          onClear={() => onClearMachines('COOLING_TOWER')}
+        />
       </div>
     </div>
   );
