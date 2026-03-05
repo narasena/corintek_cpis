@@ -280,7 +280,7 @@ export function ConsumptionChemicalsSection({
   );
 }
 
-// Consumption row with value and photo
+// Consumption row with label+input on one line, camera below
 function ConsumptionRow({
   paramId,
   label,
@@ -303,12 +303,11 @@ function ConsumptionRow({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">
+      {/* Line 1: Label and Input */}
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-medium whitespace-nowrap">
           {label} {unit ? `(${unit})` : ''}
         </label>
-      </div>
-      <div className="flex items-start gap-2">
         <Input
           type="number"
           inputMode="decimal"
@@ -318,6 +317,9 @@ function ConsumptionRow({
           disabled={disabled}
           className="flex-1"
         />
+      </div>
+      {/* Line 2: Camera button below */}
+      <div className="flex justify-end">
         <CameraInput
           value={state?.fileUrl}
           onChange={(url, file) => updateCamera(entryKey, url, file ?? null)}
