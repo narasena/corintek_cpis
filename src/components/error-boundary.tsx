@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 /**
  * Error display configuration
@@ -43,18 +43,19 @@ interface IErrorBoundaryProps {
  */
 export function ErrorBoundary(props: IErrorBoundaryProps): React.JSX.Element {
   const { error, reset, config } = props;
+  const [isPending, startTransition] = useTransition();
+  const [hasRetried, setHasRetried] = useState(false);
 
-  // TODO: Inject ErrorHandlerService to process error
-  // const errorHandler = useMemo(() => new ErrorHandlerService({ ... }), []);
+  const handleRetry = () => {
+    setHasRetried(true);
+    startTransition(() => {
+      reset();
+    });
+  };
 
-  // TODO: Process error for display using service
-  // const processedError = errorHandler.processError(error);
-
-  // TODO: Determine if in development mode for showing details
-  // const isDevelopment = process.env.NODE_ENV === 'development';
-
-  // TODO: Log error on mount
-  // useEffect(() => { errorHandler.logError(error); }, [error]);
+  const handleReload = () => {
+    window.location.reload();
+  };
 
   const title = config?.title ?? 'Terjadi kesalahan';
   const message =
@@ -73,7 +74,6 @@ export function ErrorBoundary(props: IErrorBoundaryProps): React.JSX.Element {
         <CardContent className="space-y-4">
           <p className="text-center text-muted-foreground">{message}</p>
 
-          {/* TODO: Show error digest for tracking */}
           {error.digest && (
             <p className="text-center text-xs text-muted-foreground">
               Error ID:{' '}
@@ -83,20 +83,24 @@ export function ErrorBoundary(props: IErrorBoundaryProps): React.JSX.Element {
             </p>
           )}
 
-          {/* TODO: Show technical details in development */}
-          {/* {isDevelopment && config?.showDetails && (
-            <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-40">
-              {error.stack}
-            </pre>
-          )} */}
+          {hasRetried && (
+            <p className="text-center text-sm text-amber-600">
+              Masih terjadi kesalahan. Silakan muat ulang halaman.
+            </p>
+          )}
 
           <div className="flex flex-col gap-2 pt-2">
-            {/* TODO: Implement retry button */}
-            <Button onClick={reset} className="w-full">
-              {retryLabel}
+            <Button
+              onClick={hasRetried ? handleReload : handleRetry}
+              className="w-full"
+              disabled={isPending}
+            >
+              {isPending ? (
+                <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+              ) : null}
+              {hasRetried ? 'Muat Ulang Halaman' : retryLabel}
             </Button>
 
-            {/* TODO: Implement secondary action */}
             {config?.secondaryAction && (
               <Button variant="outline" className="w-full" asChild>
                 <a href={config.secondaryAction.href}>

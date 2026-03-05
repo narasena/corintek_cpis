@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 /**
@@ -48,10 +48,17 @@ export function useSearchParam(
   }, [searchParams, paramName]);
 
   const [value, setValueState] = useState<string>(getValueFromUrl);
+  const isUserInputRef = useRef<boolean>(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Sync from URL to state (external changes only)
   useEffect(() => {
-    setValueState(getValueFromUrl());
-  }, [getValueFromUrl]);
+    const urlValue = getValueFromUrl();
+    // Only sync if not currently being edited by user
+    if (!isUserInputRef.current && urlValue !== value) {
+      setValueState(urlValue);
+    }
+  }, [getValueFromUrl, value]);
 
   const updateUrl = useCallback(
     (newValue: string) => {
@@ -74,19 +81,40 @@ export function useSearchParam(
 
   const setValue = useCallback(
     (newValue: string) => {
+      isUserInputRef.current = true;
       setValueState(newValue);
-      const timeoutId = setTimeout(() => {
+
+      // Clear existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
         updateUrl(newValue);
+        isUserInputRef.current = false;
       }, debounceMs);
-      return () => clearTimeout(timeoutId);
     },
     [debounceMs, updateUrl]
   );
 
   const clearValue = useCallback(() => {
+    isUserInputRef.current = true;
     setValueState('');
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     updateUrl('');
+    isUserInputRef.current = false;
   }, [updateUrl]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     value,

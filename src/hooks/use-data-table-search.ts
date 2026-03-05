@@ -18,6 +18,10 @@ interface IUseDataTableSearchConfig<TData> {
   searchKeys?: string[];
   /** Keys to exclude from search */
   excludedKeys?: string[];
+  /** Enable fuzzy matching (e.g., "Mrt" matches "Morat") */
+  enableFuzzy?: boolean;
+  /** Max edit distance for fuzzy matching (default: 2) */
+  fuzzyTolerance?: number;
 }
 
 /**
@@ -60,6 +64,8 @@ export function useDataTableSearch<TData extends Record<string, unknown>>(
     debounceMs = 300,
     minQueryLength = 1,
     searchKeys,
+    enableFuzzy = false,
+    fuzzyTolerance = 2,
     // excludedKeys - reserved for future use
   } = config;
 
@@ -89,13 +95,43 @@ export function useDataTableSearch<TData extends Record<string, unknown>>(
   }, []);
 
   const filteredData = useMemo(() => {
+    if (enableFuzzy && debouncedQuery.length >= minQueryLength) {
+      // Use fuzzy matching
+      const matches: TData[] = [];
+      for (const item of data) {
+        const values = searchService.extractSearchableValues(item, searchKeys);
+        for (const value of values) {
+          if (
+            searchService.fuzzyMatch(
+              String(value),
+              debouncedQuery,
+              fuzzyTolerance
+            )
+          ) {
+            matches.push(item);
+            break;
+          }
+        }
+      }
+      return matches;
+    }
+
+    // Use standard filter
     const result = searchService.applyGlobalFilter(data, {
       query: debouncedQuery,
       columnKeys: searchKeys,
       minQueryLength,
     });
     return result.filteredData;
-  }, [data, debouncedQuery, searchService, searchKeys, minQueryLength]);
+  }, [
+    data,
+    debouncedQuery,
+    searchService,
+    searchKeys,
+    minQueryLength,
+    enableFuzzy,
+    fuzzyTolerance,
+  ]);
 
   const isSearching = debouncedQuery.length >= minQueryLength;
 

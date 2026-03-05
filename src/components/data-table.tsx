@@ -58,6 +58,10 @@ interface IDataTableSearchConfig {
   enableUrlSync?: boolean;
   /** URL param name for search */
   urlParamName?: string;
+  /** Enable fuzzy matching (e.g., "Mrt" matches "Morat") */
+  enableFuzzy?: boolean;
+  /** Max edit distance for fuzzy matching (default: 2) */
+  fuzzyTolerance?: number;
 }
 
 interface IDataTableProps<TData, TValue> {
@@ -99,6 +103,8 @@ export function DataTable<TData, TValue>({
       debounceMs: searchConfig?.debounceMs,
       minQueryLength: searchConfig?.minQueryLength,
       searchKeys: searchConfig?.columnKeys,
+      enableFuzzy: searchConfig?.enableFuzzy ?? true,
+      fuzzyTolerance: searchConfig?.fuzzyTolerance ?? 2,
     });
 
   // Sync URL with search state if enabled

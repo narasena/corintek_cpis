@@ -55,6 +55,7 @@ export default function LabAnalysesPage() {
           columns={columns}
           data={projects}
           emptyMessage="Belum ada data proyek."
+          searchConfig={{ enableUrlSync: true, urlParamName: 'q' }}
         />
       )}
     </div>
