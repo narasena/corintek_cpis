@@ -78,17 +78,29 @@ describe('Middleware', () => {
     expect(res.url.toString()).toContain('/forbidden');
   });
 
-  it('bypasses static files and api routes', async () => {
+  it('redirects authenticated user without a role to /forbidden', async () => {
+    const req = new NextRequest(new URL('/users', baseUrl));
+    req.cookies.set('auth_token', 'valid-token');
+    // Simulate invalid payload (no role)
+    vi.mocked(verifyToken).mockResolvedValue({ id: '1', email: 'test@example.com' } as any);
+    
+    const res = await middleware(req);
+    
+    expect(res.type).toBe('redirect');
+    expect(res.url.toString()).toContain('/forbidden');
+  });
+
+  it('is closed-by-default for unmatched routes', async () => {
+    // If the middleware is somehow called for a static file or API route
+    // (bypassing the matcher), it should protect it by default.
     const staticReq = new NextRequest(new URL('/_next/static/chunks/main.js', baseUrl));
-    await middleware(staticReq);
-    expect(NextResponse.next).toHaveBeenCalled();
+    const staticRes = await middleware(staticReq);
+    expect(staticRes.type).toBe('redirect');
+    expect(staticRes.url.toString()).toContain('/login');
 
     const apiReq = new NextRequest(new URL('/api/health', baseUrl));
-    await middleware(apiReq);
-    expect(NextResponse.next).toHaveBeenCalled();
-    
-    const fileReq = new NextRequest(new URL('/image.png', baseUrl));
-    await middleware(fileReq);
-    expect(NextResponse.next).toHaveBeenCalled();
+    const apiRes = await middleware(apiReq);
+    expect(apiRes.type).toBe('redirect');
+    expect(apiRes.url.toString()).toContain('/login');
   });
 });

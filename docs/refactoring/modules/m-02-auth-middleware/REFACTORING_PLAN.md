@@ -24,7 +24,7 @@ Priority = f(Pain, Risk, Value)
 1. **Step 1: Isolated Utilities (JWT)** - Minor cleanup, no logic changes.
 2. **Step 2: Feature Layer (Service/Actions)** - Resolve circular dependencies by moving password logic to a pure domain helper.
 3. **Step 3: RBAC Core** - Split `MASTER_DATA` into granular resources, fix prefix matching, and unify role metadata.
-4. **Step 4: Middleware Guard** - The final "High Risk" step: switch to "Closed-by-Default" and parameterize landing pages.
+4. **Step 4: Middleware Guard** - [x] Consolidate identity resolution, implement 'Closed-by-Default' logic, parameterize landing pages, and enforce mandatory role-based authorization.
 
 ---
 
@@ -68,9 +68,10 @@ Priority = f(Pain, Risk, Value)
 
 ### Phase 3: Middleware Hardening (F2)
 
-- [ ] **src/middleware.ts**: Implement "Closed-by-Default" logic: if no resource matches, redirect to `/forbidden` (for auth users) or `/login` (for guests).
-- [ ] **src/middleware.ts**: Use `getLandingPage(role)` for the post-auth redirect.
-- [ ] **src/middleware.ts**: Remove implicit `/api` bypass; allow API routes to be handled by a common auth helper or registered in RBAC.
+- [x] **src/middleware.ts**: Implement "Closed-by-Default" logic: if no resource matches, redirect to `/forbidden` (for auth users) or `/login` (for guests).
+- [x] **src/middleware.ts**: Use `getLandingPage(role)` for the post-auth redirect.
+- [x] **src/middleware.ts**: Remove implicit `/api` bypass; allow API routes to be handled by a common auth helper or registered in RBAC.
+- [x] **src/middleware.ts**: Enforce mandatory role-based authorization for all authenticated requests; authenticated users without a role are denied access.
 
 ### Phase 4: Dependency Resolution (F3)
 

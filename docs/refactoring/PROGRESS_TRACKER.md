@@ -7,7 +7,7 @@ Status: `[B] Baseline` | `[C] Characterized` | `[R] Refactored` | `[V] Verified`
 ## Group A: Foundation
 
 - [V] **M-01: Database Schema** — `prisma/schema/`
-- [V] **M-02: Auth & Middleware** — `src/features/auth/`
+- [V] **M-02: Auth & Middleware** — `src/features/auth/` [R][V]
 - [B] **M-03: Shared Components** — `src/components/`
 
 ## Group B: Master Data CRUD

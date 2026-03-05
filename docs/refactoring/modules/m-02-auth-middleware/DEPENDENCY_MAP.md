@@ -1,6 +1,6 @@
 # M-02: Auth & Middleware — Dependency Map
 
-> Updated: 2026-03-04 (Post-Refactor Update)
+> Updated: 2026-03-05 (Post-Refactor Update)
 
 ---
 
@@ -19,11 +19,11 @@
 
 | #   | File                        | Lines | Role                                  |
 | --- | --------------------------- | ----: | ------------------------------------- |
-| 5   | src/middleware.ts           |    76 | Global Next.js Middleware             |
+| 5   | src/middleware.ts           |    67 | Global Next.js Middleware             |
 | 6   | src/lib/jwt.ts              |    80 | JWT signing & verification (jose)     |
-| 7   | src/lib/rbac.ts             |   232 | RBAC Matrix and Permission Checking   |
+| 7   | src/lib/rbac.ts             |   294 | RBAC Matrix and Permission Checking   |
 | 8   | src/lib/auth-helpers.ts     |   118 | Session retrieval & auth re-exports   |
-| 9   | src/features/users/utils.ts |    58 | User status validation & mapping      |
+| 9   | src/features/users/utils.ts |    59 | User status validation & mapping      |
 
 ---
 
@@ -42,6 +42,7 @@ graph TD
     subgraph "Middleware & Guard"
         MW[middleware.ts] --> JWT[lib/jwt.ts]
         MW --> RBAC[lib/rbac.ts]
+        MW --> AuthConstants[features/auth/constants.ts]
     end
 
     subgraph "Libraries & Helpers"
@@ -72,8 +73,8 @@ graph TD
 
 | File | Lines | Exports | Verdict |
 | ---- | ----: | :-----: | ------- |
-| src/lib/rbac.ts | 232 | 10 | **COMPLEX LOGIC**: Contains a large static matrix. Target for Phase 2 refactor. |
-| src/middleware.ts | 76 | 2 | **GOD MIDDLEWARE**: Handles all routing security. Target for Phase 3 refactor. |
+| src/lib/rbac.ts | 294 | 10 | **COMPLEX LOGIC**: Contains a large static matrix. Centralizes all policy definitions. |
+| src/middleware.ts | 67 | 2 | **REFACTORED**: Clean, declarative, and focused on security orchestration. |
 
 ---
 
@@ -81,7 +82,7 @@ graph TD
 
 | ID    | Description | Locations | Status |
 | ----- | ----------- | --------- | ------ |
-| DUP-1 | Token verification logic (try-catch block) | `middleware.ts`, `auth-helpers.ts` | OPEN |
+| DUP-1 | Token verification logic (try-catch block) | `middleware.ts`, `auth-helpers.ts` | **RESOLVED** (Centralized via getIdentity helper and jwt.ts) |
 | DUP-2 | User status check (active/blocked) | `service.ts`, `auth-helpers.ts` | **RESOLVED** (isUserAuthValid) |
 
 ---

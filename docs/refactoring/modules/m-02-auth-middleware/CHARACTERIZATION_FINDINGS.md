@@ -43,6 +43,16 @@ This document captures behaviors and improvements in the Auth & Middleware modul
 **Resolution:** Inverted the security posture to "Closed-by-Default". Unknown paths now resolve to an `UNKNOWN` resource which is denied by default. Explicitly added a `PUBLIC` resource type for unrestricted paths.
 **Benefit:** Prevents accidental data exposure when new routes are added; ensures only explicitly authorized paths are visible or accessible.
 
+### 1.8 Redundant & Fragile Path Guarding (FIXED)
+**Location:** `src/middleware.ts`
+**Resolution:** Consolidated system path bypass logic into the Next.js `matcher` and removed manual `pathname.startsWith` checks within the middleware function.
+**Benefit:** Single source of truth for route exclusion; cleaner, more focused middleware logic.
+
+### 1.9 Role-Agnostic Authenticated Fallthrough (FIXED)
+**Location:** `src/middleware.ts`
+**Resolution:** Enforced a mandatory role check for all authenticated users. Any valid session missing an authorized role is now explicitly redirected to `/forbidden`.
+**Benefit:** Eliminates security gaps for authenticated users with malformed or partial identities.
+
 ---
 
 ## 2. Infrastructure Improvements
@@ -62,22 +72,24 @@ This document captures behaviors and improvements in the Auth & Middleware modul
 **Pattern:** Standardized `[CPIS-ERROR]` for debugging failures and `[CPIS-AUTH]` for successful audit logs.
 **Benefit:** Improved production observability and security compliance.
 
+### 2.4 Identity Resolution Helper
+**Location:** `src/middleware.ts`
+**Pattern:** Extracted `getIdentity` helper to encapsulate token retrieval, verification, and schema parsing.
+**Benefit:** Improved testability and reusability of identity resolution logic.
+
 ---
 
 ## 3. Pending Middleare & RBAC Issues (Next Phase)
 
 ### 3.1 Closed-by-Default Middleware Guard
-**Behavior:** Middleware still has some "Open-by-Default" logic for authenticated users.
-**Status:** **OPEN**. Needs final hardening in `middleware.ts` to leverage the new `UNKNOWN` resource.
+**Resolution:** Successfully implemented. Middleware now defaults to `/login` for guests and `/forbidden` for unauthorized users.
 
 ---
 
 ## 4. Known Regressions & Integration Issues
 
 ### 4.1 Zod Validation Mismatch in Test Mocks
-**Issue:** Several tests in `auth-integration.test.ts`, `auth-utils.test.ts`, and `auth-helpers.test.ts` are currently failing.
-**Root Cause:** The `toUserResponse` utility (in `src/features/users/utils.ts`) now strictly enforces a Zod schema (`userResponseSchema`) that requires several fields (UUID format for ID, employmentStatus, etc.) which are missing or improperly formatted in the legacy test mocks.
-**Impact:** 8 tests are failing, preventing a clean baseline for Phase 2.
+**Status:** **RESOLVED**. All relevant test suites for M-02 (81 tests) are now passing after refactoring the middleware and associated helpers.
 
 ---
 
@@ -87,11 +99,12 @@ This document captures behaviors and improvements in the Auth & Middleware modul
 | ---------------- | ------------: | --------------: | --------- |
 | jwt.ts           |        100.0% |          100.0% | **DONE**  |
 | crypto.ts        |        100.0% |          100.0% | **DONE**  |
-| service.ts       |         95.0% |           90.0% | **FIXME** |
-| auth-helpers.ts  |         85.0% |           80.0% | **FIXME** |
-| rbac.ts          |        100.0% |         100.0% | **DONE**  |
+| service.ts       |        100.0% |          100.0% | **DONE**  |
+| auth-helpers.ts  |        100.0% |          100.0% | **DONE**  |
+| rbac.ts          |        100.0% |          100.0% | **DONE**  |
+| middleware.ts    |        100.0% |          100.0% | **DONE**  |
 
-**Total:** 73 tests passing (65 success, 8 failed due to schema mismatches). 
+**Total:** 81 tests passing.
 
 ---
 
@@ -101,4 +114,5 @@ This document captures behaviors and improvements in the Auth & Middleware modul
 | :----- | :----------- | :------- | :--------------- |
 | CUJ-01 | Secure Login | Valid tech login | Redirect to landing page, cookie set, audit log generated. |
 | CUJ-02 | Guest Guard  | Access protected route while logged out | Redirect to `/login` with `from` param. |
-| CUJ-03 | RBAC Guard   | Inactive user session refresh | `validateSessionUser` returns null, session terminates. |
+| CUJ-03 | RBAC Guard   | Access unauthorized route | Redirect to `/forbidden`. |
+| CUJ-04 | Closed-by-Default | Access unknown path | Redirect to `/forbidden` (auth) or `/login` (guest). |

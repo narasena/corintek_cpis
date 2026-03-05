@@ -1,61 +1,52 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyToken } from './lib/jwt';
-import { canAccess, matchPathToResource } from './lib/rbac';
+import { canAccess, matchPathToResource, getLandingPage } from './lib/rbac';
+import { AUTH_CONFIG, AUTH_ROUTES } from './features/auth/constants';
+import { IJwtPayload } from './@types/auth.type';
 
-// Routes that don't require authentication
-const PUBLIC_ROUTES = ['/login'];
+/**
+ * Extracts and verifies the user identity from the request cookies.
+ */
+async function getIdentity(request: NextRequest): Promise<IJwtPayload | null> {
+  const token = request.cookies.get(AUTH_CONFIG.COOKIE_NAME)?.value;
+  if (!token) return null;
 
-// Routes that should redirect to dashboard if already authenticated
-const AUTH_ROUTES = ['/login'];
+  try {
+    return await verifyToken(token);
+  } catch {
+    return null;
+  }
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const identity = await getIdentity(request);
+  const isAuthenticated = !!identity;
 
-  // Get token from cookies
-  const token = request.cookies.get('auth_token')?.value;
-
-  // Check if user is authenticated
-  let isAuthenticated = false;
-  let role: string | null = null;
-  if (token) {
-    try {
-      const payload = await verifyToken(token);
-      isAuthenticated = true;
-      role = (payload as { role?: string }).role ?? null;
-    } catch {
-      // Token is invalid or expired
-      isAuthenticated = false;
-    }
+  // 1. Authenticated users trying to access login/auth routes
+  if (isAuthenticated && pathname === AUTH_ROUTES.LOGIN) {
+    const landingPage = identity.role
+      ? getLandingPage(identity.role)
+      : AUTH_ROUTES.USERS;
+    return NextResponse.redirect(new URL(landingPage, request.url));
   }
 
-  // If user is authenticated and trying to access auth routes (like login)
-  // redirect them to the users page
-  if (isAuthenticated && AUTH_ROUTES.includes(pathname)) {
-    return NextResponse.redirect(new URL('/users', request.url));
-  }
-
-  // If user is not authenticated and trying to access protected routes
-  // redirect them to login
-  if (!isAuthenticated && !PUBLIC_ROUTES.includes(pathname)) {
-    // Don't redirect for static files and API routes
-    if (
-      pathname.startsWith('/_next') ||
-      pathname.startsWith('/api') ||
-      pathname.includes('.')
-    ) {
-      return NextResponse.next();
-    }
-
-    const loginUrl = new URL('/login', request.url);
+  // 2. Unauthenticated users trying to access protected routes
+  if (!isAuthenticated && pathname !== AUTH_ROUTES.LOGIN) {
+    const loginUrl = new URL(AUTH_ROUTES.LOGIN, request.url);
     loginUrl.searchParams.set('from', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isAuthenticated && role) {
+  // 3. RBAC Check for authenticated users
+  if (isAuthenticated) {
+    const { role } = identity;
     const resource = matchPathToResource(pathname);
-    if (resource && !canAccess(role, resource, 'read')) {
-      return NextResponse.redirect(new URL('/forbidden', request.url));
+
+    // If role is missing (invalid identity) or resource access is denied
+    if (!role || !resource || !canAccess(role, resource, 'read')) {
+      return NextResponse.redirect(new URL(AUTH_ROUTES.FORBIDDEN, request.url));
     }
   }
 
