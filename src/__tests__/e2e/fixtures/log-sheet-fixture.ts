@@ -378,7 +378,7 @@ export async function submitLogSheet(page: Page) {
 
   // Wait for success, submitted status, or explicit error toast
   const successToast = page.getByText(/berhasil dikirim/i);
-  const submittedStatus = page.getByText(/SUBMITTED/);
+  const submittedStatus = page.locator('span').getByText('SUBMITTED', { exact: true });
   const submitErrorToast = page.locator(
     '[data-sonner-toast][data-type="error"]'
   );

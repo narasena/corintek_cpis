@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
-import { buildLimitEvaluationInput } from '../limit-breach-adapter';
-import type { ILogSheetDetailView } from '../service';
+import { buildLimitEvaluationInput } from './limit-breach-adapter';
+import type { ILogSheetDetailView } from './service';
 
 function createDetail(
   entries: ILogSheetDetailView['entries'],

@@ -44,10 +44,9 @@ describe('EntryStateContext', () => {
     act(() => {
       result.current.updateNumber('test-key', '42');
     });
-    expect(result.current.getEntry('test-key')).toEqual({
-      valueType: 'NUMBER',
-      numericValue: 42,
-    });
+    const entry = result.current.getEntry('test-key');
+    expect(entry?.valueType).toBe('NUMBER');
+    expect(entry?.numericValue).toBe(42);
   });
 
   it('updateNumber sets null for empty string', () => {
@@ -55,10 +54,9 @@ describe('EntryStateContext', () => {
     act(() => {
       result.current.updateNumber('test-key', '');
     });
-    expect(result.current.getEntry('test-key')).toEqual({
-      valueType: 'NUMBER',
-      numericValue: null,
-    });
+    const entry = result.current.getEntry('test-key');
+    expect(entry?.valueType).toBe('NUMBER');
+    expect(entry?.numericValue).toBeNull();
   });
 
   it('updateNumber handles zero value', () => {
@@ -66,10 +64,9 @@ describe('EntryStateContext', () => {
     act(() => {
       result.current.updateNumber('test-key', '0');
     });
-    expect(result.current.getEntry('test-key')).toEqual({
-      valueType: 'NUMBER',
-      numericValue: 0,
-    });
+    const entry = result.current.getEntry('test-key');
+    expect(entry?.valueType).toBe('NUMBER');
+    expect(entry?.numericValue).toBe(0);
   });
 
   it('updateBoolean sets boolean value', () => {
@@ -80,6 +77,8 @@ describe('EntryStateContext', () => {
     expect(result.current.getEntry('test-key')).toEqual({
       valueType: 'BOOLEAN',
       boolValue: true,
+      numericValue: null,
+      textValue: null,
     });
   });
 
@@ -91,6 +90,8 @@ describe('EntryStateContext', () => {
     expect(result.current.getEntry('test-key')).toEqual({
       valueType: 'BOOLEAN',
       boolValue: false,
+      numericValue: null,
+      textValue: null,
     });
   });
 
@@ -102,6 +103,8 @@ describe('EntryStateContext', () => {
     expect(result.current.getEntry('test-key')).toEqual({
       valueType: 'BOOLEAN',
       boolValue: null,
+      numericValue: null,
+      textValue: null,
     });
   });
 
@@ -113,6 +116,8 @@ describe('EntryStateContext', () => {
     expect(result.current.getEntry('test-key')).toEqual({
       valueType: 'TEXT',
       textValue: 'hello',
+      numericValue: null,
+      boolValue: null,
     });
   });
 
@@ -124,6 +129,8 @@ describe('EntryStateContext', () => {
     expect(result.current.getEntry('test-key')).toEqual({
       valueType: 'TEXT',
       textValue: '',
+      numericValue: null,
+      boolValue: null,
     });
   });
 
@@ -140,6 +147,8 @@ describe('EntryStateContext', () => {
     expect(result.current.getEntry('test-key')).toEqual({
       valueType: 'NUMBER',
       numericValue: null,
+      boolValue: null,
+      textValue: null,
       fileUrl: 'https://example.com/file.jpg',
       pendingFile: mockFile,
     });
@@ -160,6 +169,8 @@ describe('EntryStateContext', () => {
     expect(result.current.getEntry('test-key')).toEqual({
       valueType: 'NUMBER',
       numericValue: 100,
+      boolValue: null,
+      textValue: null,
       fileUrl: 'https://example.com/file.jpg',
       pendingFile: null,
     });
@@ -173,6 +184,8 @@ describe('EntryStateContext', () => {
     expect(result.current.getEntry('test-key')).toEqual({
       valueType: 'NUMBER',
       numericValue: null,
+      boolValue: null,
+      textValue: null,
       fileUrl: null,
       pendingFile: null,
     });
@@ -187,8 +200,18 @@ describe('EntryStateContext', () => {
     });
     expect(result.current.entryState).toEqual({
       key1: { valueType: 'NUMBER', numericValue: 10 },
-      key2: { valueType: 'BOOLEAN', boolValue: true },
-      key3: { valueType: 'TEXT', textValue: 'text' },
+      key2: {
+        valueType: 'BOOLEAN',
+        boolValue: true,
+        numericValue: null,
+        textValue: null,
+      },
+      key3: {
+        valueType: 'TEXT',
+        textValue: 'text',
+        numericValue: null,
+        boolValue: null,
+      },
     });
   });
 });

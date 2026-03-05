@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import {
-  getCurrentUserProfileAction,
-  updateCurrentUserProfileAction,
-  uploadAvatarAction,
-} from './actions';
-
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
-vi.mock('@/lib/auth-helpers', () => ({
-  getCurrentUser: vi.fn(),
-}));
+vi.mock('@/lib/auth-helpers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/auth-helpers')>();
+  return {
+    ...actual,
+    getCurrentUser: vi.fn(),
+    getCurrentUserDetails: vi.fn(),
+    requireActor: vi.fn(),
+  };
+});
 
 vi.mock('@/lib/r2-upload', () => ({
   uploadToR2: vi.fn(),
@@ -23,26 +23,30 @@ vi.mock('./service', () => ({
   updateCurrentUserProfile: vi.fn(),
 }));
 
-const mockGetCurrentUser = vi.mocked(
-  await import('@/lib/auth-helpers').then(m => m.getCurrentUser)
-);
-const mockUploadToR2 = vi.mocked(
-  await import('@/lib/r2-upload').then(m => m.uploadToR2)
-);
-const mockGetCurrentUserProfile = vi.mocked(
-  await import('./service').then(m => m.getCurrentUserProfile)
-);
-const mockUpdateCurrentUserProfile = vi.mocked(
-  await import('./service').then(m => m.updateCurrentUserProfile)
-);
+// Now we can import the actions and the mocked helpers
+import {
+  getCurrentUserProfileAction,
+  updateCurrentUserProfileAction,
+  uploadAvatarAction,
+} from './actions';
+import { getCurrentUserDetails, requireActor } from '@/lib/auth-helpers';
+import { uploadToR2 } from '@/lib/r2-upload';
+import { getCurrentUserProfile, updateCurrentUserProfile } from './service';
 
-function makeJwtPayload(overrides: Record<string, unknown> = {}) {
+const mockGetCurrentUserDetails = vi.mocked(getCurrentUserDetails);
+const mockRequireActor = vi.mocked(requireActor);
+const mockUploadToR2 = vi.mocked(uploadToR2);
+const mockGetCurrentUserProfile = vi.mocked(getCurrentUserProfile);
+const mockUpdateCurrentUserProfile = vi.mocked(updateCurrentUserProfile);
+
+function makeUser(overrides: Record<string, unknown> = {}) {
   return {
     id: 'user-1',
     email: 'john@example.com',
-    role: 'TECHNICIAN',
-    iat: Date.now(),
-    exp: Date.now() + 3600000,
+    firstName: 'John',
+    lastName: 'Doe',
+    avatarUrl: null,
+    role: 'TECHNICIAN' as any,
     ...overrides,
   };
 }
@@ -61,43 +65,57 @@ function makeProfile(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// Define AuthenticationError locally for tests
+class AuthenticationError extends Error {
+  constructor(message = 'Unauthorized') {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
+
 describe('getCurrentUserProfileAction', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('returns profile for authenticated user', async () => {
-    const payload = makeJwtPayload();
+    const user = makeUser();
     const profile = makeProfile();
 
-    mockGetCurrentUser.mockResolvedValue(payload);
-    mockGetCurrentUserProfile.mockResolvedValue(profile);
+    mockRequireActor.mockResolvedValue(user as any);
+    mockGetCurrentUserProfile.mockResolvedValue(profile as any);
 
     const result = await getCurrentUserProfileAction();
 
     expect(result.success).toBe(true);
-    expect(result.data?.id).toBe('user-1');
+    if (result.success) {
+      expect(result.data?.id).toBe('user-1');
+    }
     expect(mockGetCurrentUserProfile).toHaveBeenCalledWith('user-1');
   });
 
   it('returns error when not authenticated', async () => {
-    mockGetCurrentUser.mockResolvedValue(null);
+    mockRequireActor.mockRejectedValue(new AuthenticationError());
 
     const result = await getCurrentUserProfileAction();
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Unauthorized');
+    if (!result.success) {
+      expect(result.error).toBe('Unauthorized');
+    }
   });
 
   it('returns error when service throws', async () => {
-    const payload = makeJwtPayload();
-    mockGetCurrentUser.mockResolvedValue(payload);
+    const user = makeUser();
+    mockRequireActor.mockResolvedValue(user as any);
     mockGetCurrentUserProfile.mockRejectedValue(new Error('User not found'));
 
     const result = await getCurrentUserProfileAction();
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('User not found');
+    if (!result.success) {
+      expect(result.error).toBe('User not found');
+    }
   });
 });
 
@@ -107,11 +125,11 @@ describe('updateCurrentUserProfileAction', () => {
   });
 
   it('updates profile successfully', async () => {
-    const payload = makeJwtPayload();
+    const user = makeUser();
     const updatedProfile = makeProfile({ firstName: 'Jane' });
 
-    mockGetCurrentUser.mockResolvedValue(payload);
-    mockUpdateCurrentUserProfile.mockResolvedValue(updatedProfile);
+    mockRequireActor.mockResolvedValue(user as any);
+    mockUpdateCurrentUserProfile.mockResolvedValue(updatedProfile as any);
 
     const result = await updateCurrentUserProfileAction({
       firstName: 'Jane',
@@ -121,11 +139,13 @@ describe('updateCurrentUserProfileAction', () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.data?.firstName).toBe('Jane');
+    if (result.success) {
+      expect(result.data?.firstName).toBe('Jane');
+    }
   });
 
   it('returns error when not authenticated', async () => {
-    mockGetCurrentUser.mockResolvedValue(null);
+    mockRequireActor.mockRejectedValue(new AuthenticationError());
 
     const result = await updateCurrentUserProfileAction({
       firstName: 'Jane',
@@ -135,12 +155,14 @@ describe('updateCurrentUserProfileAction', () => {
     });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Unauthorized');
+    if (!result.success) {
+      expect(result.error).toBe('Unauthorized');
+    }
   });
 
   it('validates input with zod schema', async () => {
-    const payload = makeJwtPayload();
-    mockGetCurrentUser.mockResolvedValue(payload);
+    const user = makeUser();
+    mockRequireActor.mockResolvedValue(user as any);
 
     const result = await updateCurrentUserProfileAction({
       firstName: '',
@@ -153,8 +175,8 @@ describe('updateCurrentUserProfileAction', () => {
   });
 
   it('returns error when service throws', async () => {
-    const payload = makeJwtPayload();
-    mockGetCurrentUser.mockResolvedValue(payload);
+    const user = makeUser();
+    mockRequireActor.mockResolvedValue(user as any);
     mockUpdateCurrentUserProfile.mockRejectedValue(
       new Error('Phone number already in use')
     );
@@ -167,7 +189,9 @@ describe('updateCurrentUserProfileAction', () => {
     });
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Phone number already in use');
+    if (!result.success) {
+      expect(result.error).toBe('Phone number already in use');
+    }
   });
 });
 
@@ -177,8 +201,8 @@ describe('uploadAvatarAction', () => {
   });
 
   it('uploads avatar successfully', async () => {
-    const payload = makeJwtPayload();
-    mockGetCurrentUser.mockResolvedValue(payload);
+    const user = makeUser();
+    mockRequireActor.mockResolvedValue(user as any);
     mockUploadToR2.mockResolvedValue(
       'https://r2.example.com/avatars/user-1/test.webp'
     );
@@ -192,9 +216,11 @@ describe('uploadAvatarAction', () => {
     const result = await uploadAvatarAction(formData);
 
     expect(result.success).toBe(true);
-    expect(result.data?.url).toBe(
-      'https://r2.example.com/avatars/user-1/test.webp'
-    );
+    if (result.success) {
+      expect(result.data?.url).toBe(
+        'https://r2.example.com/avatars/user-1/test.webp'
+      );
+    }
     expect(mockUploadToR2).toHaveBeenCalledWith(
       expect.objectContaining({
         body: expect.any(Buffer),
@@ -204,29 +230,33 @@ describe('uploadAvatarAction', () => {
   });
 
   it('returns error when not authenticated', async () => {
-    mockGetCurrentUser.mockResolvedValue(null);
+    mockRequireActor.mockRejectedValue(new AuthenticationError());
 
     const formData = new FormData();
     const result = await uploadAvatarAction(formData);
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Unauthorized');
+    if (!result.success) {
+      expect(result.error).toBe('Unauthorized');
+    }
   });
 
   it('returns error when file is missing', async () => {
-    const payload = makeJwtPayload();
-    mockGetCurrentUser.mockResolvedValue(payload);
+    const user = makeUser();
+    mockRequireActor.mockResolvedValue(user as any);
 
     const formData = new FormData();
     const result = await uploadAvatarAction(formData);
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('File tidak ditemukan');
+    if (!result.success) {
+      expect(result.error).toBe('File tidak ditemukan');
+    }
   });
 
   it('returns error when R2 upload fails', async () => {
-    const payload = makeJwtPayload();
-    mockGetCurrentUser.mockResolvedValue(payload);
+    const user = makeUser();
+    mockRequireActor.mockResolvedValue(user as any);
     mockUploadToR2.mockRejectedValue(new Error('R2 connection failed'));
 
     const file = new File(['fake image'], 'avatar.webp', {
@@ -238,12 +268,14 @@ describe('uploadAvatarAction', () => {
     const result = await uploadAvatarAction(formData);
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('R2 connection failed');
+    if (!result.success) {
+      expect(result.error).toBe('R2 connection failed');
+    }
   });
 
   it('generates unique key with timestamp', async () => {
-    const payload = makeJwtPayload();
-    mockGetCurrentUser.mockResolvedValue(payload);
+    const user = makeUser();
+    mockRequireActor.mockResolvedValue(user as any);
     mockUploadToR2.mockResolvedValue(
       'https://r2.example.com/avatars/user-1/test.webp'
     );
@@ -256,13 +288,14 @@ describe('uploadAvatarAction', () => {
 
     await uploadAvatarAction(formData);
 
+    expect(mockUploadToR2).toHaveBeenCalled();
     const callArgs = mockUploadToR2.mock.calls[0][0];
     expect(callArgs.key).toMatch(/^avatars\/user-1\/\d+-my-avatar\.webp$/);
   });
 
   it('returns error when file is not an image', async () => {
-    const payload = makeJwtPayload();
-    mockGetCurrentUser.mockResolvedValue(payload);
+    const user = makeUser();
+    mockRequireActor.mockResolvedValue(user as any);
 
     const file = new File(['fake content'], 'document.pdf', {
       type: 'application/pdf',
@@ -273,12 +306,14 @@ describe('uploadAvatarAction', () => {
     const result = await uploadAvatarAction(formData);
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('File harus berupa gambar');
+    if (!result.success) {
+      expect(result.error).toBe('File harus berupa gambar');
+    }
   });
 
   it('returns error when file exceeds 5MB', async () => {
-    const payload = makeJwtPayload();
-    mockGetCurrentUser.mockResolvedValue(payload);
+    const user = makeUser();
+    mockRequireActor.mockResolvedValue(user as any);
 
     const largeContent = 'x'.repeat(6 * 1024 * 1024);
     const file = new File([largeContent], 'large.webp', { type: 'image/webp' });
@@ -288,6 +323,8 @@ describe('uploadAvatarAction', () => {
     const result = await uploadAvatarAction(formData);
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Ukuran file maksimal 5MB');
+    if (!result.success) {
+      expect(result.error).toBe('Ukuran file maksimal 5MB');
+    }
   });
 });

@@ -1,59 +1,78 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { notificationService } from './service';
-import type { TListNotificationsResult } from './types';
+import { actionFactory } from '@/lib/action-factory';
+import { RbacResource } from '@/lib/rbac';
+import { z } from 'zod/v4';
 
-export async function getNotificationsAction(
-  page = 1,
-  pageSize = 5
-): Promise<TListNotificationsResult> {
-  const user = await getCurrentUserDetails();
-  if (!user) throw new Error('Unauthorized');
-
-  try {
-    const result = await notificationService.listUserNotifications({
-      userId: user.id,
-      page,
-      pageSize,
+/**
+ * Server Action: Get user notifications with pagination
+ */
+export const getNotificationsAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    return notificationService.listUserNotifications({
+      userId: actor.id,
+      page: input.page,
+      pageSize: input.pageSize,
     });
-    return result;
-  } catch (error) {
-    console.error('[DEBUG] getNotificationsAction error:', error);
-    throw error;
+  },
+  {
+    schema: z.object({
+      page: z.number().int().positive().default(1),
+      pageSize: z.number().int().positive().default(5),
+    }),
+    metadata: { rbac: { resource: RbacResource.PUBLIC, capability: 'read' } },
   }
-}
+);
 
-export async function getUnreadCountAction(): Promise<number> {
-  const user = await getCurrentUserDetails();
-  if (!user) return 0;
+/**
+ * Server Action: Get unread notification count
+ */
+export const getUnreadCountAction = actionFactory.protected(
+  async ({ actor }) => {
+    const result = await notificationService.getUserUnreadCount({
+      userId: actor.id,
+    });
+    return result.unreadCount;
+  },
+  {
+    metadata: { rbac: { resource: RbacResource.PUBLIC, capability: 'read' } },
+  }
+);
 
-  const result = await notificationService.getUserUnreadCount({
-    userId: user.id,
-  });
-  return result.unreadCount;
-}
+/**
+ * Server Action: Mark a single notification as read
+ */
+export const markNotificationReadAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    await notificationService.markNotificationAsRead({
+      userId: actor.id,
+      notificationId: input,
+    });
 
-export async function markNotificationReadAction(notificationId: string) {
-  const user = await getCurrentUserDetails();
-  if (!user) throw new Error('Unauthorized');
+    revalidatePath('/(main)', 'layout');
+    return { success: true };
+  },
+  {
+    schema: z.string().min(1, 'ID notifikasi wajib diisi'),
+    metadata: { rbac: { resource: RbacResource.PUBLIC, capability: 'update' } },
+  }
+);
 
-  await notificationService.markNotificationAsRead({
-    userId: user.id,
-    notificationId,
-  });
+/**
+ * Server Action: Mark all notifications as read
+ */
+export const markAllNotificationsReadAction = actionFactory.protected(
+  async ({ actor }) => {
+    await notificationService.markAllNotificationsAsRead({
+      userId: actor.id,
+    });
 
-  revalidatePath('/(main)', 'layout');
-}
-
-export async function markAllNotificationsReadAction() {
-  const user = await getCurrentUserDetails();
-  if (!user) throw new Error('Unauthorized');
-
-  await notificationService.markAllNotificationsAsRead({
-    userId: user.id,
-  });
-
-  revalidatePath('/(main)', 'layout');
-}
+    revalidatePath('/(main)', 'layout');
+    return { success: true };
+  },
+  {
+    metadata: { rbac: { resource: RbacResource.PUBLIC, capability: 'update' } },
+  }
+);

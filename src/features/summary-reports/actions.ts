@@ -1,12 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
-import { getCurrentUserDetails } from '@/lib/auth-helpers';
-import { ensureAccess, RbacResource } from '@/lib/rbac';
+import { z } from 'zod/v4';
+import { actionFactory } from '@/lib/action-factory';
+import { RbacResource } from '@/lib/rbac';
 import * as service from './service';
 import * as projectService from '@/features/projects/service';
-import type { IJwtPayload } from '@/@types/auth.type';
+import { uploadToR2 } from '@/lib/r2-upload';
 
 const booleanField = z.preprocess(value => {
   if (value === 'true' || value === 'on') return true;
@@ -28,39 +28,6 @@ const updateSchema = z.object({
   includeChemicalReports: booleanField.optional(),
   status: z.enum(['DRAFT', 'FINAL']).optional(),
 });
-
-export async function updateSummaryReportAction(formData: FormData) {
-  const actorDetails = await getCurrentUserDetails();
-  if (!actorDetails) return { error: 'Unauthorized' };
-  const actor: IJwtPayload = {
-    id: actorDetails.id,
-    email: actorDetails.email,
-    role: actorDetails.role,
-  };
-
-  const data = Object.fromEntries(formData);
-  const parsed = updateSchema.safeParse(data);
-
-  if (!parsed.success) {
-    return {
-      error: 'Validation failed',
-      fields: parsed.error.flatten().fieldErrors,
-    };
-  }
-
-  try {
-    const projectId = await service.getSummaryReportProjectId(parsed.data.id);
-    if (!projectId) return { error: 'Not found' };
-    await projectService.assertCanAccessProject(actor, projectId);
-    await service.updateSummaryReport(actor, parsed.data);
-  } catch (error) {
-    console.error('[CPIS-ERROR] SummaryReport.Update:', error);
-    return { error: 'Failed to update report' };
-  }
-
-  revalidatePath('/summary-reports');
-  return { success: true };
-}
 
 const createSchema = z.object({
   projectId: z.string().uuid(),
@@ -105,235 +72,147 @@ function isAllowedAttachmentType(file: File) {
   return file.type === 'application/pdf' || file.type.startsWith('image/');
 }
 
-async function uploadSummaryReportAttachment(
-  file: File,
-  projectId: string,
-  reportId: string
-) {
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const workerUrl = process.env.R2_WORKER_URL;
-  const authSecret = process.env.R2_AUTH_SECRET;
+/**
+ * Server Action: Update a summary report
+ */
+export const updateSummaryReportAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    // If input is FormData, extract object
+    const data = input instanceof FormData ? Object.fromEntries(input) : input;
+    const validated = updateSchema.parse(data);
 
-  if (!workerUrl || !authSecret) {
-    throw new Error('Server configuration error: Missing R2 credentials');
+    const projectId = await service.getSummaryReportProjectId(validated.id);
+    if (!projectId) throw new Error('Not found');
+    
+    await projectService.assertCanAccessProject(actor, projectId);
+    await service.updateSummaryReport(actor, validated);
+
+    revalidatePath('/summary-reports');
+    return { success: true };
+  },
+  {
+    metadata: { rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'update' } },
   }
+);
 
-  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-  const key = `projects/${projectId}/summary-reports/${reportId}/attachments/${Date.now()}_${sanitizedName}`;
+/**
+ * Server Action: Create or update summary report for a period
+ */
+export const createSummaryReportAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const data = input instanceof FormData ? Object.fromEntries(input) : input;
+    const validated = createSchema.parse(data);
 
-  const response = await fetch(`${workerUrl}/${key}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${authSecret}`,
-      'Content-Type': file.type,
-    },
-    body: buffer,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[CPIS-ERROR] SummaryReport.AttachmentUpload:', {
-      status: response.status,
-      statusText: response.statusText,
-      body: errorText,
-    });
-    throw new Error(`Upload failed: ${response.statusText}`);
-  }
-
-  return `${workerUrl}/${key}`;
-}
-
-export async function createSummaryReportAction(formData: FormData) {
-  const actorDetails = await getCurrentUserDetails();
-  if (!actorDetails) return { error: 'Unauthorized' };
-  const actor: IJwtPayload = {
-    id: actorDetails.id,
-    email: actorDetails.email,
-    role: actorDetails.role,
-  };
-
-  const data = Object.fromEntries(formData);
-  const parsed = createSchema.safeParse(data);
-
-  if (!parsed.success) {
-    return {
-      error: 'Validation failed',
-      fields: parsed.error.flatten().fieldErrors,
-    };
-  }
-
-  try {
-    ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'create');
-    await projectService.assertCanAccessProject(actor, parsed.data.projectId);
+    await projectService.assertCanAccessProject(actor, validated.projectId);
+    
     const existing = await service.getSummaryReportByPeriod(
-      parsed.data.projectId,
-      parsed.data.period
+      validated.projectId,
+      validated.period
     );
 
     if (existing) {
       const updated = await service.updateSummaryReport(actor, {
         id: existing.id,
-        notes: parsed.data.notes,
-        includeExecutiveSummary: parsed.data.includeExecutiveSummary,
-        includeLogSheets: parsed.data.includeLogSheets,
-        includeLabAnalysis: parsed.data.includeLabAnalysis,
-        includeWorkReports: parsed.data.includeWorkReports,
-        includeChemicalReports: parsed.data.includeChemicalReports,
+        notes: validated.notes,
+        includeExecutiveSummary: validated.includeExecutiveSummary,
+        includeLogSheets: validated.includeLogSheets,
+        includeLabAnalysis: validated.includeLabAnalysis,
+        includeWorkReports: validated.includeWorkReports,
+        includeChemicalReports: validated.includeChemicalReports,
       });
       revalidatePath('/summary-reports');
-      return { success: true, data: updated };
+      return updated;
     }
 
-    const created = await service.createSummaryReport(actor, parsed.data);
+    const created = await service.createSummaryReport(actor, validated);
     revalidatePath('/summary-reports');
-    return { success: true, data: created };
-  } catch (error) {
-    console.error('[CPIS-ERROR] SummaryReport.Create:', error);
-    return { error: 'Failed to create report' };
+    return created;
+  },
+  {
+    metadata: { rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'create' } },
   }
-}
+);
 
-export async function getSummaryReportByPeriodAction(
-  projectId: string,
-  period: Date
-) {
-  const actorDetails = await getCurrentUserDetails();
-  if (!actorDetails) return { error: 'Unauthorized' };
-  const actor: IJwtPayload = {
-    id: actorDetails.id,
-    email: actorDetails.email,
-    role: actorDetails.role,
-  };
+/**
+ * Server Action: Get summary report by project and period
+ */
+export const getSummaryReportByPeriodAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const validated = getByPeriodSchema.parse({
+      projectId: input.projectId,
+      period: input.period.toISOString ? input.period.toISOString() : input.period,
+    });
 
-  const parsed = getByPeriodSchema.safeParse({
-    projectId,
-    period: period.toISOString(),
-  });
-
-  if (!parsed.success) {
-    return {
-      error: 'Validation failed',
-      fields: parsed.error.flatten().fieldErrors,
-    };
+    await projectService.assertCanAccessProject(actor, validated.projectId);
+    return service.getSummaryReportByPeriod(validated.projectId, validated.period);
+  },
+  {
+    metadata: { rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'read' } },
   }
+);
 
-  try {
-    ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'read');
-    await projectService.assertCanAccessProject(actor, parsed.data.projectId);
-    const result = await service.getSummaryReportByPeriod(
-      parsed.data.projectId,
-      parsed.data.period
-    );
-    return { success: true, data: result };
-  } catch (error) {
-    console.error('[CPIS-ERROR] SummaryReport.GetByPeriod:', error);
-    return { error: 'Failed to fetch report' };
-  }
-}
+/**
+ * Server Action: Upload attachments for a summary report
+ */
+export const uploadSummaryReportAttachmentsAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    if (!(input instanceof FormData)) {
+      throw new Error('FormData required for file upload');
+    }
 
-export async function uploadSummaryReportAttachmentsAction(formData: FormData) {
-  const actorDetails = await getCurrentUserDetails();
-  if (!actorDetails) return { error: 'Unauthorized' };
-  const actor: IJwtPayload = {
-    id: actorDetails.id,
-    email: actorDetails.email,
-    role: actorDetails.role,
-  };
+    const data = Object.fromEntries(input);
+    const parsed = attachmentSchema.parse(data);
+    const periodLabel = input.get('period') as string;
 
-  const data = Object.fromEntries(formData);
-  const parsed = attachmentSchema.safeParse(data);
-
-  if (!parsed.success) {
-    return {
-      error: 'Validation failed',
-      fields: parsed.error.flatten().fieldErrors,
-    };
-  }
-
-  const periodLabel = formData.get('period') as string;
-
-  try {
-    ensureAccess(actor.role, RbacResource.SUMMARY_REPORTS, 'update');
-    await projectService.assertCanAccessProject(actor, parsed.data.projectId);
+    await projectService.assertCanAccessProject(actor, parsed.projectId);
     const report = await service.ensureSummaryReport(
       actor,
-      parsed.data.projectId,
-      parsed.data.period
+      parsed.projectId,
+      parsed.period
     );
 
-    const dataTemuanFile = formData.get('dataTemuanFile') as File | null;
-    const dataBlowdownFile = formData.get('dataBlowdownFile') as File | null;
-    const dataSuhuFile = formData.get('dataSuhuFile') as File | null;
-    const dataSuratJalanFile = formData.get(
-      'dataSuratJalanFile'
-    ) as File | null;
+    const dataTemuanFile = input.get('dataTemuanFile') as File | null;
+    const dataBlowdownFile = input.get('dataBlowdownFile') as File | null;
+    const dataSuhuFile = input.get('dataSuhuFile') as File | null;
+    const dataSuratJalanFile = input.get('dataSuratJalanFile') as File | null;
 
-    const updates: {
-      id: string;
-      dataTemuanUrl?: string;
-      dataBlowdownUrl?: string;
-      dataSuhuUrl?: string;
-      dataSuratJalanUrl?: string;
-    } = { id: report.id };
+    const updates: any = { id: report.id };
 
-    if (dataTemuanFile?.size) {
-      if (!isAllowedAttachmentType(dataTemuanFile)) {
-        return { error: 'Tipe file data temuan tidak didukung' };
+    const processFile = async (file: File | null, keyPrefix: string) => {
+      if (file?.size) {
+        if (!isAllowedAttachmentType(file)) {
+          throw new Error(`Tipe file ${keyPrefix} tidak didukung`);
+        }
+        
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const key = `projects/${parsed.projectId}/summary-reports/${report.id}/attachments/${Date.now()}_${sanitizedName}`;
+
+        return await uploadToR2({
+          key,
+          body: buffer,
+          contentType: file.type,
+        });
       }
-      updates.dataTemuanUrl = await uploadSummaryReportAttachment(
-        dataTemuanFile,
-        parsed.data.projectId,
-        report.id
-      );
-    }
+      return undefined;
+    };
 
-    if (dataBlowdownFile?.size) {
-      if (!isAllowedAttachmentType(dataBlowdownFile)) {
-        return { error: 'Tipe file data blowdown tidak didukung' };
-      }
-      updates.dataBlowdownUrl = await uploadSummaryReportAttachment(
-        dataBlowdownFile,
-        parsed.data.projectId,
-        report.id
-      );
-    }
-
-    if (dataSuhuFile?.size) {
-      if (!isAllowedAttachmentType(dataSuhuFile)) {
-        return { error: 'Tipe file data suhu tidak didukung' };
-      }
-      updates.dataSuhuUrl = await uploadSummaryReportAttachment(
-        dataSuhuFile,
-        parsed.data.projectId,
-        report.id
-      );
-    }
-
-    if (dataSuratJalanFile?.size) {
-      if (!isAllowedAttachmentType(dataSuratJalanFile)) {
-        return { error: 'Tipe file surat jalan tidak didukung' };
-      }
-      updates.dataSuratJalanUrl = await uploadSummaryReportAttachment(
-        dataSuratJalanFile,
-        parsed.data.projectId,
-        report.id
-      );
-    }
+    updates.dataTemuanUrl = await processFile(dataTemuanFile, 'data temuan');
+    updates.dataBlowdownUrl = await processFile(dataBlowdownFile, 'data blowdown');
+    updates.dataSuhuUrl = await processFile(dataSuhuFile, 'data suhu');
+    updates.dataSuratJalanUrl = await processFile(dataSuratJalanFile, 'surat jalan');
 
     await service.updateSummaryReport(actor, updates);
 
     revalidatePath('/summary-reports');
     if (periodLabel) {
-      revalidatePath(
-        `/summary-reports/${parsed.data.projectId}/${periodLabel}/print`
-      );
-      revalidatePath(
-        `/summary-reports/${parsed.data.projectId}/${periodLabel}/attachments/print`
-      );
+      revalidatePath(`/summary-reports/${parsed.projectId}/${periodLabel}/print`);
+      revalidatePath(`/summary-reports/${parsed.projectId}/${periodLabel}/attachments/print`);
     }
+    
     return { success: true };
-  } catch (error) {
-    console.error('[CPIS-ERROR] SummaryReport.UploadAttachments:', error);
-    return { error: 'Gagal mengupload lampiran' };
+  },
+  {
+    metadata: { rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'update' } },
   }
-}
+);

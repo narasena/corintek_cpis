@@ -127,7 +127,6 @@ function createMobileUnitViewConfig(
   return {
     ...base,
     ...override,
-    featureEnabled: true,
   };
 }
 

@@ -1,8 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getCurrentUser } from '@/lib/auth-helpers';
-import { ok, err, unauthorized, type ActionResult } from '@/lib/action-helpers';
+import { actionFactory } from '@/lib/action-factory';
+import { RbacResource } from '@/lib/rbac';
 import { parameterLimitProfileService } from './service';
 import {
   CreateParameterLimitProfileSchema,
@@ -11,237 +11,163 @@ import {
   CopyFromMasterDefaultsSchema,
   GetParameterLimitProfilesFilterSchema,
 } from './types';
-import type {
-  IParameterLimitProfile,
-  IProfileWithLimits,
-  IProfileStats,
-  ICreateProfileResult,
-  IDeleteProfileResult,
-  IUpsertLimitsResult,
-  TCreateParameterLimitProfile,
-  TUpdateParameterLimitProfile,
-  TUpsertParameterLimitsBatch,
-  TGetParameterLimitProfilesFilter,
-  TCopyFromMasterDefaults,
-} from './types';
+import { z } from 'zod/v4';
 
 // =============================================================================
 // Parameter Limit Profile Actions
 // =============================================================================
 
-const LOG_PREFIX = '[CPIS-ERROR] ParameterLimitProfiles';
-
 /**
  * Retrieves all parameter limit profiles.
  */
-export async function getProfilesAction(
-  filters?: TGetParameterLimitProfilesFilter
-): Promise<ActionResult<IParameterLimitProfile[]>> {
-  const actor = await getCurrentUser();
-  if (!actor) return unauthorized();
-
-  try {
-    const validatedFilters = filters
-      ? GetParameterLimitProfilesFilterSchema.parse(filters)
-      : undefined;
-    const profiles = await parameterLimitProfileService.getProfiles(
-      actor,
-      validatedFilters
-    );
-    return ok(profiles);
-  } catch (error) {
-    console.error(`${LOG_PREFIX}.GetProfiles:`, error);
-    return err(error, 'Gagal mengambil daftar profil');
+export const getProfilesAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    return parameterLimitProfileService.getProfiles(actor, input);
+  },
+  {
+    schema: GetParameterLimitProfilesFilterSchema.optional(),
+    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'read' } },
   }
-}
+);
 
 /**
  * Retrieves a single profile with all its limits.
  */
-export async function getProfileWithLimitsAction(
-  id: string
-): Promise<ActionResult<IProfileWithLimits>> {
-  const actor = await getCurrentUser();
-  if (!actor) return unauthorized();
-
-  try {
-    const profile = await parameterLimitProfileService.getProfileWithLimits(
-      actor,
-      id
-    );
-    return ok(profile);
-  } catch (error) {
-    console.error(`${LOG_PREFIX}.GetProfileWithLimits:`, error);
-    return err(error, 'Gagal mengambil detail profil');
+export const getProfileWithLimitsAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    return parameterLimitProfileService.getProfileWithLimits(actor, input);
+  },
+  {
+    schema: z.string().uuid('ID profil tidak valid'),
+    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'read' } },
   }
-}
+);
 
 /**
  * Creates a new parameter limit profile.
  */
-export async function createProfileAction(
-  data: TCreateParameterLimitProfile
-): Promise<ActionResult<ICreateProfileResult>> {
-  const actor = await getCurrentUser();
-  if (!actor) return unauthorized();
-
-  try {
-    const validated = CreateParameterLimitProfileSchema.parse(data);
-    const result = await parameterLimitProfileService.createProfile(
-      actor,
-      validated
-    );
+export const createProfileAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const result = await parameterLimitProfileService.createProfile(actor, input);
 
     revalidatePath('/parameters');
-    if (data.isDefault) {
+    if (input.isDefault) {
       revalidatePath('/projects');
     }
 
-    return ok(result);
-  } catch (error) {
-    console.error(`${LOG_PREFIX}.CreateProfile:`, error);
-    return err(error, 'Gagal membuat profil');
+    return result;
+  },
+  {
+    schema: CreateParameterLimitProfileSchema,
+    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'create' } },
   }
-}
+);
 
 /**
  * Updates an existing parameter limit profile.
  */
-export async function updateProfileAction(
-  data: TUpdateParameterLimitProfile
-): Promise<ActionResult<IParameterLimitProfile>> {
-  const actor = await getCurrentUser();
-  if (!actor) return unauthorized();
-
-  try {
-    const validated = UpdateParameterLimitProfileSchema.parse(data);
-    const profile = await parameterLimitProfileService.updateProfile(
-      actor,
-      validated
-    );
+export const updateProfileAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const profile = await parameterLimitProfileService.updateProfile(actor, input);
 
     revalidatePath('/parameters');
-    revalidatePath(`/parameters/profiles/${data.id}`);
-    if ('isDefault' in validated) {
+    revalidatePath(`/parameters/profiles/${input.id}`);
+    if ('isDefault' in input) {
       revalidatePath('/projects');
     }
 
-    return ok(profile);
-  } catch (error) {
-    console.error(`${LOG_PREFIX}.UpdateProfile:`, error);
-    return err(error, 'Gagal memperbarui profil');
+    return profile;
+  },
+  {
+    schema: UpdateParameterLimitProfileSchema,
+    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'update' } },
   }
-}
+);
 
 /**
  * Deletes a parameter limit profile.
  */
-export async function deleteProfileAction(
-  id: string
-): Promise<ActionResult<IDeleteProfileResult>> {
-  const actor = await getCurrentUser();
-  if (!actor) return unauthorized();
-
-  try {
-    const result = await parameterLimitProfileService.deleteProfile(actor, id);
+export const deleteProfileAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const result = await parameterLimitProfileService.deleteProfile(actor, input);
 
     revalidatePath('/parameters');
     revalidatePath('/projects');
 
-    return ok(result);
-  } catch (error) {
-    console.error(`${LOG_PREFIX}.DeleteProfile:`, error);
-    return err(error, 'Gagal menghapus profil');
+    return result;
+  },
+  {
+    schema: z.string().uuid('ID profil tidak valid'),
+    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'delete' } },
   }
-}
+);
 
 /**
  * Batch upserts parameter limits within a profile.
  */
-export async function upsertProfileLimitsAction(
-  data: TUpsertParameterLimitsBatch
-): Promise<ActionResult<IUpsertLimitsResult>> {
-  const actor = await getCurrentUser();
-  if (!actor) return unauthorized();
-
-  try {
-    const validated = UpsertParameterLimitsBatchSchema.parse(data);
+export const upsertProfileLimitsAction = actionFactory.protected(
+  async ({ input, actor }) => {
     const result = await parameterLimitProfileService.upsertProfileLimits(
       actor,
-      validated
+      input
     );
 
-    revalidatePath(`/parameters/profiles/${data.profileId}`);
+    revalidatePath(`/parameters/profiles/${input.profileId}`);
 
-    return ok(result);
-  } catch (error) {
-    console.error(`${LOG_PREFIX}.UpsertProfileLimits:`, error);
-    return err(error, 'Gagal menyimpan batas parameter');
+    return result;
+  },
+  {
+    schema: UpsertParameterLimitsBatchSchema,
+    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'update' } },
   }
-}
+);
 
 /**
  * Copies limits from default profile to a new profile.
  */
-export async function copyFromDefaultProfileAction(
-  data: TCopyFromMasterDefaults
-): Promise<ActionResult<{ copied: number }>> {
-  const actor = await getCurrentUser();
-  if (!actor) return unauthorized();
-
-  try {
-    const validated = CopyFromMasterDefaultsSchema.parse(data);
+export const copyFromDefaultProfileAction = actionFactory.protected(
+  async ({ input, actor }) => {
     const result = await parameterLimitProfileService.copyFromMasterDefaults(
       actor,
-      validated
+      input
     );
 
-    revalidatePath(`/parameters/profiles/${data.profileId}`);
+    revalidatePath(`/parameters/profiles/${input.profileId}`);
 
-    return ok(result);
-  } catch (error) {
-    console.error(`${LOG_PREFIX}.CopyFromDefaultProfile:`, error);
-    return err(error, 'Gagal menyalin batas default');
+    return result;
+  },
+  {
+    schema: CopyFromMasterDefaultsSchema,
+    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'update' } },
   }
-}
+);
 
 /**
  * Retrieves profile usage statistics.
  */
-export async function getProfileStatsAction(
-  id: string
-): Promise<ActionResult<IProfileStats>> {
-  const actor = await getCurrentUser();
-  if (!actor) return unauthorized();
-
-  try {
-    const stats = await parameterLimitProfileService.getProfileStats(actor, id);
-    return ok(stats);
-  } catch (error) {
-    console.error(`${LOG_PREFIX}.GetProfileStats:`, error);
-    return err(error, 'Gagal mengambil statistik profil');
+export const getProfileStatsAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    return parameterLimitProfileService.getProfileStats(actor, input);
+  },
+  {
+    schema: z.string().uuid('ID profil tidak valid'),
+    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'read' } },
   }
-}
+);
 
 /**
  * Retrieves profiles for project form selector.
  */
-export async function getProfilesForSelectAction(): Promise<
-  ActionResult<Array<Pick<IParameterLimitProfile, 'id' | 'name' | 'isDefault'>>>
-> {
-  const actor = await getCurrentUser();
-  if (!actor) return unauthorized();
-
-  try {
+export const getProfilesForSelectAction = actionFactory.protected(
+  async ({ actor }) => {
     const profiles = await parameterLimitProfileService.getProfiles(actor);
-    const selectOptions = profiles.map(p => ({
+    return profiles.map(p => ({
       id: p.id,
       name: p.name,
       isDefault: p.isDefault,
     }));
-    return ok(selectOptions);
-  } catch (error) {
-    console.error(`${LOG_PREFIX}.GetProfilesForSelect:`, error);
-    return err(error, 'Gagal mengambil daftar profil');
+  },
+  {
+    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'read' } },
   }
-}
+);

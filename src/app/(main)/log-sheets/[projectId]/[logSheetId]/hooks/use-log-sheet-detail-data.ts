@@ -18,7 +18,7 @@ export function useLogSheetDetailData(logSheetId: string) {
         });
         return;
       }
-      setDetail(result.data as unknown as TDetail);
+      setDetail((result.data as unknown as TDetail) ?? null);
     } catch {
       toast.error('Terjadi kesalahan saat memuat data');
     } finally {

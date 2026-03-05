@@ -128,18 +128,18 @@ describe('CLIENT role permissions', () => {
     expect(canAccess('CLIENT', RbacResource.CLIENTS, 'create')).toBe(false);
   });
 
-  it('has NO access to CHEMICALS', () => {
-    expect(canAccess('CLIENT', RbacResource.CHEMICALS, 'read')).toBe(false);
+  it('has read-only access to CHEMICALS', () => {
+    expect(canAccess('CLIENT', RbacResource.CHEMICALS, 'read')).toBe(true);
     expect(canAccess('CLIENT', RbacResource.CHEMICALS, 'create')).toBe(false);
   });
 
-  it('has NO access to PARAMETERS', () => {
-    expect(canAccess('CLIENT', RbacResource.PARAMETERS, 'read')).toBe(false);
+  it('has read-only access to PARAMETERS', () => {
+    expect(canAccess('CLIENT', RbacResource.PARAMETERS, 'read')).toBe(true);
     expect(canAccess('CLIENT', RbacResource.PARAMETERS, 'create')).toBe(false);
   });
 
-  it('has NO access to MACHINES', () => {
-    expect(canAccess('CLIENT', RbacResource.MACHINES, 'read')).toBe(false);
+  it('has read-only access to MACHINES', () => {
+    expect(canAccess('CLIENT', RbacResource.MACHINES, 'read')).toBe(true);
     expect(canAccess('CLIENT', RbacResource.MACHINES, 'create')).toBe(false);
   });
 });

@@ -3,9 +3,6 @@
 import {
   chemicalCreateSchema,
   chemicalUpdateSchema,
-  TChemicalCreateInput,
-  TChemicalUpdateInput,
-  TChemical,
 } from '@/@types/chemical.type';
 import {
   createChemical,
@@ -16,192 +13,95 @@ import {
   getChemicalsForLogSheet,
 } from './service';
 import { revalidatePath } from 'next/cache';
-import { getCurrentUser } from '@/lib/auth-helpers';
-
-type TActionResponse<T = unknown> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-};
+import { actionFactory } from '@/lib/action-factory';
+import { z } from 'zod/v4';
+import { RbacResource } from '@/lib/rbac';
 
 /**
  * Server Action: Create a new chemical
  */
-export async function createChemicalAction(
-  input: TChemicalCreateInput
-): Promise<TActionResponse<TChemical>> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    // Validate input
-    const validatedData = chemicalCreateSchema.parse(input);
-
-    // Call service
-    const chemical = await createChemical(actor, validatedData);
-
-    // Revalidate chemical list pages
+export const createChemicalAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const chemical = await createChemical(actor, input);
     revalidatePath('/chemicals');
-
-    return {
-      success: true,
-      data: chemical,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Chemicals.Create:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Gagal membuat chemical',
-    };
+    return chemical;
+  },
+  {
+    schema: chemicalCreateSchema,
+    metadata: {
+      rbac: { resource: RbacResource.CHEMICALS, capability: 'create' },
+    },
   }
-}
+);
 
 /**
- * Server Action: Get all chemicals
+ * Server Action: Get chemicals for log sheet selection
  */
-export async function getChemicalsAction(): Promise<
-  TActionResponse<TChemical[]>
-> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
+export const getChemicalsAction = actionFactory.protected(
+  async ({ actor }) => {
     const chemicals = await getChemicalsForLogSheet(actor);
-    return {
-      success: true,
-      data: chemicals || [],
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Chemicals.getChemicalsAction:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil data chemical',
-    };
+    return chemicals || [];
+  },
+  {
+    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'read' } },
   }
-}
+);
 
 /**
  * Server Action: Update a chemical
  */
-export async function updateChemicalAction(
-  input: TChemicalUpdateInput
-): Promise<TActionResponse<TChemical>> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    // Validate input
-    const validatedData = chemicalUpdateSchema.parse(input);
-
-    // Call service
-    const chemical = await updateChemical(actor, validatedData);
-
-    // Revalidate chemical list pages
+export const updateChemicalAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const chemical = await updateChemical(actor, input);
     revalidatePath('/chemicals');
-
-    return {
-      success: true,
-      data: chemical,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Chemicals.Update:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal mengupdate chemical',
-    };
+    return chemical;
+  },
+  {
+    schema: chemicalUpdateSchema,
+    metadata: {
+      rbac: { resource: RbacResource.CHEMICALS, capability: 'update' },
+    },
   }
-}
+);
 
 /**
  * Server Action: Delete a chemical
  */
-export async function deleteChemicalAction(
-  id: string
-): Promise<TActionResponse<boolean>> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    if (!id) throw new Error('ID required');
-
-    await deleteChemical(actor, id);
-
+export const deleteChemicalAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    await deleteChemical(actor, input);
     revalidatePath('/chemicals');
-
-    return {
-      success: true,
-      data: true,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Chemicals.Delete:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal menghapus chemical',
-    };
+    return true;
+  },
+  {
+    schema: z.string().min(1, 'ID chemical wajib diisi'),
+    metadata: {
+      rbac: { resource: RbacResource.CHEMICALS, capability: 'delete' },
+    },
   }
-}
+);
 
 /**
- * Server Action: Get all chemicals
+ * Server Action: Get all chemicals (admin view)
  */
-export async function getAllChemicalsAction(): Promise<
-  TActionResponse<TChemical[]>
-> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    const chemicals = await getAllChemicals(actor);
-
-    return {
-      success: true,
-      data: chemicals,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Chemicals.ListAll:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil data chemical',
-    };
+export const getAllChemicalsAction = actionFactory.protected(
+  async ({ actor }) => {
+    return getAllChemicals(actor);
+  },
+  {
+    metadata: { rbac: { resource: RbacResource.CHEMICALS, capability: 'read' } },
   }
-}
+);
 
 /**
  * Server Action: Get chemical by ID
  */
-export async function getChemicalByIdAction(
-  id: string
-): Promise<TActionResponse<TChemical>> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    if (!id || typeof id !== 'string') {
-      throw new Error('ID chemical tidak valid');
-    }
-
-    const chemical = await getChemicalById(actor, id);
-
-    return {
-      success: true,
-      data: chemical,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Chemicals.GetById:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil data chemical',
-    };
+export const getChemicalByIdAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    return getChemicalById(actor, input);
+  },
+  {
+    schema: z.string().min(1, 'ID chemical tidak valid'),
+    metadata: { rbac: { resource: RbacResource.CHEMICALS, capability: 'read' } },
   }
-}
+);

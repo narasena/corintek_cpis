@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { notifyLimitBreachesOnSubmission } from '../log-sheet-notifications';
+import { notifyLimitBreachesOnSubmission } from './log-sheet-notifications';
 import { notificationService } from '@/features/notifications/service';
-import { buildLimitEvaluationInput } from '../limit-breach-adapter';
+import { buildLimitEvaluationInput } from './limit-breach-adapter';
 
 // Mock dependencies
 vi.mock('@/features/notifications/service', () => ({
@@ -10,7 +10,7 @@ vi.mock('@/features/notifications/service', () => ({
   },
 }));
 
-vi.mock('../limit-breach-adapter', () => ({
+vi.mock('./limit-breach-adapter', () => ({
   buildLimitEvaluationInput: vi.fn(),
 }));
 
