@@ -1,22 +1,15 @@
 'use server';
 
 import { z } from 'zod/v4';
-import { getCurrentUserDetails } from '@/lib/auth-helpers';
-import { ensureAccess, RbacResource } from '@/lib/rbac';
+import { actionFactory } from '@/lib/action-factory';
+import { RbacResource } from '@/lib/rbac';
 import * as dashboardService from './service';
 import * as projectService from '@/features/projects/service';
 import { resolveTargetProjectIds } from './utils';
-import type { IJwtPayload } from '@/@types/auth.type';
 import type { IGetRecentActivitiesActionResult } from './types';
 import { getVisibleActivityTypes } from './config';
-import { composeDashboardModule, type IActivityRepository } from './di';
+import { composeDashboardModule } from './di';
 import { prisma } from '@/lib/prisma';
-
-async function requireActor(): Promise<IJwtPayload> {
-  const user = await getCurrentUserDetails();
-  if (!user) throw new Error('Unauthorized');
-  return { id: user.id, email: user.email, role: user.role };
-}
 
 const GetDashboardMetricsSchema = z.object({
   projectId: z.string().uuid().optional(),
@@ -35,94 +28,47 @@ const GetRecentActivitiesSchema = z.object({
   cursor: z.string().optional(),
 });
 
-export async function getDashboardMetricsAction(data: unknown) {
-  try {
-    const actor = await requireActor();
-    ensureAccess(actor.role, RbacResource.DASHBOARD, 'read');
+export const getDashboardMetricsAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const targetProjectIds = await resolveTargetProjectIds(actor, input.projectId, {
+      assertCanAccessProject: projectService.assertCanAccessProject,
+      getAccessibleProjectIds: projectService.getAccessibleProjectIds,
+    });
+    if (targetProjectIds === 'empty') return [];
 
-    const validatedData = GetDashboardMetricsSchema.parse(data || {});
-    const targetProjectIds = await resolveTargetProjectIds(
-      actor,
-      validatedData.projectId,
-      {
-        assertCanAccessProject: projectService.assertCanAccessProject,
-        getAccessibleProjectIds: projectService.getAccessibleProjectIds,
-      }
-    );
-    if (targetProjectIds === 'empty') return { success: true, data: [] };
-
-    const metrics = await dashboardService.getDashboardMetrics(
-      targetProjectIds,
-      validatedData.range
-    );
-    return { success: true, data: metrics };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Dashboard.GetMetrics:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil data metrics dashboard',
-    };
+    return dashboardService.getDashboardMetrics(targetProjectIds, input.range);
+  },
+  {
+    schema: GetDashboardMetricsSchema,
+    metadata: { rbac: { resource: RbacResource.DASHBOARD, capability: 'read' } },
   }
-}
+);
 
-export async function getRecentPhotosAction(data: unknown) {
-  try {
-    const actor = await requireActor();
-    ensureAccess(actor.role, RbacResource.DASHBOARD, 'read');
+export const getRecentPhotosAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const targetProjectIds = await resolveTargetProjectIds(actor, input.projectId, {
+      assertCanAccessProject: projectService.assertCanAccessProject,
+      getAccessibleProjectIds: projectService.getAccessibleProjectIds,
+    });
+    if (targetProjectIds === 'empty') return [];
 
-    const validatedData = GetRecentPhotosSchema.parse(data || {});
-    const targetProjectIds = await resolveTargetProjectIds(
-      actor,
-      validatedData.projectId,
-      {
-        assertCanAccessProject: projectService.assertCanAccessProject,
-        getAccessibleProjectIds: projectService.getAccessibleProjectIds,
-      }
-    );
-    if (targetProjectIds === 'empty') return { success: true, data: [] };
-
-    const photos = await dashboardService.getRecentLogSheetPhotos(
-      targetProjectIds,
-      validatedData.limit
-    );
-    return { success: true, data: photos };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Dashboard.GetRecentPhotos:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil foto terbaru dashboard',
-    };
+    return dashboardService.getRecentLogSheetPhotos(targetProjectIds, input.limit);
+  },
+  {
+    schema: GetRecentPhotosSchema,
+    metadata: { rbac: { resource: RbacResource.DASHBOARD, capability: 'read' } },
   }
-}
+);
 
-export async function getRecentActivitiesAction(
-  data: unknown
-): Promise<IGetRecentActivitiesActionResult> {
-  try {
-    const validated = GetRecentActivitiesSchema.parse(data || {});
-    const actor = await requireActor();
-    ensureAccess(actor.role, RbacResource.DASHBOARD, 'read');
-
-    const targetIds = await resolveTargetProjectIds(
-      actor,
-      validated.projectId,
-      {
-        assertCanAccessProject: projectService.assertCanAccessProject,
-        getAccessibleProjectIds: projectService.getAccessibleProjectIds,
-      }
-    );
+export const getRecentActivitiesAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const targetIds = await resolveTargetProjectIds(actor, input.projectId, {
+      assertCanAccessProject: projectService.assertCanAccessProject,
+      getAccessibleProjectIds: projectService.getAccessibleProjectIds,
+    });
 
     if (targetIds === 'empty') {
-      return {
-        success: true,
-        data: { activities: [], hasMore: false, nextCursor: null },
-      };
+      return { activities: [], hasMore: false, nextCursor: null };
     }
 
     const { activityService } = composeDashboardModule(prisma);
@@ -130,27 +76,19 @@ export async function getRecentActivitiesAction(
     const result = await activityService.getRecentActivities({
       actor,
       projectIds: targetIds ?? undefined,
-      timeRange: validated.timeRange,
-      limit: validated.limit,
+      timeRange: input.timeRange,
+      limit: input.limit,
       types: getVisibleActivityTypes(actor.role),
     });
 
     return {
-      success: true,
-      data: {
-        activities: result.activities,
-        hasMore: result.hasMore,
-        nextCursor: result.nextCursor,
-      },
+      activities: result.activities,
+      hasMore: result.hasMore,
+      nextCursor: result.nextCursor,
     };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Dashboard.GetRecentActivities:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil aktivitas terbaru',
-    };
+  },
+  {
+    schema: GetRecentActivitiesSchema,
+    metadata: { rbac: { resource: RbacResource.DASHBOARD, capability: 'read' } },
   }
-}
+) as (data: unknown) => Promise<IGetRecentActivitiesActionResult>;

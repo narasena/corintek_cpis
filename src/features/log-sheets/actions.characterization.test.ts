@@ -29,9 +29,14 @@ vi.mock('@/features/projects/service', () => ({
   getAccessibleProjectIds: vi.fn(),
 }));
 
-vi.mock('@/lib/auth-helpers', () => ({
-  getCurrentUserDetails: vi.fn(),
-}));
+vi.mock('@/lib/auth-helpers', async (importOriginal) => {
+  const actual = await importOriginal() as any;
+  return {
+    ...actual,
+    getCurrentUserDetails: vi.fn(),
+    requireActor: vi.fn(),
+  };
+});
 
 vi.mock('@/lib/rbac', () => ({
   ensureAccess: vi.fn(),
@@ -106,12 +111,25 @@ function createMockActor(overrides?: Partial<IJwtPayload>): IJwtPayload {
   };
 }
 
+import {
+  AuthenticationError,
+  getCurrentUserDetails,
+  requireActor,
+} from '@/lib/auth-helpers';
+
 function mockUser(role: string = 'TECHNICIAN') {
-  mockAuthHelpers.getCurrentUserDetails.mockResolvedValue({
+  const payload = {
     id: validUUID,
     email: 'test@example.com',
     role,
-  });
+  };
+  mockAuthHelpers.getCurrentUserDetails.mockResolvedValue(payload);
+  mockAuthHelpers.requireActor.mockResolvedValue(payload);
+}
+
+function mockGuest() {
+  mockAuthHelpers.getCurrentUserDetails.mockResolvedValue(null);
+  mockAuthHelpers.requireActor.mockRejectedValue(new AuthenticationError());
 }
 
 beforeEach(() => {
@@ -147,7 +165,7 @@ describe('getLogSheetsByProjectAction (characterization)', () => {
   });
 
   it('returns error when user not authenticated', async () => {
-    mockAuthHelpers.getCurrentUserDetails.mockResolvedValue(null);
+    mockGuest();
 
     const result = await getLogSheetsByProjectAction(anotherUUID);
 
@@ -290,6 +308,11 @@ describe('updateLogSheetStatusAction (characterization)', () => {
     mockUser('TECHNICIAN');
     const mockLogSheet = { id: validUUID, projectId: anotherUUID };
     mockLogSheetService.updateLogSheetStatus.mockResolvedValue(mockLogSheet);
+    mockLogSheetService.getLogSheetDetail.mockResolvedValue({
+      id: validUUID,
+      entries: [],
+      project: { assignments: [] },
+    });
     mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
     mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
     vi.mocked(ensureAccess).mockImplementation(() => {});
@@ -305,6 +328,11 @@ describe('updateLogSheetStatusAction (characterization)', () => {
     mockUser('ADMIN');
     const mockLogSheet = { id: validUUID, projectId: anotherUUID };
     mockLogSheetService.updateLogSheetStatus.mockResolvedValue(mockLogSheet);
+    mockLogSheetService.getLogSheetDetail.mockResolvedValue({
+      id: validUUID,
+      entries: [],
+      project: { assignments: [] },
+    });
     mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
     mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
     vi.mocked(ensureAccess).mockImplementation(() => {});
@@ -322,6 +350,11 @@ describe('submitLogSheetAction (characterization)', () => {
     mockUser('TECHNICIAN');
     const mockLogSheet = { id: validUUID, projectId: anotherUUID };
     mockLogSheetService.updateLogSheetStatus.mockResolvedValue(mockLogSheet);
+    mockLogSheetService.getLogSheetDetail.mockResolvedValue({
+      id: validUUID,
+      entries: [],
+      project: { assignments: [] },
+    });
     mockLogSheetService.validateLogSheetForSubmission.mockResolvedValue(
       undefined
     );
@@ -344,6 +377,11 @@ describe('approveLogSheetAction (characterization)', () => {
     mockUser('ADMIN');
     const mockLogSheet = { id: validUUID, projectId: anotherUUID };
     mockLogSheetService.updateLogSheetStatus.mockResolvedValue(mockLogSheet);
+    mockLogSheetService.getLogSheetDetail.mockResolvedValue({
+      id: validUUID,
+      entries: [],
+      project: { assignments: [] },
+    });
     mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
     mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
     vi.mocked(ensureAccess).mockImplementation(() => {});
@@ -819,7 +857,7 @@ describe('R2 Upload Failure Tests (P1 Critical)', () => {
       });
 
       expect(result.success).toBe(true);
-      expect((result as any).url).toContain('r2-worker.example.com');
+      expect((result as any).data.url).toContain('r2-worker.example.com');
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('r2-worker.example.com'),
         expect.objectContaining({
@@ -936,7 +974,7 @@ describe('R2 Upload Failure Tests (P1 Critical)', () => {
       const result = await uploadLogSheetImageAction(formData);
 
       expect(result.success).toBe(true);
-      expect((result as any).url).toContain('r2-worker.example.com');
+      expect((result as any).data.url).toContain('r2-worker.example.com');
     });
 
     it('sanitizes filename to prevent path traversal', async () => {

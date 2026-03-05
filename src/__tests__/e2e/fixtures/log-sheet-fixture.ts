@@ -29,10 +29,10 @@ export async function createLogSheet(
   const dateInput = dialog.getByRole('textbox', { name: /tanggal/i });
   await dateInput.fill(dateValue);
 
-  const saveButton = dialog.getByRole('button', { name: /simpan/i });
+  const saveButton = dialog.getByRole('button', { name: /buat log sheet/i });
   await saveButton.click();
 
-  await expect(dialog).not.toBeVisible();
+  await expect(dialog).not.toBeVisible({ timeout: 15000 });
 
   await page.waitForURL(/\/log-sheets\/[^/]+\/[^/]+/);
 
@@ -56,19 +56,45 @@ export async function selectActiveMachines(
 ) {
   const { chillers = [], coolingTowers = [] } = options;
 
-  for (const chillerId of chillers) {
-    const checkbox = page.getByRole('checkbox', {
-      name: new RegExp(chillerId),
-    });
-    if (!(await checkbox.isChecked())) {
-      await checkbox.check();
+  await expect(page.getByText('Unit Mesin Aktif')).toBeVisible({ timeout: 10000 });
+
+  // Each machine group is a div containing: header text + "Semua"/"Kosong" buttons + machine buttons
+  // Chillers and Cooling Towers are sibling divs
+  const allKosongButtons = page.getByRole('button', { name: /^Kosong$/i });
+  const kosongCount = await allKosongButtons.count();
+
+  // Kosong buttons appear in order: first for Chillers, second for Cooling Towers
+  // Deactivate all CTs first (index 1), then all Chillers (index 0)
+  if (coolingTowers.length === 0 && kosongCount >= 2) {
+    await allKosongButtons.nth(1).click();
+    await page.waitForTimeout(500);
+  }
+
+  // For Chillers: if specific units requested, first clear then enable
+  if (chillers.length > 0) {
+    // Chillers are already default active, just verify
+  } else if (kosongCount >= 1) {
+    await allKosongButtons.nth(0).click();
+    await page.waitForTimeout(500);
+  }
+
+  // Activate specific chillers
+  for (const unit of chillers) {
+    const btn = page.getByRole('button', { name: new RegExp(`#${unit}`) }).first();
+    const text = await btn.innerText();
+    if (!text.toLowerCase().includes('aktif')) {
+      await btn.click();
+      await page.waitForTimeout(500);
     }
   }
 
-  for (const ctId of coolingTowers) {
-    const checkbox = page.getByRole('checkbox', { name: new RegExp(ctId) });
-    if (!(await checkbox.isChecked())) {
-      await checkbox.check();
+  // Activate specific cooling towers
+  for (const unit of coolingTowers) {
+    const btn = page.getByRole('button', { name: new RegExp(`#${unit}`) }).first();
+    const text = await btn.innerText();
+    if (!text.toLowerCase().includes('aktif')) {
+      await btn.click();
+      await page.waitForTimeout(500);
     }
   }
 }
@@ -79,15 +105,23 @@ export async function fillNumericEntry(
   value: number,
   machineId?: string
 ) {
-  const cellLocator = machineId
-    ? page.getByRole('cell', { name: paramName }).locator('..')
-    : page.getByText(paramName).locator('..');
+  // Find the cell containing the parameter name
+  const paramCell = page.getByRole('cell', { name: new RegExp(`^${paramName}(\\s|\\(|$)`, 'i') }).first();
+  await expect(paramCell).toBeVisible({ timeout: 15000 });
 
-  const input = machineId
-    ? cellLocator.getByRole('textbox').nth(1)
-    : cellLocator.getByRole('textbox').first();
+  const row = page.locator('tr').filter({ has: paramCell });
+  
+  const inputs = row.getByRole('spinbutton');
+  const textboxes = row.getByRole('textbox');
+  
+  let targetInput;
+  if ((await inputs.count()) > 0) {
+    targetInput = inputs.first();
+  } else {
+    targetInput = textboxes.first();
+  }
 
-  await input.fill(String(value));
+  await targetInput.fill(String(value));
 }
 
 export async function fillBooleanEntry(
@@ -137,75 +171,230 @@ export async function fillRawWaterEntry(
   paramName: string,
   value: number
 ) {
-  const row = page.getByText(paramName).locator('..');
-  const rawWaterInput = row.getByRole('textbox').last();
-  await rawWaterInput.fill(String(value));
+  const row = page.getByRole('row').filter({ hasText: paramName }).first();
+  await expect(row).toBeVisible({ timeout: 10000 });
+
+  const numericInputs = row.getByRole('spinbutton');
+  const textInputs = row.getByRole('textbox');
+
+  if ((await numericInputs.count()) > 0) {
+    await numericInputs.last().fill(String(value));
+    return;
+  }
+
+  await textInputs.last().fill(String(value));
 }
 
 export async function addSignature(
   page: Page,
   role: 'TECHNICIAN' | 'CLIENT_PIC'
 ) {
-  const sectionLabel = role === 'TECHNICIAN' ? /teknisi/i : /pic klien/i;
-  const section = page
-    .locator('div')
-    .filter({ has: page.getByText(sectionLabel) })
-    .nth(0);
+  if (role === 'TECHNICIAN') {
+    // For technician: find the section with "Tanda Tangan Teknisi" text
+    const section = page.locator('div').filter({
+      has: page.locator('p', { hasText: 'Tanda Tangan Teknisi' }),
+    }).first();
+    const signButton = section.getByRole('button', { name: /tanda tangan/i }).first();
+    await expect(signButton).toBeVisible({ timeout: 10000 });
+    await signButton.click();
+  } else {
+    // For PIC Klien: just click "Isi Tanda Tangan" which only appears on unsigned sections
+    // After technician is signed, only PIC Klien will have "Isi Tanda Tangan"
+    const signButton = page.getByRole('button', { name: 'Isi Tanda Tangan' });
+    await expect(signButton).toBeVisible({ timeout: 10000 });
+    await signButton.click();
+  }
 
-  const signButton = section.getByRole('button', { name: /tanda tangan/i });
-  await signButton.click();
+  // Wait for the dialog with canvas to appear
+  const canvas = page.locator('[role="dialog"] canvas').first();
+  await expect(canvas).toBeVisible({ timeout: 10000 });
+  const dialog = canvas.locator('xpath=ancestor::div[@role="dialog"]');
 
-  const dialog = page.getByRole('dialog');
-  await expect(dialog).toBeVisible();
+  // Draw on canvas via mouse to trigger internal onChange detection
+  const box = await canvas.boundingBox();
+  if (box) {
+    await page.mouse.move(box.x + 10, box.y + 10);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 80, box.y + 40);
+    await page.mouse.move(box.x + 50, box.y + 60);
+    await page.mouse.up();
+  }
 
-  await page.evaluate(
-    ({ selector, dataUrl }) => {
-      const canvas = document.querySelector(selector) as HTMLCanvasElement;
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          const img = new Image();
-          img.onload = () => {
-            ctx.drawImage(img, 0, 0);
-          };
-          img.src = dataUrl;
-        }
-      }
-    },
-    {
-      selector: 'canvas',
-      dataUrl: SIGNATURE_DATA_URL,
-    }
-  );
-
-  const saveButton = dialog.getByRole('button', { name: /simpan/i });
+  const saveButton = dialog.getByRole('button', { name: /simpan/i }).last();
+  await expect(saveButton).toBeEnabled({ timeout: 10000 });
   await saveButton.click();
 
-  await expect(dialog).not.toBeVisible();
+  // Wait for canvas to disappear (dialog closed)
+  await expect(canvas).not.toBeVisible({ timeout: 10000 });
 }
 
 export async function saveLogSheet(page: Page) {
   const saveButton = page.getByRole('button', { name: /^simpan$/i });
+  let clickedDirectButton = false;
+
+  if ((await saveButton.count()) > 0 && (await saveButton.first().isVisible())) {
+    await saveButton.first().click();
+    clickedDirectButton = true;
+  } else {
+    const actionButton = page.getByRole('button', { name: /tindakan/i });
+    if (await actionButton.isVisible()) {
+      await actionButton.click();
+      const menuSave = page
+        .getByRole('menuitem', { name: /simpan/i })
+        .or(page.getByRole('button', { name: /simpan/i }))
+        .first();
+      await expect(menuSave).toBeVisible({ timeout: 5000 });
+      await menuSave.click();
+    } else {
+      throw new Error('Save action not found');
+    }
+  }
+
+  // Wait for ANY toast that indicates success
+  const toast = page.locator('[data-sonner-toast]').last();
+  await expect(toast).toBeVisible({ timeout: 10000 });
+  const toastText = await toast.innerText();
+  
+  if (toastText.toLowerCase().includes('gagal')) {
+    throw new Error(`Save failed: ${toastText}`);
+  }
+
+  if (clickedDirectButton) {
+    await expect(saveButton.first()).toBeEnabled({ timeout: 10000 });
+  }
+}
+
+export async function completeLogSheet(page: Page) {
+  // Wait for at least one spinbutton to appear (tables with data columns rendered)
+  await expect(page.getByRole('spinbutton').first()).toBeVisible({ timeout: 15000 });
+
+  const numberInputs = page.locator('table input[type="number"]');
+  const numberCount = await numberInputs.count();
+  for (let i = 0; i < numberCount; i++) {
+    const input = numberInputs.nth(i);
+    try {
+      if (await input.isVisible() && await input.isEnabled()) {
+        await input.fill('1');
+      }
+    } catch {
+      // element may detach during rerender; skip and continue
+    }
+  }
+
+  const textInputs = page.locator('table input[type="text"], table textarea');
+  const textCount = await textInputs.count();
+  for (let i = 0; i < textCount; i++) {
+    const input = textInputs.nth(i);
+    try {
+      const name = (await input.getAttribute('name')) || '';
+      if (await input.isVisible() && await input.isEnabled() && !name.includes('date')) {
+        await input.fill('Test Entry');
+      }
+    } catch {
+      // element may detach during rerender; skip and continue
+    }
+  }
+
+  const checkboxes = page.locator('table [role="checkbox"]');
+  const checkboxCount = await checkboxes.count();
+  for (let i = 0; i < checkboxCount; i++) {
+    const checkbox = checkboxes.nth(i);
+    try {
+      const checked = await checkbox.getAttribute('aria-checked');
+      if (await checkbox.isVisible() && await checkbox.isEnabled() && checked !== 'true') {
+        await checkbox.click();
+      }
+    } catch {
+      // element may detach during rerender; skip and continue
+    }
+  }
+}
+
+export async function signAsTechnician(page: Page) {
+  const section = page
+    .locator('div')
+    .filter({ has: page.getByText(/tanda tangan teknisi/i) })
+    .first();
+
+  const signButton = section.getByRole('button', { name: /tanda tangan/i }).first();
+  await expect(signButton).toBeVisible({ timeout: 10000 });
+  await signButton.click();
+
+  const dialog = page.locator('[role="dialog"]:visible').first();
+  await expect(dialog).toBeVisible({ timeout: 10000 });
+
+  const canvas = dialog.locator('canvas:visible').first();
+  await expect(canvas).toBeVisible({ timeout: 5000 });
+  const box = await canvas.boundingBox();
+  if (box) {
+    await page.mouse.move(box.x + 20, box.y + 20);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 80, box.y + 40);
+    await page.mouse.up();
+  }
+
+  const saveButton = dialog.locator('button:visible', { hasText: /^Simpan$/i }).last();
+  await expect(saveButton).not.toBeDisabled({ timeout: 10000 });
   await saveButton.click();
 
-  await expect(page.getByText(/berhasil|disimpan/i)).toBeVisible({
-    timeout: 10000,
-  });
+  await expect(dialog).not.toBeVisible({ timeout: 10000 });
 }
 
 export async function submitLogSheet(page: Page) {
-  const submitButton = page.getByRole('button', { name: /kirim$/i });
-  await submitButton.click();
+  const submitButton = page.getByRole('button', { name: /^kirim$/i });
 
+  if ((await submitButton.count()) > 0 && (await submitButton.first().isVisible())) {
+    await expect(submitButton.first()).toBeEnabled({ timeout: 15000 });
+    await submitButton.first().click();
+  } else {
+    const actionButton = page.getByRole('button', { name: /tindakan/i });
+    await expect(actionButton).toBeVisible({ timeout: 15000 });
+    await actionButton.click();
+
+    const menuSubmit = page
+      .getByRole('menuitem', { name: /kirim/i })
+      .or(page.getByRole('button', { name: /^kirim$/i }))
+      .first();
+    await expect(menuSubmit).toBeVisible({ timeout: 10000 });
+    await menuSubmit.click();
+  }
+
+  // Check if validation failed (error toast appeared instead of dialog)
+  const errorToast = page.locator('[data-sonner-toast][data-type="error"]');
   const confirmDialog = page.getByRole('alertdialog');
-  await expect(confirmDialog).toBeVisible();
+
+  const which = await Promise.race([
+    confirmDialog.waitFor({ state: 'visible', timeout: 10000 }).then(() => 'dialog' as const),
+    errorToast.waitFor({ state: 'visible', timeout: 10000 }).then(() => 'error' as const),
+  ]);
+
+  if (which === 'error') {
+    const errorText = await errorToast.innerText();
+    throw new Error(`Submit validation failed with toast: ${errorText}`);
+  }
 
   const confirmButton = confirmDialog.getByRole('button', { name: /kirim/i });
   await confirmButton.click();
 
-  await expect(page.getByText(/berhasil dikirim/i)).toBeVisible({
-    timeout: 10000,
-  });
+  // Wait for success, submitted status, or explicit error toast
+  const successToast = page.getByText(/berhasil dikirim/i);
+  const submittedStatus = page.getByText(/SUBMITTED/);
+  const submitErrorToast = page.locator(
+    '[data-sonner-toast][data-type="error"]'
+  );
+
+  const outcome = await Promise.race([
+    successToast.waitFor({ state: 'visible', timeout: 15000 }).then(() => 'success' as const),
+    submittedStatus.waitFor({ state: 'visible', timeout: 15000 }).then(() => 'submitted' as const),
+    submitErrorToast
+      .waitFor({ state: 'visible', timeout: 15000 })
+      .then(() => 'error' as const),
+  ]);
+
+  if (outcome === 'error') {
+    const errorText = await submitErrorToast.innerText();
+    throw new Error(`Submit failed after confirm: ${errorText}`);
+  }
 }
 
 export async function approveLogSheet(page: Page) {

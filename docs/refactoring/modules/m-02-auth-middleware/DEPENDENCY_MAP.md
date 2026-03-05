@@ -20,10 +20,11 @@
 | #   | File                        | Lines | Role                                  |
 | --- | --------------------------- | ----: | ------------------------------------- |
 | 5   | src/middleware.ts           |    67 | Global Next.js Middleware             |
-| 6   | src/lib/jwt.ts              |    80 | JWT signing & verification (jose)     |
-| 7   | src/lib/rbac.ts             |   294 | RBAC Matrix and Permission Checking   |
-| 8   | src/lib/auth-helpers.ts     |   118 | Session retrieval & auth re-exports   |
-| 9   | src/features/users/utils.ts |    59 | User status validation & mapping      |
+| 6   | src/lib/action-factory.ts    |    82 | Type-safe Server Action Factory       |
+| 7   | src/lib/jwt.ts              |    80 | JWT signing & verification (jose)     |
+| 8   | src/lib/rbac.ts             |   294 | RBAC Matrix and Permission Checking   |
+| 9   | src/lib/auth-helpers.ts     |   118 | Session retrieval & auth re-exports   |
+| 10  | src/features/users/utils.ts |    59 | User status validation & mapping      |
 
 ---
 
@@ -48,12 +49,15 @@ graph TD
     subgraph "Libraries & Helpers"
         Helpers[lib/auth-helpers.ts] --> Service
         Helpers --> Crypto
+        Factory[lib/action-factory.ts] --> Helpers
+        Factory --> RBAC
         JWT --> Constants
     end
 
     subgraph "External"
         Service --> Prisma[@/lib/prisma]
         RBAC --> ExternalFeatures[@/features/*]
+        ExternalActions[*.actions.ts] --> Factory
     end
 ```
 

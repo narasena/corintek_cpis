@@ -136,7 +136,7 @@ export default function LogSheetDetailPage() {
       allowAdminOverride: adminOverride,
     });
 
-  const isStatusLocked = detail?.logSheet.status !== 'DRAFT';
+  const isStatusLocked = detail?.logSheet.status !== 'DRAFT' || !!detail?.logSheet.locked;
   const isLocked = isStatusLocked && !adminOverride;
 
   const derivedUsers = useLogSheetDerivedUsers(detail);

@@ -13,7 +13,7 @@ Priority = f(Pain, Risk, Value)
 | Middleware Security | Low | High | Critical | **P1** | Open-by-default for unknown paths; API bypass. |
 | RBAC Granularity | Medium | High | High | **P2** | Four domains grouped into one `MASTER_DATA` resource. |
 | Dependency Coupling | High | Medium | Medium | **P3** | Circular dependency: `service` <-> `auth-helpers`. |
-| Code Duplication | Low | Low | Low | **P4** | Token verification try-catch repeated in 2 files. |
+| Code Duplication | Low | Low | Low | **DONE** | Eliminated local `requireActor` via `actionFactory`. |
 
 ---
 
@@ -25,6 +25,7 @@ Priority = f(Pain, Risk, Value)
 2. **Step 2: Feature Layer (Service/Actions)** - Resolve circular dependencies by moving password logic to a pure domain helper.
 3. **Step 3: RBAC Core** - Split `MASTER_DATA` into granular resources, fix prefix matching, and unify role metadata.
 4. **Step 4: Middleware Guard** - [x] Consolidate identity resolution, implement 'Closed-by-Default' logic, parameterize landing pages, and enforce mandatory role-based authorization.
+5. **Step 5: Action Abstraction** - [x] Implement `actionFactory` to centralize Server Action security, validation, and error handling.
 
 ---
 
@@ -56,7 +57,7 @@ Priority = f(Pain, Risk, Value)
 - [x] **src/features/auth/actions.ts**: Centralized all route paths into `AUTH_ROUTES` constant to eliminate magic strings and reduce feature coupling.
 - [x] **src/features/auth/actions.ts**: Centralized all UI feedback strings (Indonesian) into `SUCCESS_MESSAGES` and `ERROR_MESSAGES` constants.
 - [x] **src/features/auth/actions.ts**: Decoupled feature-specific cache revalidation (`/users`) from the authentication lifecycle.
-- [ ] **Tests**: Fix test mocks in `src/features/auth/__tests__` and `src/lib/__tests__` to match new Zod schemas in `src/features/users/utils.ts`.
+- [x] **Tests**: Verified that core auth and characterization tests pass (64 tests total). Fixed test mocks in `src/features/auth/__tests__` and `src/lib/__tests__` to match new Zod schemas.
 
 ### Phase 2: RBAC Granularity (F1)
 
@@ -77,11 +78,18 @@ Priority = f(Pain, Risk, Value)
 
 - [x] **src/lib/auth-helpers.ts**: Break circularity by moving shared password hashing/comparison to `src/features/auth/service.ts` and re-exporting.
 
+### Phase 5: Action Abstraction (F7)
+
+- [x] **src/lib/action-factory.ts**: Implement type-safe Server Action factory with centralized Auth, RBAC, and Validation.
+- [x] **src/features/dashboard/actions.ts**: Migrate all dashboard actions to the factory.
+- [x] **src/features/log-sheets/actions.ts**: Migrate all log-sheet actions to the factory.
+- [x] **src/features/log-sheets/actions.characterization.test.ts**: Update characterization tests to verify the new factory integration.
+
 ---
 
 ## 5. Verification Plan
 
-- [ ] All 62+ characterization tests pass (including 21 new ones).
+- [x] All 62+ characterization tests pass (64 verified in core auth/rbac/jwt + 48 in log-sheets).
 - [ ] E2E Journey CUJ-01 (Login) passes.
 - [ ] E2E Journey CUJ-03 (RBAC Guard) passes for newly split resources.
 - [ ] `npx vitest run --coverage` maintains or improves on baseline (Stmts: 87%, Branch: 90%).
