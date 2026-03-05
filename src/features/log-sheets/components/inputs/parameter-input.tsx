@@ -135,6 +135,12 @@ interface INumberInputProps {
   clearNumber: () => void;
 }
 
+function buildInputClass(hasError: boolean): string {
+  const baseClass = 'w-24';
+  const errorClass = 'border-red-500 focus-visible:ring-red-500 bg-red-50';
+  return hasError ? `${baseClass} ${errorClass}` : baseClass;
+}
+
 function NumberInput({
   entryKey,
   state,
@@ -163,11 +169,7 @@ function NumberInput({
           type="number"
           inputMode="decimal"
           placeholder={placeholder ?? 'Nilai...'}
-          className={
-            hasError
-              ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
-              : ''
-          }
+          className={buildInputClass(hasError)}
           value={displayValue}
           onChange={e => updateNumber(entryKey, e.target.value)}
           disabled={disabled}

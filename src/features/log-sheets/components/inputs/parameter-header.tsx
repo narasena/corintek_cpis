@@ -11,6 +11,10 @@ export interface IParameterHeaderProps {
   className?: string;
 }
 
+function buildDisplayName(name: string, unit: string | null): string {
+  return unit ? `${name} (${unit})` : name;
+}
+
 export function ParameterHeader({
   name,
   unit,
@@ -18,17 +22,14 @@ export function ParameterHeader({
   maxValue,
   className,
 }: IParameterHeaderProps) {
-  const targetText = formatNumericLimit(minValue, maxValue, unit);
-  const displayName = unit ? `${name} (${unit})` : name;
-  const hasTarget = targetText && targetText !== '-';
+  const limitText = formatNumericLimit(minValue, maxValue, unit);
+  const displayName = buildDisplayName(name, unit);
 
   return (
     <div className={className}>
       <div className="font-medium">{displayName}</div>
-      {hasTarget && (
-        <div className="text-xs text-muted-foreground">
-          Target: {targetText}
-        </div>
+      {limitText && (
+        <div className="text-xs text-muted-foreground">Limit: {limitText}</div>
       )}
     </div>
   );

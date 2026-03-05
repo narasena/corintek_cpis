@@ -15,19 +15,21 @@ interface IParameterTableRowProps {
   param: TParameter;
   machines: TMachine[];
   cat: TParameter['category'];
+  showLimitColumn?: boolean;
 }
 
 export function ParameterTableRow({
   param,
   machines,
   cat,
+  showLimitColumn = true,
 }: IParameterTableRowProps) {
   const targets = getTargetMachines(machines);
 
   return (
     <TableRow>
       <ParameterNameCell param={param} />
-      <TargetCell param={param} />
+      {showLimitColumn && <TargetCell param={param} />}
       {targets.map(m => (
         <ValueCell
           key={m.id}
@@ -64,7 +66,8 @@ interface ITargetCellProps {
 }
 
 function TargetCell({ param }: ITargetCellProps) {
-  return <TableCell>{formatLimit(param)}</TableCell>;
+  const limitValue = formatLimit(param);
+  return <TableCell>{limitValue ?? 'N/A'}</TableCell>;
 }
 
 interface IValueCellProps {

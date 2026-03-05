@@ -6,6 +6,7 @@ import { entryKeys } from '@/features/log-sheets/utils';
 import { useEntryStateContext } from '@/features/log-sheets/context';
 import { ParameterInput } from '@/features/log-sheets/components/inputs';
 import { formatRawWaterLimit } from '../utils';
+import { hasMeaningfulLimits } from '@/features/parameters/limits-format';
 import type { TParameter } from '../types';
 
 interface IBooleanCellProps {
@@ -117,13 +118,21 @@ interface IRawWaterHeaderProps {
   param: TParameter;
 }
 
+function shouldShowRawWaterTarget(param: TParameter): boolean {
+  return hasMeaningfulLimits(param.rawWaterMinValue, param.rawWaterMaxValue);
+}
+
 function RawWaterHeader({ param }: IRawWaterHeaderProps) {
+  const showLimit = shouldShowRawWaterTarget(param);
+
   return (
     <div className="flex justify-between items-center">
       <div className="text-xs font-medium text-muted-foreground">Raw Water</div>
-      <div className="text-[10px] text-muted-foreground">
-        Target: {formatRawWaterLimit(param)}
-      </div>
+      {showLimit && (
+        <div className="text-[10px] text-muted-foreground">
+          Limit: {formatRawWaterLimit(param)}
+        </div>
+      )}
     </div>
   );
 }

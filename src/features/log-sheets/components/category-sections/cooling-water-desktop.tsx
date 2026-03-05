@@ -74,15 +74,15 @@ function CoolingWaterTableHeader({ activeCTs }: ICoolingWaterTableHeaderProps) {
     <TableHeader>
       <TableRow className="bg-muted/40">
         <TableHead className="w-max-plus">Parameter</TableHead>
-        <TableHead className="w-max-plus">Target</TableHead>
+        <TableHead className="w-max-plus">Limit</TableHead>
         {activeCTs.map(m => (
-          <TableHead key={m.id} className="min-w-[140px] text-center">
+          <TableHead key={m.id} className="min-w-[100px] text-center">
             CT #{m.unitNumber}
           </TableHead>
         ))}
         <TableHead className="w-max-plus text-center">Raw Water</TableHead>
         <TableHead className="w-max-plus text-center">
-          Target (Raw Water)
+          Limit (Raw Water)
         </TableHead>
       </TableRow>
     </TableHeader>
@@ -126,7 +126,8 @@ interface ITargetCellProps {
 }
 
 function TargetCell({ param }: ITargetCellProps) {
-  return <TableCell>{formatLimit(param)}</TableCell>;
+  const limitValue = formatLimit(param);
+  return <TableCell>{limitValue ?? 'N/A'}</TableCell>;
 }
 
 interface ICoolingWaterValueCellProps {
@@ -163,7 +164,8 @@ interface IRawWaterTargetCellProps {
 }
 
 function RawWaterTargetCell({ param }: IRawWaterTargetCellProps) {
+  const rawWaterLimitValue = formatRawWaterLimit(param);
   return (
-    <TableCell className="text-center">{formatRawWaterLimit(param)}</TableCell>
+    <TableCell className="text-center">{rawWaterLimitValue ?? 'N/A'}</TableCell>
   );
 }

@@ -10,11 +10,21 @@ import {
 import type { TMachine, TParameter } from '@/features/log-sheets/types';
 import { ParameterTableRow } from './parameter-table-row';
 
+const CATEGORIES_WITHOUT_LIMIT_COLUMN: TParameter['category'][] = [
+  'GENERAL_CONDITION',
+  'JOB_DESCRIPTION',
+  'CONSUMPTION',
+];
+
 interface IGeneralCategoryDesktopProps {
   category: string;
   params: TParameter[];
   machines: TMachine[];
   cat: TParameter['category'];
+}
+
+function shouldShowLimitColumn(cat: TParameter['category']): boolean {
+  return !CATEGORIES_WITHOUT_LIMIT_COLUMN.includes(cat);
 }
 
 export function GeneralCategoryDesktop({
@@ -23,6 +33,8 @@ export function GeneralCategoryDesktop({
   machines,
   cat,
 }: IGeneralCategoryDesktopProps) {
+  const showLimitColumn = shouldShowLimitColumn(cat);
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -34,17 +46,17 @@ export function GeneralCategoryDesktop({
           <TableHeader>
             <TableRow className="bg-muted/40">
               <TableHead className="w-max-plus!">Parameter</TableHead>
-              <TableHead className="">Target</TableHead>
+              {showLimitColumn && <TableHead className="">Limit</TableHead>}
               {machines.length > 0 ? (
                 machines.map(m => (
-                  <TableHead key={m.id} className="min-w-[140px] text-center">
+                  <TableHead key={m.id} className="min-w-[100px] text-center">
                     {m.type === 'CHILLER'
                       ? `#${m.unitNumber}`
                       : `CT #${m.unitNumber}`}
                   </TableHead>
                 ))
               ) : (
-                <TableHead className="min-w-[200px] text-center">
+                <TableHead className="min-w-[140px] text-center">
                   Nilai
                 </TableHead>
               )}
@@ -57,6 +69,7 @@ export function GeneralCategoryDesktop({
                 param={param}
                 machines={machines}
                 cat={cat}
+                showLimitColumn={showLimitColumn}
               />
             ))}
           </TableBody>
