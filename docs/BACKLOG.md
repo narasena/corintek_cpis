@@ -186,7 +186,7 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 ## CG-02 — Server-Side Pagination
 
 **Priority:** 🟡 P1  
-**Status:** Not Started
+**Status:** ✅ Completed
 
 **Problem:** All list queries use `findMany()` without `take`/`skip`. Entire datasets loaded into memory.
 **Impact:** High — will degrade with 40 users generating daily records
@@ -194,9 +194,17 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 
 ### Tasks
 
-- [ ] Update services: `getLogSheets`, `getAttendance`, `getWorkReports` (heaviest tables)
-- [ ] Add `page`/`limit` params to actions
-- [ ] Add pagination UI to DataTable
+- [x] Core pagination types (`IPaginationParams`, `IPaginatedResponse`)
+- [x] Pagination helpers (`calculateOffset`, `buildPaginationMeta`)
+- [x] Error classes (`InvalidPaginationError`, `PageOutOfBoundsError`)
+- [x] React hooks (`useServerPagination`, `usePaginatedData`)
+- [x] Service layer with DI (`AttendanceService`, `LogSheetService`, `WorkReportService`)
+- [x] Actions with pagination (`getAttendanceListPaginatedAction`, etc.)
+- [x] DataTable server pagination support (`serverPagination` prop)
+- [x] DI container for clean dependency management
+- [x] Resilience patterns (retry, circuit breaker, rate limiter)
+- [x] Observability (structured logging)
+- [x] Comprehensive test coverage (100+ tests)
 
 ---
 
@@ -255,7 +263,7 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 ## CG-06 — useDebouncedValue Hook
 
 **Priority:** 🟡 P1  
-**Status:** Not Started
+**Status:** ✅ Completed
 
 **Problem:** No debounce anywhere. Search inputs need debouncing to prevent excessive re-renders.
 **Impact:** Medium — coupled to CG-01
@@ -263,5 +271,5 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 
 ### Tasks
 
-- [ ] Create `useDebouncedValue` hook in `hooks/use-debounced-value.ts`
-- [ ] Use in CG-01 (DataTable search)
+- [x] Create `useDebouncedValue` hook in `hooks/use-debounced-value.ts`
+- [x] Use in CG-01 (DataTable search)

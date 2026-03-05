@@ -64,6 +64,29 @@ interface IDataTableSearchConfig {
   fuzzyTolerance?: number;
 }
 
+/**
+ * Server-side pagination configuration
+ * @responsibility Define props for server-managed pagination
+ */
+export interface IServerPaginationConfig {
+  /** Enable server-side pagination */
+  readonly enabled: true;
+  /** Total items from server */
+  readonly total: number;
+  /** Current page (1-based) */
+  readonly page: number;
+  /** Items per page */
+  readonly limit: number;
+  /** Available page size options */
+  readonly pageSizeOptions?: readonly number[];
+  /** Page change handler */
+  readonly onPageChange: (page: number) => void;
+  /** Page size change handler */
+  readonly onLimitChange: (limit: number) => void;
+  /** Loading state */
+  readonly isLoading?: boolean;
+}
+
 interface IDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -75,6 +98,8 @@ interface IDataTableProps<TData, TValue> {
   disableSearch?: boolean;
   /** Enable highlighting of search matches in cells */
   highlightMatches?: boolean;
+  /** Server-side pagination configuration (replaces client-side when provided) */
+  serverPagination?: IServerPaginationConfig;
 }
 
 export function DataTable<TData, TValue>({
@@ -87,6 +112,7 @@ export function DataTable<TData, TValue>({
   searchConfig,
   disableSearch = false,
   highlightMatches = false,
+  serverPagination,
 }: IDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -428,23 +454,107 @@ function DataTableInner<TData, TValue>({
         )}
       </div>
 
-      <div className="flex items-center justify-end space-x-2 py-4">
+      {/* Pagination Controls - Client or Server Side */}
+      {serverPagination?.enabled ? (
+        <ServerPaginationControls
+          total={serverPagination.total}
+          page={serverPagination.page}
+          limit={serverPagination.limit}
+          pageSizeOptions={serverPagination.pageSizeOptions}
+          onPageChange={serverPagination.onPageChange}
+          onLimitChange={serverPagination.onLimitChange}
+          isLoading={serverPagination.isLoading}
+        />
+      ) : (
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Sebelumnya
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Selanjutnya
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Server-side pagination controls component
+ * @responsibility Render pagination UI for server-managed data
+ */
+interface IServerPaginationControlsProps {
+  total: number;
+  page: number;
+  limit: number;
+  pageSizeOptions?: readonly number[];
+  onPageChange: (page: number) => void;
+  onLimitChange: (limit: number) => void;
+  isLoading?: boolean;
+}
+
+function ServerPaginationControls({
+  total,
+  page,
+  limit,
+  pageSizeOptions = [10, 25, 50, 100],
+  onPageChange,
+  onLimitChange,
+  isLoading = false,
+}: IServerPaginationControlsProps) {
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const hasNextPage = page < totalPages;
+  const hasPrevPage = page > 1;
+  const start = (page - 1) * limit + 1;
+  const end = Math.min(page * limit, total);
+
+  return (
+    <div className="flex items-center justify-between space-x-4 py-4">
+      <span className="text-sm text-muted-foreground">
+        Menampilkan {start}-{end} dari {total}
+      </span>
+      <div className="flex items-center space-x-2">
         <Button
           variant="outline"
           size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
+          onClick={() => onPageChange(page - 1)}
+          disabled={!hasPrevPage || isLoading}
         >
           Sebelumnya
         </Button>
+        <span className="text-sm">
+          Halaman {page} dari {totalPages}
+        </span>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
+          onClick={() => onPageChange(page + 1)}
+          disabled={!hasNextPage || isLoading}
         >
           Selanjutnya
         </Button>
+        <select
+          value={limit}
+          onChange={e => onLimitChange(Number(e.target.value))}
+          disabled={isLoading}
+          className="h-9 rounded-md border border-input px-2 text-sm"
+        >
+          {pageSizeOptions.map(opt => (
+            <option key={opt} value={opt}>
+              {opt} / hal
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );
