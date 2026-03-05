@@ -1,0 +1,67 @@
+# M-03: Shared Components & Infrastructure — Refactoring Plan
+
+This module serves as the foundational "Infrastructure" layer for the entire project. The current state contains several God components, duplicated Canvas logic, and a critical circular dependency between the infrastructure layer and the Auth feature.
+
+---
+
+## 1. Refactoring Priority Matrix
+
+Priority = f(Pain, Risk, Value)
+
+| Area                 | Pain Level | Risk Level | Business Value | Priority | Evidence                     |
+| -------------------- | ---------- | ---------- | -------------- | :------: | ---------------------------- |
+| Auth Helpers (CIR-1) | High       | High       | Critical       |    P1    | Circular Dep with Auth feature |
+| Image/Canvas Logic   | Medium     | Medium     | High           |    P2    | Duplicated `getContext('2d')` |
+| DataTable            | High       | High       | High           |    P2    | 300+ LOC, God Component      |
+| RBAC Configuration   | Low        | High       | Critical       |    P3    | 300+ LOC Config file         |
+| Machine Form Section | Medium     | Medium     | Medium         |    P3    | Domain logic leaked to M-03  |
+
+---
+
+## 2. Refactoring Order Rationale
+
+> **LOW risk → MEDIUM risk → HIGH risk**
+
+1. **Step 1: Leaf Utilities** (`r2-upload.ts`, `prisma.ts`, `jwt.ts`) — Clean up interfaces and types.
+2. **Step 2: Logic Consolidation** (`image-compression.ts`, `camera-input.tsx`) — Extract raw Canvas manipulation to a dedicated utility to kill DUP-1.
+3. **Step 3: Feature Decoupling** (`machine-form-section.tsx`) — Move domain-specific leaks to their respective feature modules (M-09).
+4. **Step 4: Core Structural Refactoring** (`auth-helpers.ts`, `rbac.ts`, `data-table.tsx`) — Break down God classes and resolve CIR-1.
+
+---
+
+## 3. Testing Strategy
+
+### What to test first
+
+| Priority | What               | Why                                      | Type |
+| :------: | ------------------ | ---------------------------------------- | ---- |
+|    1     | Auth Primitives    | High fan-out, critical for security      | Unit |
+|    2     | Compression Engine | Prone to silent WebP conversion errors   | Unit |
+|    3     | DataTable Tabs     | Complex UI branching (Mobile vs Desktop) | E2E  |
+
+---
+
+## 4. Phased Execution
+
+### Phase 1: Foundation & Quick Wins (Low Risk)
+- [ ] **F11/F12 (R2 & Prisma):** Ensure strict interface adherence (I/T prefix) and add missing documentation.
+- [ ] **F10 (Multi-Select):** Extract sub-components (MultiSelectItem) to reduce file length.
+- [ ] **F9 (JWT):** Validate error handling for expired vs. invalid tokens.
+
+### Phase 2: Logic Consolidation (Medium Risk)
+- [ ] **Canvas Extraction (DUP-1):** Create `src/lib/utils/canvas.ts`. Move common scaling/cropping logic from `camera-input.tsx` and `image-compression.ts`.
+- [ ] **F5 (Camera Input):** Refactor to use the new Canvas utility. Separate Camera API logic from UI Dialog logic.
+- [ ] **F7 (Domain Leak):** Move `machine-form-section.tsx` from `src/components/` to `src/features/machines/components/`.
+
+### Phase 3: Structural Refactoring (High Risk)
+- [ ] **F2 (Auth Helpers):** Resolve CIR-1. Move `validateSessionUser` logic out of feature service and into a more foundational layer or standard service.
+- [ ] **F4 (DataTable):** Split `data-table.tsx` into `DataTableDesktop` and `DataTableMobile`. Centralize the Tab-switching logic.
+- [ ] **F3 (RBAC):** Split the massive `ROLE_CONFIG` into separate role-based config files if it continues to grow.
+
+---
+
+## 5. Verification Plan
+- [ ] Run 71+ Unit/Characterization tests after every Micro-Refactoring.
+- [ ] Execute `src/__tests__/e2e/infrastructure/shared-components.spec.ts` after Phase 2 and 3.
+- [ ] Verify 0 new circular dependencies via build check.
+- [ ] Architecture check: Ensure no domain leaks remaining in `src/lib`.

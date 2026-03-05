@@ -1,0 +1,108 @@
+# M-03: Shared Components & Infrastructure — Dependency Map
+
+> Generated: 2026-03-06
+
+---
+
+## 1. File Inventory
+
+### Infrastructure Layer (src/lib)
+
+| #   | File                               | Lines | Role                                      |
+| --- | ---------------------------------- | ----: | ----------------------------------------- |
+| 1   | `src/lib/rbac.ts`                  |   303 | SSOT for permissions and route matching   |
+| 2   | `src/lib/auth-helpers.ts`          |   118 | Server-side actor extraction and session  |
+| 3   | `src/lib/action-factory.ts`        |   107 | Standard wrapper for Server Actions       |
+| 4   | `src/lib/jwt.ts`                   |    80 | Jose-based token primitives               |
+| 5   | `src/lib/prisma.ts`                |    27 | Database client singleton                 |
+| 6   | `src/lib/r2-upload.ts`             |    31 | Cloudflare R2 storage integration         |
+| 7   | `src/lib/utils/image-compression.ts`|   128 | Canvas-based WebP compression engine      |
+
+### UI Component Layer (src/components)
+
+| #   | File                                    | Lines | Role                                      |
+| --- | --------------------------------------- | ----: | ----------------------------------------- |
+| 1   | `src/components/data-table.tsx`         |   316 | Complex table/card display logic          |
+| 2   | `src/components/camera-input.tsx`       |   356 | Browser Camera API + Processing UI        |
+| 3   | `src/components/machine-form-section.tsx` |   362 | Domain-specific form logic (Potential leak)|
+| 4   | `src/components/app-sidebar.tsx`        |   132 | Main navigation layout component          |
+| 5   | `src/components/multi-select.tsx`       |   145 | Reusable form primitive                   |
+
+---
+
+## 2. Dependency Graph (Mermaid)
+
+```mermaid
+graph TD
+    subgraph "Infrastructure (Lib)"
+        AF[action-factory.ts] --> AH[auth-helpers.ts]
+        AF --> RB[rbac.ts]
+        AH --> JW[jwt.ts]
+        AH --> AS[@/features/auth/service]
+    end
+
+    subgraph "Components"
+        DT[data-table.tsx] --> UI[src/components/ui/*]
+        CI[camera-input.tsx] --> IC[image-compression.ts]
+        SB[app-sidebar.tsx] --> RB
+        SB --> NM[nav-main.tsx]
+        SB --> NU[nav-user.tsx]
+        NU --> AA[@/features/auth/actions]
+    end
+
+    subgraph "External Features"
+        FE[@/features/*] --> AF
+        FE --> DT
+        FE --> RB
+    end
+
+    AA --> AH
+```
+
+---
+
+## 3. Circular Dependency Analysis
+
+**Result: 1 module-level circular dependency identified.**
+
+| ID   | Cycle Path                                      | Severity | Resolution                                  |
+| ---- | ----------------------------------------------- | -------- | ------------------------------------------- |
+| CIR-1| `lib/auth-helpers` -> `auth/service` -> `lib/auth-helpers` | High     | Move session validation logic to a lower layer |
+
+*Note: `auth/actions.ts` uses `auth-helpers`, and `auth-helpers` imports `auth/service`. Since actions use services, this creates a tight loop through the infrastructure layer.*
+
+---
+
+## 4. God Classes / Oversized Files
+
+| File                                    | Lines | Exports | Verdict           |
+| --------------------------------------- | ----: | :-----: | ----------------- |
+| `src/components/ui/sidebar.tsx`         |   726 |   ~15   | SHADCN GENERATED  |
+| `src/components/machine-form-section.tsx` |   362 |    1    | DOMAIN LEAK       |
+| `src/components/camera-input.tsx`       |   356 |    1    | LOGIC HEAVY       |
+| `src/components/data-table.tsx`         |   316 |    2    | GOD COMPONENT     |
+| `src/lib/rbac.ts`                       |   303 |    8    | CONFIG HEAVY      |
+
+---
+
+## 5. Duplicated Code Blocks
+
+| ID    | Description                                  | Locations                                      | Status |
+| ----- | -------------------------------------------- | ---------------------------------------------- | ------ |
+| DUP-1 | Raw Canvas `getContext('2d')` manipulation   | `camera-input.tsx`, `image-compression.ts`, `signature-pad.tsx` | Open   |
+| DUP-2 | Mobile Card vs Desktop Table bifurication    | `data-table.tsx` (Internal logic)              | Open   |
+
+---
+
+## 6. Cross-Module Impact
+
+**⚠️ External modules this module imports from or is imported by:**
+
+| Direction       | External Module            | Files Affected | Impact                                      |
+| --------------- | -------------------------- | -------------- | ------------------------------------------- |
+| **Imports**     | `@/features/auth`          | `auth-helpers` | Circular dependency on session validation    |
+| **Imports**     | `@/features/auth`          | `nav-user`     | Trigger logout action                       |
+| **Imported By** | **ALL Feature Modules**    | `actions.ts`   | Standardizes all server actions via `actionFactory` |
+| **Imported By** | **ALL Feature Modules**    | `page.tsx`     | Provides `DataTable` for all CRUD views     |
+
+**Rule:** `M-03` is the foundation. Any breaking change to `actionFactory`, `rbac`, or `DataTable` will require updates across the entire codebase.
