@@ -109,19 +109,18 @@ export function DataTable<TData, TValue>({
 
   // Sync URL with search state if enabled
   useEffect(() => {
-    if (searchConfig?.enableUrlSync) {
-      if (query !== urlSearch.value) {
-        urlSearch.setValue(query);
-      }
+    if (searchConfig?.enableUrlSync && query !== urlSearch.value) {
+      urlSearch.setValue(query);
     }
-  }, [query, searchConfig?.enableUrlSync, urlSearch]);
+  }, [query]); // Only sync when query changes from user input
 
-  // Initialize from URL if enabled
+  // Initialize from URL on mount only
   useEffect(() => {
     if (searchConfig?.enableUrlSync && urlSearch.value && !query) {
       setQuery(urlSearch.value);
     }
-  }, [searchConfig?.enableUrlSync, urlSearch.value, query, setQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   // If tabs are provided, use the tab's data and columns
   const activeTab = tabs?.find(t => t.value === tab);
