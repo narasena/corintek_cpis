@@ -96,7 +96,7 @@ function BooleanInput({
     state?.boolValue === null || state?.boolValue === undefined;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center justify-center gap-2">
       <Checkbox
         checked={isIndeterminate ? false : checked}
         onCheckedChange={v => updateBoolean(entryKey, v === true)}
