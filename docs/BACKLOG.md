@@ -165,7 +165,7 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 ## CG-01 — DataTable Global Search
 
 **Priority:** 🚨 P0 (Critical)  
-**Status:** Not Started
+**Status:** ✅ Completed
 
 **Problem:** DataTable has sorting + pagination only. Zero search/filter. Users must scroll to find records.
 **Impact:** Critical — tables become unusable as data grows
@@ -173,9 +173,13 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 
 ### Tasks
 
-- [ ] Add `getFilteredRowModel()` to DataTable
-- [ ] Add global search `<Input>` to DataTable toolbar
-- [ ] Create `useDebouncedValue` hook (see CG-06)
+- [x] Add `getFilteredRowModel()` to DataTable
+- [x] Add global search `<Input>` to DataTable toolbar
+- [x] Create `useDebouncedValue` hook (see CG-06)
+- [x] Create `useDataTableSearch` hook
+- [x] Add fuzzy matching with Levenshtein distance
+- [x] Add search result ranking
+- [x] Add `HighlightText` component with custom renderers
 
 ---
 
@@ -199,7 +203,7 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 ## CG-03 — Loading & Error Boundaries
 
 **Priority:** 🚨 P0 (Critical)  
-**Status:** Not Started
+**Status:** ✅ Completed
 
 **Problem:** Zero `loading.tsx` or `error.tsx` files. Users see blank screens and unhandled crashes.
 **Impact:** High — terrible UX, no error recovery
@@ -207,10 +211,11 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 
 ### Tasks
 
-- [ ] Create shared `Loading` component (spinner/skeleton)
-- [ ] Create shared `ErrorBoundary` component
-- [ ] Add `loading.tsx` to key routes
-- [ ] Add `error.tsx` to key routes
+- [x] Create shared `Loading` component (spinner/skeleton)
+- [x] Create shared `ErrorBoundary` component
+- [x] Create `ErrorHandlerService` class
+- [x] Add `loading.tsx` to (main) route group
+- [x] Add `error.tsx` to (main) route group
 
 ---
 

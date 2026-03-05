@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -13,6 +13,8 @@ import {
   Row,
   Cell,
   Header,
+  OnChangeFn,
+  Table as TableType,
 } from '@tanstack/react-table';
 
 import {
@@ -24,6 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Card,
   CardContent,
@@ -31,8 +34,11 @@ import {
   CardTitle,
   CardAction,
 } from '@/components/ui/card';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, Search, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useDataTableSearch } from '@/hooks/use-data-table-search';
+import { useSearchParam } from '@/hooks/use-search-param';
+import { HighlightText } from './highlight-text';
 
 export interface ITableTab<TData> {
   value: string;
@@ -43,6 +49,17 @@ export interface ITableTab<TData> {
   filters?: React.ReactNode;
 }
 
+interface IDataTableSearchConfig {
+  placeholder?: string;
+  debounceMs?: number;
+  minQueryLength?: number;
+  columnKeys?: string[];
+  /** Enable URL persistence for search query */
+  enableUrlSync?: boolean;
+  /** URL param name for search */
+  urlParamName?: string;
+}
+
 interface IDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -50,6 +67,10 @@ interface IDataTableProps<TData, TValue> {
   tabs?: ITableTab<TData>[];
   tab?: string;
   onTabChange?: (value: string) => void;
+  searchConfig?: IDataTableSearchConfig;
+  disableSearch?: boolean;
+  /** Enable highlighting of search matches in cells */
+  highlightMatches?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -59,13 +80,47 @@ export function DataTable<TData, TValue>({
   tabs,
   tab,
   onTabChange,
+  searchConfig,
+  disableSearch = false,
+  highlightMatches = false,
 }: IDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  // URL persistence for search
+  const urlSearch = useSearchParam({
+    paramName: searchConfig?.urlParamName ?? 'search',
+    debounceMs: searchConfig?.debounceMs ?? 300,
+  });
+
+  // Search functionality
+  const { query, setQuery, clearQuery, filteredData, isSearching } =
+    useDataTableSearch({
+      data: data as Record<string, unknown>[],
+      debounceMs: searchConfig?.debounceMs,
+      minQueryLength: searchConfig?.minQueryLength,
+      searchKeys: searchConfig?.columnKeys,
+    });
+
+  // Sync URL with search state if enabled
+  useEffect(() => {
+    if (searchConfig?.enableUrlSync) {
+      if (query !== urlSearch.value) {
+        urlSearch.setValue(query);
+      }
+    }
+  }, [query, searchConfig?.enableUrlSync, urlSearch]);
+
+  // Initialize from URL if enabled
+  useEffect(() => {
+    if (searchConfig?.enableUrlSync && urlSearch.value && !query) {
+      setQuery(urlSearch.value);
+    }
+  }, [searchConfig?.enableUrlSync, urlSearch.value, query, setQuery]);
 
   // If tabs are provided, use the tab's data and columns
   const activeTab = tabs?.find(t => t.value === tab);
   const columns = activeTab ? activeTab.columns : cols;
-  const tableData = activeTab ? activeTab.data : data;
+  const tableData = (activeTab ? activeTab.data : filteredData) as TData[];
 
   const table = useReactTable({
     data: tableData,
@@ -79,6 +134,26 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  const searchInput = !disableSearch && (
+    <div className="relative w-full sm:w-72">
+      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Input
+        placeholder={searchConfig?.placeholder ?? 'Cari...'}
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        className="pl-8 pr-8"
+      />
+      {query && (
+        <button
+          onClick={clearQuery}
+          className="absolute right-2 top-1/2 -translate-y-1/2"
+        >
+          <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+        </button>
+      )}
+    </div>
+  );
+
   // If tabs are provided, render with tabs
   if (tabs && tabs.length > 0) {
     return (
@@ -91,26 +166,25 @@ export function DataTable<TData, TValue>({
               </TabsTrigger>
             ))}
           </TabsList>
-          {activeTab?.addNewRow}
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {searchInput}
+            {activeTab?.addNewRow}
+          </div>
         </div>
 
         {activeTab?.filters && <div className="mb-4">{activeTab.filters}</div>}
 
         {tabs.map(t => (
           <TabsContent key={t.value} value={t.value} className="mt-0">
-            <DataTableInner
-              columns={t.columns}
-              data={t.data}
+            <TabContentTable
+              tab={t}
+              activeTabValue={tab}
+              filteredData={filteredData}
+              isSearching={isSearching}
+              query={query}
               emptyMessage={emptyMessage}
-              table={useReactTable({
-                data: t.data,
-                columns: t.columns,
-                getCoreRowModel: getCoreRowModel(),
-                getPaginationRowModel: getPaginationRowModel(),
-                onSortingChange: setSorting,
-                getSortedRowModel: getSortedRowModel(),
-                state: { sorting },
-              })}
+              sorting={sorting}
+              onSortingChange={setSorting}
             />
           </TabsContent>
         ))}
@@ -118,12 +192,67 @@ export function DataTable<TData, TValue>({
     );
   }
 
-  // No tabs - render simple table
+  // No tabs - render simple table with search
+  return (
+    <div className="space-y-4">
+      {searchInput && <div className="flex justify-end">{searchInput}</div>}
+      <DataTableInner
+        columns={columns}
+        data={tableData}
+        emptyMessage={
+          isSearching
+            ? `Tidak ada data yang cocok dengan '${query}'`
+            : emptyMessage
+        }
+        table={table}
+      />
+    </div>
+  );
+}
+
+interface ITabContentTableProps<TData> {
+  tab: ITableTab<TData>;
+  activeTabValue?: string;
+  filteredData: Record<string, unknown>[];
+  isSearching: boolean;
+  query: string;
+  emptyMessage?: string;
+  sorting: SortingState;
+  onSortingChange: OnChangeFn<SortingState>;
+}
+
+function TabContentTable<TData>({
+  tab,
+  activeTabValue,
+  filteredData,
+  isSearching,
+  query,
+  emptyMessage,
+  sorting,
+  onSortingChange,
+}: ITabContentTableProps<TData>) {
+  const isActive = tab.value === activeTabValue;
+  const tabData = (isActive ? filteredData : tab.data) as TData[];
+
+  const table = useReactTable({
+    data: tabData,
+    columns: tab.columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange,
+    getSortedRowModel: getSortedRowModel(),
+    state: { sorting },
+  });
+
   return (
     <DataTableInner
-      columns={columns}
-      data={tableData}
-      emptyMessage={emptyMessage}
+      columns={tab.columns}
+      data={tabData}
+      emptyMessage={
+        isActive && isSearching
+          ? `Tidak ada data yang cocok dengan '${query}'`
+          : emptyMessage
+      }
       table={table}
     />
   );
@@ -131,6 +260,7 @@ export function DataTable<TData, TValue>({
 
 function DataTableInner<TData, TValue>({
   columns,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   data,
   emptyMessage,
   table,
@@ -138,7 +268,7 @@ function DataTableInner<TData, TValue>({
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   emptyMessage?: string;
-  table: any;
+  table: TableType<TData>;
 }) {
   return (
     <div className="space-y-4">
