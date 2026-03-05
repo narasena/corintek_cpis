@@ -23,7 +23,7 @@ Priority = f(Pain, Risk, Value)
 
 1. **Step 1: Isolated Utilities (JWT)** - Minor cleanup, no logic changes.
 2. **Step 2: Feature Layer (Service/Actions)** - Resolve circular dependencies by moving password logic to a pure domain helper.
-3. **Step 3: RBAC Core** - Split `MASTER_DATA` into granular resources and fix prefix matching.
+3. **Step 3: RBAC Core** - Split `MASTER_DATA` into granular resources, fix prefix matching, and unify role metadata.
 4. **Step 4: Middleware Guard** - The final "High Risk" step: switch to "Closed-by-Default" and parameterize landing pages.
 
 ---
@@ -60,9 +60,11 @@ Priority = f(Pain, Risk, Value)
 
 ### Phase 2: RBAC Granularity (F1)
 
-- [ ] **src/lib/rbac.ts**: Split `MASTER_DATA` into `CLIENTS`, `CHEMICALS`, `PARAMETERS`, `MACHINES`.
-- [ ] **src/lib/rbac.ts**: Refactor `matchPathToResource` to use an exact-match or segmented-match logic instead of `.startsWith()`.
-- [ ] **src/lib/rbac.ts**: Implement `getLandingPage(role)` helper to replace hardcoded `/users` redirect.
+- [x] **src/lib/rbac.ts**: Split `MASTER_DATA` into `CLIENTS`, `CHEMICALS`, `PARAMETERS`, `MACHINES`.
+- [x] **src/lib/rbac.ts**: Refactor `matchPathToResource` to use an exact-match or segmented-match logic instead of `.startsWith()`.
+- [x] **src/lib/rbac.ts**: Unify role metadata (labels and permissions) into a single `ROLE_CONFIG` object.
+- [x] **src/lib/rbac.ts**: Implement `getLandingPage(role)` helper to replace hardcoded `/users` redirect.
+- [x] **src/lib/rbac.ts**: Implement "Closed-by-Default" security posture for navigation and path matching.
 
 ### Phase 3: Middleware Hardening (F2)
 

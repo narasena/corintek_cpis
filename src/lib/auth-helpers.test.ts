@@ -35,7 +35,7 @@ import {
 
 function makeValidPayload(role: TUserRole = 'TECHNICIAN') {
   return {
-    id: 'user-1',
+    id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
     email: 'test@example.com',
     role,
   };
@@ -43,14 +43,22 @@ function makeValidPayload(role: TUserRole = 'TECHNICIAN') {
 
 function makeValidUser(role: TUserRole = 'TECHNICIAN') {
   return {
-    id: 'user-1',
+    id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
     email: 'test@example.com',
     firstName: 'John',
     lastName: 'Doe',
+    idNumber: '123456789',
+    phoneNumber: '08123456789',
     avatarUrl: null,
+    address: 'Jl. Test No. 1',
     role,
+    employmentStatus: 'PERMANENT',
     isActive: true,
     isBlocked: false,
+    clientId: null,
+    client: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     deletedAt: null,
   };
 }
@@ -191,7 +199,7 @@ describe('getCurrentUserDetails', () => {
     const result = await getCurrentUserDetails();
 
     expect(result).toEqual({
-      id: 'user-1',
+      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       email: 'test@example.com',
       firstName: 'John',
       lastName: 'Doe',
@@ -239,7 +247,7 @@ describe('requireActor', () => {
     const result = await requireActor();
 
     expect(result).toEqual({
-      id: 'user-1',
+      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       email: 'test@example.com',
       role: 'TECHNICIAN',
     });
@@ -257,7 +265,7 @@ describe('requireActor', () => {
     const result = await requireActor();
 
     expect(result).toEqual({
-      id: 'user-1',
+      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       email: 'test@example.com',
       role: 'CLIENT',
     });
@@ -305,7 +313,7 @@ describe('getActorOrNull', () => {
     const result = await getActorOrNull();
 
     expect(result).toEqual({
-      id: 'user-1',
+      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       email: 'test@example.com',
       role: 'TECHNICIAN',
     });
@@ -323,7 +331,7 @@ describe('getActorOrNull', () => {
     const result = await getActorOrNull();
 
     expect(result).toEqual({
-      id: 'user-1',
+      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       email: 'test@example.com',
       role: 'CLIENT',
     });

@@ -42,15 +42,15 @@ describe('matchPathToResource', () => {
     expect(matchPathToResource('/projects')).toBe(RbacResource.PROJECTS_ADMIN);
   });
 
-  it('matches master data categories', () => {
-    expect(matchPathToResource('/clients')).toBe(RbacResource.MASTER_DATA);
-    expect(matchPathToResource('/chemicals')).toBe(RbacResource.MASTER_DATA);
-    expect(matchPathToResource('/parameters')).toBe(RbacResource.MASTER_DATA);
-    expect(matchPathToResource('/machines')).toBe(RbacResource.MASTER_DATA);
+  it('matches granular master data categories', () => {
+    expect(matchPathToResource('/clients')).toBe(RbacResource.CLIENTS);
+    expect(matchPathToResource('/chemicals')).toBe(RbacResource.CHEMICALS);
+    expect(matchPathToResource('/parameters')).toBe(RbacResource.PARAMETERS);
+    expect(matchPathToResource('/machines')).toBe(RbacResource.MACHINES);
   });
 
-  it('returns null for unknown paths', () => {
-    expect(matchPathToResource('/unknown')).toBe(null);
-    expect(matchPathToResource('/api/health')).toBe(null);
+  it('returns UNKNOWN for unknown paths', () => {
+    expect(matchPathToResource('/unknown')).toBe(RbacResource.UNKNOWN);
+    expect(matchPathToResource('/api/health')).toBe(RbacResource.UNKNOWN);
   });
 });

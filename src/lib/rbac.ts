@@ -9,7 +9,12 @@ export const RbacResource = {
   USERS_ADMIN: 'USERS_ADMIN',
   PROJECTS_LIST: 'PROJECTS_LIST',
   PROJECTS_ADMIN: 'PROJECTS_ADMIN',
-  MASTER_DATA: 'MASTER_DATA',
+  CLIENTS: 'CLIENTS',
+  CHEMICALS: 'CHEMICALS',
+  PARAMETERS: 'PARAMETERS',
+  MACHINES: 'MACHINES',
+  PUBLIC: 'PUBLIC',
+  UNKNOWN: 'UNKNOWN',
 } as const;
 
 export type TRbacResource = (typeof RbacResource)[keyof typeof RbacResource];
@@ -29,9 +34,17 @@ export const RbacRole = {
 
 export type TRbacRole = (typeof RbacRole)[keyof typeof RbacRole];
 
+export type TRbacLevel = 'CRUD' | 'CRU' | 'R' | '-';
+
 export type TRbacPermissionSet = Record<TRbacCapability, boolean>;
 
-function permissionSet(level: 'CRUD' | 'CRU' | 'R' | '-'): TRbacPermissionSet {
+interface IRbacRoleConfig {
+  label: string;
+  landingPage: string;
+  permissions: Partial<Record<TRbacResource, TRbacLevel>>;
+}
+
+function permissionSet(level: TRbacLevel): TRbacPermissionSet {
   if (level === 'CRUD') {
     return { create: true, read: true, update: true, delete: true };
   }
@@ -44,113 +57,166 @@ function permissionSet(level: 'CRUD' | 'CRU' | 'R' | '-'): TRbacPermissionSet {
   return { create: false, read: false, update: false, delete: false };
 }
 
-const ROLE_MATRIX: Record<
-  TRbacRole,
-  Partial<Record<TRbacResource, 'CRUD' | 'CRU' | 'R' | '-'>>
-> = {
+const ROLE_CONFIG: Record<TRbacRole, IRbacRoleConfig> = {
   ADMIN: {
-    DASHBOARD: 'CRUD',
-    SUMMARY_REPORTS: 'CRUD',
-    LOG_SHEETS: 'CRUD',
-    WORK_REPORTS: 'CRUD',
-    REPORTS: 'CRUD',
-    LAB_ANALYSES: 'CRUD',
-    ATTENDANCE: 'CRUD',
-    USERS_ADMIN: 'CRUD',
-    PROJECTS_LIST: 'R',
-    PROJECTS_ADMIN: 'CRUD',
-    MASTER_DATA: 'CRUD',
+    label: 'Super Admin',
+    landingPage: '/users',
+    permissions: {
+      DASHBOARD: 'CRUD',
+      SUMMARY_REPORTS: 'CRUD',
+      LOG_SHEETS: 'CRUD',
+      WORK_REPORTS: 'CRUD',
+      REPORTS: 'CRUD',
+      LAB_ANALYSES: 'CRUD',
+      ATTENDANCE: 'CRUD',
+      USERS_ADMIN: 'CRUD',
+      PROJECTS_LIST: 'R',
+      PROJECTS_ADMIN: 'CRUD',
+      CLIENTS: 'CRUD',
+      CHEMICALS: 'CRUD',
+      PARAMETERS: 'CRUD',
+      MACHINES: 'CRUD',
+    },
   },
   SUPERVISOR: {
-    DASHBOARD: 'CRUD',
-    SUMMARY_REPORTS: 'CRUD',
-    LOG_SHEETS: 'CRUD',
-    WORK_REPORTS: 'CRUD',
-    REPORTS: 'CRUD',
-    LAB_ANALYSES: 'CRUD',
-    ATTENDANCE: 'CRUD',
-    PROJECTS_LIST: 'R',
-    PROJECTS_ADMIN: '-',
-    USERS_ADMIN: '-',
-    MASTER_DATA: '-',
+    label: 'PIC Project',
+    landingPage: '/',
+    permissions: {
+      DASHBOARD: 'CRUD',
+      SUMMARY_REPORTS: 'CRUD',
+      LOG_SHEETS: 'CRUD',
+      WORK_REPORTS: 'CRUD',
+      REPORTS: 'CRUD',
+      LAB_ANALYSES: 'CRUD',
+      ATTENDANCE: 'CRUD',
+      PROJECTS_LIST: 'R',
+      PROJECTS_ADMIN: '-',
+      USERS_ADMIN: '-',
+      CLIENTS: '-',
+      CHEMICALS: '-',
+      PARAMETERS: '-',
+      MACHINES: '-',
+    },
   },
   TECHNICIAN: {
-    DASHBOARD: 'R',
-    SUMMARY_REPORTS: '-',
-    LOG_SHEETS: 'CRU',
-    WORK_REPORTS: 'CRU',
-    REPORTS: 'R',
-    LAB_ANALYSES: '-',
-    ATTENDANCE: 'CRU',
-    USERS_ADMIN: '-',
-    PROJECTS_LIST: 'R',
-    PROJECTS_ADMIN: '-',
-    MASTER_DATA: '-',
+    label: 'Teknisi',
+    landingPage: '/attendance',
+    permissions: {
+      DASHBOARD: 'R',
+      SUMMARY_REPORTS: '-',
+      LOG_SHEETS: 'CRU',
+      WORK_REPORTS: 'CRU',
+      REPORTS: 'R',
+      LAB_ANALYSES: '-',
+      ATTENDANCE: 'CRU',
+      USERS_ADMIN: '-',
+      PROJECTS_LIST: 'R',
+      PROJECTS_ADMIN: '-',
+      CLIENTS: '-',
+      CHEMICALS: '-',
+      PARAMETERS: '-',
+      MACHINES: '-',
+    },
   },
   REPORTING: {
-    DASHBOARD: 'R',
-    SUMMARY_REPORTS: 'CRU',
-    LOG_SHEETS: 'CRU',
-    WORK_REPORTS: 'CRU',
-    REPORTS: 'CRU',
-    LAB_ANALYSES: '-',
-    ATTENDANCE: '-',
-    USERS_ADMIN: '-',
-    PROJECTS_LIST: 'R',
-    PROJECTS_ADMIN: '-',
-    MASTER_DATA: '-',
+    label: 'Reporting',
+    landingPage: '/summary-reports',
+    permissions: {
+      DASHBOARD: 'R',
+      SUMMARY_REPORTS: 'CRU',
+      LOG_SHEETS: 'CRU',
+      WORK_REPORTS: 'CRU',
+      REPORTS: 'CRU',
+      LAB_ANALYSES: '-',
+      ATTENDANCE: '-',
+      USERS_ADMIN: '-',
+      PROJECTS_LIST: 'R',
+      PROJECTS_ADMIN: '-',
+      CLIENTS: '-',
+      CHEMICALS: '-',
+      PARAMETERS: '-',
+      MACHINES: '-',
+    },
   },
   DIRECTOR: {
-    DASHBOARD: 'R',
-    SUMMARY_REPORTS: 'R',
-    LOG_SHEETS: 'R',
-    WORK_REPORTS: 'R',
-    REPORTS: 'R',
-    LAB_ANALYSES: '-',
-    ATTENDANCE: '-',
-    USERS_ADMIN: '-',
-    PROJECTS_LIST: 'R',
-    PROJECTS_ADMIN: '-',
-    MASTER_DATA: '-',
+    label: 'Direksi',
+    landingPage: '/',
+    permissions: {
+      DASHBOARD: 'R',
+      SUMMARY_REPORTS: 'R',
+      LOG_SHEETS: 'R',
+      WORK_REPORTS: 'R',
+      REPORTS: 'R',
+      LAB_ANALYSES: '-',
+      ATTENDANCE: '-',
+      USERS_ADMIN: '-',
+      PROJECTS_LIST: 'R',
+      PROJECTS_ADMIN: '-',
+      CLIENTS: '-',
+      CHEMICALS: '-',
+      PARAMETERS: '-',
+      MACHINES: '-',
+    },
   },
   CLIENT: {
-    DASHBOARD: 'R',
-    SUMMARY_REPORTS: 'R',
-    LOG_SHEETS: 'R',
-    WORK_REPORTS: 'R',
-    REPORTS: 'R',
-    LAB_ANALYSES: '-',
-    ATTENDANCE: '-',
-    USERS_ADMIN: '-',
-    PROJECTS_LIST: 'R',
-    PROJECTS_ADMIN: '-',
-    MASTER_DATA: '-',
+    label: 'Klien',
+    landingPage: '/my-projects',
+    permissions: {
+      DASHBOARD: 'R',
+      SUMMARY_REPORTS: 'R',
+      LOG_SHEETS: 'R',
+      WORK_REPORTS: 'R',
+      REPORTS: 'R',
+      LAB_ANALYSES: '-',
+      ATTENDANCE: '-',
+      USERS_ADMIN: '-',
+      PROJECTS_LIST: 'R',
+      PROJECTS_ADMIN: '-',
+      CLIENTS: '-',
+      CHEMICALS: '-',
+      PARAMETERS: '-',
+      MACHINES: '-',
+    },
   },
   CLIENT_SUPERVISOR: {
-    DASHBOARD: 'R',
-    SUMMARY_REPORTS: 'R',
-    LOG_SHEETS: 'R',
-    WORK_REPORTS: 'R',
-    REPORTS: 'R',
-    LAB_ANALYSES: '-',
-    ATTENDANCE: '-',
-    USERS_ADMIN: '-',
-    PROJECTS_LIST: 'R',
-    PROJECTS_ADMIN: '-',
-    MASTER_DATA: '-',
+    label: 'PIC Klien',
+    landingPage: '/my-projects',
+    permissions: {
+      DASHBOARD: 'R',
+      SUMMARY_REPORTS: 'R',
+      LOG_SHEETS: 'R',
+      WORK_REPORTS: 'R',
+      REPORTS: 'R',
+      LAB_ANALYSES: '-',
+      ATTENDANCE: '-',
+      USERS_ADMIN: '-',
+      PROJECTS_LIST: 'R',
+      PROJECTS_ADMIN: '-',
+      CLIENTS: '-',
+      CHEMICALS: '-',
+      PARAMETERS: '-',
+      MACHINES: '-',
+    },
   },
   CLIENT_TECHNICIAN: {
-    DASHBOARD: 'R',
-    SUMMARY_REPORTS: '-',
-    LOG_SHEETS: 'CRU',
-    WORK_REPORTS: 'CRU',
-    REPORTS: 'R',
-    LAB_ANALYSES: '-',
-    ATTENDANCE: 'CRU',
-    USERS_ADMIN: '-',
-    PROJECTS_LIST: 'R',
-    PROJECTS_ADMIN: '-',
-    MASTER_DATA: '-',
+    label: 'Teknisi (Klien)',
+    landingPage: '/attendance',
+    permissions: {
+      DASHBOARD: 'R',
+      SUMMARY_REPORTS: '-',
+      LOG_SHEETS: 'CRU',
+      WORK_REPORTS: 'CRU',
+      REPORTS: 'R',
+      LAB_ANALYSES: '-',
+      ATTENDANCE: 'CRU',
+      USERS_ADMIN: '-',
+      PROJECTS_LIST: 'R',
+      PROJECTS_ADMIN: '-',
+      CLIENTS: '-',
+      CHEMICALS: '-',
+      PARAMETERS: '-',
+      MACHINES: '-',
+    },
   },
 };
 
@@ -159,7 +225,9 @@ export function canAccess(
   resource: TRbacResource,
   capability: TRbacCapability = 'read'
 ) {
-  const level = ROLE_MATRIX[role as TRbacRole]?.[resource] ?? '-';
+  if (resource === RbacResource.PUBLIC) return true;
+  const config = ROLE_CONFIG[role as TRbacRole];
+  const level = config?.permissions[resource] ?? '-';
   return permissionSet(level)[capability];
 }
 
@@ -174,50 +242,45 @@ export function ensureAccess(
 }
 
 export function getRoleLabel(role: string) {
-  switch (role) {
-    case 'ADMIN':
-      return 'Super Admin';
-    case 'SUPERVISOR':
-      return 'PIC Project';
-    case 'TECHNICIAN':
-      return 'Teknisi';
-    case 'REPORTING':
-      return 'Reporting';
-    case 'DIRECTOR':
-      return 'Direksi';
-    case 'CLIENT':
-      return 'Klien';
-    case 'CLIENT_SUPERVISOR':
-      return 'PIC Klien';
-    case 'CLIENT_TECHNICIAN':
-      return 'Teknisi (Klien)';
-    default:
-      return role;
-  }
+  return ROLE_CONFIG[role as TRbacRole]?.label ?? role;
 }
 
-export function matchPathToResource(pathname: string): TRbacResource | null {
-  if (pathname === '/' || pathname === '') return RbacResource.DASHBOARD;
-  if (pathname.startsWith('/summary-reports'))
-    return RbacResource.SUMMARY_REPORTS;
-  if (pathname.startsWith('/log-sheets')) return RbacResource.LOG_SHEETS;
-  if (pathname.startsWith('/work-reports')) return RbacResource.WORK_REPORTS;
-  if (pathname.startsWith('/reports')) return RbacResource.REPORTS;
-  if (pathname.startsWith('/lab-analyses')) return RbacResource.LAB_ANALYSES;
-  if (pathname.startsWith('/attendance') || pathname.startsWith('/absence'))
-    return RbacResource.ATTENDANCE;
-  if (pathname.startsWith('/users')) return RbacResource.USERS_ADMIN;
-  if (pathname.startsWith('/my-projects')) return RbacResource.PROJECTS_LIST;
-  if (pathname.startsWith('/projects')) return RbacResource.PROJECTS_ADMIN;
-  if (
-    pathname.startsWith('/clients') ||
-    pathname.startsWith('/chemicals') ||
-    pathname.startsWith('/parameters') ||
-    pathname.startsWith('/machines')
-  ) {
-    return RbacResource.MASTER_DATA;
+export function getLandingPage(role: string) {
+  return ROLE_CONFIG[role as TRbacRole]?.landingPage ?? '/';
+}
+
+
+
+const PATH_RESOURCE_MAP: Array<{
+  pattern: string | RegExp;
+  resource: TRbacResource;
+}> = [
+  { pattern: /^\/?$/, resource: RbacResource.DASHBOARD },
+  { pattern: /^\/summary-reports/, resource: RbacResource.SUMMARY_REPORTS },
+  { pattern: /^\/log-sheets/, resource: RbacResource.LOG_SHEETS },
+  { pattern: /^\/work-reports/, resource: RbacResource.WORK_REPORTS },
+  { pattern: /^\/reports/, resource: RbacResource.REPORTS },
+  { pattern: /^\/lab-analyses/, resource: RbacResource.LAB_ANALYSES },
+  { pattern: /^\/attendance/, resource: RbacResource.ATTENDANCE },
+  { pattern: /^\/absence/, resource: RbacResource.ATTENDANCE },
+  { pattern: /^\/users/, resource: RbacResource.USERS_ADMIN },
+  { pattern: /^\/my-projects/, resource: RbacResource.PROJECTS_LIST },
+  { pattern: /^\/projects/, resource: RbacResource.PROJECTS_ADMIN },
+  { pattern: /^\/clients/, resource: RbacResource.CLIENTS },
+  { pattern: /^\/chemicals/, resource: RbacResource.CHEMICALS },
+  { pattern: /^\/parameters/, resource: RbacResource.PARAMETERS },
+  { pattern: /^\/machines/, resource: RbacResource.MACHINES },
+];
+
+export function matchPathToResource(pathname: string): TRbacResource {
+  for (const { pattern, resource } of PATH_RESOURCE_MAP) {
+    if (typeof pattern === 'string') {
+      if (pathname === pattern) return resource;
+    } else if (pattern.test(pathname)) {
+      return resource;
+    }
   }
-  return null;
+  return RbacResource.UNKNOWN;
 }
 
 export function filterNavItems<T extends { url: string }>(
@@ -226,7 +289,6 @@ export function filterNavItems<T extends { url: string }>(
 ) {
   return items.filter(item => {
     const resource = matchPathToResource(item.url);
-    if (!resource) return true;
     return canAccess(role, resource, 'read');
   });
 }

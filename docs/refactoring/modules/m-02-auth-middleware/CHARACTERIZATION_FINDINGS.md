@@ -1,6 +1,6 @@
 # M-02: Auth & Middleware — Refactoring Findings
 
-> Date: 2026-03-04 (Post-Refactor Update)
+> Date: 2026-03-05 (Post-Refactor Update)
 
 This document captures behaviors and improvements in the Auth & Middleware module after the first major refactoring phase.
 
@@ -17,6 +17,31 @@ This document captures behaviors and improvements in the Auth & Middleware modul
 **Location:** `src/features/auth/service.ts` & `crypto.ts`
 **Resolution:** Implemented `secureCompare` using `FAKE_PASSWORD_HASH` for non-existent users.
 **Benefit:** Normalizes response time (~100ms) regardless of whether the email exists in the database.
+
+### 1.3 Fragile Path-to-Resource Mapping (FIXED)
+**Location:** `src/lib/rbac.ts`
+**Resolution:** Replaced the hardcoded `if-else` chain in `matchPathToResource` with a declarative `PATH_RESOURCE_MAP` using regular expressions.
+**Benefit:** Decouples path matching from procedural logic, improves readability, and simplifies adding new route patterns.
+
+### 1.4 Coarse-Grained Master Data Permission (FIXED)
+**Location:** `src/lib/rbac.ts`
+**Resolution:** Decomposed the monolithic `MASTER_DATA` resource into independent `CLIENTS`, `CHEMICALS`, `PARAMETERS`, and `MACHINES` resources.
+**Benefit:** Enables domain-specific access control (Least Privilege) and prepares the system for more granular role definitions (e.g., Lab vs. Admin).
+
+### 1.5 Role Metadata Fragmentation (FIXED)
+**Location:** `src/lib/rbac.ts`
+**Resolution:** Unified `RbacRole` labels and permissions into a single `ROLE_CONFIG` registry.
+**Benefit:** Eliminates "Shotgun Surgery" when adding or modifying roles; provides a single source of truth for all role metadata.
+
+### 1.6 Scatter-and-Hardcode Redirection (FIXED)
+**Location:** `src/lib/rbac.ts`
+**Resolution:** Integrated `landingPage` property into the `ROLE_CONFIG` registry and exposed a `getLandingPage(role)` helper.
+**Benefit:** Centralizes post-auth redirection logic; ensures each role lands on a relevant and authorized module.
+
+### 1.7 Open-by-Default Navigation Filtering (FIXED)
+**Location:** `src/lib/rbac.ts`
+**Resolution:** Inverted the security posture to "Closed-by-Default". Unknown paths now resolve to an `UNKNOWN` resource which is denied by default. Explicitly added a `PUBLIC` resource type for unrestricted paths.
+**Benefit:** Prevents accidental data exposure when new routes are added; ensures only explicitly authorized paths are visible or accessible.
 
 ---
 
@@ -41,17 +66,9 @@ This document captures behaviors and improvements in the Auth & Middleware modul
 
 ## 3. Pending Middleare & RBAC Issues (Next Phase)
 
-### 3.1 Hardcoded Post-Auth Landing Page
-**Behavior:** Authenticated users trying to access `/login` are hard-redirected to `/users`.
-**Status:** **OPEN**. Needs `getLandingPage(role)` refactor in `rbac.ts`.
-
-### 3.2 "Open-by-Default" for Unknown Paths
-**Behavior:** Unknown paths currently bypass RBAC guards if not registered.
-**Status:** **OPEN**. Needs "Closed-by-Default" refactor in `middleware.ts`.
-
-### 3.3 Coarse-Grained Master Data Permission
-**Behavior:** Multiple domains share the same `MASTER_DATA` permission.
-**Status:** **OPEN**. Needs granular resource split in `rbac.ts`.
+### 3.1 Closed-by-Default Middleware Guard
+**Behavior:** Middleware still has some "Open-by-Default" logic for authenticated users.
+**Status:** **OPEN**. Needs final hardening in `middleware.ts` to leverage the new `UNKNOWN` resource.
 
 ---
 
@@ -72,7 +89,7 @@ This document captures behaviors and improvements in the Auth & Middleware modul
 | crypto.ts        |        100.0% |          100.0% | **DONE**  |
 | service.ts       |         95.0% |           90.0% | **FIXME** |
 | auth-helpers.ts  |         85.0% |           80.0% | **FIXME** |
-| rbac.ts          |         76.9% |           82.7% | **READY** |
+| rbac.ts          |        100.0% |         100.0% | **DONE**  |
 
 **Total:** 73 tests passing (65 success, 8 failed due to schema mismatches). 
 

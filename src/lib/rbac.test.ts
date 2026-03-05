@@ -1,5 +1,59 @@
 import { describe, it, expect } from 'vitest';
-import { canAccess, getRoleLabel, RbacResource, RbacRole } from './rbac';
+import {
+  canAccess,
+  getLandingPage,
+  getRoleLabel,
+  matchPathToResource,
+  RbacResource,
+  RbacRole,
+} from './rbac';
+
+describe('getLandingPage', () => {
+  it('returns /users for ADMIN', () => {
+    expect(getLandingPage('ADMIN')).toBe('/users');
+  });
+
+  it('returns /attendance for TECHNICIAN', () => {
+    expect(getLandingPage('TECHNICIAN')).toBe('/attendance');
+  });
+
+  it('returns /my-projects for CLIENT', () => {
+    expect(getLandingPage('CLIENT')).toBe('/my-projects');
+  });
+
+  it('returns / for unknown role', () => {
+    expect(getLandingPage('UNKNOWN')).toBe('/');
+  });
+});
+
+describe('matchPathToResource', () => {
+  it('matches dashboard', () => {
+    expect(matchPathToResource('/')).toBe(RbacResource.DASHBOARD);
+    expect(matchPathToResource('')).toBe(RbacResource.DASHBOARD);
+  });
+
+  it('matches module paths', () => {
+    expect(matchPathToResource('/summary-reports')).toBe(
+      RbacResource.SUMMARY_REPORTS
+    );
+    expect(matchPathToResource('/log-sheets/123')).toBe(
+      RbacResource.LOG_SHEETS
+    );
+    expect(matchPathToResource('/attendance')).toBe(RbacResource.ATTENDANCE);
+    expect(matchPathToResource('/absence')).toBe(RbacResource.ATTENDANCE);
+  });
+
+  it('matches master data paths', () => {
+    expect(matchPathToResource('/clients')).toBe(RbacResource.CLIENTS);
+    expect(matchPathToResource('/chemicals')).toBe(RbacResource.CHEMICALS);
+    expect(matchPathToResource('/parameters')).toBe(RbacResource.PARAMETERS);
+    expect(matchPathToResource('/machines')).toBe(RbacResource.MACHINES);
+  });
+
+  it('returns UNKNOWN for unknown paths', () => {
+    expect(matchPathToResource('/unknown')).toBe(RbacResource.UNKNOWN);
+  });
+});
 
 describe('CLIENT role permissions', () => {
   it('has read access to DASHBOARD', () => {
@@ -69,9 +123,24 @@ describe('CLIENT role permissions', () => {
     );
   });
 
-  it('has NO access to MASTER_DATA', () => {
-    expect(canAccess('CLIENT', RbacResource.MASTER_DATA, 'read')).toBe(false);
-    expect(canAccess('CLIENT', RbacResource.MASTER_DATA, 'create')).toBe(false);
+  it('has NO access to CLIENTS', () => {
+    expect(canAccess('CLIENT', RbacResource.CLIENTS, 'read')).toBe(false);
+    expect(canAccess('CLIENT', RbacResource.CLIENTS, 'create')).toBe(false);
+  });
+
+  it('has NO access to CHEMICALS', () => {
+    expect(canAccess('CLIENT', RbacResource.CHEMICALS, 'read')).toBe(false);
+    expect(canAccess('CLIENT', RbacResource.CHEMICALS, 'create')).toBe(false);
+  });
+
+  it('has NO access to PARAMETERS', () => {
+    expect(canAccess('CLIENT', RbacResource.PARAMETERS, 'read')).toBe(false);
+    expect(canAccess('CLIENT', RbacResource.PARAMETERS, 'create')).toBe(false);
+  });
+
+  it('has NO access to MACHINES', () => {
+    expect(canAccess('CLIENT', RbacResource.MACHINES, 'read')).toBe(false);
+    expect(canAccess('CLIENT', RbacResource.MACHINES, 'create')).toBe(false);
   });
 });
 
@@ -104,6 +173,14 @@ describe('RbacRole constant', () => {
     expect(roles).toContain('CLIENT');
     expect(roles).toContain('CLIENT_TECHNICIAN');
     expect(roles).toContain('CLIENT_SUPERVISOR');
+  });
+});
+
+describe('canAccess with PUBLIC resource', () => {
+  it('returns true for any role', () => {
+    expect(canAccess('ADMIN', RbacResource.PUBLIC, 'read')).toBe(true);
+    expect(canAccess('CLIENT', RbacResource.PUBLIC, 'read')).toBe(true);
+    expect(canAccess('UNKNOWN_ROLE', RbacResource.PUBLIC, 'read')).toBe(true);
   });
 });
 

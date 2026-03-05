@@ -9,6 +9,6 @@ export default async function ChemicalsLayout({
 }) {
   const actor = await getCurrentUser();
   if (!actor) redirect('/login');
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+  ensureAccess(actor.role, RbacResource.CHEMICALS, 'read');
   return children;
 }

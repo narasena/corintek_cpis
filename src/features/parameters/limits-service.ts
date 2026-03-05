@@ -106,7 +106,7 @@ export async function getParameterLimits(
   actor: IJwtPayload,
   filters?: TParameterLimitListInput
 ): Promise<IParameterLimitMasterItem[]> {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+  ensureAccess(actor.role, RbacResource.PARAMETERS, 'read');
 
   // Find the default profile with its limits
   const defaultProfileWithLimits = await prisma.parameterLimitProfile.findFirst(
@@ -218,7 +218,7 @@ export async function updateParameterLimit(
   actor: IJwtPayload,
   input: TUpdateParameterLimitInput
 ) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
+  ensureAccess(actor.role, RbacResource.PARAMETERS, 'update');
   return updateParameterLimitCore(input);
 }
 
@@ -226,7 +226,7 @@ export async function updateParameterLimitBatch(
   actor: IJwtPayload,
   input: TUpdateParameterLimitBatchInput
 ) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
+  ensureAccess(actor.role, RbacResource.PARAMETERS, 'update');
 
   // Find the default profile first
   const defaultProfile = await prisma.parameterLimitProfile.findFirst({
@@ -270,7 +270,7 @@ export async function checkParameterHasLimits(
   actor: IJwtPayload,
   parameterId: string
 ): Promise<boolean> {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+  ensureAccess(actor.role, RbacResource.PARAMETERS, 'read');
 
   const count = await prisma.parameterLimit.count({
     where: {

@@ -7,7 +7,7 @@ import {
 vi.mock('@/lib/rbac', () => ({
   ensureAccess: vi.fn(),
   RbacResource: {
-    MASTER_DATA: 'MASTER_DATA',
+    PARAMETERS: 'PARAMETERS',
   },
 }));
 

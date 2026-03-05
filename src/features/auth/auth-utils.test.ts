@@ -29,18 +29,28 @@ describe('Auth Utilities & Helpers', () => {
   describe('validateSessionUser', () => {
     it('returns user without password when valid session exists', async () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
-        id: '123',
+        id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        firstName: 'Test',
+        lastName: 'User',
+        idNumber: '123',
         email: 'test@test.com',
+        phoneNumber: '08123',
+        password: 'hashed-password',
+        avatarUrl: null,
+        address: 'Test Address',
+        role: 'ADMIN',
+        employmentStatus: 'PERMANENT',
         isActive: true,
         isBlocked: false,
-        deletedAt: null,
+        clientId: null,
         client: null,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       } as any);
 
-      const result = await validateSessionUser('123');
-      expect(result?.id).toBe('123');
+      const result = await validateSessionUser('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11');
+      expect(result?.id).toBe('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11');
       expect((result as any).password).toBeUndefined();
     });
 
@@ -84,14 +94,31 @@ describe('Auth Utilities & Helpers', () => {
     it('returns actor when authenticated', async () => {
       // Mock getCurrentUserDetails indirectly or directly
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
-        id: '1', email: 'a@b.com', role: 'ADMIN', isActive: true, isBlocked: false, firstName: 'A'
+        id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        firstName: 'Test',
+        lastName: 'User',
+        idNumber: '123',
+        email: 'test@test.com',
+        phoneNumber: '08123',
+        password: 'hashed-password',
+        avatarUrl: null,
+        address: 'Test Address',
+        role: 'ADMIN',
+        employmentStatus: 'PERMANENT',
+        isActive: true,
+        isBlocked: false,
+        clientId: null,
+        client: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
       } as any);
       const mockCookie = { get: vi.fn().mockReturnValue({ value: 'token' }) };
       vi.mocked(cookies).mockResolvedValue(mockCookie as any);
-      vi.mocked(verifyToken).mockResolvedValue({ id: '1', role: 'ADMIN' });
+      vi.mocked(verifyToken).mockResolvedValue({ id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', role: 'ADMIN' });
 
       const result = await requireActor();
-      expect(result.id).toBe('1');
+      expect(result.id).toBe('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11');
     });
 
     it('throws AuthenticationError when not authenticated', async () => {

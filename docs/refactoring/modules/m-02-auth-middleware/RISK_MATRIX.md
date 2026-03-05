@@ -18,7 +18,7 @@
 
 | ID | File | Lines | Risk | Reason |
 | --- | --- | ---: | :--: | --- |
-| F1 | src/lib/rbac.ts | 232 | 🔴 | **High Fan-out**: Imported by almost all features. Contains critical access control matrix. Complexity in path matching. Target for next refactor phase. |
+| F1 | src/lib/rbac.ts | 320 | 🟢 | **RBAC Core**: Fully refactored to declarative registry (Phase 2). Path matching, granular resources, role metadata, and "Closed-by-Default" logic complete. Risk reduced from HIGH to LOW. |
 | F2 | src/middleware.ts | 76 | 🔴 | **Security Guard**: Single point of failure for routing security. Contains complex sequential redirection logic. Target for next refactor phase. |
 | F3 | src/lib/auth-helpers.ts | 118 | 🟡 | **Session Anchor**: Decoupled from core implementation. Now re-exports from auth service. Risk reduced from HIGH to MEDIUM after resolving circularity. |
 | F4 | src/features/auth/service.ts | 82 | 🟢 | **Business Logic**: Now declarative and clean. Security mechanisms (timing/enumeration) encapsulated in utilities. Risk reduced from MEDIUM to LOW. |

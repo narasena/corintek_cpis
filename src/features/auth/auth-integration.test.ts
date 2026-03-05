@@ -25,13 +25,24 @@ describe('authenticateUser Service', () => {
 
   it('successfully authenticates a valid user', async () => {
     const mockUser = {
-      id: '1',
+      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      firstName: 'Test',
+      lastName: 'User',
+      idNumber: '123',
       email: 'test@example.com',
+      phoneNumber: '08123',
       password: 'hashed-password',
+      avatarUrl: null,
+      address: 'Test Address',
+      role: 'ADMIN',
+      employmentStatus: 'PERMANENT',
       isActive: true,
       isBlocked: false,
-      firstName: 'Test',
-      role: 'ADMIN',
+      clientId: null,
+      client: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
     };
 
     vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
@@ -39,7 +50,7 @@ describe('authenticateUser Service', () => {
 
     const result = await authenticateUser({ email: 'test@example.com', password: 'password123' });
 
-    expect(result.id).toBe('1');
+    expect(result.id).toBe('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11');
     expect(result.email).toBe('test@example.com');
     expect((result as any).password).toBeUndefined();
   });
