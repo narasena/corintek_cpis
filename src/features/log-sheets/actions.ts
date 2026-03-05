@@ -34,7 +34,7 @@ const SaveLogSheetEntriesSchema = z.object({
       parameterId: z.string().uuid('Parameter ID tidak valid'),
       machineId: z
         .string()
-        .uuid('Machine ID tidak valid')
+        .regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, 'Machine ID tidak valid')
         .nullable()
         .optional(),
       role: LogSheetEntryRoleEnum.default('VALUE'),
@@ -63,7 +63,7 @@ const SaveLogSheetChemicalsSchema = z.object({
 const SaveLogSheetMachinesSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
   adminOverride: z.boolean().optional(),
-  machineIds: z.array(z.string().uuid('Machine ID tidak valid')),
+  machineIds: z.array(z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, 'Machine ID tidak valid')),
 });
 
 const SaveLogSheetSignatureSchema = z.object({

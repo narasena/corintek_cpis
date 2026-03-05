@@ -16,14 +16,6 @@ import {
 import { CameraInput } from '@/components/camera-input';
 import { useEntryStateContext } from '@/features/log-sheets/context';
 import { entryKeys } from '@/features/log-sheets/utils';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 
 interface IConsumptionChemicalsSectionProps {
   consumptionParams: Array<{
@@ -62,53 +54,6 @@ function findParamByNamePattern(
   return params.find(p => p.name.toLowerCase().includes(pattern.toLowerCase()));
 }
 
-// Consumption input with camera component
-function ConsumptionInputWithCamera({
-  paramId,
-  label,
-  unit,
-  disabled,
-}: {
-  paramId: string;
-  label: string;
-  unit: string | null;
-  disabled?: boolean;
-}) {
-  const { getEntry, updateNumber, updateCamera } = useEntryStateContext();
-  const entryKey = entryKeys.value(paramId, null);
-  const state = getEntry(entryKey);
-
-  const displayValue =
-    state?.numericValue !== null && state?.numericValue !== undefined
-      ? String(state.numericValue)
-      : '';
-
-  return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium">
-        {label} {unit ? `(${unit})` : ''}
-      </label>
-      <div className="flex items-start gap-2">
-        <Input
-          type="number"
-          inputMode="decimal"
-          placeholder="0"
-          value={displayValue}
-          onChange={e => updateNumber(entryKey, e.target.value)}
-          disabled={disabled}
-          className="flex-1"
-        />
-        <CameraInput
-          value={state?.fileUrl}
-          onChange={(url, file) => updateCamera(entryKey, url, file ?? null)}
-          disabled={disabled}
-        />
-      </div>
-    </div>
-  );
-}
-
-// Main component
 export function ConsumptionChemicalsSection({
   consumptionParams,
   chemicals,
@@ -182,52 +127,62 @@ export function ConsumptionChemicalsSection({
         <h3 className="font-semibold">Konsumsi & Chemical</h3>
       </div>
 
-      <div className="grid md:grid-cols-[280px_1fr] divide-y md:divide-y-0 md:divide-x">
-        {/* Consumption Section - Narrow left column */}
+      <div className="grid md:grid-cols-[320px_1fr] divide-y md:divide-y-0 md:divide-x">
+        {/* Consumption Section */}
         {hasConsumption && (
-          <div className="p-4 space-y-4">
-            <h4 className="text-sm font-medium text-muted-foreground">
+          <div className="p-4">
+            <h4 className="text-sm font-medium text-muted-foreground mb-4">
               Water Meter
             </h4>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Before */}
               {beforeParam && (
-                <ConsumptionInputWithCamera
+                <ConsumptionRow
                   paramId={beforeParam.id}
                   label="Sebelum"
                   unit={beforeParam.unit}
                   disabled={disabled}
                 />
               )}
+
+              {/* Divider */}
+              <div className="border-t" />
+
+              {/* After */}
               {afterParam && (
-                <ConsumptionInputWithCamera
+                <ConsumptionRow
                   paramId={afterParam.id}
                   label="Sesudah"
                   unit={afterParam.unit}
                   disabled={disabled}
                 />
               )}
-            </div>
 
-            {totalParam && beforeParam && afterParam && (
-              <CalculatedTotal
-                totalParam={totalParam}
-                beforeParamId={beforeParam.id}
-                afterParamId={afterParam.id}
-              />
-            )}
+              {/* Divider */}
+              <div className="border-t" />
+
+              {/* Total */}
+              {totalParam && beforeParam && afterParam && (
+                <CalculatedTotal
+                  totalParam={totalParam}
+                  beforeParamId={beforeParam.id}
+                  afterParamId={afterParam.id}
+                />
+              )}
+            </div>
           </div>
         )}
 
-        {/* Chemicals Section - Wide right column with horizontal table */}
+        {/* Chemicals Section */}
         {hasChemicals && (
-          <div className="p-4 space-y-4">
-            <h4 className="text-sm font-medium text-muted-foreground">
+          <div className="p-4">
+            <h4 className="text-sm font-medium text-muted-foreground mb-4">
               Penggunaan Chemical
             </h4>
 
             {/* Add Chemical Form */}
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
               <Select
                 value={selectedChemicalId}
                 onValueChange={setSelectedChemicalId}
@@ -267,49 +222,55 @@ export function ConsumptionChemicalsSection({
               </div>
             </div>
 
-            {/* Chemical Table - Horizontal Excel-like layout */}
+            {/* Chemical Table - Horizontal */}
             {chemicalUsages.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="text-sm text-muted-foreground text-center py-8">
                 Belum ada penggunaan chemical
               </p>
             ) : (
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
                       {chemicalUsages.map((usage, index) => (
-                        <TableHead
+                        <th
                           key={index}
-                          className="text-center min-w-[120px]"
+                          className="text-center py-2 px-3 text-sm font-medium text-muted-foreground min-w-[100px]"
                         >
                           {usage.chemicalName}
-                        </TableHead>
+                        </th>
                       ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
                       {chemicalUsages.map((usage, index) => (
-                        <TableCell key={index} className="text-center">
+                        <td
+                          key={index}
+                          className="text-center py-3 px-3 border-b"
+                        >
                           <div className="flex items-center justify-center gap-2">
-                            <span className="font-medium">
-                              {usage.amount} {usage.unit || ''}
+                            <span className="font-medium text-lg">
+                              {usage.amount}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {usage.unit || ''}
                             </span>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => handleRemoveChemical(index)}
                               disabled={disabled}
-                              className="h-6 w-6 text-destructive hover:text-destructive"
+                              className="h-6 w-6 text-destructive hover:text-destructive ml-1"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
-                        </TableCell>
+                        </td>
                       ))}
-                    </TableRow>
-                  </TableBody>
-                </Table>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -319,7 +280,55 @@ export function ConsumptionChemicalsSection({
   );
 }
 
-// Calculated total component
+// Consumption row with value and photo
+function ConsumptionRow({
+  paramId,
+  label,
+  unit,
+  disabled,
+}: {
+  paramId: string;
+  label: string;
+  unit: string | null;
+  disabled?: boolean;
+}) {
+  const { getEntry, updateNumber, updateCamera } = useEntryStateContext();
+  const entryKey = entryKeys.value(paramId, null);
+  const state = getEntry(entryKey);
+
+  const displayValue =
+    state?.numericValue !== null && state?.numericValue !== undefined
+      ? String(state.numericValue)
+      : '';
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium">
+          {label} {unit ? `(${unit})` : ''}
+        </label>
+      </div>
+      <div className="flex items-start gap-2">
+        <Input
+          type="number"
+          inputMode="decimal"
+          placeholder="0"
+          value={displayValue}
+          onChange={e => updateNumber(entryKey, e.target.value)}
+          disabled={disabled}
+          className="flex-1"
+        />
+        <CameraInput
+          value={state?.fileUrl}
+          onChange={(url, file) => updateCamera(entryKey, url, file ?? null)}
+          disabled={disabled}
+        />
+      </div>
+    </div>
+  );
+}
+
+// Calculated total
 function CalculatedTotal({
   totalParam,
   beforeParamId,
@@ -345,13 +354,11 @@ function CalculatedTotal({
   const displayValue = calculatedTotal !== null ? String(calculatedTotal) : '-';
 
   return (
-    <div className="pt-3 border-t mt-3">
-      <div className="flex items-center justify-between">
-        <span className="font-medium text-sm">{totalParam.name}</span>
-        <span className="text-lg font-bold text-primary">
-          {displayValue} {totalParam.unit || ''}
-        </span>
-      </div>
+    <div className="flex items-center justify-between py-2">
+      <span className="font-medium">{totalParam.name}</span>
+      <span className="text-xl font-bold text-primary">
+        {displayValue} {totalParam.unit || ''}
+      </span>
     </div>
   );
 }

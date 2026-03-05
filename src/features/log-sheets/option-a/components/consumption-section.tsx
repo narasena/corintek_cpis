@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { CameraInput } from '@/components/camera-input';
 import { Input } from '@/components/ui/input';
 import { useEntryStateContext } from '../../context';
@@ -112,7 +113,7 @@ interface ITotalRowProps {
 }
 
 function TotalRow({ totalParam, beforeParam, afterParam }: ITotalRowProps) {
-  const { getEntry } = useEntryStateContext();
+  const { getEntry, updateNumber } = useEntryStateContext();
 
   const beforeState = getEntry(entryKeys.value(beforeParam.id, null));
   const afterState = getEntry(entryKeys.value(afterParam.id, null));
@@ -124,6 +125,13 @@ function TotalRow({ totalParam, beforeParam, afterParam }: ITotalRowProps) {
     beforeValue !== null && afterValue !== null
       ? afterValue - beforeValue
       : null;
+
+  useEffect(() => {
+    const totalKey = entryKeys.value(totalParam.id, null);
+    if (calculatedTotal !== null) {
+      updateNumber(totalKey, String(calculatedTotal));
+    }
+  }, [calculatedTotal, totalParam.id, updateNumber]);
 
   const displayValue = calculatedTotal !== null ? String(calculatedTotal) : '-';
 

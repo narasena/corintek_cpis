@@ -38,6 +38,10 @@ export function LogSheetCategorySection({
       {categories.map(category => {
         const params = parametersByCategory.get(category) ?? [];
         const cat = category as TParameter['category'];
+
+        // Skip CONSUMPTION - it's handled separately in ConsumptionChemicalsSection
+        if (cat === 'CONSUMPTION') return null;
+
         const { machines, label } = machinesForCategory(cat);
         if (params.length === 0) return null;
 
