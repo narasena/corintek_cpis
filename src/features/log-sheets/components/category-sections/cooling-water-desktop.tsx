@@ -35,8 +35,8 @@ export function CoolingWaterQualityDesktop({
   return (
     <div className="space-y-3">
       <CategoryHeader title={category} />
-      <div className="rounded-md border">
-        <Table className="w-max min-w-full">
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="w-full table-fixed">
           <CoolingWaterTableHeader activeCTs={activeCTs} />
           <TableBody>
             {params.map(param => (
@@ -73,17 +73,15 @@ function CoolingWaterTableHeader({ activeCTs }: ICoolingWaterTableHeaderProps) {
   return (
     <TableHeader>
       <TableRow className="bg-muted/40">
-        <TableHead className="w-max-plus">Parameter</TableHead>
-        <TableHead className="w-max-plus">Limit</TableHead>
+        <TableHead className="w-[180px]">Parameter</TableHead>
+        <TableHead className="w-[100px]">Limit</TableHead>
         {activeCTs.map(m => (
-          <TableHead key={m.id} className="min-w-[100px] text-center">
+          <TableHead key={m.id} className="text-center">
             CT #{m.unitNumber}
           </TableHead>
         ))}
-        <TableHead className="w-max-plus text-center">Raw Water</TableHead>
-        <TableHead className="w-max-plus text-center">
-          Limit (Raw Water)
-        </TableHead>
+        <TableHead className="w-[100px] text-center">Raw Water</TableHead>
+        <TableHead className="w-[120px] text-center">Limit (Raw)</TableHead>
       </TableRow>
     </TableHeader>
   );

@@ -13,10 +13,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { CameraInput } from '@/components/camera-input';
 import { useEntryStateContext } from '@/features/log-sheets/context';
 import { entryKeys } from '@/features/log-sheets/utils';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
-// Types
 interface IConsumptionChemicalsSectionProps {
   consumptionParams: Array<{
     id: string;
@@ -47,12 +55,6 @@ interface IConsumptionChemicalsSectionProps {
   disabled?: boolean;
 }
 
-// Helper functions
-function isWaterMeterParam(name: string): boolean {
-  const lowerName = name.toLowerCase();
-  return lowerName.includes('before') || lowerName.includes('after');
-}
-
 function findParamByNamePattern(
   params: Array<{ id: string; name: string; unit: string | null }>,
   pattern: string
@@ -60,8 +62,8 @@ function findParamByNamePattern(
   return params.find(p => p.name.toLowerCase().includes(pattern.toLowerCase()));
 }
 
-// Consumption input component
-function ConsumptionInput({
+// Consumption input with camera component
+function ConsumptionInputWithCamera({
   paramId,
   label,
   unit,
@@ -72,7 +74,7 @@ function ConsumptionInput({
   unit: string | null;
   disabled?: boolean;
 }) {
-  const { getEntry, updateNumber } = useEntryStateContext();
+  const { getEntry, updateNumber, updateCamera } = useEntryStateContext();
   const entryKey = entryKeys.value(paramId, null);
   const state = getEntry(entryKey);
 
@@ -86,51 +88,22 @@ function ConsumptionInput({
       <label className="text-sm font-medium">
         {label} {unit ? `(${unit})` : ''}
       </label>
-      <Input
-        type="number"
-        inputMode="decimal"
-        placeholder="0"
-        value={displayValue}
-        onChange={e => updateNumber(entryKey, e.target.value)}
-        disabled={disabled}
-        className="w-full"
-      />
-    </div>
-  );
-}
-
-// Chemical usage row component
-function ChemicalUsageRow({
-  usage,
-  onRemove,
-  disabled,
-}: {
-  usage: {
-    chemicalId: string;
-    amount: number;
-    chemicalName?: string;
-    unit?: string;
-  };
-  onRemove: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-md">
-      <div className="flex-1">
-        <span className="font-medium">{usage.chemicalName || 'Unknown'}</span>
-        <span className="text-muted-foreground ml-2">
-          {usage.amount} {usage.unit || ''}
-        </span>
+      <div className="flex items-start gap-2">
+        <Input
+          type="number"
+          inputMode="decimal"
+          placeholder="0"
+          value={displayValue}
+          onChange={e => updateNumber(entryKey, e.target.value)}
+          disabled={disabled}
+          className="flex-1"
+        />
+        <CameraInput
+          value={state?.fileUrl}
+          onChange={(url, file) => updateCamera(entryKey, url, file ?? null)}
+          disabled={disabled}
+        />
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onRemove}
-        disabled={disabled}
-        className="text-destructive hover:text-destructive h-8 w-8 p-0"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
     </div>
   );
 }
@@ -143,16 +116,13 @@ export function ConsumptionChemicalsSection({
   onChemicalUsagesChange,
   disabled,
 }: IConsumptionChemicalsSectionProps) {
-  // Chemical form state
   const [selectedChemicalId, setSelectedChemicalId] = useState<string>('');
   const [amount, setAmount] = useState<string>('');
 
-  // Find water meter parameters
   const beforeParam = findParamByNamePattern(consumptionParams, 'before');
   const afterParam = findParamByNamePattern(consumptionParams, 'after');
   const totalParam = findParamByNamePattern(consumptionParams, 'total');
 
-  // Handle add chemical
   const handleAddChemical = () => {
     if (!selectedChemicalId || !amount) {
       toast.error('Pilih chemical dan masukkan jumlah');
@@ -194,7 +164,6 @@ export function ConsumptionChemicalsSection({
     setAmount('');
   };
 
-  // Handle remove chemical
   const handleRemoveChemical = (index: number) => {
     const newUsages = [...chemicalUsages];
     newUsages.splice(index, 1);
@@ -209,22 +178,21 @@ export function ConsumptionChemicalsSection({
 
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
-      {/* Header */}
       <div className="px-4 py-3 border-b bg-muted/30">
         <h3 className="font-semibold">Konsumsi & Chemical</h3>
       </div>
 
-      <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
-        {/* Consumption Section */}
+      <div className="grid md:grid-cols-[280px_1fr] divide-y md:divide-y-0 md:divide-x">
+        {/* Consumption Section - Narrow left column */}
         {hasConsumption && (
           <div className="p-4 space-y-4">
             <h4 className="text-sm font-medium text-muted-foreground">
               Water Meter
             </h4>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
               {beforeParam && (
-                <ConsumptionInput
+                <ConsumptionInputWithCamera
                   paramId={beforeParam.id}
                   label="Sebelum"
                   unit={beforeParam.unit}
@@ -232,7 +200,7 @@ export function ConsumptionChemicalsSection({
                 />
               )}
               {afterParam && (
-                <ConsumptionInput
+                <ConsumptionInputWithCamera
                   paramId={afterParam.id}
                   label="Sesudah"
                   unit={afterParam.unit}
@@ -251,7 +219,7 @@ export function ConsumptionChemicalsSection({
           </div>
         )}
 
-        {/* Chemicals Section */}
+        {/* Chemicals Section - Wide right column with horizontal table */}
         {hasChemicals && (
           <div className="p-4 space-y-4">
             <h4 className="text-sm font-medium text-muted-foreground">
@@ -259,13 +227,13 @@ export function ConsumptionChemicalsSection({
             </h4>
 
             {/* Add Chemical Form */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Select
                 value={selectedChemicalId}
                 onValueChange={setSelectedChemicalId}
                 disabled={disabled}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="sm:w-[200px]">
                   <SelectValue placeholder="Pilih chemical..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -277,7 +245,7 @@ export function ConsumptionChemicalsSection({
                 </SelectContent>
               </Select>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-1">
                 <Input
                   type="number"
                   placeholder={`Jumlah ${selectedChemical?.unit ? `(${selectedChemical.unit})` : ''}`}
@@ -285,36 +253,65 @@ export function ConsumptionChemicalsSection({
                   onChange={e => setAmount(e.target.value)}
                   disabled={disabled}
                   min="0"
-                  step="0.1"
-                  className="flex-1"
+                  step="0.01"
+                  className="flex-1 sm:max-w-[150px]"
                 />
                 <Button
                   onClick={handleAddChemical}
                   disabled={disabled || !selectedChemicalId || !amount}
                   size="sm"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4 mr-1" />
+                  Tambah
                 </Button>
               </div>
             </div>
 
-            {/* Chemical List */}
-            <div className="space-y-2 max-h-[200px] overflow-y-auto">
-              {chemicalUsages.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Belum ada penggunaan chemical
-                </p>
-              ) : (
-                chemicalUsages.map((usage, index) => (
-                  <ChemicalUsageRow
-                    key={`${usage.chemicalId}-${index}`}
-                    usage={usage}
-                    onRemove={() => handleRemoveChemical(index)}
-                    disabled={disabled}
-                  />
-                ))
-              )}
-            </div>
+            {/* Chemical Table - Horizontal Excel-like layout */}
+            {chemicalUsages.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Belum ada penggunaan chemical
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {chemicalUsages.map((usage, index) => (
+                        <TableHead
+                          key={index}
+                          className="text-center min-w-[120px]"
+                        >
+                          {usage.chemicalName}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      {chemicalUsages.map((usage, index) => (
+                        <TableCell key={index} className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="font-medium">
+                              {usage.amount} {usage.unit || ''}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveChemical(index)}
+                              disabled={disabled}
+                              className="h-6 w-6 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -348,9 +345,9 @@ function CalculatedTotal({
   const displayValue = calculatedTotal !== null ? String(calculatedTotal) : '-';
 
   return (
-    <div className="pt-2 border-t">
+    <div className="pt-3 border-t mt-3">
       <div className="flex items-center justify-between">
-        <span className="font-medium">{totalParam.name}</span>
+        <span className="font-medium text-sm">{totalParam.name}</span>
         <span className="text-lg font-bold text-primary">
           {displayValue} {totalParam.unit || ''}
         </span>

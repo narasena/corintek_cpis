@@ -32,13 +32,12 @@ function getMachineColumnHeader(
   m: TMachine,
   isActive: boolean
 ): React.ReactNode {
-  const baseClass = 'min-w-[100px] text-center';
-  const className = isActive
-    ? baseClass
-    : `${baseClass} bg-muted/30 text-muted-foreground`;
+  const activeClass = isActive
+    ? 'text-center'
+    : 'text-center bg-muted/30 text-muted-foreground';
 
   return (
-    <TableHead key={m.id} className={className}>
+    <TableHead key={m.id} className={activeClass}>
       {m.type === 'CHILLER' ? `#${m.unitNumber}` : `CT #${m.unitNumber}`}
       {!isActive && <div className="text-[10px]">Tidak Aktif</div>}
     </TableHead>
@@ -55,8 +54,8 @@ export function GeneralCategoryDesktop({
   const showLimitColumn = shouldShowLimitColumn(cat);
   const activeMachineIds = new Set(machines.map(m => m.id));
 
-  // Use allMachines if provided, otherwise fall back to machines
   const displayMachines = allMachines.length > 0 ? allMachines : machines;
+  const hasMachines = displayMachines.length > 0;
 
   return (
     <div className="space-y-3">
@@ -64,20 +63,20 @@ export function GeneralCategoryDesktop({
         <h2 className="text-lg font-semibold">{category}</h2>
       </div>
 
-      <div className="rounded-md border">
-        <Table className="w-max!">
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow className="bg-muted/40">
-              <TableHead className="w-max-plus!">Parameter</TableHead>
-              {showLimitColumn && <TableHead className="">Limit</TableHead>}
-              {displayMachines.length > 0 ? (
+              <TableHead className="w-[180px]">Parameter</TableHead>
+              {showLimitColumn && (
+                <TableHead className="w-[100px]">Limit</TableHead>
+              )}
+              {hasMachines ? (
                 displayMachines.map(m =>
                   getMachineColumnHeader(m, activeMachineIds.has(m.id))
                 )
               ) : (
-                <TableHead className="min-w-[140px] text-center">
-                  Nilai
-                </TableHead>
+                <TableHead className="w-full text-center">Nilai</TableHead>
               )}
             </TableRow>
           </TableHeader>
