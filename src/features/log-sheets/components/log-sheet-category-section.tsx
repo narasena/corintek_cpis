@@ -74,6 +74,7 @@ export function LogSheetCategorySection({
               category={category}
               params={params}
               activeCTs={activeCTs}
+              allCoolingTowers={allCoolingTowers}
             />
           );
         }
