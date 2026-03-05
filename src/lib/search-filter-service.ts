@@ -207,10 +207,31 @@ export class SearchFilterService {
     if (value === null || value === undefined) return false;
     const strValue = String(value).toLowerCase();
     const normalizedQuery = query.toLowerCase();
+
+    // Check for exact substring match first
     if (strValue.includes(normalizedQuery)) return true;
-    if (Math.abs(strValue.length - normalizedQuery.length) > tolerance)
-      return false;
-    return this.levenshteinDistance(strValue, normalizedQuery) <= tolerance;
+
+    // Split value into words/tokens and check each one
+    const tokens = strValue.split(/[\s.]+/).filter(t => t.length > 0);
+
+    for (const token of tokens) {
+      // Quick length check per token
+      if (Math.abs(token.length - normalizedQuery.length) > tolerance) {
+        continue;
+      }
+
+      // Check if this token is a fuzzy match
+      if (this.levenshteinDistance(token, normalizedQuery) <= tolerance) {
+        return true;
+      }
+
+      // Also check if query is a substring of this token
+      if (token.includes(normalizedQuery)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
