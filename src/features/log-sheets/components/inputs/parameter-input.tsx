@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { CameraInput } from '@/components/camera-input';
 import { useEntryStateContext } from '@/features/log-sheets/context';
 import { isOutOfRange } from '@/app/(main)/log-sheets/[projectId]/[logSheetId]/utils';
+import { RangeStatusIcon } from './range-status-icon';
 import type { TValueType } from '@/features/parameters/types';
 
 export interface IParameterInputProps {
@@ -141,6 +142,19 @@ function buildInputClass(hasError: boolean): string {
   return hasError ? `${baseClass} ${errorClass}` : baseClass;
 }
 
+function formatTargetRange(
+  min: number | null,
+  max: number | null
+): string | null {
+  const hasMin = min !== null && min !== undefined;
+  const hasMax = max !== null && max !== undefined;
+
+  if (hasMin && hasMax) return `${min} - ${max}`;
+  if (hasMin) return `≥ ${min}`;
+  if (hasMax) return `≤ ${max}`;
+  return null;
+}
+
 function NumberInput({
   entryKey,
   state,
@@ -154,16 +168,22 @@ function NumberInput({
   updateCamera,
   clearNumber,
 }: INumberInputProps) {
-  const hasError = isOutOfRange(state?.numericValue, minValue, maxValue);
+  const numericValue = state?.numericValue;
+  const hasError = isOutOfRange(numericValue, minValue, maxValue);
   const displayValue =
-    state?.numericValue === null || state?.numericValue === undefined
+    numericValue === null || numericValue === undefined
       ? ''
-      : String(state.numericValue);
-  const hasValue =
-    state?.numericValue !== null && state?.numericValue !== undefined;
+      : String(numericValue);
+  const hasValue = numericValue !== null && numericValue !== undefined;
+
+  // Determine if we should show out-of-range icon
+  // Only show when: has value AND is out of range
+  const inRange: boolean | null = hasValue ? !hasError : null;
+
+  const targetRangeText = formatTargetRange(minValue, maxValue);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1">
       <div className="flex items-center gap-2">
         <Input
           type="number"
@@ -174,6 +194,7 @@ function NumberInput({
           onChange={e => updateNumber(entryKey, e.target.value)}
           disabled={disabled}
         />
+        <RangeStatusIcon inRange={inRange} />
         {showClearButton && hasValue && (
           <button
             type="button"
@@ -185,6 +206,11 @@ function NumberInput({
           </button>
         )}
       </div>
+      {targetRangeText && (
+        <div className="text-[10px] text-muted-foreground">
+          Target: {targetRangeText}
+        </div>
+      )}
       {isWaterMeter && (
         <CameraInput
           value={state?.fileUrl}
