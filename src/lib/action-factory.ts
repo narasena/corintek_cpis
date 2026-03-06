@@ -1,47 +1,46 @@
 import { z } from 'zod/v4';
-import { requireActor } from '@/features/auth/lib/user-context';
 import { AuthenticationError } from './auth-helpers';
 import { ensureAccess, TRbacResource, TRbacCapability } from './rbac';
+import { requireActor } from '@/features/auth/lib/user-context';
 
 import { ActionResult, err, unauthorized } from './action-helpers';
 
 /**
  * Metadata for a protected action
  */
-interface IActionMetadata {
+export interface IActionMetadata {
   rbac?: {
     resource: TRbacResource;
     capability: TRbacCapability;
   };
 }
 
-interface IActionOptions<TInput> {
+export interface IActionOptions<TInput> {
   schema?: z.ZodType<TInput>;
   metadata?: IActionMetadata;
 }
 
 /**
- * Type-safe Server Action Factory
- * 
- * Centralizes:
- * 1. Authentication (Actor resolution)
- * 2. Authorization (RBAC)
- * 3. Validation (Zod)
- * 4. Error handling & Logging
+ * Type-safe Server Action Factory (Infrastructure Layer)
+ *
+ * Generic factory that accepts an authenticator to resolve the actor.
+ * Resolves layer inversion by injecting the high-level auth logic.
  */
-export function createActionFactory() {
+export function createActionFactory<TActor extends { role: string }>(
+  authenticate: () => Promise<TActor>
+) {
   return {
     /**
      * Create a protected action that requires a valid session
      */
     protected: <TInput, TOutput>(
-      handler: (params: { input: TInput; actor: any }) => Promise<TOutput>,
+      handler: (params: { input: TInput; actor: TActor }) => Promise<TOutput>,
       options?: IActionOptions<TInput>
     ) => {
       return async (data: TInput): Promise<ActionResult<TOutput>> => {
         try {
-          // 1. Authenticate
-          const actor = await requireActor();
+          // 1. Authenticate (using injected logic)
+          const actor = await authenticate();
 
           // 2. Authorize (RBAC)
           authorize(actor.role, options?.metadata);
@@ -76,7 +75,6 @@ function validate<T>(data: T, schema?: z.ZodType<T>): T {
   if (!schema) return data;
 
   // Handle optional input for object schemas by providing empty object if data is missing
-  // Using direct check for ZodObject to avoid instanceof issues with different versions
   const isObjectSchema = (schema as any)._def?.typeName === 'ZodObject';
   const inputToValidate =
     (data === null || data === undefined) && isObjectSchema
@@ -90,7 +88,7 @@ function validate<T>(data: T, schema?: z.ZodType<T>): T {
  * Centralized error handling for server actions
  */
 function handleActionFailure(error: any): ActionResult<any> {
-  if (error instanceof AuthenticationError) {
+  if (error instanceof AuthenticationError || error.name === 'AuthenticationError') {
     return unauthorized();
   }
 
@@ -106,4 +104,8 @@ function handleActionFailure(error: any): ActionResult<any> {
   return err(error, 'Gagal');
 }
 
-export const actionFactory = createActionFactory();
+/**
+ * Singleton instance for the application
+ * Uses the high-level Auth Feature's requireActor as the default authenticator.
+ */
+export const actionFactory = createActionFactory(requireActor);
