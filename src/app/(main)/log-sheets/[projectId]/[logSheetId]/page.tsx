@@ -252,11 +252,11 @@ export default function LogSheetDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <div>
+      <div className="print:hidden">
         <h1 className="text-2xl font-bold tracking-tight">
           Log Sheet: {detail.project.name}
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm">
           {formatDate(detail.logSheet.date)} • {detail.logSheet.status}
         </p>
       </div>
