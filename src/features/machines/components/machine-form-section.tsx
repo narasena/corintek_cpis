@@ -26,12 +26,13 @@ import {
   MachineStatusEnum,
 } from '@/features/machines/types';
 import { TCreateProject } from '@/features/projects/types';
+import { createDefaultMachine } from '../helpers';
 
-interface MachineFormSectionProps {
+interface IMachineFormSectionProps {
   control: Control<TCreateProject>;
 }
 
-export function MachineFormSection({ control }: MachineFormSectionProps) {
+export function MachineFormSection({ control }: IMachineFormSectionProps) {
   const {
     fields: machineFields,
     append: appendMachine,
@@ -42,29 +43,11 @@ export function MachineFormSection({ control }: MachineFormSectionProps) {
   });
 
   const addChiller = () => {
-    appendMachine({
-      unitNumber: (machineFields.length || 0) + 1,
-      type: 'CHILLER',
-      ownership: 'CORINTEK',
-      status: 'IDLE',
-      capacity: undefined,
-      brand: undefined,
-      model: undefined,
-      serialNumber: undefined,
-    });
+    appendMachine(createDefaultMachine('CHILLER', (machineFields.length || 0) + 1));
   };
 
   const addCoolingTower = () => {
-    appendMachine({
-      unitNumber: (machineFields.length || 0) + 1,
-      type: 'COOLING_TOWER',
-      ownership: 'CORINTEK',
-      status: 'IDLE',
-      capacity: undefined,
-      brand: undefined,
-      model: undefined,
-      serialNumber: undefined,
-    });
+    appendMachine(createDefaultMachine('COOLING_TOWER', (machineFields.length || 0) + 1));
   };
 
   // Group machines by type
@@ -155,7 +138,7 @@ export function MachineFormSection({ control }: MachineFormSectionProps) {
   );
 }
 
-interface MachineCardProps {
+interface IMachineCardProps {
   control: Control<TCreateProject>;
   index: number;
   displayIndex: number;
@@ -171,7 +154,7 @@ function MachineCard({
   type,
   onRemove,
   canRemove,
-}: MachineCardProps) {
+}: IMachineCardProps) {
   const typeLabel = type === 'CHILLER' ? 'Chiller' : 'Cooling Tower';
 
   return (

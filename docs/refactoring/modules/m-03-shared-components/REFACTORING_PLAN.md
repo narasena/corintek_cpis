@@ -52,7 +52,7 @@ Priority = f(Pain, Risk, Value)
 ### Phase 2: Logic Consolidation (Medium Risk)
 - [ ] **Canvas Extraction (DUP-1):** Create `src/lib/utils/canvas.ts`. Move common scaling/cropping logic from `camera-input.tsx` and `image-compression.ts`.
 - [ ] **F5 (Camera Input):** Refactor to use the new Canvas utility. Separate Camera API logic from UI Dialog logic.
-- [ ] **F7 (Domain Leak):** Move `machine-form-section.tsx` from `src/components/` to `src/features/machines/components/`.
+- [x] **F7 (Domain Leak):** Moved `machine-form-section.tsx` to its proper domain (`src/features/machines/components/`) and extracted factory helper.
 
 ### Phase 3: Structural Refactoring (High Risk)
 - [ ] **F2 (Auth Helpers):** Resolve CIR-1. Move `validateSessionUser` logic out of feature service and into a more foundational layer or standard service.

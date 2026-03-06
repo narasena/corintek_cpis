@@ -24,7 +24,6 @@
 | F4   | `src/components/data-table.tsx`         |   316 |  🔴  | God Component used in all CRUD views. High complexity (Desktop/Mobile). |
 | F5   | `src/components/camera-input.tsx`       |   356 |  🟡  | Complex logic integration (Browser API + Processing). Logic heavy.     |
 | F6   | `src/lib/utils/image-compression.ts`    |   128 |  🟡  | Native Canvas manipulation. Prone to silent errors (Format conversion). |
-| F7   | `src/components/machine-form-section.tsx`|   362 |  🟡  | Domain leak. High complexity in JSX and React Hook Form integration.   |
 | F8   | `src/components/app-sidebar.tsx`        |   132 |  🟡  | Layout critical. Depends on RBAC.                                      |
 | F9   | `src/lib/jwt.ts`                        |    96 |  🟢  | Decoupled security primitive. Implemented robust error handling.       |
 | F10  | `src/components/multi-select.tsx`       |   163 |  🟢  | Shared form primitive. Extracted MultiSelectBadge sub-component.       |
@@ -39,5 +38,5 @@
 | Risk Level | Count | Files                                                                 |
 | :--------: | :---: | --------------------------------------------------------------------- |
 |  🔴 HIGH   |   4   | `action-factory.ts`, `auth-helpers.ts`, `rbac.ts`, `data-table.tsx`   |
-| 🟡 MEDIUM  |   5   | `camera-input.tsx`, `image-compression.ts`, `machine-form-section.tsx`, `app-sidebar.tsx`, `jwt.ts` |
-|   🟢 LOW   |   3   | `multi-select.tsx`, `r2-upload.ts`, `prisma.ts`                       |
+| 🟡 MEDIUM  |   4   | `camera-input.tsx`, `image-compression.ts`, `app-sidebar.tsx`, `jwt.ts` |
+|   🟢 LOW   |   4   | `multi-select.tsx`, `r2-upload.ts`, `prisma.ts`, `auth.ts (constants)` |

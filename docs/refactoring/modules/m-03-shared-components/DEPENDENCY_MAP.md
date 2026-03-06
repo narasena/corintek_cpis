@@ -25,9 +25,8 @@
 | --- | --------------------------------------- | ----: | ----------------------------------------- |
 | 1   | `src/components/data-table.tsx`         |   316 | Complex table/card display logic          |
 | 2   | `src/components/camera-input.tsx`       |   356 | Browser Camera API + Processing UI        |
-| 3   | `src/components/machine-form-section.tsx` |   362 | Domain-specific form logic (Potential leak)|
-| 4   | `src/components/app-sidebar.tsx`        |   132 | Main navigation layout component          |
-| 5   | `src/components/multi-select.tsx`       |   163 | **Refactored**: Reusable form primitive   |
+| 3   | `src/components/app-sidebar.tsx`        |   132 | Main navigation layout component          |
+| 4   | `src/components/multi-select.tsx`       |   163 | **Refactored**: Reusable form primitive   |
 
 ---
 
@@ -58,6 +57,7 @@ graph TD
         FE --> DT
         FE --> RB
         AS --> AC
+        FE_PROJ[@/features/projects] --> FE_MACH[@/features/machines/components/machine-form-section]
     end
 
     AA --> AH
@@ -80,7 +80,6 @@ graph TD
 | File                                    | Lines | Exports | Verdict           |
 | --------------------------------------- | ----: | :-----: | ----------------- |
 | `src/components/ui/sidebar.tsx`         |   726 |   ~15   | SHADCN GENERATED  |
-| `src/components/machine-form-section.tsx` |   362 |    1    | DOMAIN LEAK       |
 | `src/components/camera-input.tsx`       |   356 |    1    | LOGIC HEAVY       |
 | `src/components/data-table.tsx`         |   316 |    2    | GOD COMPONENT     |
 | `src/lib/rbac.ts`                       |   303 |    8    | CONFIG HEAVY      |
