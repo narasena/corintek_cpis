@@ -58,7 +58,7 @@ Priority = f(Pain, Risk, Value)
 ### Phase 3: Structural Refactoring (High Risk)
 - [x] **F2 (Auth Helpers):** Resolved CIR-1. Split into `src/lib/auth-helpers.ts` (foundational) and `src/features/auth/lib/user-context.ts` (domain-aware).
 - [ ] **F4 (DataTable):** Split `data-table.tsx` into `DataTableDesktop` and `DataTableMobile`. Centralize the Tab-switching logic.
-- [ ] **F3 (RBAC):** Split the massive `ROLE_CONFIG` into separate role-based config files if it continues to grow.
+- [x] **F3 (RBAC):** Decomposed the massive `ROLE_CONFIG` into modular, role-based policy files in `src/lib/rbac/policies/`. Extracted types to `src/lib/rbac/types.ts`.
 
 ---
 

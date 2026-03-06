@@ -10,16 +10,18 @@
 
 | #   | File                               | Lines | Role                                      |
 | --- | ---------------------------------- | ----: | ----------------------------------------- |
-| 1   | `src/lib/rbac.ts`                  |   303 | SSOT for permissions and route matching   |
-| 2   | `src/lib/auth-helpers.ts`          |    72 | **Foundation**: Pure session/JWT logic    |
-| 3   | `src/lib/action-factory.ts`        |   110 | Standard wrapper for Server Actions       |
-| 4   | `src/lib/jwt.ts`                   |    96 | **Decoupled**: Jose-based token primitives|
-| 5   | `src/lib/prisma.ts`                |    41 | Database client singleton                 |
-| 6   | `src/lib/r2-upload.ts`             |    31 | Cloudflare R2 storage integration         |
-| 7   | `src/lib/utils/image-compression.ts`|    92 | **Refactored**: Uses canvas utility        |
-| 8   | `src/lib/utils/canvas.ts`           |   135 | **Refactored**: Foundational Canvas logic  |
-| 9   | `src/lib/constants/auth.ts`        |    23 | **New**: Foundational security constants  |
-| 10  | `src/lib/constants/navigation.ts`  |    84 | **New**: Grouped navigation schema        |
+| 1   | `src/lib/rbac.ts`                  |   121 | **Coordinator**: Pure access check logic  |
+| 2   | `src/lib/rbac/types.ts`            |    46 | **New**: RBAC type definitions            |
+| 3   | `src/lib/rbac/policies/*.ts`       |   164 | **New**: Role-specific modular policies   |
+| 4   | `src/lib/auth-helpers.ts`          |    72 | **Foundation**: Pure session/JWT logic    |
+| 5   | `src/lib/action-factory.ts`        |   110 | Standard wrapper for Server Actions       |
+| 6   | `src/lib/jwt.ts`                   |    96 | **Decoupled**: Jose-based token primitives|
+| 7   | `src/lib/prisma.ts`                |    41 | Database client singleton                 |
+| 8   | `src/lib/r2-upload.ts`             |    31 | Cloudflare R2 storage integration         |
+| 9   | `src/lib/utils/image-compression.ts`|    92 | **Refactored**: Uses canvas utility        |
+| 10  | `src/lib/utils/canvas.ts`           |   135 | **Refactored**: Foundational Canvas logic  |
+| 11  | `src/lib/constants/auth.ts`        |    23 | **New**: Foundational security constants  |
+| 12  | `src/lib/constants/navigation.ts`  |    84 | **New**: Grouped navigation schema        |
 
 ### UI Component Layer (src/components)
 
@@ -40,6 +42,8 @@ graph TD
     subgraph "Infrastructure (Lib)"
         AF[action-factory.ts] --> RB[rbac.ts]
         AF --> UC[@/features/auth/lib/user-context]
+        RB --> RBT[rbac/types.ts]
+        RB --> RBP[rbac/policies/*.ts]
         AH[auth-helpers.ts] --> JW[jwt.ts]
         AH --> AC[constants/auth.ts]
         JW --> AC
@@ -92,7 +96,6 @@ graph TD
 | File                                    | Lines | Exports | Verdict           |
 | --------------------------------------- | ----: | :-----: | ----------------- |
 | `src/components/ui/sidebar.tsx`         |   726 |   ~15   | SHADCN GENERATED  |
-| `src/lib/rbac.ts`                       |   303 |    8    | CONFIG HEAVY      |
 | `src/components/data-table.tsx`         |   316 |    2    | GOD COMPONENT     |
 
 ---

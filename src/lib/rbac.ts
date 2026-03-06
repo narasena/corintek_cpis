@@ -1,50 +1,34 @@
-export const RbacResource = {
-  DASHBOARD: 'DASHBOARD',
-  SUMMARY_REPORTS: 'SUMMARY_REPORTS',
-  LOG_SHEETS: 'LOG_SHEETS',
-  WORK_REPORTS: 'WORK_REPORTS',
-  REPORTS: 'REPORTS',
-  LAB_ANALYSES: 'LAB_ANALYSES',
-  ATTENDANCE: 'ATTENDANCE',
-  USERS_ADMIN: 'USERS_ADMIN',
-  PROJECTS_LIST: 'PROJECTS_LIST',
-  PROJECTS_ADMIN: 'PROJECTS_ADMIN',
-  CLIENTS: 'CLIENTS',
-  CHEMICALS: 'CHEMICALS',
-  PARAMETERS: 'PARAMETERS',
-  MACHINES: 'MACHINES',
-  NOTIFICATIONS: 'NOTIFICATIONS',
-  PUBLIC: 'PUBLIC',
-  UNKNOWN: 'UNKNOWN',
-} as const;
+import {
+  RbacResource,
+  TRbacResource,
+  TRbacCapability,
+  RbacRole,
+  TRbacRole,
+  TRbacLevel,
+  TRbacPermissionSet,
+  IRbacRoleConfig,
+} from './rbac/types';
 
-export type TRbacResource = (typeof RbacResource)[keyof typeof RbacResource];
+import { ADMIN_POLICY } from './rbac/policies/admin.policy';
+import { STAFF_POLICIES } from './rbac/policies/staff.policy';
+import { CLIENT_POLICIES } from './rbac/policies/client.policy';
 
-export type TRbacCapability = 'create' | 'read' | 'update' | 'delete';
+// Re-export for compatibility
+export { RbacResource, RbacRole };
+export type { TRbacResource, TRbacCapability, TRbacRole, TRbacLevel };
 
-export const RbacRole = {
-  ADMIN: 'ADMIN',
-  SUPERVISOR: 'SUPERVISOR',
-  TECHNICIAN: 'TECHNICIAN',
-  REPORTING: 'REPORTING',
-  DIRECTOR: 'DIRECTOR',
-  CLIENT: 'CLIENT',
-  CLIENT_TECHNICIAN: 'CLIENT_TECHNICIAN',
-  CLIENT_SUPERVISOR: 'CLIENT_SUPERVISOR',
-} as const;
+/**
+ * Registry of all role policies
+ */
+const ROLE_CONFIG: Record<TRbacRole, IRbacRoleConfig> = {
+  ADMIN: ADMIN_POLICY,
+  ...STAFF_POLICIES,
+  ...CLIENT_POLICIES,
+} as Record<TRbacRole, IRbacRoleConfig>;
 
-export type TRbacRole = (typeof RbacRole)[keyof typeof RbacRole];
-
-export type TRbacLevel = 'CRUD' | 'CRU' | 'R' | '-';
-
-export type TRbacPermissionSet = Record<TRbacCapability, boolean>;
-
-interface IRbacRoleConfig {
-  label: string;
-  landingPage: string;
-  permissions: Partial<Record<TRbacResource, TRbacLevel>>;
-}
-
+/**
+ * Internal helper to convert permission level to granular capability set
+ */
 function permissionSet(level: TRbacLevel): TRbacPermissionSet {
   if (level === 'CRUD') {
     return { create: true, read: true, update: true, delete: true };
@@ -58,176 +42,9 @@ function permissionSet(level: TRbacLevel): TRbacPermissionSet {
   return { create: false, read: false, update: false, delete: false };
 }
 
-const ROLE_CONFIG: Record<TRbacRole, IRbacRoleConfig> = {
-  ADMIN: {
-    label: 'Super Admin',
-    landingPage: '/users',
-    permissions: {
-      DASHBOARD: 'CRUD',
-      SUMMARY_REPORTS: 'CRUD',
-      LOG_SHEETS: 'CRUD',
-      WORK_REPORTS: 'CRUD',
-      REPORTS: 'CRUD',
-      LAB_ANALYSES: 'CRUD',
-      ATTENDANCE: 'CRUD',
-      USERS_ADMIN: 'CRUD',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: 'CRUD',
-      CLIENTS: 'CRUD',
-      CHEMICALS: 'CRUD',
-      PARAMETERS: 'CRUD',
-      MACHINES: 'CRUD',
-    },
-  },
-  SUPERVISOR: {
-    label: 'PIC Project',
-    landingPage: '/',
-    permissions: {
-      DASHBOARD: 'CRUD',
-      SUMMARY_REPORTS: 'CRUD',
-      LOG_SHEETS: 'CRUD',
-      WORK_REPORTS: 'CRUD',
-      REPORTS: 'CRUD',
-      LAB_ANALYSES: 'CRUD',
-      ATTENDANCE: 'CRUD',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      USERS_ADMIN: '-',
-      CLIENTS: '-',
-      CHEMICALS: 'R',
-      PARAMETERS: 'R',
-      MACHINES: 'R',
-      NOTIFICATIONS: 'CRUD',
-    },
-  },
-  TECHNICIAN: {
-    label: 'Teknisi',
-    landingPage: '/attendance',
-    permissions: {
-      DASHBOARD: 'R',
-      SUMMARY_REPORTS: '-',
-      LOG_SHEETS: 'CRU',
-      WORK_REPORTS: 'CRU',
-      REPORTS: 'R',
-      LAB_ANALYSES: '-',
-      ATTENDANCE: 'CRU',
-      USERS_ADMIN: '-',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      CLIENTS: '-',
-      CHEMICALS: 'R',
-      PARAMETERS: 'R',
-      MACHINES: 'R',
-      NOTIFICATIONS: 'CRUD',
-    },
-  },
-  REPORTING: {
-    label: 'Reporting',
-    landingPage: '/summary-reports',
-    permissions: {
-      DASHBOARD: 'R',
-      SUMMARY_REPORTS: 'CRU',
-      LOG_SHEETS: 'CRU',
-      WORK_REPORTS: 'CRU',
-      REPORTS: 'CRU',
-      LAB_ANALYSES: '-',
-      ATTENDANCE: '-',
-      USERS_ADMIN: '-',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      CLIENTS: '-',
-      CHEMICALS: 'R',
-      PARAMETERS: 'R',
-      MACHINES: 'R',
-      NOTIFICATIONS: 'CRUD',
-    },
-  },
-  DIRECTOR: {
-    label: 'Direksi',
-    landingPage: '/',
-    permissions: {
-      DASHBOARD: 'R',
-      SUMMARY_REPORTS: 'R',
-      LOG_SHEETS: 'R',
-      WORK_REPORTS: 'R',
-      REPORTS: 'R',
-      LAB_ANALYSES: '-',
-      ATTENDANCE: '-',
-      USERS_ADMIN: '-',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      CLIENTS: '-',
-      CHEMICALS: 'R',
-      PARAMETERS: 'R',
-      MACHINES: 'R',
-      NOTIFICATIONS: 'CRUD',
-    },
-  },
-  CLIENT: {
-    label: 'Klien',
-    landingPage: '/my-projects',
-    permissions: {
-      DASHBOARD: 'R',
-      SUMMARY_REPORTS: 'R',
-      LOG_SHEETS: 'R',
-      WORK_REPORTS: 'R',
-      REPORTS: 'R',
-      LAB_ANALYSES: '-',
-      ATTENDANCE: '-',
-      USERS_ADMIN: '-',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      CLIENTS: '-',
-      CHEMICALS: 'R',
-      PARAMETERS: 'R',
-      MACHINES: 'R',
-      NOTIFICATIONS: 'CRUD',
-    },
-  },
-  CLIENT_SUPERVISOR: {
-    label: 'PIC Klien',
-    landingPage: '/my-projects',
-    permissions: {
-      DASHBOARD: 'R',
-      SUMMARY_REPORTS: 'R',
-      LOG_SHEETS: 'R',
-      WORK_REPORTS: 'R',
-      REPORTS: 'R',
-      LAB_ANALYSES: '-',
-      ATTENDANCE: '-',
-      USERS_ADMIN: '-',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      CLIENTS: '-',
-      CHEMICALS: 'R',
-      PARAMETERS: 'R',
-      MACHINES: 'R',
-      NOTIFICATIONS: 'CRUD',
-    },
-  },
-  CLIENT_TECHNICIAN: {
-    label: 'Teknisi (Klien)',
-    landingPage: '/attendance',
-    permissions: {
-      DASHBOARD: 'R',
-      SUMMARY_REPORTS: '-',
-      LOG_SHEETS: 'CRU',
-      WORK_REPORTS: 'CRU',
-      REPORTS: 'R',
-      LAB_ANALYSES: '-',
-      ATTENDANCE: 'CRU',
-      USERS_ADMIN: '-',
-      PROJECTS_LIST: 'R',
-      PROJECTS_ADMIN: '-',
-      CLIENTS: '-',
-      CHEMICALS: 'R',
-      PARAMETERS: 'R',
-      MACHINES: 'R',
-      NOTIFICATIONS: 'CRUD',
-    },
-  },
-};
-
+/**
+ * Core RBAC check
+ */
 export function canAccess(
   role: string,
   resource: TRbacResource,
@@ -239,12 +56,15 @@ export function canAccess(
   return permissionSet(level)[capability];
 }
 
+/**
+ * Throwing wrapper for RBAC check
+ */
 export function ensureAccess(
   role: string,
   resource: TRbacResource,
   capability: TRbacCapability
 ) {
-  if (!canAccess(role as any, resource, capability)) {
+  if (!canAccess(role, resource, capability)) {
     throw new Error('Unauthorized');
   }
 }
@@ -256,8 +76,6 @@ export function getRoleLabel(role: string) {
 export function getLandingPage(role: string) {
   return ROLE_CONFIG[role as TRbacRole]?.landingPage ?? '/';
 }
-
-
 
 const PATH_RESOURCE_MAP: Array<{
   pattern: string | RegExp;

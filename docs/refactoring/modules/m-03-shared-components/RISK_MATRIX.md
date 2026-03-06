@@ -10,7 +10,7 @@
 | --------- | ----------------------------------------------------------------- |
 | 🔴 HIGH   | Core foundation logic, heavily coupled, used by ALL modules, God Class |
 | 🟡 MEDIUM | Complex shared utilities, moderate coupling, browser API integrations |
-| 🟢 LOW    | UI-only, leaf components, stable infrastructure, few/no dependents |
+| 🟢 LOW    | UI-only, leaf components, stable infrastructure, modular policy |
 
 ---
 
@@ -19,9 +19,11 @@
 | ID   | File                                    | Lines | Risk | Reason                                                                 |
 | ---- | --------------------------------------- | ----: | :--: | ---------------------------------------------------------------------- |
 | F1   | `src/lib/action-factory.ts`             |   110 |  🔴  | Central orchestration for all server actions. High impact on regressions. |
-| F3   | `src/lib/rbac.ts`                       |   303 |  🔴  | SSOT for security. God configuration. Directly controls route access. |
 | F4   | `src/components/data-table.tsx`         |   316 |  🔴  | God Component used in all CRUD views. High complexity (Desktop/Mobile). |
 | F5   | `src/components/camera-input.tsx`       |   276 |  🟡  | Browser API integration. Logic simplified via pipeline extraction.     |
+| F3   | `src/lib/rbac.ts`                       |   121 |  🟢  | Refactored to logic coordinator. Policies decomposed to separate files. |
+| F17  | `src/lib/rbac/types.ts`                 |    46 |  🟢  | RBAC type definitions SSOT.                                            |
+| F18  | `src/lib/rbac/policies/*.ts`            |   164 |  🟢  | Role-specific modular policies. Auditable and isolated.                |
 | F2   | `src/lib/auth-helpers.ts`               |    72 |  🟢  | Foundation session management. Domain logic removed. Resolved CIR-1.   |
 | F6   | `src/lib/utils/image-compression.ts`    |    92 |  🟢  | Refactored to use Canvas utility. Pure coordinator logic now.          |
 | F14  | `src/lib/utils/canvas.ts`               |   135 |  🟢  | Foundational Canvas logic. Decoupled and atomic.                       |
@@ -40,6 +42,6 @@
 
 | Risk Level | Count | Files                                                                 |
 | :--------: | :---: | --------------------------------------------------------------------- |
-|  🔴 HIGH   |   3   | `action-factory.ts`, `rbac.ts`, `data-table.tsx`                      |
+|  🔴 HIGH   |   2   | `action-factory.ts`, `data-table.tsx`                                 |
 | 🟡 MEDIUM  |   1   | `camera-input.tsx`                                                    |
-|   🟢 LOW   |   11  | `auth-helpers.ts`, `image-compression.ts`, `canvas.ts`, `app-sidebar.tsx`, `nav-main.tsx`, `navigation.ts`, `jwt.ts`, `multi-select.tsx`, `r2-upload.ts`, `prisma.ts`, `auth.ts (constants)` |
+|   🟢 LOW   |   15  | `rbac.ts`, `rbac/types.ts`, `rbac/policies/*.ts`, `auth-helpers.ts`, `image-compression.ts`, `canvas.ts`, `app-sidebar.tsx`, `nav-main.tsx`, `navigation.ts`, `jwt.ts`, `multi-select.tsx`, `r2-upload.ts`, `prisma.ts`, `auth.ts (constants)` |
