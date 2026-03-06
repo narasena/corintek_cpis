@@ -6,7 +6,11 @@ import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
-import { getProjectColumns } from './components/columns';
+import {
+  getProjectColumns,
+  PROJECT_STATUS_OPTIONS,
+  CONTRACT_TYPE_OPTIONS,
+} from './components/columns';
 import { ProjectDialog } from '@/features/projects/components/project-dialog';
 
 import {
@@ -16,6 +20,7 @@ import {
 import { getAllClientsAction } from '@/features/clients/actions';
 import { IProject } from '@/features/projects/types';
 import { TClientResponse } from '@/@types/client.type';
+import type { IColumnFilterConfig } from '@/components/data-table';
 
 type TProjectsResult = Awaited<ReturnType<typeof getProjectsAction>>;
 type TClientsResult = Awaited<ReturnType<typeof getAllClientsAction>>;
@@ -111,28 +116,28 @@ export default function ProjectsPage() {
     [refreshProjects] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
+  // TODO: Define filter configurations for DataTable column filters
+  const filterConfigs = useMemo<IColumnFilterConfig<IProject>[]>(
+    () => [
+      {
+        columnId: 'status',
+        type: 'select',
+        label: 'Status Proyek',
+        options: PROJECT_STATUS_OPTIONS,
+      },
+      {
+        columnId: 'contractType',
+        type: 'select',
+        label: 'Jenis Kontrak',
+        options: CONTRACT_TYPE_OPTIONS,
+      },
+    ],
+    []
+  );
+
   return (
     <div className="space-y-4 md:space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Manajemen Proyek
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Kelola data proyek, status, dan penugasan.
-          </p>
-        </div>
-        <ProjectDialog
-          mode="create"
-          clients={clients}
-          onSuccess={handleSuccess}
-          trigger={
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Tambah Proyek
-            </Button>
-          }
-        />
-      </div>
+      {/* ... existing header ... */}
 
       {loading && projects.length === 0 ? (
         <div className="flex items-center justify-center p-8 border rounded-lg h-64 bg-muted/20">
@@ -146,18 +151,13 @@ export default function ProjectsPage() {
           columns={columns}
           data={projects}
           emptyMessage="Belum ada data proyek."
+          columnFilters={true}
+          filterConfigs={filterConfigs}
+          persistFiltersInUrl={true}
         />
       )}
 
-      {/* Edit Dialog */}
-      <ProjectDialog
-        mode="edit"
-        project={selectedProject}
-        clients={clients}
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        onSuccess={handleSuccess}
-      />
+      {/* ... Edit Dialog ... */}
     </div>
   );
 }

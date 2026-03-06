@@ -8,6 +8,7 @@ import {
   useReactTable,
   getPaginationRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
   SortingState,
   HeaderGroup,
   Row,
@@ -15,6 +16,7 @@ import {
   Header,
   OnChangeFn,
   Table as TableType,
+  ColumnFiltersState,
 } from '@tanstack/react-table';
 
 import {
@@ -38,7 +40,10 @@ import { ArrowUpDown, Search, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDataTableSearch } from '@/hooks/use-data-table-search';
 import { useSearchParam } from '@/hooks/use-search-param';
+import { useColumnFilters } from '@/hooks/use-column-filters';
 import { HighlightText } from './highlight-text';
+import { FilterToolbar } from './filter-toolbar';
+import { filterFns } from '@/lib/filter-utils';
 
 export interface ITableTab<TData> {
   value: string;
@@ -87,6 +92,27 @@ export interface IServerPaginationConfig {
   readonly isLoading?: boolean;
 }
 
+/**
+ * Column filter configuration
+ * @responsibility Define filter UI and behavior per column
+ */
+export interface IColumnFilterConfig<TData = unknown> {
+  /** Column identifier (must match accessorKey or id) */
+  columnId: string;
+  /** Filter UI type */
+  type: 'select' | 'text' | 'date';
+  /** Label for filter control */
+  label?: string;
+  /** Options for select type filters */
+  options?: Array<{ label: string; value: string }>;
+  /** Placeholder for text/date input */
+  placeholder?: string;
+  /** Custom filter function name (uses TanStack built-in if omitted) */
+  filterFn?: string;
+  /** Default filter value */
+  defaultValue?: unknown;
+}
+
 interface IDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -100,6 +126,16 @@ interface IDataTableProps<TData, TValue> {
   highlightMatches?: boolean;
   /** Server-side pagination configuration (replaces client-side when provided) */
   serverPagination?: IServerPaginationConfig;
+  /** Enable column filters UI */
+  columnFilters?: boolean;
+  /** Global filter configurations */
+  filterConfigs?: IColumnFilterConfig<TData>[];
+  /** Callback when column filters change */
+  onColumnFiltersChange?: (filters: { id: string; value: unknown }[]) => void;
+  /** Persist filter state in URL */
+  persistFiltersInUrl?: boolean;
+  /** URL param name for filters */
+  filterUrlParamName?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -113,7 +149,26 @@ export function DataTable<TData, TValue>({
   disableSearch = false,
   highlightMatches = false,
   serverPagination,
+  columnFilters: enableColumnFilters = false,
+  filterConfigs = [],
+  onColumnFiltersChange,
+  persistFiltersInUrl = false,
+  filterUrlParamName,
 }: IDataTableProps<TData, TValue>) {
+  const { columnFilters, setColumnFilters } = useColumnFilters<TData>({
+    filterConfigs,
+    persistInUrl: persistFiltersInUrl,
+    urlParamName: filterUrlParamName,
+    initialFilters: [],
+  });
+
+  // Notify parent of column filter changes
+  useEffect(() => {
+    if (onColumnFiltersChange) {
+      onColumnFiltersChange(columnFilters);
+    }
+  }, [columnFilters, onColumnFiltersChange]);
+
   const [sorting, setSorting] = useState<SortingState>([]);
 
   // URL persistence for search
@@ -160,10 +215,25 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    filterFns: filterFns,
     state: {
       sorting,
+      columnFilters,
     },
+    onColumnFiltersChange: setColumnFilters,
   });
+
+  // Filter toolbar
+  const filterToolbar =
+    enableColumnFilters && filterConfigs?.length ? (
+      <FilterToolbar
+        filterConfigs={filterConfigs}
+        columnFilters={columnFilters}
+        onColumnFiltersChange={setColumnFilters}
+        onClearAll={() => setColumnFilters([])}
+      />
+    ) : null;
 
   const searchInput = !disableSearch && (
     <div className="relative w-full sm:w-72">
@@ -198,6 +268,7 @@ export function DataTable<TData, TValue>({
             ))}
           </TabsList>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {filterToolbar}
             {searchInput}
             {activeTab?.addNewRow}
           </div>
@@ -226,6 +297,7 @@ export function DataTable<TData, TValue>({
   // No tabs - render simple table with search
   return (
     <div className="space-y-4">
+      {filterToolbar}
       {searchInput && <div className="flex justify-end">{searchInput}</div>}
       <DataTableInner
         columns={columns}
@@ -237,6 +309,37 @@ export function DataTable<TData, TValue>({
         }
         table={table}
       />
+      {/* Server or client pagination */}
+      {serverPagination?.enabled ? (
+        <ServerPaginationControls
+          total={serverPagination.total}
+          page={serverPagination.page}
+          limit={serverPagination.limit}
+          pageSizeOptions={serverPagination.pageSizeOptions}
+          onPageChange={serverPagination.onPageChange}
+          onLimitChange={serverPagination.onLimitChange}
+          isLoading={serverPagination.isLoading}
+        />
+      ) : (
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Sebelumnya
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Selanjutnya
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -453,38 +556,6 @@ function DataTableInner<TData, TValue>({
           </div>
         )}
       </div>
-
-      {/* Pagination Controls - Client or Server Side */}
-      {serverPagination?.enabled ? (
-        <ServerPaginationControls
-          total={serverPagination.total}
-          page={serverPagination.page}
-          limit={serverPagination.limit}
-          pageSizeOptions={serverPagination.pageSizeOptions}
-          onPageChange={serverPagination.onPageChange}
-          onLimitChange={serverPagination.onLimitChange}
-          isLoading={serverPagination.isLoading}
-        />
-      ) : (
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Sebelumnya
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Selanjutnya
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

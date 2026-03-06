@@ -11,6 +11,25 @@ import { ProjectParameterOverridesDialog } from '@/features/projects/components/
 import { ActionCell } from '@/components/action-cell';
 import { Badge } from '@/components/ui/badge';
 
+export const PROJECT_STATUS_OPTIONS = [
+  { label: 'Menunggu', value: 'PENDING' },
+  { label: 'Berjalan', value: 'ONGOING' },
+  { label: 'Ditunda', value: 'PAUSED' },
+  { label: 'Selesai', value: 'COMPLETED' },
+  { label: 'Dibatalkan', value: 'CANCELLED' },
+];
+
+export const CONTRACT_TYPE_OPTIONS = [
+  { label: 'Langsung', value: 'DIRECT' },
+  { label: 'Subkon', value: 'SUBCONTRACT' },
+];
+
+export const WORK_CATEGORY_OPTIONS = [
+  { label: 'Operasional', value: 'OPERATIONAL' },
+  { label: 'Proyek/Konstruksi', value: 'CONSTRUCTION' },
+  { label: 'Ad Hoc', value: 'AD_HOC' },
+];
+
 interface GetColumnsProps {
   onEdit: (project: IProject) => void;
   onRefresh: () => void;
