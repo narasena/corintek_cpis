@@ -16,15 +16,16 @@
 | 4   | `src/lib/jwt.ts`                   |    96 | **Decoupled**: Jose-based token primitives|
 | 5   | `src/lib/prisma.ts`                |    41 | Database client singleton                 |
 | 6   | `src/lib/r2-upload.ts`             |    31 | Cloudflare R2 storage integration         |
-| 7   | `src/lib/utils/image-compression.ts`|   128 | Canvas-based WebP compression engine      |
-| 8   | `src/lib/constants/auth.ts`        |    23 | **New**: Foundational security constants  |
+| 7   | `src/lib/utils/image-compression.ts`|    92 | **Refactored**: Uses canvas utility        |
+| 8   | `src/lib/utils/canvas.ts`           |    85 | **New**: Foundational Canvas logic        |
+| 9   | `src/lib/constants/auth.ts`        |    23 | **New**: Foundational security constants  |
 
 ### UI Component Layer (src/components)
 
 | #   | File                                    | Lines | Role                                      |
 | --- | --------------------------------------- | ----: | ----------------------------------------- |
 | 1   | `src/components/data-table.tsx`         |   316 | Complex table/card display logic          |
-| 2   | `src/components/camera-input.tsx`       |   356 | Browser Camera API + Processing UI        |
+| 2   | `src/components/camera-input.tsx`       |   276 | Browser Camera API + Processing UI        |
 | 3   | `src/components/app-sidebar.tsx`        |   132 | Main navigation layout component          |
 | 4   | `src/components/multi-select.tsx`       |   163 | **Refactored**: Reusable form primitive   |
 
@@ -41,11 +42,13 @@ graph TD
         AH --> AC[constants/auth.ts]
         JW --> AC
         AH --> AS[@/features/auth/service]
+        IC[image-compression.ts] --> CV[canvas.ts]
     end
 
     subgraph "Components"
         DT[data-table.tsx] --> UI[src/components/ui/*]
-        CI[camera-input.tsx] --> IC[image-compression.ts]
+        CI[camera-input.tsx] --> IC
+        CI --> CV
         SB[app-sidebar.tsx] --> RB
         SB --> NM[nav-main.tsx]
         SB --> NU[nav-user.tsx]
@@ -90,7 +93,7 @@ graph TD
 
 | ID    | Description                                  | Locations                                      | Status |
 | ----- | -------------------------------------------- | ---------------------------------------------- | ------ |
-| DUP-1 | Raw Canvas `getContext('2d')` manipulation   | `camera-input.tsx`, `image-compression.ts`, `signature-pad.tsx` | Open   |
+| DUP-1 | Raw Canvas `getContext('2d')` manipulation   | `canvas.ts` (Centralized)                      | ✅ RESOLVED |
 | DUP-2 | Mobile Card vs Desktop Table bifurication    | `data-table.tsx` (Internal logic)              | Open   |
 
 ---

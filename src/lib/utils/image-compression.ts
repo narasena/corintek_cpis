@@ -7,6 +7,50 @@
  * 3. Logic: Smart Resizing + Quality iteration
  */
 
+import {
+  calculateAspectRatioFit,
+  drawImageToCanvas,
+  canvasToBlob,
+  cropCenterToCanvas,
+  loadImage,
+} from './canvas';
+
+/**
+ * Standardized pipeline for processing images from Camera or File uploads
+ * 1. Center crop to 1:1
+ * 2. Compress to WebP
+ * 3. Return File object
+ */
+export async function processImagePipeline(
+  source: HTMLImageElement | HTMLVideoElement,
+  fileName: string,
+  options: CompressionV2Options = {}
+): Promise<File> {
+  const { quality = 0.75, maxDimension = 1600, type = 'image/webp' } = options;
+
+  // 1. Center Crop to square
+  // We check for videoWidth first to distinguish between Video and Image
+  const isVideo = 'videoWidth' in source;
+  const srcWidth = isVideo ? (source as HTMLVideoElement).videoWidth : (source as HTMLImageElement).width;
+  const srcHeight = isVideo ? (source as HTMLVideoElement).videoHeight : (source as HTMLImageElement).height;
+  
+  const targetSize = Math.min(Math.min(srcWidth || maxDimension, srcHeight || maxDimension), maxDimension);
+
+  const croppedCanvas = cropCenterToCanvas(source, targetSize);
+
+  // 2. Export to Blob
+  const blob = await canvasToBlob(croppedCanvas, type, quality);
+
+  // 3. Return File
+  const newName =
+    fileName.replace(/\.[^/.]+$/, '') + (type === 'image/webp' ? '.webp' : '.jpg');
+
+  return new File([blob], newName, {
+    type: type,
+    lastModified: Date.now(),
+  });
+}
+
 export interface CompressionV2Options {
   /**
    * Output quality (0.0 to 1.0)
@@ -46,31 +90,17 @@ export async function compressImageV2(
   const img = await loadImage(file);
 
   // 2. Calculate New Dimensions
-  const { width, height } = calculateDimensions(
+  const { width, height } = calculateAspectRatioFit(
     img.width,
     img.height,
     maxDimension
   );
 
   // 3. Draw to Canvas
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) throw new Error('Could not get canvas context');
-
-  // High quality scaling
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, 0, 0, width, height);
+  const canvas = drawImageToCanvas(img, width, height);
 
   // 4. Export Blob
-  const blob = await new Promise<Blob | null>(resolve => {
-    canvas.toBlob(resolve, type, quality);
-  });
-
-  if (!blob) throw new Error('Compression failed');
+  const blob = await canvasToBlob(canvas, type, quality);
 
   // 5. Convert to File
   // Change extension if switching formats
@@ -82,47 +112,4 @@ export async function compressImageV2(
     type: type,
     lastModified: Date.now(),
   });
-}
-
-// --- Helpers ---
-
-function loadImage(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = url;
-  });
-}
-
-function calculateDimensions(
-  srcWidth: number,
-  srcHeight: number,
-  maxDimension: number
-): { width: number; height: number } {
-  // If image is smaller than max, don't upscale
-  if (srcWidth <= maxDimension && srcHeight <= maxDimension) {
-    return { width: srcWidth, height: srcHeight };
-  }
-
-  let width = srcWidth;
-  let height = srcHeight;
-
-  if (width > height) {
-    if (width > maxDimension) {
-      height = Math.round(height * (maxDimension / width));
-      width = maxDimension;
-    }
-  } else {
-    if (height > maxDimension) {
-      width = Math.round(width * (maxDimension / height));
-      height = maxDimension;
-    }
-  }
-
-  return { width, height };
 }

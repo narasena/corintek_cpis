@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from 'react';
 import { Camera, Image as ImageIcon, Loader2, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { compressImageV2 } from '@/lib/utils/image-compression';
+import { processImagePipeline } from '@/lib/utils/image-compression';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,7 +24,6 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const isMounted = useRef(false);
 
@@ -94,69 +93,35 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
   };
 
   const capturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current) return;
 
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
 
-    if (!context) return;
-
-    // Video dimensions
-    const videoWidth = video.videoWidth;
-    const videoHeight = video.videoHeight;
-
-    if (videoWidth === 0 || videoHeight === 0) {
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
       toast.error('Kamera belum siap', { description: 'Tunggu sebentar...' });
       return;
     }
 
-    // Calculate the square crop (center of the video)
-    const size = Math.min(videoWidth, videoHeight);
-    const x = (videoWidth - size) / 2;
-    const y = (videoHeight - size) / 2;
+    setIsProcessing(true);
+    stopCamera(); // Freeze UX immediately
 
-    // Set canvas size to the cropped size
-    canvas.width = size;
-    canvas.height = size;
+    try {
+      // Use the unified pipeline: Crop 1:1 -> Compress WebP -> Return File
+      const compressedFile = await processImagePipeline(video, 'photo.jpg', {
+        quality: 0.75,
+        maxDimension: 1600,
+        type: 'image/webp',
+      });
 
-    // Draw the cropped image
-    context.drawImage(video, x, y, size, size, 0, 0, size, size);
-
-    // Convert to blob and return file
-    canvas.toBlob(
-      async blob => {
-        if (!blob) {
-          toast.error('Gagal mengambil gambar');
-          return;
-        }
-
-        setIsProcessing(true);
-        stopCamera(); // Freeze UX immediately
-
-        try {
-          // 1. Create initial file from canvas
-          const rawFile = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
-
-          // 2. Compress using V2 Engine (WebP)
-          const compressedFile = await compressImageV2(rawFile, {
-            quality: 0.75,
-            maxDimension: 1600,
-            type: 'image/webp',
-          });
-
-          const previewUrl = URL.createObjectURL(compressedFile);
-          onChange(previewUrl, compressedFile);
-          handleClose();
-        } catch {
-          toast.error('Gagal memproses gambar');
-        } finally {
-          setIsProcessing(false);
-        }
-      },
-      'image/jpeg',
-      0.8
-    );
+      const previewUrl = URL.createObjectURL(compressedFile);
+      onChange(previewUrl, compressedFile);
+      handleClose();
+    } catch (error) {
+      console.error('[CPIS-CAMERA] Capture failed:', error);
+      toast.error('Gagal memproses gambar');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,68 +136,25 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
 
     setIsProcessing(true);
 
-    // Create a 1:1 crop from the uploaded file (center crop)
-    // We need to load it into an image, then draw to canvas
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
+    try {
+      // 1. Load image
+      const img = await loadImage(file);
 
-    img.onload = async () => {
-      const canvas = document.createElement('canvas');
-      const size = Math.min(img.width, img.height);
-      const x = (img.width - size) / 2;
-      const y = (img.height - size) / 2;
+      // 2. Use unified pipeline: Crop 1:1 -> Compress WebP -> Return File
+      const compressedFile = await processImagePipeline(img, file.name, {
+        quality: 0.75,
+        maxDimension: 1600,
+        type: 'image/webp',
+      });
 
-      canvas.width = size;
-      canvas.height = size;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        setIsProcessing(false);
-        return;
-      }
-
-      ctx.drawImage(img, x, y, size, size, 0, 0, size, size);
-
-      canvas.toBlob(
-        async blob => {
-          if (!blob) {
-            setIsProcessing(false);
-            return;
-          }
-
-          try {
-            const croppedFile = new File([blob], file.name, {
-              type: file.type,
-            });
-
-            // COMPRESSION V2
-            const compressedFile = await compressImageV2(croppedFile, {
-              quality: 0.75,
-              maxDimension: 1600,
-              type: 'image/webp',
-            });
-
-            const previewUrl = URL.createObjectURL(compressedFile);
-            onChange(previewUrl, compressedFile);
-          } catch {
-            toast.error('Gagal memproses gambar');
-          } finally {
-            URL.revokeObjectURL(objectUrl);
-            setIsProcessing(false);
-          }
-        },
-        file.type,
-        0.8
-      );
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
+      const previewUrl = URL.createObjectURL(compressedFile);
+      onChange(previewUrl, compressedFile);
+    } catch (error) {
+      console.error('[CPIS-CAMERA] File processing failed:', error);
+      toast.error('Gagal memproses gambar');
+    } finally {
       setIsProcessing(false);
-      toast.error('Gagal membaca file gambar');
-    };
-
-    img.src = objectUrl;
+    }
   };
 
   if (value) {
@@ -328,8 +250,6 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
               <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white" />
               <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white" />
             </div>
-
-            <canvas ref={canvasRef} className="hidden" />
           </div>
 
           <div className="p-6 flex justify-center bg-black">

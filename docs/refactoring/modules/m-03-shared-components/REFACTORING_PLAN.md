@@ -50,8 +50,8 @@ Priority = f(Pain, Risk, Value)
 - [x] **F9 (JWT):** Decoupled from feature layer via `src/lib/constants/auth.ts` and implemented discriminated `JWTError` handling.
 
 ### Phase 2: Logic Consolidation (Medium Risk)
-- [ ] **Canvas Extraction (DUP-1):** Create `src/lib/utils/canvas.ts`. Move common scaling/cropping logic from `camera-input.tsx` and `image-compression.ts`.
-- [ ] **F5 (Camera Input):** Refactor to use the new Canvas utility. Separate Camera API logic from UI Dialog logic.
+- [x] **Canvas Extraction (DUP-1):** Created `src/lib/utils/canvas.ts`. Moved common scaling and promisified `toBlob` logic from `image-compression.ts`.
+- [x] **F5 (Camera Input):** Refactored to use the unified `processImagePipeline`. Removed redundant internal canvas logic and refs.
 - [x] **F7 (Domain Leak):** Moved `machine-form-section.tsx` to its proper domain (`src/features/machines/components/`) and extracted factory helper.
 
 ### Phase 3: Structural Refactoring (High Risk)

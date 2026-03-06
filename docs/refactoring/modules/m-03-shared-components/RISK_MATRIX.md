@@ -22,8 +22,9 @@
 | F2   | `src/lib/auth-helpers.ts`               |   118 |  🔴  | Manages session and actor extraction. Involved in CIR-1 (Circular Dep). |
 | F3   | `src/lib/rbac.ts`                       |   303 |  🔴  | SSOT for security. God configuration. Directly controls route access. |
 | F4   | `src/components/data-table.tsx`         |   316 |  🔴  | God Component used in all CRUD views. High complexity (Desktop/Mobile). |
-| F5   | `src/components/camera-input.tsx`       |   356 |  🟡  | Complex logic integration (Browser API + Processing). Logic heavy.     |
-| F6   | `src/lib/utils/image-compression.ts`    |   128 |  🟡  | Native Canvas manipulation. Prone to silent errors (Format conversion). |
+| F5   | `src/components/camera-input.tsx`       |   276 |  🟡  | Refactored to use unified `processImagePipeline`. Logic simplified.    |
+| F6   | `src/lib/utils/image-compression.ts`    |    92 |  🟢  | Refactored to use Canvas utility. Pure coordinator logic now.          |
+| F14  | `src/lib/utils/canvas.ts`               |    85 |  🟡  | Foundational Canvas API wrapper. Critical for image processing.        |
 | F8   | `src/components/app-sidebar.tsx`        |   132 |  🟡  | Layout critical. Depends on RBAC.                                      |
 | F9   | `src/lib/jwt.ts`                        |    96 |  🟢  | Decoupled security primitive. Implemented robust error handling.       |
 | F10  | `src/components/multi-select.tsx`       |   163 |  🟢  | Shared form primitive. Extracted MultiSelectBadge sub-component.       |
@@ -38,5 +39,5 @@
 | Risk Level | Count | Files                                                                 |
 | :--------: | :---: | --------------------------------------------------------------------- |
 |  🔴 HIGH   |   4   | `action-factory.ts`, `auth-helpers.ts`, `rbac.ts`, `data-table.tsx`   |
-| 🟡 MEDIUM  |   4   | `camera-input.tsx`, `image-compression.ts`, `app-sidebar.tsx`, `jwt.ts` |
-|   🟢 LOW   |   4   | `multi-select.tsx`, `r2-upload.ts`, `prisma.ts`, `auth.ts (constants)` |
+| 🟡 MEDIUM  |   4   | `camera-input.tsx`, `canvas.ts`, `app-sidebar.tsx`, `jwt.ts` (moved to green below) |
+|   🟢 LOW   |   5   | `image-compression.ts`, `multi-select.tsx`, `r2-upload.ts`, `prisma.ts`, `auth.ts (constants)`, `jwt.ts` |
