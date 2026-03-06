@@ -14,20 +14,21 @@
 | 2   | `src/lib/rbac/types.ts`            |    46 | **New**: RBAC type definitions            |
 | 3   | `src/lib/rbac/policies/*.ts`       |   164 | **New**: Role-specific modular policies   |
 | 4   | `src/lib/auth-helpers.ts`          |    72 | **Foundation**: Pure session/JWT logic    |
-| 5   | `src/lib/action-factory.ts`        |   110 | Standard wrapper for Server Actions       |
-| 6   | `src/lib/jwt.ts`                   |    96 | **Decoupled**: Jose-based token primitives|
-| 7   | `src/lib/prisma.ts`                |    41 | Database client singleton                 |
-| 8   | `src/lib/r2-upload.ts`             |    31 | Cloudflare R2 storage integration         |
-| 9   | `src/lib/utils/image-compression.ts`|    92 | **Refactored**: Uses canvas utility        |
-| 10  | `src/lib/utils/canvas.ts`           |   135 | **Refactored**: Foundational Canvas logic  |
-| 11  | `src/lib/constants/auth.ts`        |    23 | **New**: Foundational security constants  |
-| 12  | `src/lib/constants/navigation.ts`  |    84 | **New**: Grouped navigation schema        |
+| 5   | `src/lib/action-factory.ts`        |   110 | **Decoupled**: Type-safe Action Factory   |
+| 6   | `src/lib/action-helpers.ts`        |    40 | **Standard**: TActionResult definitions   |
+| 7   | `src/lib/jwt.ts`                   |    96 | **Decoupled**: Jose-based token primitives|
+| 8   | `src/lib/prisma.ts`                |    41 | **Encapsulated**: DB client singleton     |
+| 9   | `src/lib/r2-upload.ts`             |    31 | Cloudflare R2 storage integration         |
+| 10  | `src/lib/utils/image-compression.ts`|    92 | **Refactored**: Uses canvas utility        |
+| 11  | `src/lib/utils/canvas.ts`           |   135 | **Refactored**: Foundational Canvas logic  |
+| 12  | `src/lib/constants/auth.ts`        |    23 | **New**: Foundational security constants  |
+| 13  | `src/lib/constants/navigation.ts`  |    84 | **New**: Grouped navigation schema        |
 
 ### UI Component Layer (src/components)
 
 | #   | File                                    | Lines | Role                                      |
 | --- | --------------------------------------- | ----: | ----------------------------------------- |
-| 1   | `src/components/data-table.tsx`         |   316 | Complex table/card display logic          |
+| 1   | `src/components/data-table/*.tsx`       |   341 | **Modular**: Orchestrator + Desktop/Mobile|
 | 2   | `src/components/camera-input.tsx`       |   276 | **Refactored**: Uses unified pipeline     |
 | 3   | `src/components/app-sidebar.tsx`        |    69 | **Refactored**: Modular layout component  |
 | 4   | `src/components/nav-main.tsx`           |    56 | **Refactored**: Categorized navigation    |
@@ -41,6 +42,7 @@
 graph TD
     subgraph "Infrastructure (Lib)"
         AF[action-factory.ts] --> RB[rbac.ts]
+        AF --> AH_HELP[action-helpers.ts]
         AF --> UC[@/features/auth/lib/user-context]
         RB --> RBT[rbac/types.ts]
         RB --> RBP[rbac/policies/*.ts]
@@ -57,7 +59,10 @@ graph TD
     end
 
     subgraph "Components"
-        DT[data-table.tsx] --> UI[src/components/ui/*]
+        DT[data-table/index.tsx] --> DTV[data-table-view.tsx]
+        DTV --> DTD[desktop-view.tsx]
+        DTV --> DTM[mobile-view.tsx]
+        DTD --> UI[src/components/ui/*]
         CI[camera-input.tsx] --> IC
         CI --> CV
         SB[app-sidebar.tsx] --> RB
@@ -93,10 +98,14 @@ graph TD
 
 ## 4. God Classes / Oversized Files
 
-| File                                    | Lines | Exports | Verdict           |
-| --------------------------------------- | ----: | :-----: | ----------------- |
-| `src/components/ui/sidebar.tsx`         |   726 |   ~15   | SHADCN GENERATED  |
-| `src/components/data-table.tsx`         |   316 |    2    | GOD COMPONENT     |
+**Result: 0 files remaining over 300 LOC (excluding Shadcn primitives).**
+
+| File                                    | Before | After | Verdict           |
+| --------------------------------------- | -----: | ----: | ----------------- |
+| `src/lib/rbac.ts`                       |    303 |   121 | ✅ MODULARIZED    |
+| `src/components/camera-input.tsx`       |    356 |   276 | ✅ SIMPLIFIED     |
+| `src/components/data-table.tsx`         |    316 |   110 | ✅ DECOMPOSED     |
+| `src/components/ui/sidebar.tsx`         |    726 |   726 | SHADCN GENERATED  |
 
 ---
 
@@ -105,7 +114,7 @@ graph TD
 | ID    | Description                                  | Locations                                      | Status |
 | ----- | -------------------------------------------- | ---------------------------------------------- | ------ |
 | DUP-1 | Raw Canvas `getContext('2d')` manipulation   | `canvas.ts` (Centralized)                      | ✅ RESOLVED |
-| DUP-2 | Mobile Card vs Desktop Table bifurication    | `data-table.tsx` (Internal logic)              | Open   |
+| DUP-2 | Mobile Card vs Desktop Table bifurication    | `data-table/` (Modular views)                  | ✅ RESOLVED |
 
 ---
 

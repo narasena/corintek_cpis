@@ -24,7 +24,7 @@ import {
 export async function processImagePipeline(
   source: HTMLImageElement | HTMLVideoElement,
   fileName: string,
-  options: CompressionV2Options = {}
+  options: ICompressionV2Options = {}
 ): Promise<File> {
   const { quality = 0.75, maxDimension = 1600, type = 'image/webp' } = options;
 
@@ -51,7 +51,7 @@ export async function processImagePipeline(
   });
 }
 
-export interface CompressionV2Options {
+export interface ICompressionV2Options {
   /**
    * Output quality (0.0 to 1.0)
    * @default 0.75
@@ -78,7 +78,7 @@ export interface CompressionV2Options {
  */
 export async function compressImageV2(
   file: File,
-  options: CompressionV2Options = {}
+  options: ICompressionV2Options = {}
 ): Promise<File> {
   const {
     quality = 0.75,

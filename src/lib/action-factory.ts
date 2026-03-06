@@ -3,7 +3,7 @@ import { AuthenticationError } from './auth-helpers';
 import { ensureAccess, TRbacResource, TRbacCapability } from './rbac';
 import { requireActor } from '@/features/auth/lib/user-context';
 
-import { ActionResult, err, unauthorized } from './action-helpers';
+import { TActionResult, err, unauthorized } from './action-helpers';
 
 /**
  * Metadata for a protected action
@@ -37,7 +37,7 @@ export function createActionFactory<TActor extends { role: string }>(
       handler: (params: { input: TInput; actor: TActor }) => Promise<TOutput>,
       options?: IActionOptions<TInput>
     ) => {
-      return async (data: TInput): Promise<ActionResult<TOutput>> => {
+      return async (data: TInput): Promise<TActionResult<TOutput>> => {
         try {
           // 1. Authenticate (using injected logic)
           const actor = await authenticate();
@@ -87,7 +87,7 @@ function validate<T>(data: T, schema?: z.ZodType<T>): T {
 /**
  * Centralized error handling for server actions
  */
-function handleActionFailure(error: any): ActionResult<any> {
+function handleActionFailure(error: any): TActionResult<any> {
   if (error instanceof AuthenticationError || error.name === 'AuthenticationError') {
     return unauthorized();
   }

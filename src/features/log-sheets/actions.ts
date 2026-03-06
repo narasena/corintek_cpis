@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod/v4';
 import { actionFactory } from '@/lib/action-factory';
+import { TActionResult } from '@/lib/action-helpers';
 import { RbacResource } from '@/lib/rbac';
 import * as logSheetService from './service';
 import { updateLogSheetStatusWithNotifications } from './status-with-notifications';
@@ -421,4 +422,4 @@ export const uploadLogSheetImageAction = actionFactory.protected(
   {
     metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' } },
   }
-) as (formData: FormData) => Promise<ActionResult<{ url: string }>>;
+) as (formData: FormData) => Promise<TActionResult<{ url: string }>>;
