@@ -6,6 +6,29 @@
  */
 
 /**
+ * Internal helper to initialize a canvas with high-quality smoothing
+ */
+function initCanvasContext(width: number, height: number): {
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+} {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    throw new Error('[CPIS-CANVAS] Could not get 2d canvas context');
+  }
+
+  // High quality scaling configuration
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  return { canvas, ctx };
+}
+
+/**
  * Calculate dimensions to fit into a max dimension while maintaining aspect ratio
  */
 export function calculateAspectRatioFit(
@@ -63,20 +86,8 @@ export function drawImageToCanvas(
   width: number,
   height: number
 ): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) {
-    throw new Error('[CPIS-CANVAS] Could not get 2d canvas context');
-  }
-
-  // High quality scaling configuration
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  const { canvas, ctx } = initCanvasContext(width, height);
   ctx.drawImage(img, 0, 0, width, height);
-
   return canvas;
 }
 
@@ -87,15 +98,6 @@ export function cropCenterToCanvas(
   source: HTMLImageElement | HTMLVideoElement,
   targetSize: number
 ): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
-  canvas.width = targetSize;
-  canvas.height = targetSize;
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) {
-    throw new Error('[CPIS-CANVAS] Could not get 2d canvas context');
-  }
-
   const srcWidth = source instanceof HTMLVideoElement ? source.videoWidth : source.width;
   const srcHeight = source instanceof HTMLVideoElement ? source.videoHeight : source.height;
 
@@ -103,10 +105,7 @@ export function cropCenterToCanvas(
   const x = (srcWidth - size) / 2;
   const y = (srcHeight - size) / 2;
 
-  // High quality scaling
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  
+  const { canvas, ctx } = initCanvasContext(targetSize, targetSize);
   ctx.drawImage(source, x, y, size, size, 0, 0, targetSize, targetSize);
 
   return canvas;

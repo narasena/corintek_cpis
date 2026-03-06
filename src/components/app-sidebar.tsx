@@ -1,25 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import {
-  BookUser,
-  Building2,
-  ClipboardList,
-  Clock,
-  FileSpreadsheet,
-  FileText,
-  FlaskConical,
-  LayoutDashboard,
-  Microscope,
-  Settings2,
-  SlidersHorizontal,
-  Users,
-} from 'lucide-react';
 import Image from 'next/image';
 
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { filterNavItems } from '@/lib/rbac';
+import { NAV_CONFIG } from '@/lib/constants/navigation';
 import {
   Sidebar,
   SidebarContent,
@@ -30,72 +17,19 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 
-const navMain = [
-  {
-    title: 'Dashboard',
-    url: '/',
-    icon: LayoutDashboard,
-    isActive: true,
-  },
-  {
-    title: 'Clients',
-    url: '/clients',
-    icon: BookUser,
-  },
-  {
-    title: 'Projects',
-    url: '/projects',
-    icon: Building2,
-  },
-  {
-    title: 'Summary Reports',
-    url: '/summary-reports',
-    icon: ClipboardList,
-  },
-  {
-    title: 'Log Sheets',
-    url: '/log-sheets',
-    icon: FileSpreadsheet,
-  },
-  {
-    title: 'Work Reports',
-    url: '/work-reports',
-    icon: FileText,
-  },
-  {
-    title: 'Lab Analyses',
-    url: '/lab-analyses',
-    icon: Microscope,
-  },
-  {
-    title: 'Chemicals',
-    url: '/chemicals',
-    icon: FlaskConical,
-  },
-  {
-    title: 'Parameters',
-    url: '/parameters',
-    icon: SlidersHorizontal,
-  },
-  {
-    title: 'Users',
-    url: '/users',
-    icon: Users,
-  },
-  {
-    title: 'Absensi',
-    url: '/attendance',
-    icon: Clock,
-  },
-];
-
 export function AppSidebar({
   user,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user: { name: string; email: string; avatar: string | null; role: string };
 }) {
-  const items = filterNavItems(user.role, navMain);
+  // Filter all categories through RBAC
+  const categories = {
+    platform: filterNavItems(user.role, [...NAV_CONFIG.platform]),
+    operations: filterNavItems(user.role, [...NAV_CONFIG.operations]),
+    inventory: filterNavItems(user.role, [...NAV_CONFIG.inventory]),
+    administration: filterNavItems(user.role, [...NAV_CONFIG.administration]),
+  };
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -122,7 +56,10 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={items} />
+        <NavMain items={categories.platform} />
+        <NavMain items={categories.operations} label="Operasional" />
+        <NavMain items={categories.inventory} label="Inventori & Master" />
+        <NavMain items={categories.administration} label="Administrasi" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />

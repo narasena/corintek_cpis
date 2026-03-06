@@ -53,9 +53,10 @@ Priority = f(Pain, Risk, Value)
 - [x] **Canvas Extraction (DUP-1):** Created `src/lib/utils/canvas.ts`. Moved common scaling and promisified `toBlob` logic from `image-compression.ts`.
 - [x] **F5 (Camera Input):** Refactored to use the unified `processImagePipeline`. Removed redundant internal canvas logic and refs.
 - [x] **F7 (Domain Leak):** Moved `machine-form-section.tsx` to its proper domain (`src/features/machines/components/`) and extracted factory helper.
+- [x] **F8 (App Sidebar):** Modularized sidebar into subgroups (Operasional, Administrasi, etc.) and extracted schema to `src/lib/constants/navigation.ts`.
 
 ### Phase 3: Structural Refactoring (High Risk)
-- [ ] **F2 (Auth Helpers):** Resolve CIR-1. Move `validateSessionUser` logic out of feature service and into a more foundational layer or standard service.
+- [x] **F2 (Auth Helpers):** Resolved CIR-1. Split into `src/lib/auth-helpers.ts` (foundational) and `src/features/auth/lib/user-context.ts` (domain-aware).
 - [ ] **F4 (DataTable):** Split `data-table.tsx` into `DataTableDesktop` and `DataTableMobile`. Centralize the Tab-switching logic.
 - [ ] **F3 (RBAC):** Split the massive `ROLE_CONFIG` into separate role-based config files if it continues to grow.
 

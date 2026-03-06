@@ -29,12 +29,23 @@ vi.mock('@/features/projects/service', () => ({
   getAccessibleProjectIds: vi.fn(),
 }));
 
+vi.mock('@/features/auth/lib/user-context', () => ({
+  getCurrentUserDetails: vi.fn(),
+  requireActor: vi.fn(),
+}));
+
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    user: { findUnique: vi.fn() },
+    logSheet: { findUnique: vi.fn(), delete: vi.fn() },
+    // Add other models if needed
+  },
+}));
+
 vi.mock('@/lib/auth-helpers', async (importOriginal) => {
   const actual = await importOriginal() as any;
   return {
     ...actual,
-    getCurrentUserDetails: vi.fn(),
-    requireActor: vi.fn(),
   };
 });
 
@@ -72,6 +83,7 @@ import { revalidatePath } from 'next/cache';
 import * as logSheetService from '@/features/log-sheets/service';
 import * as projectService from '@/features/projects/service';
 import * as authHelpers from '@/lib/auth-helpers';
+import * as userContext from '@/features/auth/lib/user-context';
 
 import {
   getLogSheetsByProjectAction,
@@ -98,6 +110,7 @@ const mockRevalidatePath = revalidatePath as any;
 const mockLogSheetService = logSheetService as any;
 const mockProjectService = projectService as any;
 const mockAuthHelpers = authHelpers as any;
+const mockUserContext = userContext as any;
 
 const validUUID = '123e4567-e89b-12d3-a456-426614174000';
 const anotherUUID = '223e4567-e89b-12d3-a456-426614174001';
@@ -111,11 +124,11 @@ function createMockActor(overrides?: Partial<IJwtPayload>): IJwtPayload {
   };
 }
 
+import { AuthenticationError } from '@/lib/auth-helpers';
 import {
-  AuthenticationError,
   getCurrentUserDetails,
   requireActor,
-} from '@/lib/auth-helpers';
+} from '@/features/auth/lib/user-context';
 
 function mockUser(role: string = 'TECHNICIAN') {
   const payload = {
@@ -123,14 +136,18 @@ function mockUser(role: string = 'TECHNICIAN') {
     email: 'test@example.com',
     role,
   };
-  mockAuthHelpers.getCurrentUserDetails.mockResolvedValue(payload);
-  mockAuthHelpers.requireActor.mockResolvedValue(payload);
+  mockUserContext.getCurrentUserDetails.mockResolvedValue(payload);
+  mockUserContext.requireActor.mockResolvedValue(payload);
 }
 
 function mockGuest() {
-  mockAuthHelpers.getCurrentUserDetails.mockResolvedValue(null);
-  mockAuthHelpers.requireActor.mockRejectedValue(new AuthenticationError());
+  mockUserContext.getCurrentUserDetails.mockResolvedValue(null);
+  mockUserContext.requireActor.mockRejectedValue(new AuthenticationError());
 }
+
+beforeAll(() => {
+  vi.stubEnv('DATABASE_URL', 'postgresql://user:password@localhost:5432/db');
+});
 
 beforeEach(() => {
   vi.clearAllMocks();

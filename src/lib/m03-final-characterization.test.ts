@@ -23,14 +23,16 @@ import { verifyToken } from './jwt';
 import { prisma } from './prisma';
 import { 
   getCurrentUser, 
-  getCurrentUserDetails, 
-  requireActor, 
-  getActorOrNull, 
   AuthenticationError,
   getAuthCookieName,
   setAuthSession,
   deleteAuthSession
 } from './auth-helpers';
+import { 
+  getCurrentUserDetails, 
+  requireActor, 
+  getActorOrNull 
+} from '@/features/auth/lib/user-context';
 import { ensureAccess, filterNavItems, matchPathToResource } from './rbac';
 
 describe('auth-helpers (Actual Logic)', () => {

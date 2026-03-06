@@ -3,6 +3,7 @@
 import { type LucideIcon } from 'lucide-react';
 import {
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -12,6 +13,7 @@ import { usePathname } from 'next/navigation';
 
 export function NavMain({
   items,
+  label,
 }: {
   items: {
     title: string;
@@ -19,11 +21,15 @@ export function NavMain({
     icon: LucideIcon;
     isActive?: boolean;
   }[];
+  label?: string;
 }) {
   const pathname = usePathname();
 
+  if (items.length === 0) return null;
+
   return (
     <SidebarGroup>
+      {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
       <SidebarMenu>
         {items.map(item => (
           <SidebarMenuItem key={item.title}>

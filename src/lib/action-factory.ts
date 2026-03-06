@@ -1,6 +1,8 @@
 import { z } from 'zod/v4';
-import { requireActor, AuthenticationError } from './auth-helpers';
+import { requireActor } from '@/features/auth/lib/user-context';
+import { AuthenticationError } from './auth-helpers';
 import { ensureAccess, TRbacResource, TRbacCapability } from './rbac';
+
 import { ActionResult, err, unauthorized } from './action-helpers';
 
 /**

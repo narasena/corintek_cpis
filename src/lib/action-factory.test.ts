@@ -1,9 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { actionFactory } from './action-factory';
 import { AuthenticationError } from './auth-helpers';
 import { z } from 'zod';
 
 // Mock dependencies
+vi.mock('@/features/auth/lib/user-context', () => ({
+  requireActor: vi.fn(),
+}));
+
 vi.mock('./auth-helpers', () => ({
   requireActor: vi.fn(),
   AuthenticationError: class extends Error {
@@ -23,10 +27,14 @@ vi.mock('./action-helpers', () => ({
   err: vi.fn((_e, msg) => ({ success: false, error: msg || 'Error' })),
 }));
 
-const requireActorMock = vi.mocked(await import('./auth-helpers').then(m => m.requireActor));
+const requireActorMock = vi.mocked(await import('@/features/auth/lib/user-context').then(m => m.requireActor));
 const ensureAccessMock = vi.mocked(await import('./rbac').then(m => m.ensureAccess));
 
 describe('actionFactory characterization', () => {
+  beforeAll(() => {
+    vi.stubEnv('DATABASE_URL', 'postgresql://user:password@localhost:5432/db');
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });

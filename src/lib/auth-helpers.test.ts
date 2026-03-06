@@ -27,11 +27,14 @@ const prismaMock = vi.mocked(await import('./prisma').then(m => m.prisma));
 
 import {
   AuthenticationError,
+  getCurrentUser,
+  getAuthCookieName,
+} from './auth-helpers';
+import {
   requireActor,
   getActorOrNull,
-  getCurrentUser,
   getCurrentUserDetails,
-} from './auth-helpers';
+} from '@/features/auth/lib/user-context';
 
 function makeValidPayload(role: TUserRole = 'TECHNICIAN') {
   return {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { validateSessionUser } from './service';
-import { getCurrentUser, getCurrentUserDetails, requireActor, getActorOrNull } from '@/lib/auth-helpers';
+import { getCurrentUser } from '@/lib/auth-helpers';
+import { getCurrentUserDetails, requireActor, getActorOrNull } from './lib/user-context';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';

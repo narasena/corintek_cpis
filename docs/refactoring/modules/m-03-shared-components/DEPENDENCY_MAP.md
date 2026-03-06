@@ -11,23 +11,25 @@
 | #   | File                               | Lines | Role                                      |
 | --- | ---------------------------------- | ----: | ----------------------------------------- |
 | 1   | `src/lib/rbac.ts`                  |   303 | SSOT for permissions and route matching   |
-| 2   | `src/lib/auth-helpers.ts`          |   118 | Server-side actor extraction and session  |
-| 3   | `src/lib/action-factory.ts`        |   107 | Standard wrapper for Server Actions       |
+| 2   | `src/lib/auth-helpers.ts`          |    72 | **Foundation**: Pure session/JWT logic    |
+| 3   | `src/lib/action-factory.ts`        |   110 | Standard wrapper for Server Actions       |
 | 4   | `src/lib/jwt.ts`                   |    96 | **Decoupled**: Jose-based token primitives|
 | 5   | `src/lib/prisma.ts`                |    41 | Database client singleton                 |
 | 6   | `src/lib/r2-upload.ts`             |    31 | Cloudflare R2 storage integration         |
 | 7   | `src/lib/utils/image-compression.ts`|    92 | **Refactored**: Uses canvas utility        |
-| 8   | `src/lib/utils/canvas.ts`           |    85 | **New**: Foundational Canvas logic        |
+| 8   | `src/lib/utils/canvas.ts`           |   135 | **Refactored**: Foundational Canvas logic  |
 | 9   | `src/lib/constants/auth.ts`        |    23 | **New**: Foundational security constants  |
+| 10  | `src/lib/constants/navigation.ts`  |    84 | **New**: Grouped navigation schema        |
 
 ### UI Component Layer (src/components)
 
 | #   | File                                    | Lines | Role                                      |
 | --- | --------------------------------------- | ----: | ----------------------------------------- |
 | 1   | `src/components/data-table.tsx`         |   316 | Complex table/card display logic          |
-| 2   | `src/components/camera-input.tsx`       |   276 | Browser Camera API + Processing UI        |
-| 3   | `src/components/app-sidebar.tsx`        |   132 | Main navigation layout component          |
-| 4   | `src/components/multi-select.tsx`       |   163 | **Refactored**: Reusable form primitive   |
+| 2   | `src/components/camera-input.tsx`       |   276 | **Refactored**: Uses unified pipeline     |
+| 3   | `src/components/app-sidebar.tsx`        |    69 | **Refactored**: Modular layout component  |
+| 4   | `src/components/nav-main.tsx`           |    56 | **Refactored**: Categorized navigation    |
+| 5   | `src/components/multi-select.tsx`       |   163 | **Refactored**: Reusable form primitive   |
 
 ---
 
@@ -36,13 +38,18 @@
 ```mermaid
 graph TD
     subgraph "Infrastructure (Lib)"
-        AF[action-factory.ts] --> AH[auth-helpers.ts]
-        AF --> RB[rbac.ts]
-        AH --> JW[jwt.ts]
+        AF[action-factory.ts] --> RB[rbac.ts]
+        AF --> UC[@/features/auth/lib/user-context]
+        AH[auth-helpers.ts] --> JW[jwt.ts]
         AH --> AC[constants/auth.ts]
         JW --> AC
-        AH --> AS[@/features/auth/service]
         IC[image-compression.ts] --> CV[canvas.ts]
+        NC[constants/navigation.ts]
+    end
+
+    subgraph "Auth Feature (Domain)"
+        UC --> AH
+        UC --> AS[@/features/auth/service]
     end
 
     subgraph "Components"
@@ -50,7 +57,9 @@ graph TD
         CI[camera-input.tsx] --> IC
         CI --> CV
         SB[app-sidebar.tsx] --> RB
+        SB --> NC
         SB --> NM[nav-main.tsx]
+        NM --> NC
         SB --> NU[nav-user.tsx]
         NU --> AA[@/features/auth/actions]
     end
@@ -70,11 +79,11 @@ graph TD
 
 ## 3. Circular Dependency Analysis
 
-**Result: 1 module-level circular dependency identified.**
+**Result: 0 high-severity circular dependencies.**
 
-| ID   | Cycle Path                                      | Severity | Resolution                                  |
-| ---- | ----------------------------------------------- | -------- | ------------------------------------------- |
-| CIR-1| `lib/auth-helpers` -> `auth/service` -> `lib/auth-helpers` | High     | Move session validation logic to a lower layer |
+| ID   | Path                                            | Status      | Resolution                                  |
+| ---- | ----------------------------------------------- | ----------- | ------------------------------------------- |
+| CIR-1| `lib/auth-helpers` -> `auth/service` -> `lib/auth-helpers` | ✅ RESOLVED | Moved domain logic to `@/features/auth/lib/user-context`. |
 
 ---
 
@@ -83,9 +92,8 @@ graph TD
 | File                                    | Lines | Exports | Verdict           |
 | --------------------------------------- | ----: | :-----: | ----------------- |
 | `src/components/ui/sidebar.tsx`         |   726 |   ~15   | SHADCN GENERATED  |
-| `src/components/camera-input.tsx`       |   356 |    1    | LOGIC HEAVY       |
-| `src/components/data-table.tsx`         |   316 |    2    | GOD COMPONENT     |
 | `src/lib/rbac.ts`                       |   303 |    8    | CONFIG HEAVY      |
+| `src/components/data-table.tsx`         |   316 |    2    | GOD COMPONENT     |
 
 ---
 
@@ -104,9 +112,9 @@ graph TD
 
 | Direction       | External Module            | Files Affected | Impact                                      |
 | --------------- | -------------------------- | -------------- | ------------------------------------------- |
-| **Imports**     | `@/features/auth`          | `auth-helpers` | Circular dependency on session validation    |
 | **Imports**     | `@/features/auth`          | `nav-user`     | Trigger logout action                       |
+| **Imported By** | `@/features/auth`          | `user-context` | Standard session primitives                 |
 | **Imported By** | **ALL Feature Modules**    | `actions.ts`   | Standardizes all server actions via `actionFactory` |
 | **Imported By** | **ALL Feature Modules**    | `page.tsx`     | Provides `DataTable` for all CRUD views     |
 
-**Rule:** `M-03` is the foundation. Any breaking change to `actionFactory`, `rbac`, or `DataTable` will require updates across the entire codebase.
+**Rule:** `M-03` is now a pure infrastructure layer. It provides foundation but does not contain business logic.

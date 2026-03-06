@@ -4,13 +4,16 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
+vi.mock('@/features/auth/lib/user-context', () => ({
+  getCurrentUserDetails: vi.fn(),
+  requireActor: vi.fn(),
+}));
+
 vi.mock('@/lib/auth-helpers', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/auth-helpers')>();
   return {
     ...actual,
     getCurrentUser: vi.fn(),
-    getCurrentUserDetails: vi.fn(),
-    requireActor: vi.fn(),
   };
 });
 
@@ -29,7 +32,7 @@ import {
   updateCurrentUserProfileAction,
   uploadAvatarAction,
 } from './actions';
-import { getCurrentUserDetails, requireActor } from '@/lib/auth-helpers';
+import { getCurrentUserDetails, requireActor } from '@/features/auth/lib/user-context';
 import { uploadToR2 } from '@/lib/r2-upload';
 import { getCurrentUserProfile, updateCurrentUserProfile } from './service';
 

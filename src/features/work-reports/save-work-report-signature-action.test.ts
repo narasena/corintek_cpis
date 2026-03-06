@@ -7,19 +7,15 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
-vi.mock('@/lib/auth-helpers', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/auth-helpers')>();
-  return {
-    ...actual,
-    requireActor: vi.fn(),
-  };
-});
+vi.mock('@/features/auth/lib/user-context', () => ({
+  requireActor: vi.fn(),
+}));
 
 vi.mock('./service', () => ({
   saveWorkReportSignature: vi.fn(),
 }));
 
-import { requireActor } from '@/lib/auth-helpers';
+import { requireActor } from '@/features/auth/lib/user-context';
 
 describe('saveWorkReportSignatureAction', () => {
   const mockActor = { id: 'user-1', email: 'user@example.com', role: 'TECHNICIAN' };
