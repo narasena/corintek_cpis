@@ -26,10 +26,11 @@
 | F6   | `src/lib/utils/image-compression.ts`    |   128 |  🟡  | Native Canvas manipulation. Prone to silent errors (Format conversion). |
 | F7   | `src/components/machine-form-section.tsx`|   362 |  🟡  | Domain leak. High complexity in JSX and React Hook Form integration.   |
 | F8   | `src/components/app-sidebar.tsx`        |   132 |  🟡  | Layout critical. Depends on RBAC.                                      |
-| F9   | `src/lib/jwt.ts`                        |    80 |  🟡  | Security primitive. Low LOC but high impact if logic changes.          |
-| F10  | `src/components/multi-select.tsx`       |   145 |  🟢  | Shared form primitive. Mostly self-contained logic.                    |
+| F9   | `src/lib/jwt.ts`                        |    96 |  🟢  | Decoupled security primitive. Implemented robust error handling.       |
+| F10  | `src/components/multi-select.tsx`       |   163 |  🟢  | Shared form primitive. Extracted MultiSelectBadge sub-component.       |
 | F11  | `src/lib/r2-upload.ts`                  |    31 |  🟢  | Simple utility wrapper. Isolated dependency.                           |
-| F12  | `src/lib/prisma.ts`                     |    27 |  🟢  | Simple singleton. Minimal internal logic.                              |
+| F12  | `src/lib/prisma.ts`                     |    41 |  🟢  | Encapsulated singleton with lazy initialization and environment validation. |
+| F13  | `src/lib/constants/auth.ts`             |    23 |  🟢  | Foundational security constants. SSOT for infra layer.                 |
 
 ---
 

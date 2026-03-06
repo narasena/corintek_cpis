@@ -1,8 +1,15 @@
-import { SignJWT, jwtVerify, decodeJwt } from 'jose';
+import { SignJWT, jwtVerify, decodeJwt, errors } from 'jose';
 import { IJwtPayload, jwtPayloadSchema } from '@/@types/auth.type';
-import { JWT_CONFIG, ERROR_MESSAGES } from '@/features/auth/constants';
+import { JWT_INFRA_CONFIG, AUTH_INFRA_ERROR } from './constants/auth';
 
 let cachedSecret: Uint8Array | null = null;
+
+export class JWTError extends Error {
+  constructor(message: string, public code: 'EXPIRED' | 'INVALID' | 'SECRET_MISSING' | 'VALIDATION_FAILED') {
+    super(message);
+    this.name = 'JWTError';
+  }
+}
 
 /**
  * Internal helper to get and encode JWT_SECRET (memoized)
@@ -13,8 +20,9 @@ function getEncodedSecret(context: string): Uint8Array {
 
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error(
-      `[CPIS-ERROR] ${context}: ${ERROR_MESSAGES.JWT_SECRET_REQUIRED}`
+    throw new JWTError(
+      `[CPIS-ERROR] ${context}: ${AUTH_INFRA_ERROR.JWT_SECRET_REQUIRED}`,
+      'SECRET_MISSING'
     );
   }
 
@@ -26,7 +34,6 @@ function getEncodedSecret(context: string): Uint8Array {
  * Generate a JWT token for authenticated user
  * @param payload - User data to encode in token
  * @returns Signed JWT token string
- * @throws Error if JWT_SECRET is not configured
  */
 export async function generateToken(
   payload: Omit<IJwtPayload, 'iat' | 'exp'>
@@ -34,9 +41,9 @@ export async function generateToken(
   const SECRET_KEY = getEncodedSecret('JWT.generateToken');
 
   return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: JWT_CONFIG.ALGORITHM })
+    .setProtectedHeader({ alg: JWT_INFRA_CONFIG.ALGORITHM })
     .setIssuedAt()
-    .setExpirationTime(JWT_CONFIG.EXPIRES_IN)
+    .setExpirationTime(JWT_INFRA_CONFIG.EXPIRES_IN)
     .sign(SECRET_KEY);
 }
 
@@ -44,7 +51,6 @@ export async function generateToken(
  * Verify and decode a JWT token
  * @param token - JWT token string to verify
  * @returns Decoded payload if valid
- * @throws Error if token is invalid or expired or JWT_SECRET is not configured
  */
 export async function verifyToken(token: string): Promise<IJwtPayload> {
   const SECRET_KEY = getEncodedSecret('JWT.verifyToken');
@@ -53,13 +59,23 @@ export async function verifyToken(token: string): Promise<IJwtPayload> {
     const { payload } = await jwtVerify(token, SECRET_KEY);
     return jwtPayloadSchema.parse(payload);
   } catch (error) {
-    if (error instanceof Error && error.name === 'ZodError') {
-      throw new Error(
-        `[CPIS-ERROR] JWT.verifyToken: ${ERROR_MESSAGES.PAYLOAD_VALIDATION_FAILED}: ${error.message}`
+    if (error instanceof errors.JWTExpired) {
+      throw new JWTError(
+        `[CPIS-ERROR] JWT.verifyToken: ${AUTH_INFRA_ERROR.TOKEN_EXPIRED}`,
+        'EXPIRED'
       );
     }
-    throw new Error(
-      `[CPIS-ERROR] JWT.verifyToken: ${ERROR_MESSAGES.TOKEN_INVALID}`
+    
+    if (error instanceof Error && error.name === 'ZodError') {
+      throw new JWTError(
+        `[CPIS-ERROR] JWT.verifyToken: ${AUTH_INFRA_ERROR.PAYLOAD_VALIDATION_FAILED}: ${error.message}`,
+        'VALIDATION_FAILED'
+      );
+    }
+
+    throw new JWTError(
+      `[CPIS-ERROR] JWT.verifyToken: ${AUTH_INFRA_ERROR.TOKEN_INVALID}`,
+      'INVALID'
     );
   }
 }

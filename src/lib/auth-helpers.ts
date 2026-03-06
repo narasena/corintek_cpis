@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { verifyToken, generateToken } from './jwt';
 import { IJwtPayload } from '@/@types/auth.type';
 import { TUserRole } from '@/@types/user.type';
-import { AUTH_CONFIG } from '@/features/auth/constants';
+import { AUTH_INFRA_CONFIG } from './constants/auth';
 import * as authService from '@/features/auth/service';
 
 // Re-export password primitives from crypto for compatibility
@@ -22,7 +22,7 @@ export class AuthenticationError extends Error {
 export async function getCurrentUser(): Promise<IJwtPayload | null> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get(AUTH_CONFIG.COOKIE_NAME)?.value;
+    const token = cookieStore.get(AUTH_INFRA_CONFIG.COOKIE_NAME)?.value;
 
     if (!token) {
       return null;
@@ -45,11 +45,11 @@ export async function setAuthSession(
   const token = await generateToken(payload);
   const cookieStore = await cookies();
 
-  cookieStore.set(AUTH_CONFIG.COOKIE_NAME, token, {
+  cookieStore.set(AUTH_INFRA_CONFIG.COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: AUTH_CONFIG.COOKIE_MAX_AGE,
+    maxAge: AUTH_INFRA_CONFIG.COOKIE_MAX_AGE,
     path: '/',
   });
 }
@@ -59,7 +59,7 @@ export async function setAuthSession(
  */
 export async function deleteAuthSession(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete(AUTH_CONFIG.COOKIE_NAME);
+  cookieStore.delete(AUTH_INFRA_CONFIG.COOKIE_NAME);
 }
 
 export interface ICurrentUserDetails {
@@ -94,7 +94,7 @@ export async function getCurrentUserDetails(): Promise<ICurrentUserDetails | nul
  * Get auth cookie name (for consistency)
  */
 export function getAuthCookieName(): string {
-  return AUTH_CONFIG.COOKIE_NAME;
+  return AUTH_INFRA_CONFIG.COOKIE_NAME;
 }
 
 /**

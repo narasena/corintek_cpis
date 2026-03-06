@@ -44,9 +44,10 @@ Priority = f(Pain, Risk, Value)
 ## 4. Phased Execution
 
 ### Phase 1: Foundation & Quick Wins (Low Risk)
-- [ ] **F11/F12 (R2 & Prisma):** Ensure strict interface adherence (I/T prefix) and add missing documentation.
-- [ ] **F10 (Multi-Select):** Extract sub-components (MultiSelectItem) to reduce file length.
-- [ ] **F9 (JWT):** Validate error handling for expired vs. invalid tokens.
+- [x] **F12 (Prisma):** Refactored with Encapsulated Lazy Initialization and environment validation.
+- [ ] **F11 (R2):** Ensure strict interface adherence (I/T prefix) and add missing documentation.
+- [x] **F10 (Multi-Select):** Extracted `MultiSelectBadge` sub-component and standardized interfaces.
+- [x] **F9 (JWT):** Decoupled from feature layer via `src/lib/constants/auth.ts` and implemented discriminated `JWTError` handling.
 
 ### Phase 2: Logic Consolidation (Medium Risk)
 - [ ] **Canvas Extraction (DUP-1):** Create `src/lib/utils/canvas.ts`. Move common scaling/cropping logic from `camera-input.tsx` and `image-compression.ts`.

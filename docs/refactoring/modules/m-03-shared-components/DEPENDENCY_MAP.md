@@ -13,10 +13,11 @@
 | 1   | `src/lib/rbac.ts`                  |   303 | SSOT for permissions and route matching   |
 | 2   | `src/lib/auth-helpers.ts`          |   118 | Server-side actor extraction and session  |
 | 3   | `src/lib/action-factory.ts`        |   107 | Standard wrapper for Server Actions       |
-| 4   | `src/lib/jwt.ts`                   |    80 | Jose-based token primitives               |
-| 5   | `src/lib/prisma.ts`                |    27 | Database client singleton                 |
+| 4   | `src/lib/jwt.ts`                   |    96 | **Decoupled**: Jose-based token primitives|
+| 5   | `src/lib/prisma.ts`                |    41 | Database client singleton                 |
 | 6   | `src/lib/r2-upload.ts`             |    31 | Cloudflare R2 storage integration         |
 | 7   | `src/lib/utils/image-compression.ts`|   128 | Canvas-based WebP compression engine      |
+| 8   | `src/lib/constants/auth.ts`        |    23 | **New**: Foundational security constants  |
 
 ### UI Component Layer (src/components)
 
@@ -26,7 +27,7 @@
 | 2   | `src/components/camera-input.tsx`       |   356 | Browser Camera API + Processing UI        |
 | 3   | `src/components/machine-form-section.tsx` |   362 | Domain-specific form logic (Potential leak)|
 | 4   | `src/components/app-sidebar.tsx`        |   132 | Main navigation layout component          |
-| 5   | `src/components/multi-select.tsx`       |   145 | Reusable form primitive                   |
+| 5   | `src/components/multi-select.tsx`       |   163 | **Refactored**: Reusable form primitive   |
 
 ---
 
@@ -38,6 +39,8 @@ graph TD
         AF[action-factory.ts] --> AH[auth-helpers.ts]
         AF --> RB[rbac.ts]
         AH --> JW[jwt.ts]
+        AH --> AC[constants/auth.ts]
+        JW --> AC
         AH --> AS[@/features/auth/service]
     end
 
@@ -54,6 +57,7 @@ graph TD
         FE[@/features/*] --> AF
         FE --> DT
         FE --> RB
+        AS --> AC
     end
 
     AA --> AH
@@ -68,8 +72,6 @@ graph TD
 | ID   | Cycle Path                                      | Severity | Resolution                                  |
 | ---- | ----------------------------------------------- | -------- | ------------------------------------------- |
 | CIR-1| `lib/auth-helpers` -> `auth/service` -> `lib/auth-helpers` | High     | Move session validation logic to a lower layer |
-
-*Note: `auth/actions.ts` uses `auth-helpers`, and `auth-helpers` imports `auth/service`. Since actions use services, this creates a tight loop through the infrastructure layer.*
 
 ---
 
