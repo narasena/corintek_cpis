@@ -5,6 +5,18 @@ import { TUserResponse } from '@/@types/user.type';
 import { ActionCell } from '@/components/action-cell';
 import { deleteUserAction } from '@/features/users/actions';
 
+export const ROLE_OPTIONS = [
+  { label: 'Admin', value: 'ADMIN' },
+  { label: 'Teknisi', value: 'TECHNICIAN' },
+  { label: 'Supervisor', value: 'SUPERVISOR' },
+  { label: 'Klien', value: 'CLIENT' },
+];
+
+export const STATUS_OPTIONS = [
+  { label: 'Aktif', value: 'true' },
+  { label: 'Nonaktif', value: 'false' },
+];
+
 interface IUserColumnsProps {
   onEdit: (user: TUserResponse) => void;
   onRefresh: () => void;

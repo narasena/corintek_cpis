@@ -79,6 +79,12 @@ export async function createUser(
       isActive: true,
       isBlocked: true,
       clientId: true,
+      client: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
       createdAt: true,
       updatedAt: true,
       deletedAt: true,
