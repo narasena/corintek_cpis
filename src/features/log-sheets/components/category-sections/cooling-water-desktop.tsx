@@ -25,25 +25,35 @@ interface ICoolingWaterQualityDesktopProps {
   category: string;
   params: TParameter[];
   activeCTs: TMachine[];
+  allCoolingTowers: TMachine[];
 }
 
 export function CoolingWaterQualityDesktop({
   category,
   params,
   activeCTs,
+  allCoolingTowers,
 }: ICoolingWaterQualityDesktopProps) {
+  const activeMachineIds = new Set(activeCTs.map(m => m.id));
+  const displayMachines =
+    allCoolingTowers.length > 0 ? allCoolingTowers : activeCTs;
+
   return (
     <div className="space-y-3">
       <CategoryHeader title={category} />
-      <div className="rounded-md border">
-        <Table className="w-max min-w-full">
-          <CoolingWaterTableHeader activeCTs={activeCTs} />
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="w-full table-fixed">
+          <CoolingWaterTableHeader
+            activeCTs={activeCTs}
+            allCoolingTowers={allCoolingTowers}
+          />
           <TableBody>
             {params.map(param => (
               <ParameterRow
                 key={param.id}
                 param={param}
                 activeCTs={activeCTs}
+                allCoolingTowers={allCoolingTowers}
               />
             ))}
           </TableBody>
@@ -67,23 +77,37 @@ function CategoryHeader({ title }: ICategoryHeaderProps) {
 
 interface ICoolingWaterTableHeaderProps {
   activeCTs: TMachine[];
+  allCoolingTowers: TMachine[];
 }
 
-function CoolingWaterTableHeader({ activeCTs }: ICoolingWaterTableHeaderProps) {
+function CoolingWaterTableHeader({
+  activeCTs,
+  allCoolingTowers,
+}: ICoolingWaterTableHeaderProps) {
+  const activeMachineIds = new Set(activeCTs.map(m => m.id));
+
   return (
     <TableHeader>
       <TableRow className="bg-muted/40">
-        <TableHead className="w-max-plus">Parameter</TableHead>
-        <TableHead className="w-max-plus">Target</TableHead>
-        {activeCTs.map(m => (
-          <TableHead key={m.id} className="min-w-[140px] text-center">
+        <TableHead className="w-[180px]">Parameter</TableHead>
+        <TableHead className="w-[100px]">Limit</TableHead>
+        {allCoolingTowers.map(m => (
+          <TableHead
+            key={m.id}
+            className={
+              activeMachineIds.has(m.id)
+                ? 'text-center'
+                : 'text-center bg-muted/30 text-muted-foreground'
+            }
+          >
             CT #{m.unitNumber}
+            {!activeMachineIds.has(m.id) && (
+              <div className="text-[10px]">Tidak Aktif</div>
+            )}
           </TableHead>
         ))}
-        <TableHead className="w-max-plus text-center">Raw Water</TableHead>
-        <TableHead className="w-max-plus text-center">
-          Target (Raw Water)
-        </TableHead>
+        <TableHead className="w-[100px] text-center">Raw Water</TableHead>
+        <TableHead className="w-[120px] text-center">Limit (Raw)</TableHead>
       </TableRow>
     </TableHeader>
   );
@@ -92,15 +116,27 @@ function CoolingWaterTableHeader({ activeCTs }: ICoolingWaterTableHeaderProps) {
 interface IParameterRowProps {
   param: TParameter;
   activeCTs: TMachine[];
+  allCoolingTowers: TMachine[];
 }
 
-function ParameterRow({ param, activeCTs }: IParameterRowProps) {
+function ParameterRow({
+  param,
+  activeCTs,
+  allCoolingTowers,
+}: IParameterRowProps) {
+  const activeMachineIds = new Set(activeCTs.map(m => m.id));
+
   return (
     <TableRow>
       <ParameterNameCell param={param} />
       <TargetCell param={param} />
-      {activeCTs.map(m => (
-        <CoolingWaterValueCell key={m.id} param={param} machineId={m.id} />
+      {allCoolingTowers.map(m => (
+        <CoolingWaterValueCell
+          key={m.id}
+          param={param}
+          machineId={m.id}
+          isActive={activeMachineIds.has(m.id)}
+        />
       ))}
       <RawWaterCell param={param} />
       <RawWaterTargetCell param={param} />
@@ -126,19 +162,30 @@ interface ITargetCellProps {
 }
 
 function TargetCell({ param }: ITargetCellProps) {
-  return <TableCell>{formatLimit(param)}</TableCell>;
+  const limitValue = formatLimit(param);
+  return <TableCell>{limitValue ?? 'N/A'}</TableCell>;
 }
 
 interface ICoolingWaterValueCellProps {
   param: TParameter;
   machineId: string;
+  isActive: boolean;
 }
 
 function CoolingWaterValueCell({
   param,
   machineId,
+  isActive,
 }: ICoolingWaterValueCellProps) {
   const key = entryKeys.value(param.id, machineId);
+
+  if (!isActive) {
+    return (
+      <TableCell className="bg-muted/20 text-muted-foreground text-center">
+        -
+      </TableCell>
+    );
+  }
 
   if (param.valueType === 'BOOLEAN') {
     return <BooleanCell key={key} entryKey={key} showClearButton />;
@@ -163,7 +210,8 @@ interface IRawWaterTargetCellProps {
 }
 
 function RawWaterTargetCell({ param }: IRawWaterTargetCellProps) {
+  const rawWaterLimitValue = formatRawWaterLimit(param);
   return (
-    <TableCell className="text-center">{formatRawWaterLimit(param)}</TableCell>
+    <TableCell className="text-center">{rawWaterLimitValue ?? 'N/A'}</TableCell>
   );
 }

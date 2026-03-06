@@ -1,7 +1,23 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Printer, Save } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  ArrowLeft,
+  ChevronDown,
+  Eye,
+  FileInput,
+  Printer,
+  Save,
+  Send,
+  Lock,
+  Unlock,
+} from 'lucide-react';
 import Link from 'next/link';
 import type { TLogSheetStatus } from '@/features/log-sheets/types';
 
@@ -21,6 +37,18 @@ interface ILogSheetToolbarProps {
   onBack: () => void;
 }
 
+function getViewLabel(mode: 'input' | 'preview'): string {
+  return mode === 'input' ? 'Input' : 'Preview';
+}
+
+function getViewIcon(mode: 'input' | 'preview') {
+  return mode === 'input' ? (
+    <FileInput className="mr-2 h-4 w-4" />
+  ) : (
+    <Eye className="mr-2 h-4 w-4" />
+  );
+}
+
 export function LogSheetToolbar({
   projectId,
   mode,
@@ -36,6 +64,8 @@ export function LogSheetToolbar({
   onAdminOverrideToggle,
   onBack,
 }: ILogSheetToolbarProps) {
+  const isDraft = status === 'DRAFT';
+
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between print:hidden">
       <div className="flex items-center gap-2">
@@ -47,42 +77,78 @@ export function LogSheetToolbar({
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="flex gap-2">
-          <Button
-            variant={mode === 'input' ? 'default' : 'outline'}
-            onClick={() => onModeChange('input')}
-          >
-            Input
-          </Button>
-          <Button
-            variant={mode === 'preview' ? 'default' : 'outline'}
-            onClick={() => onModeChange('preview')}
-          >
-            Preview
-          </Button>
-        </div>
-        <Button variant="outline" onClick={onPrint}>
-          <Printer className="mr-2 h-4 w-4" /> Print
-        </Button>
-        {status === 'DRAFT' && (
-          <Button variant="secondary" onClick={onSubmit} disabled={isPending}>
-            Kirim
-          </Button>
-        )}
-        {canAdminOverride && (
-          <Button
-            variant="outline"
-            onClick={onAdminOverrideToggle}
-            disabled={isPending}
-          >
-            {adminOverride ? 'Kunci Kembali' : 'Buka Kunci'}
-          </Button>
-        )}
-        <Button onClick={onSave} disabled={isPending || isLocked}>
-          <Save className="mr-2 h-4 w-4" />{' '}
-          {isPending ? 'Menyimpan...' : 'Simpan'}
-        </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        {/* View Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="min-w-[120px]">
+              {getViewIcon(mode)}
+              {getViewLabel(mode)}
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onModeChange('input')}>
+              <FileInput className="mr-2 h-4 w-4" />
+              Input
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onModeChange('preview')}>
+              <Eye className="mr-2 h-4 w-4" />
+              Preview
+            </DropdownMenuItem>
+            {mode === 'preview' && (
+              <DropdownMenuItem onClick={onPrint}>
+                <Printer className="mr-2 h-4 w-4" />
+                Print
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Actions Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="default"
+              className="min-w-[140px]"
+              disabled={isPending}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Tindakan
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onSave} disabled={isLocked || isPending}>
+              <Save className="mr-2 h-4 w-4" />
+              Simpan Draft
+            </DropdownMenuItem>
+            {isDraft && (
+              <DropdownMenuItem onClick={onSubmit} disabled={isPending}>
+                <Send className="mr-2 h-4 w-4" />
+                Kirim
+              </DropdownMenuItem>
+            )}
+            {canAdminOverride && (
+              <DropdownMenuItem
+                onClick={onAdminOverrideToggle}
+                disabled={isPending}
+              >
+                {adminOverride ? (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Kunci Kembali
+                  </>
+                ) : (
+                  <>
+                    <Unlock className="mr-2 h-4 w-4" />
+                    Buka Kunci (Admin)
+                  </>
+                )}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

@@ -158,7 +158,7 @@ function collectConsumptionMissing(
 ) {
   const params = input.parametersByCategory.get('CONSUMPTION') ?? [];
   params.forEach(param => {
-    // Skip auto-calculated "Total Consumption" (derived from Before - After)
+    // Skip auto-calculated "Total Consumption" (derived from After - Before)
     if (param.name.toLowerCase().includes('total')) return;
     const key = makeEntryKey(param.id, null, 'VALUE');
     if (isEmpty(input.entryState[key], param)) {

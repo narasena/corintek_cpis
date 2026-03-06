@@ -1,23 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
   SortingState,
 } from '@tanstack/react-table';
 
+import { Search, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { IDataTableProps } from './data-table/types';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { IDataTableProps, IDataTableInnerProps, ITableTab } from './data-table/types';
 import { DataTableView } from './data-table/data-table-view';
+import { ServerPaginationControls } from './data-table/pagination-controls';
+import { useDataTableSearch } from '@/hooks/use-data-table-search';
+import { useSearchParam } from '@/hooks/use-search-param';
+import { useColumnFilters } from '@/hooks/use-column-filters';
+import { FilterToolbar } from './filter-toolbar';
+import { filterFns } from '@/lib/filter-utils';
 
 export type { ITableTab } from './data-table/types';
 
 /**
  * Main DataTable Orchestrator
- * Handles Tabs, Global Sorting State, and responsive view switching.
+ * Handles Tabs, Global Sorting State, Search, Filtering, and Pagination.
  */
 export function DataTable<TData, TValue>({
   columns: cols,
@@ -26,10 +36,103 @@ export function DataTable<TData, TValue>({
   tabs,
   tab,
   onTabChange,
+  searchConfig,
+  disableSearch = false,
+  serverPagination,
+  columnFilters: enableColumnFilters = false,
+  filterConfigs = [],
+  onColumnFiltersChange,
+  persistFiltersInUrl = false,
+  filterUrlParamName,
 }: IDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  
+  // 1. Column Filters
+  const { columnFilters, setColumnFilters } = useColumnFilters<TData>({
+    filterConfigs,
+    persistInUrl: persistFiltersInUrl,
+    urlParamName: filterUrlParamName,
+    initialFilters: [],
+  });
 
-  // 1. Tabbed Mode
+  useEffect(() => {
+    if (onColumnFiltersChange) {
+      onColumnFiltersChange(columnFilters);
+    }
+  }, [columnFilters, onColumnFiltersChange]);
+
+  // 2. Search Logic
+  const urlSearch = useSearchParam({
+    paramName: searchConfig?.urlParamName ?? 'search',
+    debounceMs: searchConfig?.debounceMs ?? 300,
+  });
+
+  const { query, setQuery, clearQuery, filteredData, isSearching } =
+    useDataTableSearch({
+      data: data as Record<string, unknown>[],
+      debounceMs: searchConfig?.debounceMs,
+      minQueryLength: searchConfig?.minQueryLength,
+      searchKeys: searchConfig?.columnKeys,
+      enableFuzzy: searchConfig?.enableFuzzy ?? true,
+      fuzzyTolerance: searchConfig?.fuzzyTolerance ?? 2,
+    });
+
+  useEffect(() => {
+    if (searchConfig?.enableUrlSync && query !== urlSearch.value) {
+      urlSearch.setValue(query);
+    }
+  }, [query, searchConfig?.enableUrlSync, urlSearch]);
+
+  useEffect(() => {
+    if (searchConfig?.enableUrlSync && urlSearch.value && !query) {
+      setQuery(urlSearch.value);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 3. Components
+  const filterToolbar = enableColumnFilters && filterConfigs?.length ? (
+    <FilterToolbar
+      filterConfigs={filterConfigs}
+      columnFilters={columnFilters}
+      onColumnFiltersChange={setColumnFilters}
+      onClearAll={() => setColumnFilters([])}
+    />
+  ) : null;
+
+  const searchInput = !disableSearch && (
+    <div className="relative w-full sm:w-72">
+      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Input
+        placeholder={searchConfig?.placeholder ?? 'Cari...'}
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        className="pl-8 pr-8"
+      />
+      {query && (
+        <button
+          onClick={clearQuery}
+          className="absolute right-2 top-1/2 -translate-y-1/2"
+        >
+          <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+        </button>
+      )}
+    </div>
+  );
+
+  const paginationControls = serverPagination?.enabled ? (
+    <ServerPaginationControls
+      total={serverPagination.total}
+      page={serverPagination.page}
+      limit={serverPagination.limit}
+      pageSizeOptions={serverPagination.pageSizeOptions}
+      onPageChange={serverPagination.onPageChange}
+      onLimitChange={serverPagination.onLimitChange}
+      isLoading={serverPagination.isLoading}
+    />
+  ) : null;
+
+  // 4. Tabbed Mode
   if (tabs && tabs.length > 0) {
     const activeTab = tabs.find(t => t.value === tab);
     
@@ -43,53 +146,139 @@ export function DataTable<TData, TValue>({
               </TabsTrigger>
             ))}
           </TabsList>
-          {activeTab?.addNewRow}
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {filterToolbar}
+            {searchInput}
+            {activeTab?.addNewRow}
+          </div>
         </div>
 
         {activeTab?.filters && <div className="mb-4">{activeTab.filters}</div>}
 
         {tabs.map(t => (
           <TabsContent key={t.value} value={t.value} className="mt-0">
-            <DataTableTable
-              columns={t.columns}
-              data={t.data}
+            <TabContentTable
+              tab={t}
+              activeTabValue={tab}
+              filteredData={filteredData as any[]}
+              isSearching={isSearching}
+              query={query}
               emptyMessage={emptyMessage}
               sorting={sorting}
               onSortingChange={setSorting}
+              columnFilters={columnFilters}
+              onColumnFiltersChange={setColumnFilters}
             />
           </TabsContent>
         ))}
+        {paginationControls}
       </Tabs>
     );
   }
 
-  // 2. Simple Mode (No Tabs)
+  // 5. Simple Mode (No Tabs)
+  const tableData = filteredData as TData[];
+  
   return (
-    <DataTableTable
-      columns={cols}
-      data={data}
-      emptyMessage={emptyMessage}
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {filterToolbar}
+        <div className="ml-auto">
+          {searchInput}
+        </div>
+      </div>
+      
+      <DataTableInnerWrapper
+        columns={cols}
+        data={tableData}
+        emptyMessage={
+          isSearching
+            ? `Tidak ada data yang cocok dengan '${query}'`
+            : emptyMessage
+        }
+        sorting={sorting}
+        onSortingChange={setSorting}
+        columnFilters={columnFilters}
+        onColumnFiltersChange={setColumnFilters}
+      />
+      
+      {!serverPagination?.enabled && (
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="hidden" // use internal pagination if needed
+          >
+            Previous
+          </Button>
+        </div>
+      )}
+      {paginationControls}
+    </div>
+  );
+}
+
+interface ITabContentTableProps<TData> {
+  tab: ITableTab<TData>;
+  activeTabValue?: string;
+  filteredData: TData[];
+  isSearching: boolean;
+  query: string;
+  emptyMessage?: string;
+  sorting: SortingState;
+  onSortingChange: any;
+  columnFilters: any;
+  onColumnFiltersChange: any;
+}
+
+function TabContentTable<TData>({
+  tab,
+  activeTabValue,
+  filteredData,
+  isSearching,
+  query,
+  emptyMessage,
+  sorting,
+  onSortingChange,
+  columnFilters,
+  onColumnFiltersChange,
+}: ITabContentTableProps<TData>) {
+  const isActive = tab.value === activeTabValue;
+  const tabData = isActive ? filteredData : tab.data;
+
+  return (
+    <DataTableInnerWrapper
+      columns={tab.columns as any}
+      data={tabData}
+      emptyMessage={
+        isActive && isSearching
+          ? `Tidak ada data yang cocok dengan '${query}'`
+          : emptyMessage
+      }
       sorting={sorting}
-      onSortingChange={setSorting}
+      onSortingChange={onSortingChange}
+      columnFilters={columnFilters}
+      onColumnFiltersChange={onColumnFiltersChange}
     />
   );
 }
 
-/**
- * Internal component to isolate useReactTable hook
- */
-function DataTableTable<TData, TValue>({
+function DataTableInnerWrapper<TData, TValue>({
   columns,
   data,
-  emptyMessage,
+  emptyMessage = 'Belum ada data.',
   sorting,
   onSortingChange,
+  columnFilters,
+  onColumnFiltersChange,
 }: {
   columns: any;
   data: TData[];
-  emptyMessage: string;
+  emptyMessage?: string;
   sorting: SortingState;
   onSortingChange: any;
+  columnFilters: any;
+  onColumnFiltersChange: any;
 }) {
   const table = useReactTable({
     data,
@@ -98,9 +287,13 @@ function DataTableTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange,
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    filterFns: filterFns,
     state: {
       sorting,
+      columnFilters,
     },
+    onColumnFiltersChange: onColumnFiltersChange,
   });
 
   return (

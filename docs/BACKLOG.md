@@ -157,3 +157,119 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 - [ ] Evaluate operational requirement for multi-select (vs current single-select)
 - [ ] If needed: Create `ProjectWorkType` junction table
 - [ ] Update Project form with multi-select UI (checkboxes or multi-select dropdown)
+
+---
+
+# Critical Gap Analysis — From `docs/CRITICAL_GAP_ANALYSIS.md`
+
+## CG-01 — DataTable Global Search
+
+**Priority:** 🚨 P0 (Critical)  
+**Status:** ✅ Completed
+
+**Problem:** DataTable has sorting + pagination only. Zero search/filter. Users must scroll to find records.
+**Impact:** Critical — tables become unusable as data grows
+**Effort:** Low (2-4 hrs)
+
+### Tasks
+
+- [x] Add `getFilteredRowModel()` to DataTable
+- [x] Add global search `<Input>` to DataTable toolbar
+- [x] Create `useDebouncedValue` hook (see CG-06)
+- [x] Create `useDataTableSearch` hook
+- [x] Add fuzzy matching with Levenshtein distance
+- [x] Add search result ranking
+- [x] Add `HighlightText` component with custom renderers
+
+---
+
+## CG-02 — Server-Side Pagination
+
+**Priority:** 🟡 P1  
+**Status:** ✅ Completed
+
+**Problem:** All list queries use `findMany()` without `take`/`skip`. Entire datasets loaded into memory.
+**Impact:** High — will degrade with 40 users generating daily records
+**Effort:** Medium (8-12 hrs)
+
+### Tasks
+
+- [x] Core pagination types (`IPaginationParams`, `IPaginatedResponse`)
+- [x] Pagination helpers (`calculateOffset`, `buildPaginationMeta`)
+- [x] Error classes (`InvalidPaginationError`, `PageOutOfBoundsError`)
+- [x] React hooks (`useServerPagination`, `usePaginatedData`)
+- [x] Service layer with DI (`AttendanceService`, `LogSheetService`, `WorkReportService`)
+- [x] Actions with pagination (`getAttendanceListPaginatedAction`, etc.)
+- [x] DataTable server pagination support (`serverPagination` prop)
+- [x] DI container for clean dependency management
+- [x] Resilience patterns (retry, circuit breaker, rate limiter)
+- [x] Observability (structured logging)
+- [x] Comprehensive test coverage (100+ tests)
+
+---
+
+## CG-03 — Loading & Error Boundaries
+
+**Priority:** 🚨 P0 (Critical)  
+**Status:** ✅ Completed
+
+**Problem:** Zero `loading.tsx` or `error.tsx` files. Users see blank screens and unhandled crashes.
+**Impact:** High — terrible UX, no error recovery
+**Effort:** Low (2-3 hrs)
+
+### Tasks
+
+- [x] Create shared `Loading` component (spinner/skeleton)
+- [x] Create shared `ErrorBoundary` component
+- [x] Create `ErrorHandlerService` class
+- [x] Add `loading.tsx` to (main) route group
+- [x] Add `error.tsx` to (main) route group
+
+---
+
+## CG-04 — DataTable Column Filters
+
+**Priority:** 🟡 P1  
+**Status:** Not Started
+
+**Problem:** No per-column filtering (Status, Role, Date). Standard expectation for internal tools.
+**Impact:** Medium-High
+**Effort:** Low-Medium (4-6 hrs)
+
+### Tasks
+
+- [ ] Add `getFilteredRowModel()` to DataTable
+- [ ] Add filter UI per column (dropdown for enums, date picker for dates)
+- [ ] Priority columns: Project Status, User Role, Attendance Date
+
+---
+
+## CG-05 — Next.js Data Caching
+
+**Priority:** 🟢 P2  
+**Status:** Not Started
+
+**Problem:** No `unstable_cache`, `cacheTag`, or `revalidateTag`. Every page load hits DB fresh.
+**Impact:** Medium — wasteful; matters if client portal scales
+**Effort:** Medium (4-6 hrs)
+
+### Tasks
+
+- [ ] Add `unstable_cache` to read-heavy services (dashboard, parameters, clients)
+- [ ] Add `revalidateTag` to mutation actions
+
+---
+
+## CG-06 — useDebouncedValue Hook
+
+**Priority:** 🟡 P1  
+**Status:** ✅ Completed
+
+**Problem:** No debounce anywhere. Search inputs need debouncing to prevent excessive re-renders.
+**Impact:** Medium — coupled to CG-01
+**Effort:** Low (~1 hr)
+
+### Tasks
+
+- [x] Create `useDebouncedValue` hook in `hooks/use-debounced-value.ts`
+- [x] Use in CG-01 (DataTable search)

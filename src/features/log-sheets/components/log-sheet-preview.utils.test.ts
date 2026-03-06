@@ -52,17 +52,14 @@ describe('formatLimit (P2-8)', () => {
       expect(formatLimit(param)).toBe('≥ 6');
     });
 
-    it('returns empty string when no limits', () => {
-      const param: FormatLimitParam = {
-        minValue: null,
-        maxValue: null,
+    it('returns null when no limits', () => {
+      const param: FormatRawWaterLimitParam = {
+        rawWaterMinValue: null,
+        rawWaterMaxValue: null,
         unit: '',
-        valueType: 'NUMBER',
-        category: 'CONSUMPTION',
-        variableName: 'consumption',
       };
 
-      expect(formatLimit(param)).toBe('');
+      expect(formatRawWaterLimit(param)).toBeNull();
     });
 
     it('returns "min-max" when min is 0 and max exists', () => {
@@ -193,14 +190,14 @@ describe('formatRawWaterLimit (P2-8)', () => {
     expect(formatRawWaterLimit(param)).toBe('≥ 50 mg/L');
   });
 
-  it('returns empty string when no limits', () => {
+  it('returns null when no limits', () => {
     const param: FormatRawWaterLimitParam = {
       rawWaterMinValue: null,
       rawWaterMaxValue: null,
       unit: '',
     };
 
-    expect(formatRawWaterLimit(param)).toBe('');
+    expect(formatRawWaterLimit(param)).toBeNull();
   });
 
   it('handles null unit gracefully', () => {

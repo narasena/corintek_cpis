@@ -134,12 +134,12 @@ export function LogSheetPreview({
     afterPhotos.length > 0;
 
   return (
-    <div className="bg-white text-black text-[11px] leading-tight w-[210mm] min-h-[297mm] mx-auto shadow-xl print:shadow-none print:w-full print:min-h-0 print:mx-0 print:text-[11px]">
+    <div className="bg-white text-black text-[11px] leading-tight w-[210mm] min-h-[297mm] mx-auto shadow-xl print:shadow-none print:min-h-0 print:mx-0 print:w-full print:max-w-[210mm] print:text-[11px]">
       <div className="print:hidden mb-2 text-xs text-muted-foreground p-2 text-center">
         Mode cetak: gunakan tombol Print pada halaman ini.
       </div>
 
-      <div className="border border-black border-b-0 p-1">
+      <div className="border border-black border-b-0 p-4">
         <LogSheetHeader
           customerName={customerName}
           date={date}
@@ -194,9 +194,6 @@ export function LogSheetPreview({
 
         <div className="border-t border-black">
           <table className="w-full table-fixed border-collapse">
-            <colgroup>
-              <col className="w-[180px]" />
-            </colgroup>
             <thead>
               <tr>
                 <th className="border-r border-black bg-blue-200 print:bg-blue-200 p-[2px] font-semibold text-center align-middle">
@@ -241,8 +238,16 @@ export function LogSheetPreview({
         dangerouslySetInnerHTML={{
           __html: `
           @media print {
-            @page { size: A4 portrait; margin: 5mm; }
-            html, body { background: #fff; }
+            @page {
+              size: 210mm 297mm;
+              margin: 0;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 210mm;
+              height: 297mm;
+            }
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; page-break-after: auto; }
             .break-words { word-break: break-word; }

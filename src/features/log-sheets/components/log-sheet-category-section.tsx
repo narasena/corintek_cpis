@@ -20,6 +20,8 @@ interface ILogSheetCategorySectionProps {
   ) => TMachinesForCategoryResult;
   activeCTIds: string[];
   coolingTowers: TMachine[];
+  allChillers: TMachine[];
+  allCoolingTowers: TMachine[];
 }
 
 export function LogSheetCategorySection({
@@ -28,12 +30,18 @@ export function LogSheetCategorySection({
   machinesForCategory,
   activeCTIds,
   coolingTowers,
+  allChillers,
+  allCoolingTowers,
 }: ILogSheetCategorySectionProps) {
   return (
     <>
       {categories.map(category => {
         const params = parametersByCategory.get(category) ?? [];
         const cat = category as TParameter['category'];
+
+        // Skip CONSUMPTION - it's handled separately in ConsumptionChemicalsSection
+        if (cat === 'CONSUMPTION') return null;
+
         const { machines, label } = machinesForCategory(cat);
         if (params.length === 0) return null;
 
@@ -66,9 +74,15 @@ export function LogSheetCategorySection({
               category={category}
               params={params}
               activeCTs={activeCTs}
+              allCoolingTowers={allCoolingTowers}
             />
           );
         }
+
+        // Determine all machines based on category
+        const isChillerCategory =
+          cat === 'UNIT_CONDENSOR' || cat === 'UNIT_EVAPORATOR';
+        const allMachines = isChillerCategory ? allChillers : allCoolingTowers;
 
         return (
           <GeneralCategoryDesktop
@@ -76,6 +90,7 @@ export function LogSheetCategorySection({
             category={category}
             params={params}
             machines={machines}
+            allMachines={allMachines}
             cat={cat}
           />
         );

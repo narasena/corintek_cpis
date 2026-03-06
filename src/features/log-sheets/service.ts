@@ -344,6 +344,15 @@ type TLogSheetRowResult = TPrismaLogSheet & {
     id: string;
     name: string;
     client: { name: string } | null;
+    parameterLimitProfile: {
+      limits: Array<{
+        parameterId: string;
+        minValue: number | null;
+        maxValue: number | null;
+        rawWaterMinValue: number | null;
+        rawWaterMaxValue: number | null;
+      }>;
+    } | null;
     parameterOverrides: any[];
     assignments: Array<{
       role: string;
@@ -400,6 +409,11 @@ async function fetchLogSheetRow(id: string): Promise<TLogSheetRowResult> {
       project: {
         include: {
           client: { select: { name: true } },
+          parameterLimitProfile: {
+            include: {
+              limits: true,
+            },
+          },
           parameterOverrides: true,
           assignments: {
             where: { isActive: true },
@@ -611,9 +625,22 @@ export async function getLogSheetDetail(
     machines.coolingTowers
   );
 
+  const profileLimits = logSheet.project.parameterLimitProfile?.limits ?? [];
+  const profileLimitOverrides = profileLimits.map(limit => ({
+    parameterId: limit.parameterId,
+    minValue: limit.minValue ?? null,
+    maxValue: limit.maxValue ?? null,
+    rawWaterMinValue: limit.rawWaterMinValue ?? null,
+    rawWaterMaxValue: limit.rawWaterMaxValue ?? null,
+  }));
+  const parametersWithProfileLimits = applyProjectOverridesToParameters(
+    parameters,
+    profileLimitOverrides
+  );
+
   const overrides = logSheet.project.parameterOverrides || [];
   const parametersWithOverrides = applyProjectOverridesToParameters(
-    parameters,
+    parametersWithProfileLimits,
     overrides
   );
 

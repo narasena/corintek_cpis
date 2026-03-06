@@ -68,7 +68,10 @@ export const getRecentActivitiesAction = actionFactory.protected(
     });
 
     if (targetIds === 'empty') {
-      return { activities: [], hasMore: false, nextCursor: null };
+      return { 
+        success: true, 
+        data: { activities: [], hasMore: false, nextCursor: null } 
+      };
     }
 
     const { activityService } = composeDashboardModule(prisma);
@@ -82,9 +85,12 @@ export const getRecentActivitiesAction = actionFactory.protected(
     });
 
     return {
-      activities: result.activities,
-      hasMore: result.hasMore,
-      nextCursor: result.nextCursor,
+      success: true,
+      data: {
+        activities: result.activities,
+        hasMore: result.hasMore,
+        nextCursor: result.nextCursor,
+      }
     };
   },
   {
