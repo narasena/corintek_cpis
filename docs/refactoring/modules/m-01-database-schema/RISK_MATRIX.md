@@ -1,6 +1,8 @@
-# M-01: Database Schema — Risk & Priority Matrix
+# M-01: Database Schema — Risk & Priority Matrix (DEFERRED)
 
 > Updated 2026-03-07
+
+**NOTICE:** Structural refactoring of the database schema has been deferred to avoid codebase-wide type breakages during the primary refactoring phase. 
 
 ---
 
@@ -26,22 +28,22 @@
 
 ## 3. Priority Table (Risk vs. Value)
 
-| ID | File | Risk | Value | Priority | Reason |
+| ID | File | Risk | Value | Priority | Status |
 | :--- | :--- | :---: | :---: | :--- | :--- |
-| F1 | `log-sheets.prisma` | 🔴 | 🔴 | **CRITICAL** | God Domain; 5x User relations; Nexus of most coupling. High ROI to decouple. |
-| F2 | `projects.prisma` | 🔴 | 🟡 | **HIGH** | Core Anchor; Recursive relations (Addenda). High risk to change. |
-| F3 | `users.prisma` | 🔴 | 🟢 | **MONITOR** | Auth Anchor. High risk but currently stable. Lower ROI for change. |
-| F4 | `machines.prisma` | 🟡 | 🔴 | **HIGH** | Fixes the "Implicit Machine-Entry Contract" tech debt. |
-| F5 | `lab-analyses.prisma` | 🟡 | 🟡 | **MED** | Simplifies complex 3-model column/parameter relationship. |
-| F6 | `work-reports.prisma` | 🟡 | 🟢 | **MED** | Transactional but relatively straightforward compared to LogSheets. |
-| F7 | `chemicals.prisma` | 🟡 | 🟢 | **LOW** | Stable inventory logic; low current debt. |
-| F8 | `parameter-limit-profiles.prisma` | 🟡 | 🟡 | **MED** | Improves validation logic consistency across projects. |
-| F9 | `summary-reports.prisma` | 🟢 | 🟡 | **MED** | Low risk to refactor; high value for improving monthly export accuracy. |
-| F10 | `attendance.prisma` | 🟢 | 🟢 | **LOW** | Isolated leaf domain; stable. |
-| F11 | `notifications.prisma` | 🟢 | 🟢 | **LOW** | Isolated leaf domain; stable. |
-| F12 | `parameters.prisma` | 🟢 | 🟢 | **LOW** | Stable master data definition. |
-| F13 | `clients.prisma` | 🟢 | 🟢 | **LOW** | Stable master data definition. |
-| F14 | `schema.prisma` | 🟢 | 🟢 | **LOW** | Config only. |
+| F1 | `log-sheets.prisma` | 🔴 | 🔴 | **CRITICAL** | **⏸️ DEFERRED** |
+| F2 | `projects.prisma` | 🔴 | 🟡 | **HIGH** | **⏸️ DEFERRED** |
+| F3 | `users.prisma` | 🔴 | 🟢 | **MONITOR** | **⏸️ DEFERRED** |
+| F4 | `machines.prisma` | 🟡 | 🔴 | **HIGH** | **⏸️ DEFERRED** |
+| F5 | `lab-analyses.prisma` | 🟡 | 🟡 | **MED** | **⏸️ DEFERRED** |
+| F6 | `work-reports.prisma` | 🟡 | 🟢 | **MED** | **⏸️ DEFERRED** |
+| F7 | `chemicals.prisma` | 🟡 | 🟢 | **LOW** | **⏸️ DEFERRED** |
+| F8 | `parameter-limit-profiles.prisma` | 🟡 | 🟡 | **MED** | **⏸️ DEFERRED** |
+| F9 | `summary-reports.prisma` | 🟢 | 🟡 | **MED** | **⏸️ DEFERRED** |
+| F10 | `attendance.prisma` | 🟢 | 🟢 | **LOW** | **DONE (Standardized)** |
+| F11 | `notifications.prisma` | 🟢 | 🟢 | **LOW** | **DONE (Standardized)** |
+| F12 | `parameters.prisma` | 🟢 | 🟢 | **LOW** | **DONE (Standardized)** |
+| F13 | `clients.prisma` | 🟢 | 🟢 | **LOW** | **DONE (Standardized)** |
+| F14 | `schema.prisma` | 🟢 | 🟢 | **LOW** | **DONE (Standardized)** |
 
 ---
 
@@ -55,8 +57,8 @@
 
 ---
 
-## 5. Strategic Recommendation
+## 5. Strategic Recommendation (Revised 2026-03-07)
 
-1.  **Immediate Focus**: Decouple `log-sheets.prisma` from its 5x `User` relations (likely move to a join table or service-level resolution) to reduce global coupling.
-2.  **Integrity Fix**: Strengthen the `Machine-Entry` relationship in `log-sheets.prisma` or via cross-module validation to resolve the implicit contract debt.
-3.  **Stability Guard**: Guard `users.prisma` and `projects.prisma` from breaking changes during refactoring of transactional modules.
+1.  **Freeze Structural Changes**: To prevent global type breakage, no breaking structural changes will be applied to M-01 during the main project transition.
+2.  **Service-Layer Abstraction**: Instead of refactoring the schema, business logic refactoring in downstream modules (M-11, M-12, etc.) should use service-layer abstractions to hide current schema complexities.
+3.  **Migration Planning**: Structural changes (like F1 and F4) should be moved to a post-transition migration phase where data can be safely mapped to a new schema.

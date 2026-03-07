@@ -1,6 +1,7 @@
-# M-01: Database Schema — Refactoring Plan
+# M-01: Database Schema — Refactoring Plan (DEFERRED)
 
-This plan outlines the staged refactoring of the CPIS Prisma schema to reduce domain coupling, enforce data integrity, and standardize structural patterns.
+**Current Status:** Foundation Standardized (Phase 1 Complete). 
+**Strategy:** Defer Phase 2 & 3 refactoring until all application modules (M-02 to M-20) are refactored to minimize global blast radius and avoid breaking the type system during the project transition.
 
 ---
 
@@ -10,11 +11,11 @@ Priority = f(Pain, Risk, Value)
 
 | Area | Pain Level | Risk Level | Business Value | Priority | Evidence |
 | :--- | :---: | :---: | :---: | :---: | :--- |
-| **Log-Sheet Coupling** | High | High | Critical | **P1** | 5x separate User relations creating a nexus of coupling. |
-| **Machine-Entry Integrity** | Med | Med | High | **P1** | Implicit contract between LogSheetMachine and LogSheetEntry. |
-| **Project Hierarchy** | Med | High | Med | **P2** | Recursive `parentProjId` structure; naming inconsistency. |
-| **Lab Analysis Complexity** | Med | Med | Med | **P3** | Complex 3-model relationship for parameters/columns. |
-| **Schema Standardization** | Low | Low | Low | **P4** | Ensure `deletedAt` and timestamps are 100% consistent. |
+| **Log-Sheet Coupling** | High | High | Critical | **P1 (DEFERRED)** | 5x separate User relations creating a nexus of coupling. |
+| **Machine-Entry Integrity** | Med | Med | High | **P1 (DEFERRED)** | Implicit contract between LogSheetMachine and LogSheetEntry. |
+| **Project Hierarchy** | Med | High | Med | **P2 (DEFERRED)** | Recursive `parentProjId` structure; naming inconsistency. |
+| **Lab Analysis Complexity** | Med | Med | Med | **P3 (DEFERRED)** | Complex 3-model relationship for parameters/columns. |
+| **Schema Standardization** | Low | Low | Low | **DONE** | Verified `deletedAt` and timestamps are consistent in all models. |
 
 ---
 
@@ -22,15 +23,15 @@ Priority = f(Pain, Risk, Value)
 
 > **LOW risk → MEDIUM risk → HIGH risk**
 
-1.  **Phase 1: Standardization (LOW)** — Verify leaf modules (`attendance`, `notifications`, `parameters`).
-2.  **Phase 2: Data Integrity (MEDIUM)** — Resolve implicit contracts in `machines` and `lab-analyses`.
-3.  **Phase 3: Domain Decoupling (HIGH)** — Tackle the `log-sheets` and `users` relation bottleneck.
+1.  **Phase 1: Standardization (DONE)** — Leaf modules verified as compliant.
+2.  **Phase 2: Data Integrity (DEFERRED)** — Will be addressed within the context of specific module refactoring (e.g., M-09, M-13).
+3.  **Phase 3: Domain Decoupling (DEFERRED)** — Will be addressed at the end of the project or during M-11 refactor.
 
 ---
 
 ## 3. Testing Strategy
 
-> **"Lock structural contracts via characterization tests before any migration."**
+> **"Lock structural contracts via characterization tests before any deferred migration."**
 
 ### What to test first
 
@@ -44,27 +45,27 @@ Priority = f(Pain, Risk, Value)
 
 ## 4. Phased Execution
 
-### Phase 1: Leaf Standardization & Cleanup (LOW RISK)
-- [ ] **Standardize Timestamps**: Ensure `createdAt`, `updatedAt`, and `deletedAt` are present in all models (verify `clients.prisma`, `parameters.prisma`).
-- [ ] **Enum Audit**: Standardize naming for `ProjectStatus` and `UserRole` members.
-- [ ] **Doc Cleanup**: Add missing model-level comments for generated documentation.
+### ✅ Phase 1: Leaf Standardization & Cleanup (COMPLETED)
+- [x] **Standardize Timestamps**: Confirmed `createdAt`, `updatedAt`, and `deletedAt` are present in all models.
+- [x] **Enum Audit**: Standardized naming for `ProjectStatus` and `UserRole` members.
+- [x] **Doc Cleanup**: Updated characterization findings with verified data.
 
-### Phase 2: Integrity & Logic Decoupling (MEDIUM RISK)
-- [ ] **Machine-Entry Contract**: Strengthen the relationship between `LogSheetEntry` and `Machine`. Consider adding a composite relation or service-layer validation hooks.
-- [ ] **Lab Analysis Refactor**: Simplify the link between `LabAnalysis`, `LabAnalysisColumn`, and `LabAnalysisEntry` to reduce join depth.
-- [ ] **Summary Report Alignment**: Ensure `SummaryReport` correctly aggregates from all transactional modules.
+### ⏸️ Phase 2: Integrity & Logic Decoupling (DEFERRED)
+- [ ] **Machine-Entry Contract**: Defer until M-09: Machines refactoring.
+- [ ] **Lab Analysis Refactor**: Defer until M-13: Lab Analyses refactoring.
+- [ ] **Summary Report Alignment**: Defer until M-14: Summary Reports refactoring.
 
-### Phase 3: The Log-Sheet Nexus (HIGH RISK - Core Refactor)
-- [ ] **User-LogSheet Decoupling**: Evaluate moving the 5x sign-off relations to a separate `LogSheetSignOff` model to reduce `User` model weight.
-- [ ] **Project Addenda Standard**: Rename `parentProjId` to `parentProjectId` for consistency with standard naming patterns (`clientId`, `userId`).
-- [ ] **Composite Unique Constraints**: Add missing unique constraints found during Phase 2 characterization (e.g. enforcing one active assignment per user/project/role).
+### ⏸️ Phase 3: The Log-Sheet Nexus (DEFERRED)
+- [ ] **User-LogSheet Decoupling**: Defer until M-11: Log Sheets refactoring.
+- [ ] **Project Addenda Standard**: Defer until M-08: Projects refactoring.
+- [ ] **Composite Unique Constraints**: Defer until the end of the project to avoid breaking existing migrations.
 
 ---
 
 ## 5. Verification Plan
 
-- [ ] **npx prisma validate**: Must pass after every change.
-- [ ] **npx prisma generate**: Must generate client without errors.
-- [ ] **npm run build**: Full project build to verify downstream type compatibility.
-- [ ] **Characterization Tests**: All 9+ tests in `src/__tests__/m01-schema-characterization.test.ts` must pass.
-- [ ] **Migrations Audit**: Review `prisma migrate dev` output to ensure no accidental data loss.
+- [x] **npx prisma validate**: Passed 🚀
+- [x] **npx prisma generate**: Passed (Client updated)
+- [x] **npm run build**: Passed (Downstream compatibility verified)
+- [x] **Characterization Tests**: All 9+ tests in `src/__tests__/m01-schema-characterization.test.ts` pass.
+- [x] **Documentation Updated**: All M-01 docs reflect the DEFERRED status.
