@@ -8,6 +8,7 @@ import type { IJwtPayload } from '@/@types/auth.type';
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
 import type { TCreateParameter, TUpdateParameter, IParameter } from './types';
+import { CACHE_LIFE } from '../cache/life-profiles';
 
 export class CachedParameterService {
   constructor(private readonly service: typeof original = original) {}
@@ -15,7 +16,7 @@ export class CachedParameterService {
   async getAllParameters(actor: IJwtPayload): Promise<IParameter[]> {
     'use cache';
     cacheTag(ECacheTag.PARAMETERS);
-    cacheLife({ stale: 1800, revalidate: 3600 });
+    cacheLife(CACHE_LIFE.HOURS);
     try {
       return await this.service.getAllParameters(actor);
     } catch (error) {
@@ -33,7 +34,7 @@ export class CachedParameterService {
   ): Promise<IParameter | null> {
     'use cache';
     cacheTag(ECacheTag.PARAMETERS);
-    cacheLife({ stale: 1800, revalidate: 3600 });
+    cacheLife(CACHE_LIFE.HOURS);
     try {
       return await this.service.getParameterById(actor, id);
     } catch (error) {

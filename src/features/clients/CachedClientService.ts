@@ -11,6 +11,7 @@ import type {
   TClientCreateInput,
   TClientUpdateInput,
 } from '@/@types/client.type';
+import { CACHE_LIFE } from '../cache/life-profiles';
 
 export class CachedClientService {
   constructor(private readonly service: typeof original = original) {}
@@ -18,7 +19,7 @@ export class CachedClientService {
   async getAllClients(actor: IJwtPayload): Promise<unknown[]> {
     'use cache';
     cacheTag(ECacheTag.CLIENTS);
-    cacheLife({ stale: 1800, revalidate: 3600 });
+    cacheLife(CACHE_LIFE.HOURS);
     try {
       return await this.service.getAllClients(actor);
     } catch (error) {
@@ -30,7 +31,7 @@ export class CachedClientService {
   async getClientById(actor: IJwtPayload, id: string): Promise<unknown> {
     'use cache';
     cacheTag(ECacheTag.CLIENTS);
-    cacheLife({ stale: 1800, revalidate: 3600 });
+    cacheLife(CACHE_LIFE.HOURS);
     try {
       return await this.service.getClientById(actor, id);
     } catch (error) {

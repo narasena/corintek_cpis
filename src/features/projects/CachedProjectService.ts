@@ -14,6 +14,7 @@ import {
 } from './types';
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
+import { CACHE_LIFE } from '../cache/life-profiles';
 
 export class CachedProjectService {
   constructor(private readonly service: typeof original = original) {}
@@ -21,7 +22,7 @@ export class CachedProjectService {
   async getProjects(actor: IJwtPayload): Promise<IProject[]> {
     'use cache';
     cacheTag(ECacheTag.PROJECTS);
-    cacheLife({ stale: 900, revalidate: 900 });
+    cacheLife(CACHE_LIFE.DEFAULT);
     try {
       return await this.service.getProjects(actor);
     } catch (error) {
@@ -35,7 +36,7 @@ export class CachedProjectService {
   ): Promise<IProjectDashboardCard[]> {
     'use cache';
     cacheTag(ECacheTag.PROJECTS_DASHBOARD);
-    cacheLife({ stale: 60, revalidate: 300 });
+    cacheLife(CACHE_LIFE.SHORT);
     try {
       return await this.service.getDashboardProjects(actor);
     } catch (error) {
@@ -53,7 +54,7 @@ export class CachedProjectService {
   ): Promise<IProject | null> {
     'use cache';
     cacheTag(ECacheTag.PROJECTS);
-    cacheLife({ stale: 900, revalidate: 900 });
+    cacheLife(CACHE_LIFE.DEFAULT);
     try {
       return await this.service.getProjectById(actor, id);
     } catch (error) {

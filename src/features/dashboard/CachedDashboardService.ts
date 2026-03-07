@@ -5,6 +5,7 @@
 
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
+import { CACHE_LIFE } from '../cache/life-profiles';
 import {
   getDashboardMetrics as originalGetDashboardMetrics,
   getRecentLogSheetPhotos as originalGetRecentLogSheetPhotos,
@@ -31,7 +32,7 @@ export class CachedDashboardService {
   ): Promise<IDashboardMetric[]> {
     'use cache';
     cacheTag(ECacheTag.DASHBOARD_METRICS);
-    cacheLife({ stale: 900, revalidate: 900 });
+    cacheLife(CACHE_LIFE.DEFAULT);
     try {
       return await this.getDashboardMetricsImpl(projectIds, range);
     } catch (error) {
@@ -49,7 +50,7 @@ export class CachedDashboardService {
   ): Promise<unknown[]> {
     'use cache';
     cacheTag(ECacheTag.DASHBOARD_PHOTOS);
-    cacheLife({ stale: 60, revalidate: 300 });
+    cacheLife(CACHE_LIFE.SHORT);
     try {
       return await this.getRecentLogSheetPhotosImpl(projectIds, limit);
     } catch (error) {
@@ -66,7 +67,7 @@ export class CachedDashboardService {
   ): Promise<IGetRecentActivitiesResult> {
     'use cache';
     cacheTag(ECacheTag.DASHBOARD_ACTIVITIES);
-    cacheLife({ stale: 60, revalidate: 300 });
+    cacheLife(CACHE_LIFE.SHORT);
     try {
       return await this.activityService.getRecentActivities(input);
     } catch (error) {

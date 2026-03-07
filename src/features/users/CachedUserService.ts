@@ -13,6 +13,7 @@ import {
 } from '@/@types/user.type';
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
+import { CACHE_LIFE } from '../cache/life-profiles';
 import { canAccess, RbacResource } from '@/lib/rbac';
 
 export class CachedUserService {
@@ -21,7 +22,7 @@ export class CachedUserService {
   async getAllUsers(actor: IJwtPayload): Promise<unknown[]> {
     'use cache';
     cacheTag(ECacheTag.USERS);
-    cacheLife({ stale: 1800, revalidate: 3600 });
+    cacheLife(CACHE_LIFE.HOURS);
     if (!canAccess(actor.role, RbacResource.USERS_ADMIN, 'read')) {
       throw new Error('Unauthorized');
     }
@@ -36,7 +37,7 @@ export class CachedUserService {
   async getTechniciansList(actor: IJwtPayload): Promise<unknown[]> {
     'use cache';
     cacheTag(ECacheTag.USERS_TECHNICIANS);
-    cacheLife({ stale: 1800, revalidate: 3600 });
+    cacheLife(CACHE_LIFE.HOURS);
     if (!canAccess(actor.role, RbacResource.LOG_SHEETS, 'read')) {
       throw new Error('Unauthorized');
     }
@@ -54,7 +55,7 @@ export class CachedUserService {
   async getUserById(actor: IJwtPayload, id: string): Promise<unknown> {
     'use cache';
     cacheTag(ECacheTag.USERS);
-    cacheLife({ stale: 1800, revalidate: 3600 });
+    cacheLife(CACHE_LIFE.HOURS);
     if (!canAccess(actor.role, RbacResource.USERS_ADMIN, 'read')) {
       throw new Error('Unauthorized');
     }
@@ -69,7 +70,7 @@ export class CachedUserService {
   async getCurrentUserProfile(userId: string): Promise<ICurrentUserProfile> {
     'use cache';
     cacheTag(ECacheTag.USERS);
-    cacheLife({ stale: 1800, revalidate: 3600 });
+    cacheLife(CACHE_LIFE.HOURS);
     try {
       return await this.service.getCurrentUserProfile(userId);
     } catch (error) {
