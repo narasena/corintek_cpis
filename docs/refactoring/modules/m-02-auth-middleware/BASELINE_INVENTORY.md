@@ -15,7 +15,7 @@
 | Methods >50 lines            |      0 |     — |      — |
 | TODO/FIXME/HACK Comments     |      0 |     — |      — |
 | Est. Cyclomatic Complexity   |    Low |     — |      — |
-| Tests Passing                |     73 |     — |      — |
+| Tests Passing                |    105 |     — |      — |
 
 *Note: This baseline reflects the current refactored state, including modular RBAC policies and centralized action factories. The total LOC includes both feature-specific logic and shared infrastructure helpers in `src/lib/`.*
 

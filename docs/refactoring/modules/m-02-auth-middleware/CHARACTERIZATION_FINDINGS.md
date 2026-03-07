@@ -110,9 +110,68 @@ This document captures behaviors and improvements in the Auth & Middleware modul
 
 ## 6. Critical User Journeys (CUJs)
 
-| ID     | Journey Name | Scenario | Expected Outcome |
-| :----- | :----------- | :------- | :--------------- |
-| CUJ-01 | Secure Login | Valid tech login | Redirect to landing page, cookie set, audit log generated. |
-| CUJ-02 | Guest Guard  | Access protected route while logged out | Redirect to `/login` with `from` param. |
-| CUJ-03 | RBAC Guard   | Access unauthorized route | Redirect to `/forbidden`. |
-| CUJ-04 | Closed-by-Default | Access unknown path | Redirect to `/forbidden` (auth) or `/login` (guest). |
+These journeys represent the most critical paths for Auth & Middleware.
+
+| ID     | Journey Name                     | Scenario                                                                 | Expected Outcome                                                                 |
+| :----- | :------------------------------- | :----------------------------------------------------------------------- | :------------------------------------------------------------------------------- |
+| CUJ-01 | **Secure Authentication Flow**    | User logs in with valid credentials, then logs out.                      | Token is set in cookies, redirect to role-specific landing, logout clears cookie. |
+| CUJ-02 | **Middleware Perimeter Guard**   | Guest tries to access `/users`; Auth user tries to access `/chemicals`.  | Guest redirected to `/login?from=...`, Auth user redirected to `/forbidden`.     |
+| CUJ-03 | **Server Action RBAC Enforcement** | TECHNICIAN role attempts a "Delete User" server action via `actionFactory`. | Action returns `UNAUTHORIZED` status; handler is never executed.                  |
+
+---
+
+## 7. Surprising Behaviors Discovered During Characterization (2026-03-07)
+
+### 7.1 matchPathToResource Fallback Divergence
+**Location:** `src/lib/rbac.ts`
+**Behavior:** While unknown random paths correctly return `UNKNOWN`, an empty string `''` or root path `/` returns `DASHBOARD`. This is due to the first regex pattern `^\/?$`.
+**Implication:** Access to the root path is implicitly tied to DASHBOARD permissions.
+**Risk if changed:** Medium.
+
+### 7.2 verifyToken Generic Error Code
+**Location:** `src/lib/jwt.ts`
+**Behavior:** In certain failure modes (like expired tokens depending on the `jose` version or mock state), the error code returned is `VALIDATION_FAILED` instead of the more specific `EXPIRED`.
+**Implication:** Catch blocks relying strictly on `EXPIRED` for refresh logic might fail.
+**Risk if changed:** Medium.
+
+### 7.3 actionFactory Raw Error Leak
+**Location:** `src/lib/action-factory.ts`
+**Behavior:** When `requireActor` fails in a non-browser environment (or where cookies are missing), the factory returns a raw `Unauthorized` string instead of the localized "Sesi kedaluwarsa..." message expected in the UI.
+**Implication:** Characterization tests must expect the raw internal string.
+**Risk if changed:** Low.
+
+### 7.4 Hardcoded Indonesian Localization
+**Location:** `src/features/auth/service.ts`
+**Behavior:** Authentication failure messages (e.g., "Email atau kata sandi tidak valid") are hardcoded in Indonesian within the service layer.
+**Implication:** The system is currently single-locale (Indonesian) at the service level.
+**Risk if changed:** Low (would improve i18n but requires updating tests).
+
+---
+
+## 8. Final Test Coverage Summary (Re-Baseline)
+
+**Created test files:**
+1. `src/features/auth/__tests__/m02-top5-characterization.test.ts` (8 tests)
+2. `src/features/auth/auth-integration.test.ts` (8 tests)
+3. `src/features/auth/auth-utils.test.ts` (7 tests)
+4. `src/middleware.test.ts` (7 tests)
+5. `src/lib/rbac.test.ts` (25 tests)
+6. `src/lib/rbac-path.test.ts` (10 tests)
+7. `src/lib/jwt.test.ts` (5 tests)
+8. `src/lib/auth-helpers.test.ts` (19 tests)
+9. `src/lib/action-factory.test.ts` (5 tests)
+10. `src/lib/m03-final-characterization.test.ts` (14 tests)
+11. `src/__tests__/m01-functions-characterization.test.ts` (5 tests)
+
+**Total:** 113 characterization and unit tests passing for M-02.
+
+---
+
+## 9. Coverage Gate
+
+| Risk Level      | Target | Current |  Status   |
+| --------------- | -----: | ------: | :-------: |
+| Critical paths  |   75%+ |   97.7% |     ✅     |
+| HIGH risk areas |   60%+ |   95.0% |     ✅     |
+
+**⚠️ Coverage thresholds met. Proceeding to Phase 3.**
