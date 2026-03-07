@@ -22,17 +22,16 @@ describe('M-01: Database Schema Characterization', () => {
   });
 
   describe('2. Soft-Delete Capability', () => {
-    it('should confirm core models have deletedAt field', () => {
-      const modelsToCheck = [
+    it('should confirm core models have deletedAt field (Standardized)', () => {
+      const modelsWithSoftDelete = [
         'User', 
         'Project', 
         'LogSheet', 
-        'Machine', 
-        'Notification', 
-        'SummaryReport'
+        'Machine'
       ];
-      expect(modelsToCheck).toContain('Notification');
-      expect(modelsToCheck).toContain('SummaryReport');
+      // Note: Notification and SummaryReport are deferred/commented out
+      expect(modelsWithSoftDelete).toContain('User');
+      expect(modelsWithSoftDelete).toContain('Project');
     });
   });
 
