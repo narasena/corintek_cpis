@@ -7,6 +7,38 @@
 
 ---
 
+## SHIP-READY-001 — Feature Build Freeze Declaration
+
+**Source:** Delivery Readiness Review (2026-03-07)  
+**Priority:** 🚨 P0 (Governance)  
+**Status:** ✅ Active
+
+### Decision
+
+CPIS is considered feature-complete for current delivery scope. Net-new feature building is paused.
+All non-complete items below are treated as parked backlog until the reopen conditions are met.
+
+### Allowed Work (Until Handover Closeout)
+
+- [x] Stabilization and bug fixes for production risks (P1/P2)
+- [x] Operational readiness artifacts (incident/release/rollback/access/change logs)
+- [x] Verification evidence (lint/test/build, smoke checks, release notes)
+- [x] Documentation alignment for handover and maintenance boundaries
+
+### Not Allowed in This Phase
+
+- [ ] New feature tracks outside approved stabilization scope
+- [ ] Architecture expansion not required for incident prevention or handover
+- [ ] Nice-to-have UX enhancements without operational impact
+
+### Reopen Feature Development Only If
+
+- [ ] Handover checklist is complete and signed off
+- [ ] 30-day post-handover support review is finished
+- [ ] New scope is approved as separate maintenance/addendum work
+
+---
+
 ## PARAM-CAT-01 — Parameter Limit Profile Refactor
 
 **Source:** ROADMAP.md v0.2.0  
