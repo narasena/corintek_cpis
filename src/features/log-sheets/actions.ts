@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod/v4';
 import * as logSheetService from './service';
 import { updateLogSheetStatusWithNotifications } from './status-with-notifications';
@@ -25,6 +25,7 @@ import type { IJwtPayload } from '@/@types/auth.type';
 import { isLogSheetEntryEmpty } from './utils';
 import { uploadToR2 } from '@/lib/r2-upload';
 import { ok, err } from '@/lib/action-helpers';
+import { ECacheTag } from '../cache/tags';
 
 const SaveLogSheetEntriesSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
@@ -34,7 +35,10 @@ const SaveLogSheetEntriesSchema = z.object({
       parameterId: z.string().uuid('Parameter ID tidak valid'),
       machineId: z
         .string()
-        .regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, 'Machine ID tidak valid')
+        .regex(
+          /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+          'Machine ID tidak valid'
+        )
         .nullable()
         .optional(),
       role: LogSheetEntryRoleEnum.default('VALUE'),
@@ -63,7 +67,14 @@ const SaveLogSheetChemicalsSchema = z.object({
 const SaveLogSheetMachinesSchema = z.object({
   logSheetId: z.string().uuid('Log sheet ID tidak valid'),
   adminOverride: z.boolean().optional(),
-  machineIds: z.array(z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, 'Machine ID tidak valid')),
+  machineIds: z.array(
+    z
+      .string()
+      .regex(
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+        'Machine ID tidak valid'
+      )
+  ),
 });
 
 const SaveLogSheetSignatureSchema = z.object({
@@ -92,6 +103,10 @@ async function assertCanAccessLogSheet(actor: IJwtPayload, logSheetId: string) {
 }
 
 function revalidateLogSheetPaths(projectId: string, logSheetId?: string): void {
+  // CG-05: Cache invalidation - tag-based
+  revalidateTag(ECacheTag.DASHBOARD_ACTIVITIES, 'max');
+  revalidateTag(ECacheTag.PROJECTS_DASHBOARD, 'max');
+  // Fallback path-based revalidation (keep for safety during testing)
   revalidatePath('/log-sheets');
   revalidatePath(`/log-sheets/${projectId}`);
   revalidatePath('/');
@@ -143,6 +158,8 @@ export async function createLogSheetAction(data: unknown) {
     const logSheet = await logSheetService.createLogSheet(validatedData);
 
     revalidateLogSheetPaths(validatedData.projectId);
+    // CG-05: Invalidate dashboard photos cache (new log sheet may have no photos yet but dashboard may show prior state? At least creation affects recency)
+    revalidateTag(ECacheTag.DASHBOARD_PHOTOS, 'max');
     return ok(logSheet);
   } catch (error) {
     return err(error, 'Gagal membuat log sheet');
@@ -328,6 +345,8 @@ export async function saveLogSheetPhotosAction(data: unknown) {
     );
     if (projectId) {
       revalidateLogSheetPaths(projectId, validatedData.logSheetId);
+      // CG-05: Photos updated - invalidate dashboard photos cache
+      revalidateTag(ECacheTag.DASHBOARD_PHOTOS, 'max');
     }
     return ok(undefined);
   } catch (error) {

@@ -14,8 +14,9 @@ import {
   updateClient,
   deleteClient,
 } from './service';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getCurrentUser } from '@/lib/auth-helpers';
+import { ECacheTag } from '../cache/tags';
 
 type TActionResponse<T = unknown> = {
   success: boolean;
@@ -39,8 +40,9 @@ export async function createClientAction(
     // Call service
     const client = await createClient(actor, validatedData);
 
-    // Revalidate client list pages
-    revalidatePath('/clients');
+    // CG-05: Cache invalidation - tag-based
+    revalidateTag(ECacheTag.CLIENTS, 'max');
+    // revalidatePath('/clients'); // fallback
 
     return {
       success: true,
@@ -132,9 +134,10 @@ export async function updateClientAction(
     // Call service
     const client = await updateClient(actor, id, validatedData);
 
-    // Revalidate client pages
-    revalidatePath('/clients');
-    revalidatePath(`/clients/${id}`);
+    // CG-05: Cache invalidation - tag-based
+    revalidateTag(ECacheTag.CLIENTS, 'max');
+    // revalidatePath('/clients'); // fallback
+    // revalidatePath(`/clients/${id}`); // fallback for detail page
 
     return {
       success: true,
@@ -163,8 +166,9 @@ export async function deleteClientAction(id: string): Promise<TActionResponse> {
 
     await deleteClient(actor, id);
 
-    // Revalidate client pages
-    revalidatePath('/clients');
+    // CG-05: Cache invalidation - tag-based
+    revalidateTag(ECacheTag.CLIENTS, 'max');
+    // revalidatePath('/clients'); // fallback
 
     return {
       success: true,

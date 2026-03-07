@@ -19,9 +19,10 @@ import {
   getCurrentUserProfile,
   updateCurrentUserProfile,
 } from './service';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { uploadToR2 } from '@/lib/r2-upload';
+import { ECacheTag } from '../cache/tags';
 
 type TActionResponse<T = unknown> = {
   success: boolean;
@@ -49,9 +50,11 @@ export async function createUserAction(
     // Call service
     const user = await createUser(actor, userData);
 
-    // Revalidate user list pages
-    revalidatePath('/users');
-    revalidatePath('/test/users');
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.USERS, 'max');
+    revalidateTag(ECacheTag.USERS_TECHNICIANS, 'max');
+    // revalidatePath('/users'); // fallback
+    // revalidatePath('/test/users'); // fallback
 
     return {
       success: true,
@@ -175,10 +178,12 @@ export async function updateUserAction(
     // Call service
     const user = await updateUser(actor, id, validatedData);
 
-    // Revalidate user pages
-    revalidatePath('/users');
-    revalidatePath('/test/users');
-    revalidatePath(`/users/${id}`);
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.USERS, 'max');
+    revalidateTag(ECacheTag.USERS_TECHNICIANS, 'max');
+    // revalidatePath('/users'); // fallback
+    // revalidatePath('/test/users'); // fallback
+    // revalidatePath(`/users/${id}`); // fallback
 
     return {
       success: true,
@@ -208,9 +213,11 @@ export async function deleteUserAction(id: string): Promise<TActionResponse> {
 
     await deleteUser(actor, id);
 
-    // Revalidate user pages
-    revalidatePath('/users');
-    revalidatePath('/test/users');
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.USERS, 'max');
+    revalidateTag(ECacheTag.USERS_TECHNICIANS, 'max');
+    // revalidatePath('/users'); // fallback
+    // revalidatePath('/test/users'); // fallback
 
     return {
       success: true,
@@ -254,7 +261,9 @@ export async function updateCurrentUserProfileAction(
   try {
     const validatedData = profileUpdateSchema.parse(input);
     const profile = await updateCurrentUserProfile(user.id, validatedData);
-    revalidatePath('/my-profile');
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.USERS, 'max');
+    // revalidatePath('/my-profile'); // fallback
     return { success: true, data: profile };
   } catch (error) {
     console.error('[CPIS-ERROR] Users.UpdateCurrentProfile:', error);

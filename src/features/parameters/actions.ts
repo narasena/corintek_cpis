@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import * as parameterService from './service';
 import * as limitService from './limits-service';
 import { getCurrentUser } from '@/lib/auth-helpers';
@@ -16,6 +16,7 @@ import {
   TUpdateParameterLimitBatchInput,
   TUpdateParameterLimitInput,
 } from './types';
+import { ECacheTag } from '../cache/tags';
 
 // =============================================================================
 // Parameter Actions - Server Actions Entry Point
@@ -54,7 +55,11 @@ export async function createParameterAction(data: TCreateParameter) {
       validatedData
     );
 
-    revalidatePath('/parameters');
+    // CG-05: Cache invalidation - tag-based
+    revalidateTag(ECacheTag.PARAMETERS, 'max');
+    revalidateTag(ECacheTag.PARAMETERS_LIMITS, 'max');
+    // Fallback: revalidatePath('/parameters'); // Keep commented for safety, remove after testing
+
     return { success: true, data: parameter };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Parameters.Create:', error);
@@ -97,7 +102,11 @@ export async function updateParameterAction(data: TUpdateParameter) {
       validatedData
     );
 
-    revalidatePath('/parameters');
+    // CG-05: Cache invalidation - tag-based
+    revalidateTag(ECacheTag.PARAMETERS, 'max');
+    revalidateTag(ECacheTag.PARAMETERS_LIMITS, 'max');
+    // revalidatePath('/parameters'); // fallback
+
     return { success: true, data: parameter };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Parameters.Update:', error);
@@ -136,7 +145,10 @@ export async function deleteParameterAction(id: string) {
   try {
     await parameterService.deleteParameter(actor, id);
 
-    revalidatePath('/parameters');
+    // CG-05: Cache invalidation - tag-based
+    revalidateTag(ECacheTag.PARAMETERS, 'max');
+    // revalidatePath('/parameters'); // fallback
+
     return { success: true };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Parameters.Delete:', error);
@@ -175,7 +187,9 @@ export async function updateParameterLimitAction(
   try {
     const validated = UpdateParameterLimitInputSchema.parse(input);
     const data = await limitService.updateParameterLimit(actor, validated);
-    revalidatePath('/parameters/limits');
+    // CG-05: Cache invalidation for limits
+    revalidateTag(ECacheTag.PARAMETERS_LIMITS, 'max');
+    // revalidatePath('/parameters/limits'); // fallback
     return { success: true, data };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Parameters.LimitsUpdate:', error);
@@ -194,7 +208,9 @@ export async function updateParameterLimitBatchAction(
   try {
     const validated = UpdateParameterLimitBatchInputSchema.parse(input);
     const data = await limitService.updateParameterLimitBatch(actor, validated);
-    revalidatePath('/parameters/limits');
+    // CG-05: Cache invalidation for limits
+    revalidateTag(ECacheTag.PARAMETERS_LIMITS, 'max');
+    // revalidatePath('/parameters/limits'); // fallback
     return { success: true, data };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Parameters.LimitsBatchUpdate:', error);

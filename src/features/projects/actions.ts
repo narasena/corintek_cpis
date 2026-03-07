@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import * as projectService from './service';
 import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
@@ -13,6 +13,7 @@ import {
   TUpdateProject,
   TProjectParameterOverride,
 } from './types';
+import { ECacheTag } from '../cache/tags';
 
 // =============================================================================
 // Project Actions - Server Actions Entry Point
@@ -82,7 +83,11 @@ export async function createProjectAction(data: TCreateProject) {
       validatedData
     );
 
-    revalidatePath('/projects');
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.PROJECTS, 'max');
+    revalidateTag(ECacheTag.PROJECTS_DASHBOARD, 'max');
+    // revalidatePath('/projects'); // fallback
+
     return { success: true, data: project };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.Create:', error);
@@ -111,7 +116,11 @@ export async function updateProjectAction(data: TUpdateProject) {
       validatedData
     );
 
-    revalidatePath('/projects');
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.PROJECTS, 'max');
+    revalidateTag(ECacheTag.PROJECTS_DASHBOARD, 'max');
+    // revalidatePath('/projects'); // fallback
+
     return { success: true, data: project };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.Update:', error);
@@ -139,7 +148,11 @@ export async function deleteProjectAction(id: string) {
       id
     );
 
-    revalidatePath('/projects');
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.PROJECTS, 'max');
+    revalidateTag(ECacheTag.PROJECTS_DASHBOARD, 'max');
+    // revalidatePath('/projects'); // fallback
+
     return { success: true };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.Delete:', error);
@@ -263,7 +276,11 @@ export async function setProjectAssignmentsAction(input: unknown) {
       parsed.assignments
     );
 
-    revalidatePath('/projects');
+    // CG-05: Cache invalidation (affects dashboard project cards and user assignment lists)
+    revalidateTag(ECacheTag.PROJECTS_DASHBOARD, 'max');
+    revalidateTag(ECacheTag.USERS, 'max');
+    // revalidatePath('/projects'); // fallback
+
     return { success: true, data: assignments };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.Assignments.Set:', error);

@@ -277,7 +277,135 @@ scripts/backfill-client-users.ts (new)
 
 ---
 
+## ADR-009: Next.js 16 Cache Components for Service Layer (CG-05)
+
+**Date:** 2026-03-07  
+**Status:** Accepted (Implementation Phase)  
+**Scope:** Performance Optimization, Service Layer, Caching
+
+### Context
+
+Current application hits database on every page load. With ~40 internal users, this is acceptable but not scalable for the upcoming client portal. No existing caching layer exists; only `revalidatePath()` is used for page refresh after mutations.
+
+### Decision
+
+Implement Next.js 16 Cache Components with tag-based invalidation:
+
+1. **Enable `cacheComponents`** in `next.config.ts`
+2. **Define cache tags** (`ECacheTag` enum) for all major domains
+3. **Define TTL profiles** (`ECacheLifeProfile` enum) with graduated lifetimes
+4. **Apply `'use cache'` directive** to read-heavy service methods
+5. **Use `revalidateTag()`** in mutation actions instead of `revalidatePath()` alone
+6. **Create class-based service wrappers** (`CachedXxxService`) to maintain separation and allow gradual rollout
+
+### Rationale
+
+- **Framework-native**: Uses built-in Next.js 16 cache system (zero new dependencies)
+- **Server-side**: Compatible with "Server Actions Only" architecture
+- **Tag-based invalidation**: More granular than path-based; can invalidate cross-cutting concerns (e.g., dashboard data from multiple sources)
+- **Self-hosted friendly**: In-memory cache persists across requests; acceptable for 40 users
+- **Low risk**: Opt-in per function; easy rollback via `cacheComponents: false` config flag
+- **Performance**: Reduces database load for frequently accessed read-only data (parameters, clients, projects, dashboard metrics)
+- **Stale-while-revalidate**: `revalidateTag(..., 'max')` ensures fresh data after mutations without blocking UI
+
+### Architecture
+
+```
+Cache Tag Strategy:
+┌─────────────────┬─────────────────────────────┬─────────────┬────────────────────────────┐
+│ Domain          │ Tag Prefix                  │ TTL Profile │ Invalidation Triggers      │
+├─────────────────┼─────────────────────────────┼─────────────┼────────────────────────────┤
+│ Dashboard       │ dashboard-*                 │ DEFAULT     │ Log sheet status updates   │
+│ Parameters      │ parameters, parameters-*    │ HOURS       │ CRUD on parameters/limits  │
+│ Clients         │ clients                     │ HOURS       │ CRUD on clients            │
+│ Projects        │ projects, projects-dashboard│ DEFAULT     │ CRUD, assignments          │
+│ Users           │ users, users-technicians    │ HOURS       │ CRUD, profile updates      │
+│ Work Reports    │ work-reports                │ DEFAULT     │ Create/update/approve/delete│
+│ Log Sheets      │ dashboard-activities,       │ DEFAULT     │ Create/update/approve/delete│
+│                 │ dashboard-photos            │ SHORT       │                            │
+│ Attendance      │ attendance                  │ HOURS       │ Clock in/out actions       │
+└─────────────────┴─────────────────────────────┴─────────────┴────────────────────────────┘
+```
+
+TTL Profiles (in `next.config.ts`):
+
+- `default`: stale 15min, revalidate 15min
+- `short`: stale 1min, revalidate 5min
+- `hours`: stale 30min, revalidate 1h
+- `days`: stale 1h, revalidate 24h
+- `max`: stale infinite, revalidate infinite (for tag invalidation)
+
+### Implementation Strategy
+
+1. **Phase 1 - Infrastructure**: Create `src/features/cache/` with `tags.ts`, `config.ts`, `errors.ts` (optional)
+2. **Phase 2 - Configuration**: Update `next.config.ts` with `cacheComponents: true` and `cacheLife` profiles
+3. **Phase 3 - Cached Service Wrappers**: Create class-based stubs (`CachedDashboardService`, `CachedParameterService`, etc.) with:
+   - `'use cache'` directive at file level
+   - `cacheTag()` and `cacheLife()` calls in each cached read method
+   - Constructor dependency injection (prisma, RBAC helpers, etc.)
+   - CRUD methods WITHOUT caching (read-write separation)
+4. **Phase 4 - Action Invalidation**: Modify all mutation actions to call `revalidateTag()` after successful DB operations
+5. **Phase 5 - Testing**: Verify cache hits/misses via `NEXT_PRIVATE_DEBUG_CACHE=1`, confirm invalidation works
+
+### Stub Pattern
+
+```typescript
+'use cache';
+
+import { cacheTag, cacheLife } from 'next/cache';
+import { ECacheTag, ECacheLifeProfile } from '../cache/tags';
+import { prisma } from '@/lib/prisma';
+import type { IJwtPayload } from '@/@types/auth.type';
+
+export class CachedParameterService {
+  constructor(
+    private prisma: PrismaClient
+    // TODO: inject other dependencies (RBAC, validators)
+  ) {}
+
+  /**
+   * Get all active parameters
+   * @caching tags=[PARAMETERS], life=HOURS
+   * @throws NotImplementedError - stub not implemented
+   */
+  async getAllParameters(actor: IJwtPayload): Promise<IParameter[]> {
+    cacheTag(ECacheTag.PARAMETERS);
+    cacheLife(ECacheLifeProfile.HOURS);
+    throw new Error(
+      '[CPIS-STUB] CachedParameterService.getAllParameters: Not implemented'
+    );
+  }
+
+  // CRUD methods (no caching) - similar stubs...
+}
+```
+
+### Rollback Plan
+
+- **Immediate**: Set `cacheComponents: false` in `next.config.ts` → all `'use cache'` directives become no-ops
+- **Selective**: Remove `'use cache'` and `cacheTag()` from specific service files
+- **Fallback**: Keep commented `revalidatePath()` in mutation actions until cache proven stable
+
+### Consequences
+
+- **Code volume**: ~5 new service files + modifications to ~7 action files
+- **Testing overhead**: Must verify cache invalidation across all mutation paths
+- **Serverless limitation**: Cache does not persist across serverless instances; acceptable for self-hosted deployment
+- **Serialization requirement**: All function arguments must be serializable (Dates OK, Maps/Sets NO)
+- **Dynamic data rule**: Cannot call `cookies()`, `headers()` inside cached functions; must pass as arguments
+
+---
+
 ## How to Add New Decisions
+
+1. Use format: `ADR-XXX: Title`
+2. Include Date, Status (Proposed/Accepted/Deprecated), Scope
+3. Document Context → Decision → Rationale → Consequences
+4. Update this file via PR — never commit directly to main
+
+---
+
+> **Related:** See `ROADMAP.md` for upcoming features, `CONTEXT.md` for active sprint state.
 
 1. Use format: `ADR-XXX: Title`
 2. Include Date, Status (Proposed/Accepted/Deprecated), Scope
