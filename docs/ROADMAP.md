@@ -32,6 +32,7 @@
 | Worker (R2)        | Upload API with Bearer auth (dev/prod environments)                                                                           |
 | Log Sheet          | All sections complete + Option A Mobile + Print Preview + Digital Signatures + Approval workflow + Limit breach notifications |
 | Dashboard          | Charts (Approach/Ampere) + Recent Activity Feed with RBAC + Photo Gallery                                                     |
+| **Caching**        | **Next.js 16 Cache Components + tag-based invalidation + DI container**                                                       |
 
 ---
 
