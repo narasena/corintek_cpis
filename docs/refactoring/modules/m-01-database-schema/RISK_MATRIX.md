@@ -1,10 +1,10 @@
-# M-01: Database Schema — Risk Matrix
+# M-01: Database Schema — Risk & Priority Matrix
 
-> Updated 2026-03-04
+> Updated 2026-03-07
 
 ---
 
-## Risk Classification Criteria
+## 1. Risk Classification Criteria
 
 | Level     | Criteria                                                          |
 | --------- | ----------------------------------------------------------------- |
@@ -14,31 +14,49 @@
 
 ---
 
-## Risk Table
+## 2. Refactoring Value (ROI)
 
-| ID   | File                                          | Lines | Risk | Reason                                                                 |
-| ---- | --------------------------------------------- | ----: | :--: | ---------------------------------------------------------------------- |
-| F1   | prisma/schema/log-sheets.prisma               |   123 |  🔴  | God Domain; 4 models; 5+ relations to User; Core transactional engine  |
-| F2   | prisma/schema/projects.prisma                 |   118 |  🔴  | Core Anchor; Recursive relations (Addenda); Primary foreign key target  |
-| F3   | prisma/schema/users.prisma                    |    61 |  🔴  | Authentication Anchor; Heavily coupled to LogSheets and Projects       |
-| F4   | prisma/schema/work-reports.prisma             |    72 |  🟡  | Transactional; Cross-references Project, User, and Machine             |
-| F5   | prisma/schema/lab-analyses.prisma             |    80 |  🟡  | Complex internal structure (3 models); Multi-column/parameter logic    |
-| F6   | prisma/schema/machines.prisma                 |    46 |  🟡  | Shared asset model; Linked to Projects, LogSheets, and WorkReports     |
-| F7   | prisma/schema/chemicals.prisma                |    42 |  🟡  | Inventory logic; Linked to LogSheets via ChemicalUsage                 |
-| F8   | prisma/schema/parameter-limit-profiles.prisma |    41 |  🟡  | Critical business validation logic; Linked to Projects and Parameters  |
-| F9   | prisma/schema/attendance.prisma               |    24 |  🟢  | Leaf domain; Primary dependency on User only                           |
-| F10  | prisma/schema/notifications.prisma            |    30 |  🟢  | Leaf domain; Low impact on core transactions                           |
-| F11  | prisma/schema/summary-reports.prisma          |    38 |  🟢  | Derived data; Monthly snapshots; Low risk of breaking active flows      |
-| F12  | prisma/schema/parameters.prisma               |    45 |  🟢  | Master data; Stable definitions                                        |
-| F13  | prisma/schema/clients.prisma                  |    20 |  🟢  | Master data; High-level anchor but simple structure                    |
-| F14  | prisma/schema/schema.prisma                   |    12 |  🟢  | Configuration only                                                     |
+| Value | Impact of Refactoring |
+| :--- | :--- |
+| 🔴 HIGH | Major reduction in complexity, kills cross-domain coupling, or fixes major tech debt. |
+| 🟡 MED | Improves readability, better type safety, or minor architectural alignment. |
+| 🟢 LOW | Cosmetic changes, stable master data, or low-use features. |
 
 ---
 
-## Summary
+## 3. Priority Table (Risk vs. Value)
 
-| Risk Level | Count | Files                                                              |
-| :--------: | :---: | ------------------------------------------------------------------ |
-|  🔴 HIGH   |   3   | log-sheets, projects, users                                        |
-| 🟡 MEDIUM  |   5   | work-reports, lab-analyses, machines, chemicals, parameter-limits  |
-|   🟢 LOW   |   6   | attendance, notifications, summary-reports, parameters, clients, schema |
+| ID | File | Risk | Value | Priority | Reason |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| F1 | `log-sheets.prisma` | 🔴 | 🔴 | **CRITICAL** | God Domain; 5x User relations; Nexus of most coupling. High ROI to decouple. |
+| F2 | `projects.prisma` | 🔴 | 🟡 | **HIGH** | Core Anchor; Recursive relations (Addenda). High risk to change. |
+| F3 | `users.prisma` | 🔴 | 🟢 | **MONITOR** | Auth Anchor. High risk but currently stable. Lower ROI for change. |
+| F4 | `machines.prisma` | 🟡 | 🔴 | **HIGH** | Fixes the "Implicit Machine-Entry Contract" tech debt. |
+| F5 | `lab-analyses.prisma` | 🟡 | 🟡 | **MED** | Simplifies complex 3-model column/parameter relationship. |
+| F6 | `work-reports.prisma` | 🟡 | 🟢 | **MED** | Transactional but relatively straightforward compared to LogSheets. |
+| F7 | `chemicals.prisma` | 🟡 | 🟢 | **LOW** | Stable inventory logic; low current debt. |
+| F8 | `parameter-limit-profiles.prisma` | 🟡 | 🟡 | **MED** | Improves validation logic consistency across projects. |
+| F9 | `summary-reports.prisma` | 🟢 | 🟡 | **MED** | Low risk to refactor; high value for improving monthly export accuracy. |
+| F10 | `attendance.prisma` | 🟢 | 🟢 | **LOW** | Isolated leaf domain; stable. |
+| F11 | `notifications.prisma` | 🟢 | 🟢 | **LOW** | Isolated leaf domain; stable. |
+| F12 | `parameters.prisma` | 🟢 | 🟢 | **LOW** | Stable master data definition. |
+| F13 | `clients.prisma` | 🟢 | 🟢 | **LOW** | Stable master data definition. |
+| F14 | `schema.prisma` | 🟢 | 🟢 | **LOW** | Config only. |
+
+---
+
+## 4. Summary Matrix
+
+| Risk \ Value | 🟢 LOW | 🟡 MED | 🔴 HIGH |
+| :--- | :--- | :--- | :--- |
+| **🔴 HIGH** | `users` | `projects` | `log-sheets` |
+| **🟡 MED** | `work-reports`, `chemicals` | `lab-analyses`, `param-limits` | `machines` |
+| **🟢 LOW** | `attendance`, `notif`, `param`, `client`, `schema` | `summary-reports` | |
+
+---
+
+## 5. Strategic Recommendation
+
+1.  **Immediate Focus**: Decouple `log-sheets.prisma` from its 5x `User` relations (likely move to a join table or service-level resolution) to reduce global coupling.
+2.  **Integrity Fix**: Strengthen the `Machine-Entry` relationship in `log-sheets.prisma` or via cross-module validation to resolve the implicit contract debt.
+3.  **Stability Guard**: Guard `users.prisma` and `projects.prisma` from breaking changes during refactoring of transactional modules.

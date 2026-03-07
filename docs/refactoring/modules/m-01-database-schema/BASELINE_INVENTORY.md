@@ -1,6 +1,6 @@
 # M-01: Database Schema — Baseline Inventory
 
-> Snapshot: 2026-03-04
+> Snapshot: 2026-03-07
 
 ---
 
@@ -8,11 +8,11 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (prisma) |    752 |     0 |      — |
+| Total Lines of Code (prisma) |    758 |     0 |      — |
 | Code Files (.prisma)         |     14 |     0 |      — |
-| Largest File (LOC)           |    123 |     0 |      — |
+| Largest File (LOC)           |    125 |     0 |      — |
 | Files >500 lines             |      0 |     0 |      — |
-| Total Models                 |     24 |     0 |      — |
+| Total Models                 |     23 |     0 |      — |
 | TODO/FIXME/HACK Comments     |      0 |     0 |      — |
 | Est. Complexity Score        |    Low |     0 |      — |
 | Tests Passing                |    N/A |     0 |      — |
@@ -24,19 +24,19 @@
 | #   | File                                          | Lines | Notes |
 | --- | --------------------------------------------- | ----: | ----- |
 | 1   | prisma/schema/schema.prisma                   |    12 |       |
-| 2   | prisma/schema/clients.prisma                  |    20 |       |
+| 2   | prisma/schema/clients.prisma                  |    21 |       |
 | 3   | prisma/schema/attendance.prisma               |    24 |       |
-| 4   | prisma/schema/notifications.prisma            |    30 |       |
-| 5   | prisma/schema/summary-reports.prisma          |    38 |       |
+| 4   | prisma/schema/notifications.prisma            |    31 |       |
+| 5   | prisma/schema/summary-reports.prisma          |    39 |       |
 | 6   | prisma/schema/parameter-limit-profiles.prisma |    41 |       |
 | 7   | prisma/schema/chemicals.prisma                |    42 |       |
 | 8   | prisma/schema/parameters.prisma               |    45 |       |
 | 9   | prisma/schema/machines.prisma                 |    46 |       |
-| 10  | prisma/schema/users.prisma                    |    61 |       |
+| 10  | prisma/schema/users.prisma                    |    62 |       |
 | 11  | prisma/schema/work-reports.prisma             |    72 |       |
 | 12  | prisma/schema/lab-analyses.prisma             |    80 |       |
 | 13  | prisma/schema/projects.prisma                 |   118 |       |
-| 14  | prisma/schema/log-sheets.prisma               |   123 |       |
+| 14  | prisma/schema/log-sheets.prisma               |   125 |       |
 
 ---
 
@@ -57,7 +57,7 @@
 | 3   | prisma/schema/clients.prisma                  |      1 |
 | 4   | prisma/schema/lab-analyses.prisma             |      3 |
 | 5   | prisma/schema/log-sheets.prisma               |      4 |
-| 6   | prisma/schema/machines.prisma                 |      2 |
+| 6   | prisma/schema/machines.prisma                 |      1 |
 | 7   | prisma/schema/notifications.prisma            |      1 |
 | 8   | prisma/schema/parameter-limit-profiles.prisma |      2 |
 | 9   | prisma/schema/parameters.prisma               |      1 |
@@ -84,10 +84,10 @@
 ┌──────────────────────────────┬──────────┐
 │ Metric                       │ Baseline │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (prisma)           │      752 │
+│ Total LOC (prisma)           │      758 │
 │ File count                   │       14 │
-│ Max file size (LOC)          │      123 │
-│ Total Models                 │       24 │
+│ Max file size (LOC)          │      125 │
+│ Total Models                 │       23 │
 │ Complexity Score             │      Low │
 │ Duplicated code blocks       │        0 │
 └──────────────────────────────┴──────────┘
