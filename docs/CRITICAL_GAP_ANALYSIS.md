@@ -125,3 +125,17 @@ The biggest bang-for-buck is **Gap #1 (DataTable search)** and **Gap #3 (loading
 - **Task Breakdown:** `docs/wbs/WBS_DETAILED.md`
 - **Architecture:** `docs/STRUCTURE.md`
 - **Key Decisions:** `docs/DECISIONS.md`
+
+---
+
+## Delivery Decision Addendum (2026-03-07)
+
+Post-review decision for rescue mode:
+
+1. CPIS is considered **feature-complete enough to ship** for current scope.
+2. Priority shifts from net-new feature building to **stabilization + handover readiness evidence**.
+3. Remaining optional enhancements in Tier 2/3 stay in backlog and are handled only under maintenance/addendum scope.
+4. Current execution focus:
+   - Operational docs with real records (incident/release/rollback/access/change)
+   - Release verification evidence (`npm run lint`, `npm run test:run`, `npm run build`, smoke checks)
+   - Scope discipline to prevent perfection-driven expansion during handover
