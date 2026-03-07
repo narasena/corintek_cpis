@@ -1,7 +1,6 @@
-# M-01: Database Schema — Refactoring Plan (DEFERRED)
+# M-01: Database Schema — Refactoring Plan
 
-**Current Status:** Foundation Standardized (Phase 1 Complete). 
-**Strategy:** Defer Phase 2 & 3 refactoring until all application modules (M-02 to M-20) are refactored to minimize global blast radius and avoid breaking the type system during the project transition.
+The database schema is the foundation of CPIS. While currently functional and modularized into separate `.prisma` files, it suffers from inconsistent soft-delete standardization and two "God Modules" (`log-sheets.prisma`, `projects.prisma`) that act as domain nexus points.
 
 ---
 
@@ -9,13 +8,12 @@
 
 Priority = f(Pain, Risk, Value)
 
-| Area | Pain Level | Risk Level | Business Value | Priority | Evidence |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| **Log-Sheet Coupling** | High | High | Critical | **P1 (DEFERRED)** | 5x separate User relations creating a nexus of coupling. |
-| **Machine-Entry Integrity** | Med | Med | High | **P1 (DEFERRED)** | Implicit contract between LogSheetMachine and LogSheetEntry. |
-| **Project Hierarchy** | Med | High | Med | **P2 (DEFERRED)** | Recursive `parentProjId` structure; naming inconsistency. |
-| **Lab Analysis Complexity** | Med | Med | Med | **P3 (DEFERRED)** | Complex 3-model relationship for parameters/columns. |
-| **Schema Standardization** | Low | Low | Low | **DONE** | Verified `deletedAt` and timestamps are consistent in all models. |
+| Area                 | Pain Level | Risk Level | Business Value | Priority | Evidence                     |
+| -------------------- | ---------- | ---------- | -------------- | :------: | ---------------------------- |
+| Soft-Delete Stand.   | Low        | Medium     | High           |    P1    | `deletedAt` commented out in 2 files. |
+| Performance Indexing | Low        | Low        | Medium         |    P2    | Characterized index gaps in Users/Notifications. |
+| Project Domain Hub   | Medium     | High       | Critical       |    P3    | Recursive addenda + complex assignments. |
+| Log Sheet God Module | High       | High       | Critical       |    P4    | Nexus for 5 domains; 125 LOC schema. |
 
 ---
 
@@ -23,49 +21,49 @@ Priority = f(Pain, Risk, Value)
 
 > **LOW risk → MEDIUM risk → HIGH risk**
 
-1.  **Phase 1: Standardization (DONE)** — Leaf modules verified as compliant.
-2.  **Phase 2: Data Integrity (DEFERRED)** — Will be addressed within the context of specific module refactoring (e.g., M-09, M-13).
-3.  **Phase 3: Domain Decoupling (DEFERRED)** — Will be addressed at the end of the project or during M-11 refactor.
+1. **Step 1: Leaf Standardization** — Resolve deferred soft-delete fields in `notifications` and `summary-reports`.
+2. **Step 2: Performance & Integrity** — Add characterized indexes and unique constraints to `users` and `parameters`.
+3. **Step 3: Hub Modularization** — Split complex relations in `projects` and `log-sheets` if possible (within Prisma limitations).
 
 ---
 
 ## 3. Testing Strategy
 
-> **"Lock structural contracts via characterization tests before any deferred migration."**
+> **"Lock current behavior, not test results."**
 
 ### What to test first
 
-| Priority | What | Why | Type |
-| :---: | :--- | :--- | :--- |
-| 1 | Relation Fields | Ensure all 5 User-LogSheet relations are preserved/mapped correctly. | Characterization |
-| 2 | Unique Constraints | Ensure multi-field unique constraints (ProjectAssignment) are locked. | Characterization |
-| 3 | Default Values | Verify `IDLE`, `PENDING`, etc. defaults are preserved. | Characterization |
+| Priority | What         | Why                            | Type |
+| :------: | ------------ | ------------------------------ | ---- |
+|    1     | Schema Struct| Lock structural invariants.    | Char. |
+|    2     | DB Functions | Ensure transactions survive migration. | Char. |
 
 ---
 
 ## 4. Phased Execution
 
-### ✅ Phase 1: Leaf Standardization & Cleanup (COMPLETED)
-- [x] **Standardize Timestamps**: Confirmed `createdAt`, `updatedAt`, and `deletedAt` are present in all models.
-- [x] **Enum Audit**: Standardized naming for `ProjectStatus` and `UserRole` members.
-- [x] **Doc Cleanup**: Updated characterization findings with verified data.
+### Phase 1: Foundation — Standardization (Low/Med Risk)
 
-### ⏸️ Phase 2: Integrity & Logic Decoupling (DEFERRED)
-- [ ] **Machine-Entry Contract**: Defer until M-09: Machines refactoring.
-- [ ] **Lab Analysis Refactor**: Defer until M-13: Lab Analyses refactoring.
-- [ ] **Summary Report Alignment**: Defer until M-14: Summary Reports refactoring.
+- [ ] **Task 1.1**: Standardize Soft-Delete. Add/Uncomment `deletedAt` in `notifications.prisma` and `summary-reports.prisma`.
+- [ ] **Task 1.2**: Standardize Timestamps. Ensure all models (except junction tables) have `createdAt` and `updatedAt`.
+- [ ] **Task 1.3**: Sync Schema. Run `prisma generate` and verify no type regressions in `M-02` (Auth).
 
-### ⏸️ Phase 3: The Log-Sheet Nexus (DEFERRED)
-- [ ] **User-LogSheet Decoupling**: Defer until M-11: Log Sheets refactoring.
-- [ ] **Project Addenda Standard**: Defer until M-08: Projects refactoring.
-- [ ] **Composite Unique Constraints**: Defer until the end of the project to avoid breaking existing migrations.
+### Phase 2: Performance & Integrity (Medium Risk)
+
+- [ ] **Task 2.1**: User Performance. Add index on `User(email, isActive)` and `User(role, isActive)`.
+- [ ] **Task 2.2**: Notification Performance. Ensure compound index on `userId` and `isRead`.
+- [ ] **Task 2.3**: Parameter Constraints. Formalize business-unique names where missing.
+
+### Phase 3: Hub Modularization (High Risk)
+
+- [ ] **Task 3.1**: Project Hub Cleanup. Rename recursive fields to project standard (`parentProjectId`) ONLY if verified safe by characterization tests.
+- [ ] **Task 3.2**: Log Sheet Nexus. Extract machine-specific entry logic into sub-models if schema allows better decoupling.
 
 ---
 
 ## 5. Verification Plan
 
-- [x] **npx prisma validate**: Passed 🚀
-- [x] **npx prisma generate**: Passed (Client updated)
-- [x] **npm run build**: Passed (Downstream compatibility verified)
-- [x] **Characterization Tests**: All 9+ tests in `src/__tests__/m01-schema-characterization.test.ts` pass.
-- [x] **Documentation Updated**: All M-01 docs reflect the DEFERRED status.
+- [ ] `npx prisma validate` passes.
+- [ ] `npm run build` passes (Total type-safety check).
+- [ ] `src/__tests__/m01-schema-characterization.test.ts` passes.
+- [ ] `src/__tests__/m01-functions-characterization.test.ts` passes.

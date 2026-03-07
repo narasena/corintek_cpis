@@ -36,6 +36,39 @@ This document captures structural invariants and surprising behaviors discovered
 **Implication:** The system supports a hierarchy of projects (Addenda). Logic that aggregates project data must account for this recursive structure.
 **Risk if changed:** Medium
 
+### 1.5 Function-Level Surprises (Risky Logic)
+
+#### 1.5.1 The "Upsert-Sync" Assignment Logic
+**Location:** `src/features/projects/service.ts` (`setProjectAssignments`)
+
+**Behavior:** Instead of a simple "set" or "delete-all-then-reinsert", this function performs a three-stage synchronization:
+1. Fetch existing active assignments.
+2. `upsert` all incoming assignments (creating or re-activating).
+3. Identify existing assignments *missing* from the incoming list and `update` them to `isActive: false` with an `endDate`.
+**Implication:** History is strictly preserved. Soft-delete is enforced even at the join-table level.
+**Risk:** High complexity in transaction management.
+
+#### 1.5.2 Recursive Tree Update (Lab Analysis)
+**Location:** `src/features/lab-analyses/service.ts` (`updateLabAnalysis`)
+
+**Behavior:** Updating a single `LabAnalysis` triggers a recursive update of `LabAnalysisColumn` and `LabAnalysisEntry` trees. It uses internal "Temp ID" mapping to bridge client-side temporary IDs with server-side database IDs.
+**Implication:** Extremely fragile. A failure in one leaf (entry) can roll back the entire analysis update.
+**Risk:** High (Transaction nesting and state mapping).
+
+#### 1.5.3 Business-Layer Unique Constraints
+**Location:** `src/features/projects/service.ts` (`createProject`)
+
+**Behavior:** The function performs an explicit `prisma.project.findFirst` check for duplicate project names before creation.
+**Implication:** This unique constraint is NOT enforced by the database schema (Prisma), meaning a race condition or direct DB edit could bypass it. It is a "Business Unique" rule.
+**Risk:** Medium (Data integrity drift).
+
+#### 1.5.4 Generic Security Failure Pattern
+**Location:** `src/features/auth/service.ts` (`authenticateUser`)
+
+**Behavior:** Every failure path (user not found, password mismatch, user blocked, user inactive) throws the *exact same* error message.
+**Implication:** Specifically designed to prevent account enumeration attacks.
+**Risk:** Low (Security requirement).
+
 ---
 
 ## 2. Summary of Findings
@@ -46,6 +79,8 @@ This document captures structural invariants and surprising behaviors discovered
 | 2 | **Soft-Delete** | Unified `deletedAt` confirmed across all models | Low | **Fixed/Locked** |
 | 3 | **Integrity** | Machine-Entry relation is structurally unconstrained | Medium | **Documented** |
 | 4 | **Recursive** | Project Addenda uses `parentProjId` field | Medium | **Verified** |
+| 5 | **Logic** | "Upsert-Sync" logic for Project Assignments | High | **Characterized** |
+| 6 | **Logic** | Recursive Tree Update for Lab Analysis | High | **Characterized** |
 
 ---
 
@@ -53,51 +88,69 @@ This document captures structural invariants and surprising behaviors discovered
 
 **Characterization / Structural Tests:**
 - `src/__tests__/m01-schema-characterization.test.ts` (PASS) - Locks in the top 5 risky structural contracts.
+- `src/__tests__/m01-functions-characterization.test.ts` (PASS) - Locks in the behavior of the top 5 riskiest DB-interacting functions.
 
 | Category | Description | Status |
 | :--- | :--- | :--- |
-| **Relations** | 5x User-LogSheet domain coupling | **Verified & Locked** |
-| **Soft-Delete** | Strategy alignment across all models | **Verified & Locked** |
-| **Implicit Contracts** | Machine-Entry lack of enforcement | **Verified & Locked** |
-| **Recursive** | Project Addenda relationship | **Verified & Locked** |
-| **Enums/Defaults** | Critical status defaults (IDLE, PENDING) | **Verified & Locked** |
+| **Structural** | 5x User-LogSheet domain coupling | **Verified & Locked** |
+| **Structural** | Soft-Delete Strategy alignment | **Verified & Locked** |
+| **Structural** | Machine-Entry lack of enforcement | **Verified & Locked** |
+| **Functional** | Project Assignment "Upsert-Sync" logic | **Verified & Locked** |
+| **Functional** | Lab Analysis Recursive Update | **Verified & Locked** |
+| **Functional** | Auth "Generic Error" security pattern | **Verified & Locked** |
 
-**Total:** 5 characterization tests (All Passing)
+**Total:** 10 characterization tests (All Passing)
 
 ---
 
-## 4. E2E / Critical User Journeys
+## 4. E2E / Critical User Journeys (Re-Identified)
 
-**End-to-End Scenarios identified to verify schema-supported logic:**
+These scenarios represent the most complex, high-risk, and business-critical flows in the system. They exercise the complex `prisma.$transaction` logic and multi-model relationships.
 
-| # | Scenario Name | Description | Related Schema Risk |
+| # | Journey Name | Critical Value | Schema/Logic Risk |
 | :--- | :--- | :--- | :--- |
-| **1** | **The Log Sheet "Five-Sign-Off" Cycle** | Create -> Submit -> Approve -> Tech Sign -> Client Sign. | 1.1 Multi-Relation Bottleneck |
-| **2** | **Project Hierarchy (Addendum) Lifecycle** | Create Base Project -> Link Addendum via `parentProjId` -> Close Parent. | 1.4 Recursive Structure |
-| **3** | **Machine-Specific Entry Integrity** | Assign Machines to LogSheet -> Enter data for assigned vs unassigned machines. | 1.3 Implicit Contract |
+| **CUJ-01** | **Project Lifecycle & Resource Orchestration** | Foundation of billing and access. | Recursive Addenda + Sync Assignment Logic |
+| **CUJ-02** | **Digital Log Sheet: Field to Sign-off** | Core daily business activity. | 5x User Relations + Transactional signatures |
+| **CUJ-03** | **Analytical Monitoring: Lab Analysis Lifecycle** | Compliance and technical health. | Recursive Tree Update + Dynamic Columns |
 
 ---
 
-### E2E Test Scenarios (Pseudo-spec)
+### E2E Test Scenarios (Execution Specs)
 
-#### CUJ-01: Log Sheet Sign-off
-1. **Pre-condition**: A Project exists with at least one Technician and one Client PIC assigned.
-2. **Action**: 
-   - `POST /api/log-sheets` (Draft)
-   - `PATCH /api/log-sheets/[id]/submit` (links `submittedById`)
-   - `PATCH /api/log-sheets/[id]/approve` (links `approvedById`)
-   - `POST /api/log-sheets/[id]/signatures` (links `technicianSignedById` and `clientPicSignedById`)
-3. **Verification**: `GET /api/log-sheets/[id]` returns a model with all 5 User relations populated.
+#### CUJ-01: Project Lifecycle & Resource Orchestration
+*   **Goal**: Verify that projects can be branched (Addenda) and personnel can be synced without losing history.
+*   **Steps**:
+    1.  **Create UTAMA**: Create a base project "P-001".
+    2.  **Assign Team**: Set assignments for 2 Technicians and 1 Supervisor using the "Sync" logic.
+    3.  **Branch Addendum**: Create project "P-001-A1" linking `parentProjId` to "P-001".
+    4.  **Sync/Update Assignments**: Update "P-001" assignments by removing 1 Tech and adding a new one.
+*   **Success Criteria**:
+    -   `P-001-A1` is correctly linked in the recursive hierarchy.
+    -   Removed assignment is marked `isActive: false` with an `endDate` (not deleted).
+    -   New assignment is `isActive: true`.
 
-#### CUJ-02: Project Addenda
-1. **Action**:
-   - `POST /api/projects` (UTAMA)
-   - `POST /api/projects` (ADDENDUM, `parentProjId` = id of first project)
-2. **Verification**: 
-   - Parent `GET` shows Addendum in `addenda` array.
-   - Child `GET` shows Parent in `parentProject` object.
+#### CUJ-02: Digital Log Sheet: Field to Sign-off
+*   **Goal**: Ensure the "Five-Sign-Off" state machine works through its transactional stages.
+*   **Steps**:
+    1.  **Draft**: Technician creates a Log Sheet with machine entries and chemical usage.
+    2.  **Submit**: Technician submits (sets `submittedById`, status `SUBMITTED`).
+    3.  **Approve**: Supervisor reviews and approves (sets `approvedById`, status `APPROVED`).
+    4.  **Field Signature**: Technician provides a digital signature in the field (sets `technicianSignedById`).
+    5.  **Client Sign-off**: Client PIC signs the report (sets `clientPicSignedById`).
+*   **Success Criteria**:
+    -   All 5 User-relation fields in the Log Sheet model are correctly populated.
+    -   Status transitions are enforced (cannot approve a draft).
+    -   Signatures are correctly linked to the specific authenticated actors.
 
-#### CUJ-03: Machine Entry Validation
-1. **Action**:
-   - `POST /api/log-sheets/[id]/entries` with `machineId` of a machine NOT in the log sheet's machine list.
-2. **Verification**: Application returns `400 Bad Request` (verifying that the implicit contract is enforced by the service layer).
+#### CUJ-03: Analytical Monitoring: Lab Analysis Lifecycle
+*   **Goal**: Verify the complex recursive update of lab analyses and dynamic column mapping.
+*   **Steps**:
+    1.  **Initialize**: Create a Lab Analysis with 3 columns (Units) and 5 parameters.
+    2.  **Populate**: Enter data for all 15 cells (3x5 grid).
+    3.  **Dynamic Update**: Add a 4th column and remove the 2nd column; update 10 parameter values.
+    4.  **Automatic Raw Water**: Ensure the "Raw Water" system-column is automatically preserved/synced.
+*   **Success Criteria**:
+    -   The `updateLabAnalysis` transaction successfully maps "Temp IDs" to real IDs.
+    -   Removed column and its entries are soft-deleted.
+    -   Data for the 4th column is persisted correctly in the new grid layout.
+    -   Audit logs show the transition of state.

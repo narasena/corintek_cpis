@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { authenticateUser } from './service';
+import { authenticateUser, validateSessionUser } from './service';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
 
@@ -18,34 +18,34 @@ vi.mock('bcrypt', () => ({
   },
 }));
 
+const mockFullUser = {
+  id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+  firstName: 'Test',
+  lastName: 'User',
+  idNumber: '12345',
+  email: 'test@example.com',
+  phoneNumber: '0812345678',
+  password: 'hashed-password',
+  avatarUrl: 'https://example.com/avatar.png',
+  address: 'Test Address',
+  role: 'ADMIN',
+  employmentStatus: 'PERMANENT',
+  isActive: true,
+  isBlocked: false,
+  clientId: null,
+  client: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  deletedAt: null,
+};
+
 describe('authenticateUser Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('successfully authenticates a valid user', async () => {
-    const mockUser = {
-      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-      firstName: 'Test',
-      lastName: 'User',
-      idNumber: '123',
-      email: 'test@example.com',
-      phoneNumber: '08123',
-      password: 'hashed-password',
-      avatarUrl: null,
-      address: 'Test Address',
-      role: 'ADMIN',
-      employmentStatus: 'PERMANENT',
-      isActive: true,
-      isBlocked: false,
-      clientId: null,
-      client: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      deletedAt: null,
-    };
-
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockFullUser as any);
     vi.mocked(bcrypt.compare).mockResolvedValue(true as any);
 
     const result = await authenticateUser({ email: 'test@example.com', password: 'password123' });
@@ -65,10 +65,8 @@ describe('authenticateUser Service', () => {
 
   it('throws error for blocked user', async () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValue({
-      email: 'blocked@example.com',
+      ...mockFullUser,
       isBlocked: true,
-      isActive: true,
-      deletedAt: null,
     } as any);
     vi.mocked(bcrypt.compare).mockResolvedValue(true as any);
 
@@ -78,10 +76,8 @@ describe('authenticateUser Service', () => {
 
   it('throws error for inactive user', async () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValue({
-      email: 'inactive@example.com',
-      isBlocked: false,
+      ...mockFullUser,
       isActive: false,
-      deletedAt: null,
     } as any);
     vi.mocked(bcrypt.compare).mockResolvedValue(true as any);
 
@@ -90,16 +86,34 @@ describe('authenticateUser Service', () => {
   });
 
   it('throws error for invalid password', async () => {
-    vi.mocked(prisma.user.findUnique).mockResolvedValue({
-      email: 'test@example.com',
-      password: 'hashed-password',
-      isBlocked: false,
-      isActive: true,
-      deletedAt: null,
-    } as any);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockFullUser as any);
     vi.mocked(bcrypt.compare).mockResolvedValue(false as any);
 
     await expect(authenticateUser({ email: 'test@example.com', password: 'wrong-password' }))
       .rejects.toThrow('Email atau kata sandi tidak valid');
+  });
+});
+
+describe('validateSessionUser Service', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('successfully validates an active user', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockFullUser as any);
+    const result = await validateSessionUser(mockFullUser.id);
+    expect(result?.id).toBe(mockFullUser.id);
+  });
+
+  it('returns null for non-existent user', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+    const result = await validateSessionUser('wrong-id');
+    expect(result).toBeNull();
+  });
+
+  it('returns null for blocked user', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ ...mockFullUser, isBlocked: true } as any);
+    const result = await validateSessionUser(mockFullUser.id);
+    expect(result).toBeNull();
   });
 });
