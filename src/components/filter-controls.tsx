@@ -35,18 +35,18 @@ export function FilterSelect<TData>({
   onClear,
 }: IFilterSelectProps<TData>) {
   const handleValueChange = (newValue: string) => {
-    onChange(newValue === '' ? undefined : newValue);
+    onChange(newValue === 'ALL' ? undefined : newValue);
   };
 
   return (
-    <Select value={value ?? ''} onValueChange={handleValueChange}>
+    <Select value={value ?? 'ALL'} onValueChange={handleValueChange}>
       <SelectTrigger className="w-full sm:w-[180px]">
         <SelectValue
           placeholder={config.placeholder ?? config.label ?? 'Filter'}
         />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="">Semua</SelectItem>
+        <SelectItem value="ALL">Semua</SelectItem>
         {config.options?.map(opt => (
           <SelectItem key={opt.value} value={opt.value}>
             {opt.label}

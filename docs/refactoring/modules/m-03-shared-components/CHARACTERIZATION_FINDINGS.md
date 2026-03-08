@@ -33,9 +33,10 @@ This document captures surprising, non-obvious, or potentially problematic behav
 
 ### 2.1 Double DOM Rendering
 **Location:** `DataTable` Component
-**Behavior:** The component renders both the `<div className="hidden md:block">` (Desktop Table) and `<div className="md:hidden">` (Mobile Cards) into the DOM simultaneously.
-**Implication:** Characterization tests using `getByText` will fail with "Found multiple elements". Developers must use `getAllByText` and understand that CSS `hidden` does not remove elements from the DOM.
-**Risk if changed:** Low (Performance impact if removed, but logic remains same).
+**Behavior:** Previously rendered both desktop and mobile views into the DOM simultaneously for both Simple and Tabbed modes.
+**Refactoring Result:** Implemented **Extract Sub-Component**. Moved Toolbar logic to `DataTableToolbar` and unified layout orchestration.
+**Impact:** Reduced internal state complexity. Fixed logic where inactive tabs still processed data by introducing `isActive` prop and strict data passing.
+**Risk after change:** Medium.
 
 ---
 
@@ -110,7 +111,7 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | --- | ----------- | -------------------------------------- | ---- | ------ |
 | 1   | RBAC        | `ADMIN` restricted on `PROJECTS_LIST`  | Med  | Preserve |
 | 2   | RBAC        | `PUBLIC` bypasses security             | High | Preserve |
-| 3   | UI          | Double rendering (Mobile/Desktop)      | Low  | Preserve (Fix in Ph5?) |
+| 3   | UI          | Double rendering (Mobile/Desktop)      | Med  | ✅ Refactored |
 | 4   | Search      | Cache never cleared in hook            | Med  | ✅ Refactored |
 | 5   | Camera      | Missing `revokeObjectURL`              | Low  | ✅ Refactored |
 | 6   | Sidebar     | Manual category repetition             | Low  | ✅ Refactored |

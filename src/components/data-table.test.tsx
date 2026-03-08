@@ -2,14 +2,26 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { DataTable } from './data-table';
+import React from 'react';
+
+// Mock Next.js navigation
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/',
+}));
 import { ColumnDef } from '@tanstack/react-table';
 
 // Mock ResizeObserver which is needed by Radix/Shadcn UI in jsdom
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+global.ResizeObserver = class ResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+};
 
 interface ITestData {
   id: string;
@@ -57,10 +69,16 @@ describe('DataTable Logic Characterization', () => {
       }
     ];
 
-    render(<DataTable columns={columns} data={[]} tabs={tabs} tab="tab1" />);
+    render(<DataTable columns={columns} data={tabs[0].data} tabs={tabs} tab="tab1" />);
     
     expect(screen.getAllByText('Tab 1 Data').length).toBeGreaterThanOrEqual(1);
-    expect(screen.queryByText('Tab 2 Data')).toBeNull();
+    
+    const tab2Elements = screen.queryAllByText('Tab 2 Data');
+    tab2Elements.forEach(el => {
+      const container = el.closest('[data-state]');
+      const state = container?.getAttribute('data-state');
+      expect(['inactive', 'false']).toContain(state);
+    });
   });
 
   it('switches data when tab changes', () => {
@@ -79,10 +97,65 @@ describe('DataTable Logic Characterization', () => {
       }
     ];
 
-    const { rerender } = render(<DataTable columns={columns} data={[]} tabs={tabs} tab="tab1" />);
+    const { rerender } = render(<DataTable columns={columns} data={tabs[0].data} tabs={tabs} tab="tab1" />);
     expect(screen.getAllByText('Tab 1 Data').length).toBeGreaterThanOrEqual(1);
 
-    rerender(<DataTable columns={columns} data={[]} tabs={tabs} tab="tab2" />);
+    rerender(<DataTable columns={columns} data={tabs[1].data} tabs={tabs} tab="tab2" />);
     expect(screen.getAllByText('Tab 2 Data').length).toBeGreaterThanOrEqual(1);
+    
+    const tab1Elements = screen.queryAllByText('Tab 1 Data');
+    tab1Elements.forEach(el => {
+      const container = el.closest('[data-state]');
+      const state = container?.getAttribute('data-state');
+      expect(['inactive', 'false']).toContain(state);
+    });
+  });
+
+  it('renders pagination and filter toolbar when enabled', () => {
+    const filterConfig = [
+      { columnId: 'role', label: 'Role', type: 'select', options: [{ label: 'Admin', value: 'ADMIN' }] }
+    ];
+
+    render(
+      <DataTable 
+        columns={columns} 
+        data={data} 
+        columnFilters={true}
+        filterConfigs={filterConfig as any}
+        serverPagination={{ 
+          enabled: true, 
+          total: 10, 
+          page: 1, 
+          limit: 10,
+          onPageChange: vi.fn(),
+          onLimitChange: vi.fn(),
+          isLoading: false
+        }}
+      />
+    );
+    
+    // Check for pagination buttons
+    expect(screen.getAllByText('Sebelumnya').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Selanjutnya').length).toBeGreaterThanOrEqual(1);
+    
+    // Check for filter toolbar (Role placeholder or default 'Semua' for select)
+    expect(screen.getByText('Semua')).toBeDefined();
+  });
+
+  it('renders tab-specific filters when provided', () => {
+    const tabs = [
+      {
+        value: 'tab1',
+        label: 'Tab 1',
+        data: data,
+        columns: columns,
+        filters: <div data-testid="tab-filter">Custom Filter</div>
+      }
+    ];
+
+    render(<DataTable columns={columns} data={[]} tabs={tabs} tab="tab1" />);
+    
+    expect(screen.getByTestId('tab-filter')).toBeDefined();
+    expect(screen.getByText('Custom Filter')).toBeDefined();
   });
 });

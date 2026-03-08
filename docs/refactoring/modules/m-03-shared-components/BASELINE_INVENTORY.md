@@ -8,7 +8,7 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) | 12,688 | 12,652|    -36 |
+| Total Lines of Code (ts/tsx) | 12,688 | 12,615|    -73 |
 | Code Files (.ts/.tsx)        |    124 |   123 |     -1 |
 | Largest File (LOC)           |    726 |   726 |      0 |
 | Files >500 lines             |      1 |     1 |      0 |
@@ -25,7 +25,7 @@
 | --- | --------------------------------------------- | ----: | ------------------------------------------ |
 | 1   | src/components/ui/sidebar.tsx                 |   726 | Shadcn Component (Largest)                 |
 | 2   | src/lib/search-filter-service.ts              |   360 | Core filtering infrastructure              |
-| 3   | src/components/data-table.tsx                 |   306 | Main DataTable Orchestrator                |
+| 3   | src/components/data-table.tsx                 |   269 | Main DataTable Orchestrator (Refactored)   |
 | 4   | src/components/camera-input.tsx               |   300 | Image capture and processing UI            |
 | 5   | src/lib/error-handler-service.ts              |   180 | Global error handling logic                |
 | 6   | src/components/loading.tsx                    |   171 | Loading states and skeleton                |
@@ -80,7 +80,7 @@
 ┌──────────────────────────────┬──────────┐
 │ Metric                       │ Baseline │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (ts/tsx)           │   12,652 │
+│ Total LOC (ts/tsx)           │   12,615 │
 │ File count                   │      123 │
 │ Max file size                │      726 │
 │ Max method size              │      200 │

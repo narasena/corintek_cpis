@@ -13,7 +13,7 @@ Priority = f(Pain, Risk, Value)
 | DI Inversion         | Low        | High       | Medium         |  Done    | Reversed foundation-to-feature coupling |
 | RBAC Path Matching   | Low        | High       | Critical       |  Done    | Implemented strict boundary matching    |
 | Search/Camera Leaks  | Low        | Low        | High           |  Done    | Implemented automatic resource cleanup  |
-| DataTable Complexity | Low        | High       | High           |    P3    | Simultaneous DOM rendering (dual-view)  |
+| DataTable Complexity | Low        | High       | High           |  Done    | Decoupled toolbar and layout logic      |
 | Action Error Format  | Low        | Medium     | Medium         |  Done    | Implemented recursive Zod formatting    |
 | JWT Result Pattern   | Low        | Low        | High           |  Done    | Standardized on TActionResult           |
 | Localization Cleanup | Low        | Low        | Low            |  Done    | Extracted to context-aware constants    |
@@ -71,7 +71,7 @@ Priority = f(Pain, Risk, Value)
   - Move service registration factories to their respective feature directories.
 - [x] **Task 3.2: Secure RBAC Paths** (`rbac.ts`)
   - Refactor `matchPathToResource` to prevent greedy matching (e.g., `/users/settings` shouldn't match `/users` unless intended).
-- [ ] **Task 3.3: DataTable View Decoupling** (`data-table.tsx`)
+- [x] **Task 3.3: DataTable View Decoupling** (`data-table.tsx`)
   - Separate Desktop and Mobile view rendering logic more cleanly.
   - (Optional) Implement a mechanism to prevent dual-DOM rendering for better performance.
 
@@ -80,6 +80,7 @@ Priority = f(Pain, Risk, Value)
 ## 5. Verification Plan
 
 - [x] All 350+ unit tests pass.
+- [x] DataTable dual view logic verified via `getAllByText` characterization.
 - [ ] E2E suite (`shared-components.spec.ts`) passes across all roles.
-- [ ] Memory check: Verify ObjectURLs are revoked after clearing image in `CameraInput`.
-- [ ] Security check: Verify that non-admin sub-paths are correctly blocked by RBAC.
+- [x] Memory check: Verify ObjectURLs are revoked after clearing image in `CameraInput`.
+- [x] Security check: Verify that non-admin sub-paths are correctly blocked by RBAC.

@@ -18,8 +18,7 @@
 
 | ID   | File                                          | Lines | Risk | Reason                                      |
 | ---- | --------------------------------------------- | ----: | :--: | ------------------------------------------- |
-| F1   | `src/lib/rbac.ts`                             |   128 |  🟢  | Fixed greedy matching; strict boundaries    |
-| F2   | `src/components/data-table.tsx`               |   306 |  🔴  | High UI coupling; simultaneous DOM rendering|
+| F2   | `src/components/data-table.tsx`               |   269 |  🟡  | Decoupled to sub-components; improved SRP   |
 | F3   | `src/lib/search-filter-service.ts`            |   360 |  🟡  | Capped cache & flattened logic              |
 | F4   | `src/lib/action-factory.ts`                   |   116 |  🟡  | Refactored to typed error resolution        |
 | F5   | `src/components/camera-input.tsx`             |   300 |  🟢  | Added URL revocation lifecycle              |
@@ -37,6 +36,6 @@
 
 | Risk Level | Count | Files                                                                 |
 | :--------: | :---: | --------------------------------------------------------------------- |
-|  🔴 HIGH   |   1   | `data-table.tsx` |
-| 🟡 MEDIUM  |   2   | `search-filter-service.ts`, `action-factory.ts` |
-|   🟢 LOW   |   9   | `rbac.ts`, `camera-input.tsx`, `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |
+|  🔴 HIGH   |   1   | `rbac.ts` |
+| 🟡 MEDIUM  |   3   | `data-table.tsx`, `search-filter-service.ts`, `action-factory.ts` |
+|   🟢 LOW   |   8   | `camera-input.tsx`, `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |
