@@ -101,7 +101,18 @@ This document captures surprising, non-obvious, or potentially problematic behav
 
 ---
 
-## 9. Summary of Findings
+## 9. Action Factory (src/lib/action-factory.ts)
+
+### 9.1 Brittle Error Strategy Mapping
+**Location:** `handleActionFailure`
+**Behavior:** Previously relied on string-based constructor name matching and ignored nested Zod errors.
+**Refactoring Result:** Migrated to **Replace Conditional with Polymorphism (Explicit Type Checking)**. Implemented a recursive `formatZodError` helper.
+**Impact:** Zod errors are now returned as flat, human-readable strings (e.g., "email: Invalid format; age: Too young") instead of generic messages. Standardized on `unknown` error typing.
+**Risk after change:** Medium (Downgraded from High).
+
+---
+
+## 10. Summary of Findings
 
 | #   | Category    | Finding                                | Risk | Action |
 | --- | ----------- | -------------------------------------- | ---- | ------ |
@@ -113,5 +124,6 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | 6   | Sidebar     | Manual category repetition             | Low  | ✅ Refactored |
 | 7   | JWT         | Exception-based flow control           | Low  | ✅ Refactored |
 | 8   | Error       | Hardcoded localized messages           | Low  | ✅ Refactored |
+| 9   | Factory     | Brittle error mapping                  | Med  | ✅ Refactored |
 
 **⚠️ Characterization Complete. Proceed to Phase 3: Map.**

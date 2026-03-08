@@ -90,7 +90,23 @@ describe('actionFactory characterization', () => {
     const result = await action({ email: 'invalid' } as any);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Email tidak valid');
+    expect(result.error).toContain('email: Email tidak valid');
+  });
+
+  it('formats multiple Zod errors into a single string', async () => {
+    requireActorMock.mockResolvedValue({ role: 'ADMIN' } as any);
+
+    const schema = z.object({
+      email: z.string().email('Email invalid'),
+      age: z.number().min(18, 'Must be adult'),
+    });
+
+    const action = actionFactory.protected(async () => 'ok', { schema });
+
+    const result = await action({ email: 'bad', age: 10 } as any);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('email: Email invalid; age: Must be adult');
   });
 
   it('handles generic errors via err helper', async () => {

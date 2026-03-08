@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { AuthenticationError } from './auth-helpers';
 import { ensureAccess, TRbacResource, TRbacCapability } from './rbac';
 import { requireActor } from '@/features/auth/lib/user-context';
@@ -88,26 +88,41 @@ function validate<T>(data: T, schema?: z.ZodType<T>): T {
 /**
  * Centralized error handling for server actions
  */
-function handleActionFailure(error: any): TActionResult<any> {
-  // Strategy registry for known error types
-  const ERROR_STRATEGIES: Record<string, (err: any) => string> = {
-    AuthenticationError: () => ERROR_MESSAGES.SESSION_EXPIRED,
-    ZodError: (err: z.ZodError) => err.errors?.[0]?.message || err.message || ERROR_MESSAGES.INPUT_INVALID,
-  };
-
-  // Resolve strategy by class name or error name property
-  const errorType = error.constructor?.name || error.name;
-  const strategy = ERROR_STRATEGIES[errorType];
-
-  if (strategy) {
+function handleActionFailure(error: unknown): TActionResult<never> {
+  // 1. Authentication Errors (Standardized message)
+  if (error instanceof AuthenticationError) {
     return {
       success: false,
-      error: strategy(error),
+      error: ERROR_MESSAGES.SESSION_EXPIRED,
     };
   }
 
-  // Fallback to generic error logging
+  // 2. Validation Errors (Recursive human-readable format)
+  if (error instanceof z.ZodError) {
+    return {
+      success: false,
+      error: formatZodError(error),
+    };
+  }
+
+  // 3. Fallback to generic error logging
   return err(error, ERROR_MESSAGES.GENERIC_ERROR);
+}
+
+/**
+ * Formats Zod errors into a flat, human-readable string
+ * Example: "email: Alamat email tidak valid; password: Kata sandi terlalu pendek"
+ */
+function formatZodError(error: z.ZodError): string {
+  if (error.issues.length === 0) return ERROR_MESSAGES.INPUT_INVALID;
+
+  return error.issues
+    .map(issue => {
+      const path = issue.path.join('.');
+      const message = issue.message;
+      return path ? `${path}: ${message}` : message;
+    })
+    .join('; ');
 }
 
 /**

@@ -24,7 +24,7 @@
 | #   | File                                          | Lines | Role                                       |
 | --- | --------------------------------------------- | ----: | ------------------------------------------ |
 | 1   | src/lib/rbac.ts                               |   121 | Role-Based Access Control logic            |
-| 2   | src/lib/action-factory.ts                     |   110 | Server Action Dependency Injection factory |
+| 2   | src/lib/action-factory.ts                     |   116 | Server Action Dependency Injection factory |
 | 3   | src/lib/error-handler-service.ts              |   180 | Global error processing and localization   |
 | 4   | src/lib/prisma.ts                             |    30 | Prisma Client Singleton                    |
 | 5   | src/lib/jwt.ts                                |    88 | Session token management                   |

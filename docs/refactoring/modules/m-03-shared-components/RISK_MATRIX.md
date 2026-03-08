@@ -22,7 +22,7 @@
 | F2   | `src/components/data-table.tsx`               |   306 |  🔴  | High UI coupling; simultaneous DOM rendering|
 | F3   | `src/lib/di/factories.ts`                     |    45 |  🔴  | Structural inversion; foundation-to-feature  |
 | F4   | `src/lib/search-filter-service.ts`            |   358 |  🔴  | High complexity logic; memory leak in cache |
-| F5   | `src/lib/action-factory.ts`                   |   110 |  🔴  | Foundation for all server-side operations   |
+| F5   | `src/lib/action-factory.ts`                   |   116 |  🟡  | Refactored to typed error resolution        |
 | F6   | `src/components/camera-input.tsx`             |   300 |  🟢  | Added URL revocation lifecycle              |
 | F7   | `src/lib/error-handler-service.ts`            |   180 |  🟢  | Refactored to context-aware constants       |
 | F8   | `src/lib/jwt.ts`                               |    88 |  🟢  | Refactored to TActionResult pattern         |
@@ -38,6 +38,6 @@
 
 | Risk Level | Count | Files                                                                 |
 | :--------: | :---: | --------------------------------------------------------------------- |
-|  🔴 HIGH   |   5   | `rbac.ts`, `data-table.tsx`, `di/factories.ts`, `search-filter-service.ts`, `action-factory.ts` |
-| 🟡 MEDIUM  |   0   | — |
+|  🔴 HIGH   |   4   | `rbac.ts`, `data-table.tsx`, `di/factories.ts`, `search-filter-service.ts` |
+| 🟡 MEDIUM  |   1   | `action-factory.ts` |
 |   🟢 LOW   |   8   | `camera-input.tsx`, `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |

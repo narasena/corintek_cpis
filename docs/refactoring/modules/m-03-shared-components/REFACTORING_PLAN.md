@@ -14,6 +14,7 @@ Priority = f(Pain, Risk, Value)
 | RBAC Path Matching   | Medium     | High       | Critical       |    P1    | Regex matches sub-paths greedily        |
 | Search/Camera Leaks  | Low        | Low        | High           |  Done    | Implemented automatic resource cleanup  |
 | DataTable Complexity | Low        | High       | High           |    P3    | Simultaneous DOM rendering (dual-view)  |
+| Action Error Format  | Low        | Medium     | Medium         |  Done    | Implemented recursive Zod formatting    |
 | JWT Result Pattern   | Low        | Low        | High           |  Done    | Standardized on TActionResult           |
 | Localization Cleanup | Low        | Low        | Low            |  Done    | Extracted to context-aware constants    |
 | Sidebar Repetition   | Low        | Low        | Low            |  Done    | Refactored to Data-Driven Mapping       |
@@ -58,7 +59,7 @@ Priority = f(Pain, Risk, Value)
 
 ### Phase 2: Functional Standardization (MEDIUM to HIGH RISK)
 
-- [ ] **Task 2.1: Action Error Formatting** (`action-factory.ts`)
+- [x] **Task 2.1: Action Error Formatting** (`action-factory.ts`)
   - Improve Zod error parsing to return human-readable strings instead of JSON blobs to the client.
 - [x] **Task 2.2: JWT Result Pattern** (`jwt.ts`)
   - Standardize error results using the `TActionResult` pattern used in newer modules.
