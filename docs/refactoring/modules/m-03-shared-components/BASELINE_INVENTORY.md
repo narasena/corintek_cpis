@@ -8,8 +8,8 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) | 12,688 | 12,605|    -83 |
-| Code Files (.ts/.tsx)        |    124 |   123 |     -1 |
+| Total Lines of Code (ts/tsx) | 12,688 | 12,555|   -133 |
+| Code Files (.ts/.tsx)        |    124 |   124 |      0 |
 | Largest File (LOC)           |    726 |   726 |      0 |
 | Files >500 lines             |      1 |     1 |      0 |
 | Methods >50 lines            |     ~8 |    ~8 |      0 |
@@ -24,7 +24,7 @@
 | #   | File                                          | Lines | Notes                                      |
 | --- | --------------------------------------------- | ----: | ------------------------------------------ |
 | 1   | src/components/ui/sidebar.tsx                 |   726 | Shadcn Component (Largest)                 |
-| 2   | src/lib/search-filter-service.ts              |   360 | Core filtering infrastructure              |
+| 2   | src/lib/search-filter-service.ts              |   310 | Core filtering infrastructure (Refactored) |
 | 3   | src/components/data-table.tsx                 |   269 | Main DataTable Orchestrator (Refactored)   |
 | 4   | src/components/camera-input.tsx               |   300 | Image capture and processing UI            |
 | 5   | src/lib/error-handler-service.ts              |   180 | Global error handling logic                |
@@ -68,7 +68,7 @@
 
 | File                            | Est. CC | Hotspots                    |
 | ------------------------------- | ------: | --------------------------- |
-| src/lib/search-filter-service.ts|       8 | Fuzzy matching logic        |
+| src/lib/search-filter-service.ts|       6 | Simplified via extraction   |
 | src/lib/rbac.ts                 |       7 | Permission evaluation loops |
 | src/components/data-table.tsx   |       6 | Tab and filter state sync   |
 
@@ -80,7 +80,7 @@
 ┌──────────────────────────────┬──────────┐
 │ Metric                       │ Baseline │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (ts/tsx)           │   12,605 │
+│ Total LOC (ts/tsx)           │   12,555 │
 │ File count                   │      123 │
 │ Max file size                │      726 │
 │ Max method size              │      200 │

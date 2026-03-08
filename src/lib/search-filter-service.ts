@@ -1,3 +1,9 @@
+import {
+  calculateLevenshtein,
+  highlightMatches,
+  IHighlightPart,
+} from './utils/string-algorithms';
+
 /**
  * Search filter configuration
  */
@@ -170,7 +176,7 @@ export class SearchFilterService {
     const cached = this.levenshteinCache.get(cacheKey);
     if (cached !== undefined) return cached;
 
-    const result = this.calculateLevenshtein(a, b);
+    const result = calculateLevenshtein(a, b);
 
     // Self-cleaning: prevent unbounded growth
     if (this.levenshteinCache.size >= this.CACHE_LIMIT) {
@@ -179,35 +185,6 @@ export class SearchFilterService {
 
     this.levenshteinCache.set(cacheKey, result);
     return result;
-  }
-
-  /**
-   * Core Levenshtein calculation
-   * @param a - First string
-   * @param b - Second string
-   * @returns Edit distance
-   */
-  private calculateLevenshtein(a: string, b: string): number {
-    const matrix: number[][] = [];
-    for (let i = 0; i <= b.length; i++) {
-      matrix[i] = [i];
-    }
-    for (let j = 0; j <= a.length; j++) {
-      matrix[0][j] = j;
-    }
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        matrix[i][j] =
-          b[i - 1] === a[j - 1]
-            ? matrix[i - 1][j - 1]
-            : Math.min(
-                matrix[i - 1][j - 1] + 1,
-                matrix[i][j - 1] + 1,
-                matrix[i - 1][j] + 1
-              );
-      }
-    }
-    return matrix[b.length][a.length];
   }
 
   /**
@@ -253,37 +230,8 @@ export class SearchFilterService {
     text: string,
     query: string,
     caseInsensitive: boolean = true
-  ): Array<{ text: string; isMatch: boolean }> {
-    if (!query) return [{ text, isMatch: false }];
-    if (!text) return [{ text: '', isMatch: false }];
-
-    const normalizedText = caseInsensitive ? text.toLowerCase() : text;
-    const normalizedQuery = caseInsensitive ? query.toLowerCase() : query;
-    const result: Array<{ text: string; isMatch: boolean }> = [];
-
-    let lastIndex = 0;
-    let index = normalizedText.indexOf(normalizedQuery, lastIndex);
-
-    while (index !== -1) {
-      if (index > lastIndex) {
-        result.push({
-          text: text.slice(lastIndex, index),
-          isMatch: false,
-        });
-      }
-      result.push({
-        text: text.slice(index, index + query.length),
-        isMatch: true,
-      });
-      lastIndex = index + query.length;
-      index = normalizedText.indexOf(normalizedQuery, lastIndex);
-    }
-
-    if (lastIndex < text.length) {
-      result.push({ text: text.slice(lastIndex), isMatch: false });
-    }
-
-    return result;
+  ): IHighlightPart[] {
+    return highlightMatches(text, query, caseInsensitive);
   }
 
   /**

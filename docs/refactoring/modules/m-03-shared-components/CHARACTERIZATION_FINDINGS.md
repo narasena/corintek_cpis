@@ -45,9 +45,9 @@ This document captures surprising, non-obvious, or potentially problematic behav
 ### 3.1 Persistent Levenshtein Cache
 **Location:** `SearchFilterService.levenshteinCache`
 **Behavior:** Previously used a private `Map` without size limits, relying on external calls to `clearCache()`.
-**Refactoring Result:** Implemented **Capped Cache & Flattened Logic**. Added a `CACHE_LIMIT` (1000) and automatic flush when full.
-**Impact:** Memory growth is now strictly bounded regardless of session length. Cyclomatic complexity reduced by extracting row-ranking logic and using array primitives (`some`, `map`).
-**Risk after change:** Medium.
+**Refactoring Result:** Implemented **Capped Cache & Flattened Logic**. Extracted core string algorithms to `lib/utils/string-algorithms.ts`.
+**Impact:** Memory growth is strictly bounded (limit: 1000). High mix of abstraction levels resolved by extracting low-level math/string logic. Logic duplication in `HighlightText` component killed by sharing the same algorithm.
+**Risk after change:** Low.
 
 ---
 
@@ -126,7 +126,7 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | 1   | RBAC        | `ADMIN` restricted on `PROJECTS_LIST`  | Med  | Preserve |
 | 2   | RBAC        | `PUBLIC` bypasses security             | High | Preserve |
 | 3   | UI          | Double rendering (Mobile/Desktop)      | Med  | ✅ Refactored |
-| 4   | Search      | Cache never cleared in hook            | Med  | ✅ Refactored |
+| 4   | Search      | Cache never cleared in hook            | Low  | ✅ Refactored |
 | 5   | Camera      | Missing `revokeObjectURL`              | Low  | ✅ Refactored |
 | 6   | Sidebar     | Manual category repetition             | Low  | ✅ Refactored |
 | 7   | JWT         | Exception-based flow control           | Low  | ✅ Refactored |
