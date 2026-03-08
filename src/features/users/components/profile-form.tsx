@@ -91,6 +91,11 @@ export function ProfileForm({ profile }: IProfileFormProps) {
         toast.error('Gagal memperbarui profil', {
           description: result.error || 'Terjadi kesalahan',
         });
+        // Set form error for consistency with UserForm
+        form.setError('root', {
+          type: 'manual',
+          message: result.error || 'An error occurred',
+        });
       }
     });
   };

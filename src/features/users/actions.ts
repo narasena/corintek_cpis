@@ -22,6 +22,15 @@ import { RbacResource } from '@/lib/rbac';
 import { uploadToR2 } from '@/lib/r2-upload';
 import { z } from 'zod/v4';
 
+const USER_PATHS = ['/users', '/test/users'] as const;
+
+function revalidateUserPaths(userId?: string) {
+  USER_PATHS.forEach(path => revalidatePath(path));
+  if (userId) {
+    revalidatePath(`/users/${userId}`);
+  }
+}
+
 /**
  * Server Action: Create a new user
  */
@@ -31,8 +40,7 @@ export const createUserAction = actionFactory.protected(
     const { confirmPassword, ...userData } = input;
     const user = await createUser(actor, userData);
 
-    revalidatePath('/users');
-    revalidatePath('/test/users');
+    revalidateUserPaths();
 
     return user;
   },
@@ -89,9 +97,7 @@ export const updateUserAction = actionFactory.protected(
     const { id, ...data } = input as any;
     const user = await updateUser(actor, id, data);
 
-    revalidatePath('/users');
-    revalidatePath('/test/users');
-    revalidatePath(`/users/${id}`);
+    revalidateUserPaths(id);
 
     return user;
   },
@@ -108,8 +114,7 @@ export const deleteUserAction = actionFactory.protected(
   async ({ input, actor }) => {
     await deleteUser(actor, input);
 
-    revalidatePath('/users');
-    revalidatePath('/test/users');
+    revalidateUserPaths();
 
     return { id: input };
   },

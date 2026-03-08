@@ -50,9 +50,9 @@ Priority = f(Pain, Risk, Value)
 - [x] **1.3 Validate**: Run all 54 tests.
 
 ### Phase 2: Action & Hook Abstraction (Medium Risk)
-- [ ] **2.1 Extract Client Fetching**: Create a reusable hook for fetching the clients list used in `UserForm`.
-- [ ] **2.2 Cleanup Actions**: Standardize revalidation paths and error handling in `actions.ts`.
-- [ ] **2.3 Profile Form**: Refactor `ProfileForm` to use the standardized error handling.
+- [x] **2.1 Extract Client Fetching**: Create a reusable hook for fetching the clients list used in `UserForm`.
+- [x] **2.2 Cleanup Actions**: Standardize revalidation paths and error handling in `actions.ts`.
+- [x] **2.3 Profile Form**: Refactor `ProfileForm` to use the standardized error handling.
 
 ### Phase 3: Service Decomposition (High Risk)
 - [ ] **3.1 Extract Password Logic**: Move hashing/verification check to a focused helper if reused.

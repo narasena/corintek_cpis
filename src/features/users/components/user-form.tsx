@@ -3,7 +3,7 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { useTransition, useEffect, useState } from 'react';
+import { useTransition } from 'react';
 import {
   userCreateSchema,
   userUpdateSchema,
@@ -15,7 +15,7 @@ import {
   TUserRole,
 } from '@/@types/user.type';
 import { createUserAction, updateUserAction } from '@/features/users/actions';
-import { getAllClientsAction } from '@/features/clients/actions';
+import { useUserClients } from '@/features/users/hooks/use-user-clients';
 import {
   Form,
   FormControl,
@@ -54,8 +54,6 @@ export function UserForm({
   onCancel,
 }: IUserFormProps) {
   const [isPending, startTransition] = useTransition();
-  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
-  const [isLoadingClients, setIsLoadingClients] = useState(false);
 
   const form = useForm<TUserCreateInput | TUserUpdateInput>({
     resolver: zodResolver(
@@ -93,21 +91,9 @@ export function UserForm({
   const isClientRole =
     selectedRole && CLIENT_ROLES.includes(selectedRole as TUserRole);
 
-  useEffect(() => {
-    if (isClientRole) {
-      setIsLoadingClients(true);
-      getAllClientsAction()
-        .then(result => {
-          if (result.success && result.data) {
-            setClients(result.data);
-          } else {
-            toast.error('Gagal memuat data klien');
-          }
-        })
-        .catch(() => toast.error('Gagal memuat data klien'))
-        .finally(() => setIsLoadingClients(false));
-    }
-  }, [isClientRole]);
+  const { clients, isLoading: isLoadingClients } = useUserClients(
+    !!isClientRole
+  );
 
   const onSubmit = async (data: TUserCreateInput | TUserUpdateInput) => {
     startTransition(async () => {
