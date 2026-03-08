@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import * as projectService from './service';
-import { actionFactory } from '@/lib/action-factory';
+import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
 import {
   CreateProjectSchema,

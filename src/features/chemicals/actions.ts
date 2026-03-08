@@ -13,7 +13,7 @@ import {
   getChemicalsForLogSheet,
 } from './service';
 import { revalidatePath } from 'next/cache';
-import { actionFactory } from '@/lib/action-factory';
+import { actionFactory } from '@/features/auth/di';
 import { z } from 'zod/v4';
 import { RbacResource } from '@/lib/rbac';
 

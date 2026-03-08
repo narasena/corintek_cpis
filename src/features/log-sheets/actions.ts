@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod/v4';
-import { actionFactory } from '@/lib/action-factory';
+import { actionFactory } from '@/features/auth/di';
 import { TActionResult } from '@/lib/action-helpers';
 import { RbacResource } from '@/lib/rbac';
 import * as logSheetService from './service';

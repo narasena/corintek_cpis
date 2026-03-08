@@ -1,10 +1,16 @@
 import { z } from 'zod';
 import { AuthenticationError } from './auth-helpers';
 import { ensureAccess, TRbacResource, TRbacCapability } from './rbac';
-import { requireActor } from '@/features/auth/lib/user-context';
-import { ERROR_MESSAGES } from '@/features/auth/constants';
-
 import { TActionResult, err } from './action-helpers';
+
+/**
+ * Standard error messages required by the factory
+ */
+export interface IActionFactoryErrorConfig {
+  sessionExpired: string;
+  inputInvalid: string;
+  genericError: string;
+}
 
 /**
  * Metadata for a protected action
@@ -24,11 +30,12 @@ export interface IActionOptions<TInput> {
 /**
  * Type-safe Server Action Factory (Infrastructure Layer)
  *
- * Generic factory that accepts an authenticator to resolve the actor.
- * Resolves layer inversion by injecting the high-level auth logic.
+ * Generic factory that accepts an authenticator and error config.
+ * Resolves layer inversion by allowing feature-layer wiring at composition root.
  */
 export function createActionFactory<TActor extends { role: string }>(
-  authenticate: () => Promise<TActor>
+  authenticate: () => Promise<TActor>,
+  errorConfig: IActionFactoryErrorConfig
 ) {
   return {
     /**
@@ -53,7 +60,7 @@ export function createActionFactory<TActor extends { role: string }>(
           const result = await handler({ input: validatedInput, actor });
           return { success: true, data: result };
         } catch (error: any) {
-          return handleActionFailure(error);
+          return handleActionFailure(error, errorConfig);
         }
       };
     },
@@ -88,33 +95,35 @@ function validate<T>(data: T, schema?: z.ZodType<T>): T {
 /**
  * Centralized error handling for server actions
  */
-function handleActionFailure(error: unknown): TActionResult<never> {
-  // 1. Authentication Errors (Standardized message)
+function handleActionFailure(
+  error: unknown,
+  config: IActionFactoryErrorConfig
+): TActionResult<never> {
+  // 1. Authentication Errors
   if (error instanceof AuthenticationError) {
     return {
       success: false,
-      error: ERROR_MESSAGES.SESSION_EXPIRED,
+      error: config.sessionExpired,
     };
   }
 
-  // 2. Validation Errors (Recursive human-readable format)
+  // 2. Validation Errors
   if (error instanceof z.ZodError) {
     return {
       success: false,
-      error: formatZodError(error),
+      error: formatZodError(error, config.inputInvalid),
     };
   }
 
   // 3. Fallback to generic error logging
-  return err(error, ERROR_MESSAGES.GENERIC_ERROR);
+  return err(error, config.genericError);
 }
 
 /**
  * Formats Zod errors into a flat, human-readable string
- * Example: "email: Alamat email tidak valid; password: Kata sandi terlalu pendek"
  */
-function formatZodError(error: z.ZodError): string {
-  if (error.issues.length === 0) return ERROR_MESSAGES.INPUT_INVALID;
+function formatZodError(error: z.ZodError, fallback: string): string {
+  if (error.issues.length === 0) return fallback;
 
   return error.issues
     .map(issue => {
@@ -124,9 +133,3 @@ function formatZodError(error: z.ZodError): string {
     })
     .join('; ');
 }
-
-/**
- * Singleton instance for the application
- * Uses the high-level Auth Feature's requireActor as the default authenticator.
- */
-export const actionFactory = createActionFactory(requireActor);

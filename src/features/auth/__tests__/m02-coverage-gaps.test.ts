@@ -8,7 +8,7 @@ import { loginAction, logoutAction } from '@/features/auth/actions';
 import { secureCompare } from '@/features/auth/crypto';
 import { matchPathToResource } from '@/lib/rbac';
 import { verifyToken } from '@/lib/jwt';
-import { actionFactory } from '@/lib/action-factory';
+import { actionFactory } from '@/features/auth/di';
 import { authenticateUser } from '@/features/auth/service';
 import { setAuthSession, deleteAuthSession } from '@/lib/auth-helpers';
 import { revalidatePath } from 'next/cache';

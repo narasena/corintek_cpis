@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { attendanceListFiltersSchema } from './types';
 import * as service from './service';
-import { actionFactory } from '@/lib/action-factory';
+import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
 import { z } from 'zod/v4';
 import { uploadToR2 } from '@/lib/r2-upload';

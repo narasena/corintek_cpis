@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import * as parameterService from './service';
 import * as limitService from './limits-service';
-import { actionFactory } from '@/lib/action-factory';
+import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
 import {
   CreateParameterSchema,

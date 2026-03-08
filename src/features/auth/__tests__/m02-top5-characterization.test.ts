@@ -7,7 +7,7 @@ vi.hoisted(() => {
 import { matchPathToResource, canAccess, RbacResource } from '@/lib/rbac';
 import { verifyToken, generateToken } from '@/lib/jwt';
 import { authenticateUser } from '@/features/auth/service';
-import { actionFactory } from '@/lib/action-factory';
+import { actionFactory } from '@/features/auth/di';
 import { middleware } from '@/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 import { AUTH_CONFIG, ERROR_MESSAGES } from '@/features/auth/constants';

@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { actionFactory } from '@/lib/action-factory';
+import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
 import { parameterLimitProfileService } from './service';
 import {

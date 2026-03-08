@@ -18,9 +18,10 @@
 
 | ID   | File                                          | Lines | Risk | Reason                                      |
 | ---- | --------------------------------------------- | ----: | :--: | ------------------------------------------- |
-| F2   | `src/components/data-table.tsx`               |   269 |  🟡  | Decoupled to sub-components; improved SRP   |
-| F3   | `src/lib/search-filter-service.ts`            |   360 |  🟡  | Capped cache & flattened logic              |
-| F4   | `src/lib/action-factory.ts`                   |   116 |  🟡  | Refactored to typed error resolution        |
+| F1   | `src/components/data-table.tsx`               |   269 |  🟡  | Decoupled to sub-components; improved SRP   |
+| F2   | `src/lib/search-filter-service.ts`            |   360 |  🟡  | Capped cache & flattened logic              |
+| F3   | `src/lib/rbac.ts`                             |   128 |  🟢  | Fixed greedy matching; strict boundaries    |
+| F4   | `src/lib/action-factory.ts`                   |   106 |  🟢  | Pure foundation; DI composition in Feature  |
 | F5   | `src/components/camera-input.tsx`             |   300 |  🟢  | Added URL revocation lifecycle              |
 | F6   | `src/lib/error-handler-service.ts`            |   180 |  🟢  | Refactored to context-aware constants       |
 | F7   | `src/lib/jwt.ts`                               |    88 |  🟢  | Refactored to TActionResult pattern         |
@@ -36,6 +37,6 @@
 
 | Risk Level | Count | Files                                                                 |
 | :--------: | :---: | --------------------------------------------------------------------- |
-|  🔴 HIGH   |   1   | `rbac.ts` |
-| 🟡 MEDIUM  |   3   | `data-table.tsx`, `search-filter-service.ts`, `action-factory.ts` |
-|   🟢 LOW   |   8   | `camera-input.tsx`, `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |
+|  🔴 HIGH   |   0   | — |
+| 🟡 MEDIUM  |   2   | `data-table.tsx`, `search-filter-service.ts` |
+|   🟢 LOW   |   10  | `rbac.ts`, `action-factory.ts`, `camera-input.tsx`, `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |

@@ -10,11 +10,12 @@ Priority = f(Pain, Risk, Value)
 
 | Area                 | Pain Level | Risk Level | Business Value | Priority | Evidence                                |
 | -------------------- | ---------- | ---------- | -------------- | :------: | --------------------------------------- |
-| DI Inversion         | Low        | High       | Medium         |  Done    | Reversed foundation-to-feature coupling |
-| RBAC Path Matching   | Low        | High       | Critical       |  Done    | Implemented strict boundary matching    |
+| DI Inversion         | Low        | Low        | Medium         |  Done    | Reversed foundation-to-feature coupling |
+| RBAC Path Matching   | Low        | Low        | Critical       |  Done    | Implemented strict boundary matching    |
 | Search/Camera Leaks  | Low        | Low        | High           |  Done    | Implemented automatic resource cleanup  |
-| DataTable Complexity | Low        | High       | High           |  Done    | Decoupled toolbar and layout logic      |
-| Action Error Format  | Low        | Medium     | Medium         |  Done    | Implemented recursive Zod formatting    |
+| DataTable Complexity | Low        | Medium     | High           |  Done    | Decoupled toolbar and layout logic      |
+| Action Error Format  | Low        | Low        | Medium         |  Done    | Implemented recursive Zod formatting    |
+| Action DI/Wiring     | Low        | Low        | High           |  Done    | Composition moved to Feature layer      |
 | JWT Result Pattern   | Low        | Low        | High           |  Done    | Standardized on TActionResult           |
 | Localization Cleanup | Low        | Low        | Low            |  Done    | Extracted to context-aware constants    |
 | Sidebar Repetition   | Low        | Low        | Low            |  Done    | Refactored to Data-Driven Mapping       |
@@ -74,6 +75,9 @@ Priority = f(Pain, Risk, Value)
 - [x] **Task 3.3: DataTable View Decoupling** (`data-table.tsx`)
   - Separate Desktop and Mobile view rendering logic more cleanly.
   - (Optional) Implement a mechanism to prevent dual-DOM rendering for better performance.
+- [x] **Task 3.4: Action Factory Dependency Inversion** (`action-factory.ts`)
+  - Move singleton instantiation to `src/features/auth/di.ts`.
+  - Remove feature-layer imports from the foundational factory logic.
 
 ---
 

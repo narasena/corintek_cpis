@@ -17,7 +17,7 @@ import {
   updateCurrentUserProfile,
 } from './service';
 import { revalidatePath } from 'next/cache';
-import { actionFactory } from '@/lib/action-factory';
+import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
 import { uploadToR2 } from '@/lib/r2-upload';
 import { z } from 'zod/v4';

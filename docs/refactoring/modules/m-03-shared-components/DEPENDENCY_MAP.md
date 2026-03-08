@@ -24,7 +24,7 @@
 | #   | File                                          | Lines | Role                                       |
 | --- | --------------------------------------------- | ----: | ------------------------------------------ |
 | 1   | src/lib/rbac.ts                               |   128 | Role-Based Access Control logic            |
-| 2   | src/lib/action-factory.ts                     |   116 | Server Action Dependency Injection factory |
+| 2   | src/lib/action-factory.ts                     |   106 | Pure Infrastructure Factory                |
 | 3   | src/lib/error-handler-service.ts              |   180 | Global error processing and localization   |
 | 4   | src/lib/prisma.ts                             |    30 | Prisma Client Singleton                    |
 | 5   | src/lib/jwt.ts                                |    88 | Session token management                   |
@@ -51,6 +51,7 @@ graph TD
         
         %% Composition Root Direction
         CR[lib/di/composition-root.ts] -.-> F_DI[@/features/*/di.ts]
+        F_DI --> AF[lib/action-factory.ts]
         NS[components/nav-user.tsx] --> AU[@/features/auth]
     end
 ```
@@ -64,7 +65,8 @@ graph TD
 | ID   | Cycle Path                                | Severity | Resolution                                 |
 | ---- | ----------------------------------------- | -------- | ------------------------------------------ |
 | CIR-1| `lib/di/factories.ts` -> `features/*`     | Resolved | Factories moved to feature DI files        |
-| CIR-2| `components/nav-user.tsx` -> `auth/actions`| Low      | Standard practice for logout logic         |
+| CIR-2| `lib/action-factory.ts` -> `features/auth`| Resolved | Composition moved to `features/auth/di.ts` |
+| CIR-3| `components/nav-user.tsx` -> `auth/actions`| Low      | Standard practice for logout logic         |
 
 ---
 
@@ -74,7 +76,7 @@ graph TD
 | ------------------------------- | ----: | :-----: | ------------------------------------- |
 | src/components/ui/sidebar.tsx   |   726 |   15+   | SHADCN GOD FILE (Generated)           |
 | src/lib/search-filter-service.ts|   360 |    1    | COMPLEX SERVICE (Fuzzy Logic)         |
-| src/components/data-table.tsx   |   306 |    2    | ORCHESTRATOR (High coupling to hooks) |
+| src/components/data-table.tsx   |   269 |    2    | ORCHESTRATOR (Refactored)             |
 
 ---
 

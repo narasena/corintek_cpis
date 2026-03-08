@@ -8,7 +8,7 @@ import {
   WorkReportSchema,
   WorkReportSignatureSchema,
 } from './types';
-import { actionFactory } from '@/lib/action-factory';
+import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
 import { z } from 'zod/v4';
 

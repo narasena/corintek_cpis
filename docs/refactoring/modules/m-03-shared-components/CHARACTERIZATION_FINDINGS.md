@@ -92,20 +92,34 @@ This document captures surprising, non-obvious, or potentially problematic behav
 **Impact:** 8+ test files and core middleware updated to handle the new return type. Call sites are now cleaner and follow the project's standard result pattern.
 **Risk after change:** Low.
 
----
+## 8. DI Infrastructure (Reverse Layer Inversion)
 
-## 8. DI Infrastructure (src/lib/di/factories.ts)
-
-### 8.1 Structural Layer Inversion
-**Location:** `factories.ts`
-**Behavior:** Foundational layer (`src/lib`) was importing concrete service implementations from the feature layer (`src/features`).
-**Refactoring Result:** Implemented **Dependency Inversion**. Concrete factories were moved to their respective feature directories (`src/features/*/di.ts`).
-**Impact:** Circular dependency risks eliminated. The foundation layer is now purely abstract, and the feature layer correctly depends on it.
-**Risk after change:** High (Structural change).
+### 8.1 Structural Layer Inversion (Service Factories)
+**Location:** `factories.ts` (Removed)
+**Refactoring Result:** Implemented **Dependency Inversion**. Concrete factories moved to feature directories (`src/features/*/di.ts`).
+**Impact:** Foundation layer no longer depends on features. Circular dependency risks eliminated.
+**Risk after change:** Low.
 
 ---
 
-## 9. Summary of Findings
+## 9. Action Factory (src/lib/action-factory.ts)
+
+### 9.1 Brittle Error Strategy Mapping
+**Location:** `handleActionFailure`
+**Refactoring Result:** Migrated to **Explicit Type Checking** and implemented a recursive `formatZodError` helper.
+**Impact:** Zod errors are now returned as flat, human-readable strings. Standardized on `unknown` error typing.
+**Risk after change:** Low.
+
+### 9.2 Structural Layer Inversion (Composition Root)
+**Location:** `action-factory.ts`
+**Behavior:** Previously mixed logic with singleton instantiation, importing `requireActor` from the feature layer.
+**Refactoring Result:** Implemented **Dependency Inversion (Move Composition Root)**. Foundation now only exports the logic; instantiation moved to `src/features/auth/di.ts`.
+**Impact:** Foundation is now purely reusable and independent of Auth feature logic.
+**Risk after change:** Low.
+
+---
+
+## 10. Summary of Findings
 
 | #   | Category    | Finding                                | Risk | Action |
 | --- | ----------- | -------------------------------------- | ---- | ------ |
@@ -117,8 +131,8 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | 6   | Sidebar     | Manual category repetition             | Low  | ✅ Refactored |
 | 7   | JWT         | Exception-based flow control           | Low  | ✅ Refactored |
 | 8   | Error       | Hardcoded localized messages           | Low  | ✅ Refactored |
-| 9   | DI          | Structural layer inversion             | High | ✅ Refactored |
-| 10  | Factory     | Brittle error mapping                  | Med  | ✅ Refactored |
+| 9   | DI          | Structural layer inversion             | Low  | ✅ Refactored |
+| 10  | Factory     | Brittle error mapping                  | Low  | ✅ Refactored |
 | 11  | RBAC        | Greedy path matching                   | Low  | ✅ Refactored |
 
 **⚠️ Characterization Complete. Proceed to Phase 3: Map.**

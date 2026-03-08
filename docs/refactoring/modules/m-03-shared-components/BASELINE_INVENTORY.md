@@ -8,13 +8,13 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) | 12,688 | 12,615|    -73 |
+| Total Lines of Code (ts/tsx) | 12,688 | 12,605|    -83 |
 | Code Files (.ts/.tsx)        |    124 |   123 |     -1 |
 | Largest File (LOC)           |    726 |   726 |      0 |
 | Files >500 lines             |      1 |     1 |      0 |
 | Methods >50 lines            |     ~8 |    ~8 |      0 |
 | TODO/FIXME/HACK Comments     |     13 |    13 |      0 |
-| Est. Cyclomatic Complexity   | Medium-High | Medium | — |
+| Est. Cyclomatic Complexity   | Medium-High | Low-Medium | — |
 | Tests Passing                | 342/346| 342/346|     — |
 
 ---
@@ -34,7 +34,7 @@
 | 9   | src/components/virtual-list.tsx               |   141 | Large dataset virtualization               |
 | 10  | src/lib/utils/canvas.ts                       |   135 | Canvas utility for image processing        |
 | 11  | src/components/action-cell.tsx                |   119 | DataTable row actions                      |
-| 12  | src/lib/action-factory.ts                     |   116 | Server Action Dependency Injection         |
+| 12  | src/lib/action-factory.ts                     |   106 | Pure Infrastructure Factory                |
 | 13  | src/lib/rbac.ts                               |   128 | Role-Based Access Control logic            |
 | 14  | src/lib/jwt.ts                                |    88 | Session token management                   |
 | 15  | src/lib/auth-helpers.ts                       |    72 | Authentication helper functions            |
@@ -80,11 +80,11 @@
 ┌──────────────────────────────┬──────────┐
 │ Metric                       │ Baseline │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (ts/tsx)           │   12,615 │
+│ Total LOC (ts/tsx)           │   12,605 │
 │ File count                   │      123 │
 │ Max file size                │      726 │
 │ Max method size              │      200 │
-│ Total cyclomatic complexity  │ Medium   │
+│ Total cyclomatic complexity  │ Low-Med  │
 │ Duplicated code blocks       │      Low │
 └──────────────────────────────┴──────────┘
 ```
