@@ -52,9 +52,10 @@ export async function upsertProjectParameterOverrideAction(
       }
     );
 
-    revalidatePath(`/projects`); // Revalidate list just in case
-    // revalidatePath(`/projects/${validatedData.projectId}`); // Dynamic path not easily guessable here if we are on edit page, but we can try.
-    // Actually, usually we revalidate the specific path.
+    // Invalidate cache for projects and dashboard projections
+    revalidateTag(ECacheTag.PROJECTS, 'max');
+    revalidateTag(ECacheTag.PROJECTS_DASHBOARD, 'max');
+    revalidatePath(`/projects`); // Fallback for page router components
 
     return { success: true, data: override };
   } catch (error: any) {

@@ -386,6 +386,8 @@ export async function uploadWorkReportPhotoAction(formData: FormData) {
     );
 
     if (!skipRevalidate) {
+      revalidateTag(ECacheTag.WORK_REPORTS, 'max');
+      revalidateTag(ECacheTag.DASHBOARD_ACTIVITIES, 'max');
       revalidatePath(`/work-reports/${projectId}/${workReportId}`);
     }
     return { success: true, url, id: photo.id };
@@ -428,6 +430,8 @@ export async function deleteWorkReportPhotoAction(formData: FormData) {
   }
 
   if (projectId && workReportId) {
+    revalidateTag(ECacheTag.WORK_REPORTS, 'max');
+    revalidateTag(ECacheTag.DASHBOARD_ACTIVITIES, 'max');
     revalidatePath(`/work-reports/${projectId}/${workReportId}`);
   }
   return { success: true };
@@ -484,6 +488,8 @@ export async function saveWorkReportSignatureAction(
     });
 
     const projectId = result.report.projectId;
+    revalidateTag(ECacheTag.WORK_REPORTS, 'max');
+    revalidateTag(ECacheTag.DASHBOARD_ACTIVITIES, 'max');
     revalidatePath(`/work-reports/${projectId}`);
     revalidatePath(`/work-reports/${projectId}/${validated.workReportId}`);
     revalidatePath(`/my-projects/${projectId}`);

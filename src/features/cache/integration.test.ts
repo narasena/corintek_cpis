@@ -296,13 +296,13 @@ describe('Cache Integration', () => {
     it('revalidateTag function is available and callable', () => {
       expect(typeof revalidateTag).toBe('function');
       // Should not throw
-      revalidateTag(ECacheTag.PARAMETERS);
+      (revalidateTag as any)(ECacheTag.PARAMETERS);
       expect(mockRevalidateTagFn).toHaveBeenCalled();
     });
 
     it('revalidateTag can be called with different tags', () => {
       mockRevalidateTagFn.mockClear();
-      revalidateTag(ECacheTag.CLIENTS);
+      (revalidateTag as any)(ECacheTag.CLIENTS);
       expect(mockRevalidateTagFn).toHaveBeenCalled();
     });
   });

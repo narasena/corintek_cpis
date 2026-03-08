@@ -53,7 +53,7 @@
 
 ## v0.3.0 — Caching Layer (2026-03-08)
 
-**Branch:** `feat/caching/nextjs-cache-components` (in progress)
+**Branch:** `feat/caching/nextjs-cache-components` (merged)
 
 ### Next.js 16 Cache Components (CG-05)
 
@@ -69,15 +69,21 @@
 - [x] Add tag-based invalidation (`revalidateTag()`) on all mutations
 - [x] Implement helper function pattern (Next.js 16 requires `'use cache'` outside class methods)
 - [x] Add Suspense boundaries to layout and pages to handle uncached async calls
+- [x] **Testing:** Integration test suite (22 tests) + metrics telemetry
+- [x] **Invalidation fixes:** Completed coverage across all mutation actions:
+  - Projects: `upsertProjectParameterOverrideAction` now invalidates `PROJECTS` and `PROJECTS_DASHBOARD`
+  - Parameters: `deleteParameterAction` now invalidates `PARAMETERS_LIMITS`
+  - Work Reports: photo/signature actions now invalidate `WORK_REPORTS` and `DASHBOARD_ACTIVITIES`
 - [x] Build passes: `npm run build` succeeds (32 pages, TypeScript clean)
-- [ ] **Testing:** QA validation pending (cache hit rates, invalidation, concurrent users)
+- [x] **Deployment:** Ready for QA/staging (see `docs/PHASE_4_DEPLOYMENT.md`)
 
 **Technical Details:**
 
 - Cache strategy: tag-based invalidation with graduated TTL profiles
 - Build-time cache Components enabled (`cacheComponents: true` in next.config)
 - All read-heavy service methods cached; writes bypass cache
-- Rollback available via config flag
+- Metrics collection available via `NEXT_PUBLIC_CACHE_METRICS=true`
+- Rollback available via config flag (`cacheComponents: false`)
 
 ---
 

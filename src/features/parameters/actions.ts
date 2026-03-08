@@ -145,6 +145,7 @@ export async function deleteParameterAction(id: string) {
 
     // CG-05: Cache invalidation - tag-based
     revalidateTag(ECacheTag.PARAMETERS, 'max');
+    revalidateTag(ECacheTag.PARAMETERS_LIMITS, 'max'); // Also invalidate limits
     // revalidatePath('/parameters'); // fallback
 
     return { success: true };
