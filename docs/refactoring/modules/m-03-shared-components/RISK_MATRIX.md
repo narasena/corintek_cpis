@@ -23,7 +23,7 @@
 | F3   | `src/lib/di/factories.ts`                     |    45 |  🔴  | Structural inversion; foundation-to-feature  |
 | F4   | `src/lib/search-filter-service.ts`            |   358 |  🔴  | High complexity logic; memory leak in cache |
 | F5   | `src/lib/action-factory.ts`                   |   110 |  🔴  | Foundation for all server-side operations   |
-| F6   | `src/components/camera-input.tsx`             |   276 |  🟡  | Media lifecycle; memory leak (ObjectURL)    |
+| F6   | `src/components/camera-input.tsx`             |   300 |  🟢  | Added URL revocation lifecycle              |
 | F7   | `src/lib/error-handler-service.ts`            |   180 |  🟢  | Refactored to context-aware constants       |
 | F8   | `src/lib/jwt.ts`                               |    88 |  🟢  | Refactored to TActionResult pattern         |
 | F9   | `src/components/app-sidebar.tsx`              |    51 |  🟢  | Refactored to data-driven mapping           |
@@ -39,5 +39,5 @@
 | Risk Level | Count | Files                                                                 |
 | :--------: | :---: | --------------------------------------------------------------------- |
 |  🔴 HIGH   |   5   | `rbac.ts`, `data-table.tsx`, `di/factories.ts`, `search-filter-service.ts`, `action-factory.ts` |
-| 🟡 MEDIUM  |   1   | `camera-input.tsx` |
-|   🟢 LOW   |   7   | `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |
+| 🟡 MEDIUM  |   0   | — |
+|   🟢 LOW   |   8   | `camera-input.tsx`, `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |

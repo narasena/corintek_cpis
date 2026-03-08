@@ -12,7 +12,7 @@ Priority = f(Pain, Risk, Value)
 | -------------------- | ---------- | ---------- | -------------- | :------: | --------------------------------------- |
 | DI Inversion         | High       | High       | Medium         |    P1    | Foundational DI depends on Feature code |
 | RBAC Path Matching   | Medium     | High       | Critical       |    P1    | Regex matches sub-paths greedily        |
-| Search/Camera Leaks  | Medium     | Medium     | High           |    P2    | Missing cache/object-url cleanups       |
+| Search/Camera Leaks  | Low        | Low        | High           |  Done    | Implemented automatic resource cleanup  |
 | DataTable Complexity | Low        | High       | High           |    P3    | Simultaneous DOM rendering (dual-view)  |
 | JWT Result Pattern   | Low        | Low        | High           |  Done    | Standardized on TActionResult           |
 | Localization Cleanup | Low        | Low        | Low            |  Done    | Extracted to context-aware constants    |
@@ -49,7 +49,7 @@ Priority = f(Pain, Risk, Value)
 
 - [x] **Task 1.0: Sidebar Dynamic Mapping** (`app-sidebar.tsx`)
   - Migrate hardcoded categories to dynamic configuration array.
-- [ ] **Task 1.1: Camera Cleanup** (`camera-input.tsx`)
+- [x] **Task 1.1: Camera Cleanup** (`camera-input.tsx`)
   - Implement `useEffect` cleanup to call `URL.revokeObjectURL` for all previews.
 - [ ] **Task 1.2: Search Cache Management** (`search-filter-service.ts`)
   - Update `useDataTableSearch` hook to call `searchService.clearCache()` on unmount or query reset.

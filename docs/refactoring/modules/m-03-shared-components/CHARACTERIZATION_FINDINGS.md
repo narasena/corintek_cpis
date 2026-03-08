@@ -52,9 +52,10 @@ This document captures surprising, non-obvious, or potentially problematic behav
 
 ### 4.1 Object URL Leakage
 **Location:** `capturePhoto` and `handleFileChange`
-**Behavior:** Uses `URL.createObjectURL(compressedFile)` to generate a preview URL.
-**Implication:** There is no corresponding `URL.revokeObjectURL` call when the component unmounts or when the image is cleared/replaced. 
-**Risk if changed:** Medium (Memory leak in browser-based sessions).
+**Behavior:** Previously created preview URLs but never revoked them.
+**Refactoring Result:** Implemented **Resource Lifecycle Hook**. Added a `previewUrlRef` and a `revokeCurrentPreview` helper.
+**Impact:** All Blob URLs are now revoked when replaced, when the user deletes the image, or when the component unmounts. Memory leak resolved.
+**Risk after change:** Low.
 
 ---
 
@@ -108,7 +109,7 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | 2   | RBAC        | `PUBLIC` bypasses security             | High | Preserve |
 | 3   | UI          | Double rendering (Mobile/Desktop)      | Low  | Preserve (Fix in Ph5?) |
 | 4   | Search      | Cache never cleared in hook            | Low  | Add `useEffect` cleanup |
-| 5   | Camera      | Missing `revokeObjectURL`              | Med  | Add cleanup |
+| 5   | Camera      | Missing `revokeObjectURL`              | Low  | ✅ Refactored |
 | 6   | Sidebar     | Manual category repetition             | Low  | ✅ Refactored |
 | 7   | JWT         | Exception-based flow control           | Low  | ✅ Refactored |
 | 8   | Error       | Hardcoded localized messages           | Low  | ✅ Refactored |

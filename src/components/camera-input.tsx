@@ -26,12 +26,24 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isMounted = useRef(false);
+  const previewUrlRef = useRef<string | null>(null);
+
+  /**
+   * Release browser memory for the current preview URL
+   */
+  const revokeCurrentPreview = () => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+  };
 
   useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
       stopCamera();
+      revokeCurrentPreview();
     };
   }, []);
 
@@ -113,7 +125,10 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
         type: 'image/webp',
       });
 
+      revokeCurrentPreview();
       const previewUrl = URL.createObjectURL(compressedFile);
+      previewUrlRef.current = previewUrl;
+
       onChange(previewUrl, compressedFile);
       handleClose();
     } catch (error) {
@@ -147,7 +162,10 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
         type: 'image/webp',
       });
 
+      revokeCurrentPreview();
       const previewUrl = URL.createObjectURL(compressedFile);
+      previewUrlRef.current = previewUrl;
+
       onChange(previewUrl, compressedFile);
     } catch (error) {
       console.error('[CPIS-CAMERA] File processing failed:', error);
@@ -167,7 +185,10 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
             size="icon"
             className="h-8 w-8"
             type="button"
-            onClick={() => onChange(null, null)}
+            onClick={() => {
+              revokeCurrentPreview();
+              onChange(null, null);
+            }}
             disabled={disabled}
           >
             <Trash2 className="h-4 w-4" />

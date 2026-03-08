@@ -12,7 +12,7 @@
 | --- | --------------------------------------------- | ----: | ------------------------------------------ |
 | 1   | src/components/data-table.tsx                 |   306 | Main DataTable Orchestrator (Tabs, Search) |
 | 2   | src/components/crud-dialog.tsx                |    45 | Reusable Dialog wrapper for forms          |
-| 3   | src/components/camera-input.tsx               |   276 | Image capture and processing UI            |
+| 3   | src/components/camera-input.tsx               |   300 | Image capture and processing UI            |
 | 4   | src/components/action-cell.tsx                |   119 | DataTable row actions                      |
 | 5   | src/components/virtual-list.tsx               |   141 | Large dataset virtualization               |
 | 6   | src/components/multi-select.tsx               |   163 | Multi-select input with badges             |
