@@ -117,9 +117,23 @@ This document captures surprising, non-obvious, or potentially problematic behav
 **Impact:** Foundation is now purely reusable and independent of Auth feature logic.
 **Risk after change:** Low.
 
+## 10. Cross-File Deduplication (Shared Abstractions)
+
+### 10.1 Object URL Lifecycle Duplication
+**Location:** `camera-input.tsx` and feature forms.
+**Refactoring Result:** Implemented **useObjectURL hook**. Centralized the `create`/`revoke` lifecycle logic with automatic unmount cleanup.
+**Impact:** Eliminated manual revocation boilerplate. Provides a safe standard for all future image-handling components.
+**Risk after change:** Low.
+
+### 10.2 Zod Error Formatting Duplication
+**Location:** `action-factory.ts`, `jwt.ts`, `auth/actions.ts`.
+**Refactoring Result:** Implemented **ValidationUtils**. Centralized `isZodError` and human-readable `formatZodError` logic.
+**Impact:** Consistent error presentation across infrastructure and feature layers. Reduced LOC in multiple files.
+**Risk after change:** Low.
+
 ---
 
-## 10. Summary of Findings
+## 11. Summary of Findings
 
 | #   | Category    | Finding                                | Risk | Action |
 | --- | ----------- | -------------------------------------- | ---- | ------ |
@@ -134,5 +148,6 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | 9   | DI          | Structural layer inversion             | Low  | ✅ Refactored |
 | 10  | Factory     | Brittle error mapping                  | Low  | ✅ Refactored |
 | 11  | RBAC        | Greedy path matching                   | Low  | ✅ Refactored |
+| 12  | Global      | Logic duplication (URL/Validation)     | Low  | ✅ Refactored |
 
 **⚠️ Characterization Complete. Proceed to Phase 3: Map.**

@@ -1,6 +1,6 @@
 'use server';
 
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { authenticateUser } from './service';
@@ -8,6 +8,7 @@ import { setAuthSession, deleteAuthSession } from '@/lib/auth-helpers';
 import { authLoginSchema, TAuthLoginResponse } from '@/@types/auth.type';
 import { TUserRole } from '@/@types/user.type';
 import { AUTH_ROUTES, ERROR_MESSAGES, SUCCESS_MESSAGES } from './constants';
+import { isZodError, formatZodError } from '@/lib/utils/validation';
 
 /**
  * Server action for user login
@@ -54,9 +55,8 @@ export async function loginAction(
   } catch (error: any) {
     let message = ERROR_MESSAGES.LOGIN_FAILED;
 
-    if (error instanceof z.ZodError || error.name === 'ZodError') {
-      message =
-        error.errors?.[0]?.message || error.message || ERROR_MESSAGES.INPUT_INVALID;
+    if (isZodError(error)) {
+      message = formatZodError(error, ERROR_MESSAGES.INPUT_INVALID);
     } else if (error instanceof Error) {
       message = error.message;
     }

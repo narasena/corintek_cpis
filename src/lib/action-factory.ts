@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { AuthenticationError } from './auth-helpers';
 import { ensureAccess, TRbacResource, TRbacCapability } from './rbac';
 import { TActionResult, err } from './action-helpers';
+import { isZodError, formatZodError } from './utils/validation';
 
 /**
  * Standard error messages required by the factory
@@ -108,7 +109,7 @@ function handleActionFailure(
   }
 
   // 2. Validation Errors
-  if (error instanceof z.ZodError) {
+  if (isZodError(error)) {
     return {
       success: false,
       error: formatZodError(error, config.inputInvalid),
@@ -117,19 +118,4 @@ function handleActionFailure(
 
   // 3. Fallback to generic error logging
   return err(error, config.genericError);
-}
-
-/**
- * Formats Zod errors into a flat, human-readable string
- */
-function formatZodError(error: z.ZodError, fallback: string): string {
-  if (error.issues.length === 0) return fallback;
-
-  return error.issues
-    .map(issue => {
-      const path = issue.path.join('.');
-      const message = issue.message;
-      return path ? `${path}: ${message}` : message;
-    })
-    .join('; ');
 }

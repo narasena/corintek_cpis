@@ -12,7 +12,7 @@
 | --- | --------------------------------------------- | ----: | ------------------------------------------ |
 | 1   | src/components/data-table.tsx                 |   215 | Main DataTable Orchestrator (Refactored)   |
 | 2   | src/components/crud-dialog.tsx                |    45 | Reusable Dialog wrapper for forms          |
-| 3   | src/components/camera-input.tsx               |   300 | Image capture and processing UI            |
+| 3   | src/components/camera-input.tsx               |   285 | Image capture and processing UI            |
 | 4   | src/components/action-cell.tsx                |   119 | DataTable row actions                      |
 | 5   | src/components/virtual-list.tsx               |   141 | Large dataset virtualization               |
 | 6   | src/components/multi-select.tsx               |   163 | Multi-select input with badges             |
@@ -24,12 +24,13 @@
 | #   | File                                          | Lines | Role                                       |
 | --- | --------------------------------------------- | ----: | ------------------------------------------ |
 | 1   | src/lib/rbac.ts                               |   128 | Role-Based Access Control logic            |
-| 2   | src/lib/action-factory.ts                     |   106 | Pure Infrastructure Factory                |
+| 2   | src/lib/action-factory.ts                     |    95 | Pure Infrastructure Factory                |
 | 3   | src/lib/error-handler-service.ts              |   180 | Global error processing and localization   |
 | 4   | src/lib/prisma.ts                             |    30 | Prisma Client Singleton                    |
 | 5   | src/lib/jwt.ts                                |    88 | Session token management                   |
 | 6   | src/lib/search-filter-service.ts              |   310 | Fuzzy search and dataset filtering         |
 | 7   | src/lib/di/container.ts                       |    80 | IoC Container implementation               |
+| 8   | src/lib/utils/validation.ts                   |    35 | Shared validation utilities                |
 
 ---
 
@@ -42,6 +43,7 @@ graph TD
         C --> H[src/hooks/*]
         L --> DI[src/lib/di/*]
         L --> RBAC[src/lib/rbac.ts]
+        L --> V[src/lib/utils/validation.ts]
     end
 
     subgraph "External Dependencies"
@@ -75,8 +77,8 @@ graph TD
 | File                            | Lines | Exports | Verdict                               |
 | ------------------------------- | ----: | :-----: | ------------------------------------- |
 | src/components/ui/sidebar.tsx   |   726 |   15+   | SHADCN GOD FILE (Generated)           |
-| src/lib/search-filter-service.ts|   360 |    1    | COMPLEX SERVICE (Fuzzy Logic)         |
-| src/components/data-table.tsx   |   269 |    2    | ORCHESTRATOR (Refactored)             |
+| src/lib/search-filter-service.ts|   310 |    1    | COMPLEX SERVICE (Fuzzy Logic)         |
+| src/components/data-table.tsx   |   215 |    2    | ORCHESTRATOR (Refactored)             |
 
 ---
 

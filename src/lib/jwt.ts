@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify, decodeJwt, errors } from 'jose';
 import { IJwtPayload, jwtPayloadSchema } from '@/@types/auth.type';
 import { JWT_INFRA_CONFIG, AUTH_INFRA_ERROR } from './constants/auth';
 import { TActionResult, ok } from './action-helpers';
+import { isZodError, formatZodError } from './utils/validation';
 
 export class JWTError extends Error {
   constructor(
@@ -76,11 +77,10 @@ function mapJwtErrorToActionResult(
 
   if (error instanceof errors.JWTExpired) {
     message = AUTH_INFRA_ERROR.TOKEN_EXPIRED;
-  } else if (
-    error instanceof Error &&
-    (error.name === 'ZodError' || (error as any).issues)
-  ) {
-    message = `${AUTH_INFRA_ERROR.PAYLOAD_VALIDATION_FAILED}: ${error.message}`;
+  } else if (isZodError(error)) {
+    message = `${AUTH_INFRA_ERROR.PAYLOAD_VALIDATION_FAILED}: ${formatZodError(
+      error
+    )}`;
   }
 
   console.error(`[CPIS-ERROR] ${context}: ${message}`);

@@ -5,6 +5,7 @@ import { Camera, Image as ImageIcon, Loader2, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { processImagePipeline } from '@/lib/utils/image-compression';
+import { loadImage } from '@/lib/utils/canvas';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useObjectURL } from '@/hooks/use-object-url';
 
 interface CameraInputProps {
   value?: string | null;
@@ -26,24 +28,14 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isMounted = useRef(false);
-  const previewUrlRef = useRef<string | null>(null);
-
-  /**
-   * Release browser memory for the current preview URL
-   */
-  const revokeCurrentPreview = () => {
-    if (previewUrlRef.current) {
-      URL.revokeObjectURL(previewUrlRef.current);
-      previewUrlRef.current = null;
-    }
-  };
+  const { create: createObjectURL, revoke: revokeCurrentPreview } =
+    useObjectURL();
 
   useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
       stopCamera();
-      revokeCurrentPreview();
     };
   }, []);
 
@@ -125,9 +117,7 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
         type: 'image/webp',
       });
 
-      revokeCurrentPreview();
-      const previewUrl = URL.createObjectURL(compressedFile);
-      previewUrlRef.current = previewUrl;
+      const previewUrl = createObjectURL(compressedFile);
 
       onChange(previewUrl, compressedFile);
       handleClose();
@@ -162,9 +152,7 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
         type: 'image/webp',
       });
 
-      revokeCurrentPreview();
-      const previewUrl = URL.createObjectURL(compressedFile);
-      previewUrlRef.current = previewUrl;
+      const previewUrl = createObjectURL(compressedFile);
 
       onChange(previewUrl, compressedFile);
     } catch (error) {

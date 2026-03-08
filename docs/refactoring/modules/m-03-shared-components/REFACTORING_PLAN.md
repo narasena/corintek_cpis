@@ -14,6 +14,7 @@ Priority = f(Pain, Risk, Value)
 | RBAC Path Matching   | Low        | Low        | Critical       |  Done    | Implemented strict boundary matching    |
 | Search/Camera Leaks  | Low        | Low        | High           |  Done    | Implemented automatic resource cleanup  |
 | DataTable Complexity | Low        | Low        | High           |  Done    | Extracted hook and decoupled sub-views  |
+| Cross-File Duplication| Low        | Low        | High           |  Done    | Extracted useObjectURL & ValidationUtils|
 | Action Error Format  | Low        | Low        | Medium         |  Done    | Implemented recursive Zod formatting    |
 | Action DI/Wiring     | Low        | Low        | High           |  Done    | Composition moved to Feature layer      |
 | JWT Result Pattern   | Low        | Low        | High           |  Done    | Standardized on TActionResult           |
@@ -30,6 +31,7 @@ Priority = f(Pain, Risk, Value)
 2. **Resource Hygiene:** Fixing memory leaks in `CameraInput` and `SearchFilterService`.
 3. **UX Standardization:** Improving `ErrorHandlerService` and `ActionFactory` error reporting.
 4. **Architectural Realignment:** Reversing DI inversion and tightening RBAC security.
+5. **Deduplication:** Consolidating common patterns into shared utilities/hooks.
 
 ---
 
@@ -78,6 +80,13 @@ Priority = f(Pain, Risk, Value)
 - [x] **Task 3.4: Action Factory Dependency Inversion** (`action-factory.ts`)
   - Move singleton instantiation to `src/features/auth/di.ts`.
   - Remove feature-layer imports from the foundational factory logic.
+
+### Phase 4: Cross-File Deduplication (MEDIUM RISK)
+
+- [x] **Task 4.1: Extract useObjectURL Hook** (`camera-input.tsx` + features)
+  - Created standalone hook for Blob URL lifecycle management.
+- [x] **Task 4.2: Extract ValidationUtils** (`action-factory.ts` + `jwt.ts`)
+  - Centralized `isZodError` and `formatZodError` logic.
 
 ---
 
