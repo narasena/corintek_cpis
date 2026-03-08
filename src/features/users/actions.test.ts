@@ -21,13 +21,16 @@ vi.mock('@/lib/r2-upload', () => ({
   uploadToR2: vi.fn(),
 }));
 
-vi.mock('./service', () => ({
+vi.mock('./services/user-queries', () => ({
   getCurrentUserProfile: vi.fn(),
-  updateCurrentUserProfile: vi.fn(),
-  createUser: vi.fn(),
   getAllUsers: vi.fn(),
   getTechniciansList: vi.fn(),
   getUserById: vi.fn(),
+}));
+
+vi.mock('./services/user-mutations', () => ({
+  updateCurrentUserProfile: vi.fn(),
+  createUser: vi.fn(),
   updateUser: vi.fn(),
   deleteUser: vi.fn(),
 }));
@@ -46,16 +49,18 @@ import {
 } from './actions';
 import { getCurrentUserDetails, requireActor } from '@/features/auth/lib/user-context';
 import { uploadToR2 } from '@/lib/r2-upload';
-import { 
-  getCurrentUserProfile, 
+import {
   updateCurrentUserProfile,
   createUser,
+  updateUser,
+  deleteUser,
+} from './services/user-mutations';
+import {
+  getCurrentUserProfile,
   getAllUsers,
   getTechniciansList,
   getUserById,
-  updateUser,
-  deleteUser,
-} from './service';
+} from './services/user-queries';
 
 const mockGetCurrentUserDetails = vi.mocked(getCurrentUserDetails);
 const mockRequireActor = vi.mocked(requireActor);

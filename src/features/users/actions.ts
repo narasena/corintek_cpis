@@ -8,14 +8,16 @@ import {
 } from '@/@types/user.type';
 import {
   createUser,
+  updateUser,
+  deleteUser,
+  updateCurrentUserProfile,
+} from './services/user-mutations';
+import {
   getAllUsers,
   getTechniciansList,
   getUserById,
-  updateUser,
-  deleteUser,
   getCurrentUserProfile,
-  updateCurrentUserProfile,
-} from './service';
+} from './services/user-queries';
 import { revalidatePath } from 'next/cache';
 import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';

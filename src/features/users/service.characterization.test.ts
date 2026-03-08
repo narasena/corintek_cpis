@@ -1,14 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { 
-  createUser, 
-  updateUser, 
-  deleteUser, 
+import {
+  createUser,
+  updateUser,
+  deleteUser,
+  updateCurrentUserProfile,
+  restoreUser,
+  permanentlyDeleteUser,
+} from './services/user-mutations';
+import {
   getTechniciansList,
   getAllUsers,
   getUserById,
-  restoreUser,
-  permanentlyDeleteUser
-} from './service';
+  getCurrentUserProfile,
+} from './services/user-queries';
 import { isUserAuthValid } from './utils';
 import { prisma } from '@/lib/prisma';
 import { canAccess } from '@/lib/rbac';

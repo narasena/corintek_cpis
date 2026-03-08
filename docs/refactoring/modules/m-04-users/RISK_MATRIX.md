@@ -26,12 +26,14 @@ Output a Risk Table."
 
 | ID   | File | Lines | Risk | Reason |
 | ---- | ---- | ----: | :--: | ------ |
-| F1 | `src/features/users/service.ts` | 319 | 🔴 | **CORE LOGIC**: Handles all user CRUD, password hashing, and RBAC enforcement. High impact on auth. |
-| F2 | `src/features/users/components/user-form.tsx` | 417 | 🔴 | **GOD COMPONENT**: Extremely complex UI logic, handles both create/edit modes and role-based conditional fields. |
-| F3 | `src/features/users/actions.ts` | 154 | 🟡 | **ENTRY POINT**: Cross-layer dependency between UI and Service. Used by multiple external pages. |
-| F4 | `src/features/users/components/profile-form.tsx` | 226 | 🟡 | **COMPLEX UI**: Handles profile updates and avatar uploads (R2 integration). |
-| F5 | `src/features/users/utils.ts` | 68 | 🟡 | **SHARED INFRA**: Defines the Prisma select object used by all service methods. Change impacts every read. |
-| F6 | `src/features/users/components/user-dialog.tsx` | 46 | 🟢 | **UI WRAPPER**: Simple dialog container for the form. Low complexity. |
+| F1 | `src/features/users/services/user-mutations.ts`| 255 | 🟡 | **MUTATIONS**: Handles data changes and password security. Moderate complexity. |
+| F2 | `src/features/users/components/user-form.tsx` | 403 | 🔴 | **GOD COMPONENT**: Extremely complex UI logic, still needs decomposition in Phase 4. |
+| F3 | `src/features/users/actions.ts` | 159 | 🟡 | **ENTRY POINT**: Cross-layer dependency between UI and Service. |
+| F4 | `src/features/users/services/user-queries.ts` | 119 | 🟡 | **QUERIES**: Focused on data retrieval. Lower impact than mutations. |
+| F5 | `src/features/users/components/profile-form.tsx` | 231 | 🟡 | **COMPLEX UI**: Handles profile updates and avatar uploads. |
+| F6 | `src/features/users/utils.ts` | 68 | 🟡 | **SHARED INFRA**: Defines shared Prisma select objects. |
+| F7 | `src/features/users/service.ts` | 9 | 🟢 | **FACADE**: Simple re-export file for backward compatibility. |
+| F8 | `src/features/users/components/user-dialog.tsx` | 46 | 🟢 | **UI WRAPPER**: Simple dialog container. |
 
 ---
 
@@ -39,6 +41,6 @@ Output a Risk Table."
 
 | Risk Level | Count | Files |
 | :--------: | :---: | ----- |
-|  🔴 HIGH   |   2   | `service.ts`, `user-form.tsx` |
-| 🟡 MEDIUM  |   3   | `actions.ts`, `profile-form.tsx`, `utils.ts` |
-|   🟢 LOW   |   1   | `user-dialog.tsx` |
+|  🔴 HIGH   |   1   | `user-form.tsx` |
+| 🟡 MEDIUM  |   5   | `user-mutations.ts`, `user-queries.ts`, `actions.ts`, `profile-form.tsx`, `utils.ts` |
+|   🟢 LOW   |   2   | `service.ts`, `user-dialog.tsx` |

@@ -35,8 +35,10 @@ Do NOT suggest fixes yet. Just map the current state."
 
 | #   | File                                | Lines | Role                                           |
 | --- | ----------------------------------- | ----: | ---------------------------------------------- |
-| 6   | `src/features/users/service.ts`     |   367 | Core logic + Administrative utilities          |
-| 7   | `src/features/users/utils.ts`       |    68 | Data mappers and shared Prisma select objects  |
+| 6   | `src/features/users/services/user-queries.ts` |   119 | Decomposed Read operations                     |
+| 7   | `src/features/users/services/user-mutations.ts`|   255 | Decomposed Write operations                    |
+| 8   | `src/features/users/service.ts`     |     9 | Backward-compatible facade (exports all)       |
+| 9   | `src/features/users/utils.ts`       |    68 | Data mappers and shared Prisma select objects  |
 
 ---
 
@@ -52,23 +54,28 @@ graph TD
     end
 
     subgraph "Domain Layer"
-        UA --> US[service.ts]
+        UA --> UQ[user-queries.ts]
+        UA --> UM[user-mutations.ts]
         UH --> CA[@/features/clients/actions]
     end
-...
-```
 
     subgraph "Service/Infra Layer"
-        US --> UU[utils.ts]
-        US --> DB[(Prisma)]
+        UQ --> UU[utils.ts]
+        UM --> UU[utils.ts]
+        UQ --> DB[(Prisma)]
+        UM --> DB[(Prisma)]
     end
 
     subgraph "External Dependencies"
         UA --> AF[actionFactory]
         UA --> R2[uploadToR2]
-        US --> RBAC[lib/rbac]
-        US --> CRYPTO[features/auth/crypto]
+        UQ --> RBAC[lib/rbac]
+        UM --> RBAC[lib/rbac]
+        UM --> CRYPTO[features/auth/crypto]
         UF --> CLIENTS[@/features/clients/actions]
+    end
+```
+
     end
 ```
 

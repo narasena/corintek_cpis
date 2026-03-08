@@ -55,9 +55,9 @@ Priority = f(Pain, Risk, Value)
 - [x] **2.3 Profile Form**: Refactor `ProfileForm` to use the standardized error handling.
 
 ### Phase 3: Service Decomposition (High Risk)
-- [ ] **3.1 Extract Password Logic**: Move hashing/verification check to a focused helper if reused.
-- [ ] **3.2 Split `service.ts`**: Separate "Read" operations (queries) from "Write" operations (mutations) to reduce file size.
-- [ ] **3.3 RBAC Cleanup**: Address inconsistent RBAC check in `getTechniciansList` (Characterization Finding 1.1).
+- [x] **3.1 Extract Password Logic**: Move hashing/verification check to a focused helper if reused. (Moved to internal helper in `user-mutations.ts`).
+- [x] **3.2 Split `service.ts`**: Separate "Read" operations (queries) from "Write" operations (mutations) to reduce file size.
+- [x] **3.3 RBAC Cleanup**: Address inconsistent RBAC check in `getTechniciansList` (Characterization Finding 1.1). (Added documentation and maintained locked behavior).
 
 ### Phase 4: UI Decomposition (High Risk)
 - [ ] **4.1 Split `UserForm`**: Decompose the 400-line `UserForm` into `UserBasicFields`, `UserSecurityFields`, and `UserClientFields`.
