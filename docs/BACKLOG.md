@@ -305,3 +305,23 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 
 - [x] Create `useDebouncedValue` hook in `hooks/use-debounced-value.ts`
 - [x] Use in CG-01 (DataTable search)
+
+---
+
+## VIDEO-GEN-01 — Playwright Client Video Generator
+
+**Source:** Client Request for App Demonstration
+**Priority:** 🟡 P1
+**Status:** Not Started
+
+### Background
+
+The client requested videos of the screen recording various scenarios (e.g., adding logsheets, checking summary reports, settings). We will automate these recordings using Playwright tests configured with `slowMo` to make the interactions human-readable.
+
+### Tasks
+
+- [ ] Create `playwright.video.config.ts` isolated from standard CI tests with `video: 'on'` and `slowMo: 800`.
+- [ ] Create scenario script `01-admin-setup.spec.ts` for Admin CRUD and Project Creation flows.
+- [ ] Create scenario script `02-technician-logsheet.spec.ts` for Technician Logsheet flows.
+- [ ] Create scenario script `03-client-portal.spec.ts` for Client dashboard/report viewing flows.
+- [ ] Add NPM script `record:videos` to run the new video suite.
