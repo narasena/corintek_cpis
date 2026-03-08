@@ -9,16 +9,7 @@ import {
   TUserResponse,
   ICurrentUserProfile,
 } from '@/@types/user.type';
-import {
-  createUser,
-  getAllUsers,
-  getTechniciansList,
-  getUserById,
-  updateUser,
-  deleteUser,
-  getCurrentUserProfile,
-  updateCurrentUserProfile,
-} from './service';
+import { getCacheContainer } from '@/features/cache/di';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { uploadToR2 } from '@/lib/r2-upload';
@@ -48,7 +39,8 @@ export async function createUserAction(
     const { confirmPassword, ...userData } = validatedData;
 
     // Call service
-    const user = await createUser(actor, userData);
+    const { users } = getCacheContainer();
+    const user = await users.createUser(actor, userData);
 
     // CG-05: Cache invalidation
     revalidateTag(ECacheTag.USERS, 'max');
@@ -79,7 +71,8 @@ export async function getAllUsersAction(): Promise<
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
-    const users = await getAllUsers(actor);
+    const { users: usersService } = getCacheContainer();
+    const users = await usersService.getAllUsers(actor);
 
     return {
       success: true,
@@ -107,7 +100,8 @@ export async function getTechniciansListAction(): Promise<
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
-    const technicians = await getTechniciansList(actor);
+    const { users } = getCacheContainer();
+    const technicians = await users.getTechniciansList(actor);
 
     return {
       success: true,
@@ -139,7 +133,8 @@ export async function getUserByIdAction(
       throw new Error('ID pengguna tidak valid');
     }
 
-    const user = await getUserById(actor, id);
+    const { users } = getCacheContainer();
+    const user = await users.getUserById(actor, id);
 
     return {
       success: true,
@@ -176,7 +171,8 @@ export async function updateUserAction(
     const validatedData = userUpdateSchema.parse(input);
 
     // Call service
-    const user = await updateUser(actor, id, validatedData);
+    const { users } = getCacheContainer();
+    const user = await users.updateUser(actor, id, validatedData);
 
     // CG-05: Cache invalidation
     revalidateTag(ECacheTag.USERS, 'max');
@@ -211,7 +207,8 @@ export async function deleteUserAction(id: string): Promise<TActionResponse> {
       throw new Error('ID pengguna tidak valid');
     }
 
-    await deleteUser(actor, id);
+    const { users } = getCacheContainer();
+    await users.deleteUser(actor, id);
 
     // CG-05: Cache invalidation
     revalidateTag(ECacheTag.USERS, 'max');
@@ -240,7 +237,8 @@ export async function getCurrentUserProfileAction(): Promise<
   if (!user) return { success: false, error: 'Unauthorized' };
 
   try {
-    const profile = await getCurrentUserProfile(user.id);
+    const { users } = getCacheContainer();
+    const profile = await users.getCurrentUserProfile(user.id);
     return { success: true, data: profile };
   } catch (error) {
     console.error('[CPIS-ERROR] Users.GetCurrentProfile:', error);
@@ -260,7 +258,11 @@ export async function updateCurrentUserProfileAction(
 
   try {
     const validatedData = profileUpdateSchema.parse(input);
-    const profile = await updateCurrentUserProfile(user.id, validatedData);
+    const { users } = getCacheContainer();
+    const profile = await users.updateCurrentUserProfile(
+      user.id,
+      validatedData
+    );
     // CG-05: Cache invalidation
     revalidateTag(ECacheTag.USERS, 'max');
     // revalidatePath('/my-profile'); // fallback

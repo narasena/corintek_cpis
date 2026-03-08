@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath, revalidateTag } from 'next/cache';
-import * as parameterService from './service';
+import { getCacheContainer } from '@/features/cache/di';
 import * as limitService from './limits-service';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import {
@@ -30,8 +30,9 @@ export async function getParametersAction() {
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
-    const parameters = await parameterService.getAllParameters(actor);
-    return { success: true, data: parameters };
+    const { parameters } = getCacheContainer();
+    const data = await parameters.getAllParameters(actor);
+    return { success: true, data };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Parameters.List:', error);
     return {
@@ -50,10 +51,8 @@ export async function createParameterAction(data: TCreateParameter) {
 
   try {
     const validatedData = CreateParameterSchema.parse(data);
-    const parameter = await parameterService.createParameter(
-      actor,
-      validatedData
-    );
+    const { parameters } = getCacheContainer();
+    const parameter = await parameters.createParameter(actor, validatedData);
 
     // CG-05: Cache invalidation - tag-based
     revalidateTag(ECacheTag.PARAMETERS, 'max');
@@ -97,10 +96,8 @@ export async function updateParameterAction(data: TUpdateParameter) {
 
   try {
     const validatedData = UpdateParameterSchema.parse(data);
-    const parameter = await parameterService.updateParameter(
-      actor,
-      validatedData
-    );
+    const { parameters } = getCacheContainer();
+    const parameter = await parameters.updateParameter(actor, validatedData);
 
     // CG-05: Cache invalidation - tag-based
     revalidateTag(ECacheTag.PARAMETERS, 'max');
@@ -143,7 +140,8 @@ export async function deleteParameterAction(id: string) {
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
-    await parameterService.deleteParameter(actor, id);
+    const { parameters } = getCacheContainer();
+    await parameters.deleteParameter(actor, id);
 
     // CG-05: Cache invalidation - tag-based
     revalidateTag(ECacheTag.PARAMETERS, 'max');

@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath, revalidateTag } from 'next/cache';
-import * as projectService from './service';
+import { getCacheContainer } from '@/features/cache/di';
 import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
 import {
@@ -29,6 +29,7 @@ export async function upsertProjectParameterOverrideAction(
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
+    const { projects: projectService } = getCacheContainer();
     const validatedData = ProjectParameterOverrideSchema.parse(data);
 
     if (!validatedData.projectId || !validatedData.parameterId) {
@@ -74,7 +75,8 @@ export async function createProjectAction(data: TCreateProject) {
 
   try {
     const validatedData = CreateProjectSchema.parse(data);
-    const project = await projectService.createProject(
+    const { projects } = getCacheContainer();
+    const project = await projects.createProject(
       {
         id: actor.id,
         email: actor.email,
@@ -107,7 +109,8 @@ export async function updateProjectAction(data: TUpdateProject) {
 
   try {
     const validatedData = UpdateProjectSchema.parse(data);
-    const project = await projectService.updateProject(
+    const { projects } = getCacheContainer();
+    const project = await projects.updateProject(
       {
         id: actor.id,
         email: actor.email,
@@ -139,7 +142,8 @@ export async function deleteProjectAction(id: string) {
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
-    await projectService.deleteProject(
+    const { projects } = getCacheContainer();
+    await projects.deleteProject(
       {
         id: actor.id,
         email: actor.email,
@@ -172,7 +176,8 @@ export async function getProjectsAction() {
 
   try {
     ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
-    const projects = await projectService.getProjects({
+    const { projects: projectsService } = getCacheContainer();
+    const projects = await projectsService.getProjects({
       id: actor.id,
       email: actor.email,
       role: actor.role,
@@ -193,7 +198,8 @@ export async function getDashboardProjectsAction() {
 
   try {
     ensureAccess(actor.role, RbacResource.DASHBOARD, 'read');
-    const projects = await projectService.getDashboardProjects({
+    const { projects: projectsService } = getCacheContainer();
+    const projects = await projectsService.getDashboardProjects({
       id: actor.id,
       email: actor.email,
       role: actor.role,
@@ -217,7 +223,8 @@ export async function getProjectAction(id: string) {
 
   try {
     ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
-    const project = await projectService.getProjectById(
+    const { projects } = getCacheContainer();
+    const project = await projects.getProjectById(
       {
         id: actor.id,
         email: actor.email,
@@ -247,7 +254,8 @@ export async function getProjectAssignmentsAction(projectId: string) {
     const validatedProjectId =
       SetProjectAssignmentsSchema.shape.projectId.parse(projectId);
 
-    const assignments = await projectService.getProjectAssignments(
+    const { projects } = getCacheContainer();
+    const assignments = await projects.getProjectAssignments(
       { id: actor.id, email: actor.email, role: actor.role },
       validatedProjectId
     );
@@ -270,7 +278,8 @@ export async function setProjectAssignmentsAction(input: unknown) {
     ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'update');
     const parsed = SetProjectAssignmentsSchema.parse(input);
 
-    const assignments = await projectService.setProjectAssignments(
+    const { projects } = getCacheContainer();
+    const assignments = await projects.setProjectAssignments(
       { id: actor.id, email: actor.email, role: actor.role },
       parsed.projectId,
       parsed.assignments

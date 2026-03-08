@@ -3,13 +3,12 @@
 import { z } from 'zod/v4';
 import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
-import * as dashboardService from './service';
+import { getCacheContainer } from '@/features/cache/di';
 import * as projectService from '@/features/projects/service';
 import { resolveTargetProjectIds } from './utils';
 import type { IJwtPayload } from '@/@types/auth.type';
 import type { IGetRecentActivitiesActionResult } from './types';
 import { getVisibleActivityTypes } from './config';
-import { composeDashboardModule, type IActivityRepository } from './di';
 import { prisma } from '@/lib/prisma';
 
 async function requireActor(): Promise<IJwtPayload> {
@@ -51,7 +50,8 @@ export async function getDashboardMetricsAction(data: unknown) {
     );
     if (targetProjectIds === 'empty') return { success: true, data: [] };
 
-    const metrics = await dashboardService.getDashboardMetrics(
+    const { dashboard } = getCacheContainer();
+    const metrics = await dashboard.getDashboardMetrics(
       targetProjectIds,
       validatedData.range
     );
@@ -84,7 +84,8 @@ export async function getRecentPhotosAction(data: unknown) {
     );
     if (targetProjectIds === 'empty') return { success: true, data: [] };
 
-    const photos = await dashboardService.getRecentLogSheetPhotos(
+    const { dashboard } = getCacheContainer();
+    const photos = await dashboard.getRecentLogSheetPhotos(
       targetProjectIds,
       validatedData.limit
     );
@@ -125,9 +126,8 @@ export async function getRecentActivitiesAction(
       };
     }
 
-    const { activityService } = composeDashboardModule(prisma);
-
-    const result = await activityService.getRecentActivities({
+    const { dashboard } = getCacheContainer();
+    const result = await dashboard.getRecentActivities({
       actor,
       projectIds: targetIds ?? undefined,
       timeRange: validated.timeRange,

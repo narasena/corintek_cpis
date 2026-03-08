@@ -8,48 +8,41 @@ import type { IJwtPayload } from '@/@types/auth.type';
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
 import type { TCreateParameter, TUpdateParameter, IParameter } from './types';
-import { CACHE_LIFE } from '../cache/life-profiles';
+
+// Cached function wrappers (outside class)
+async function getAllParametersCached(
+  service: typeof original,
+  actor: IJwtPayload
+) {
+  'use cache';
+  cacheTag(ECacheTag.PARAMETERS);
+  cacheLife('hours');
+  return await service.getAllParameters(actor);
+}
+
+async function getParameterByIdCached(
+  service: typeof original,
+  actor: IJwtPayload,
+  id: string
+) {
+  'use cache';
+  cacheTag(ECacheTag.PARAMETERS);
+  cacheLife('hours');
+  return await service.getParameterById(actor, id);
+}
 
 export class CachedParameterService {
   constructor(private readonly service: typeof original = original) {}
 
-  async getAllParameters(actor: IJwtPayload): Promise<IParameter[]> {
-    'use cache';
-    cacheTag(ECacheTag.PARAMETERS);
-    cacheLife(CACHE_LIFE.HOURS);
-    try {
-      return await this.service.getAllParameters(actor);
-    } catch (error) {
-      console.error(
-        '[CPIS-ERROR] CachedParameterService.getAllParameters:',
-        error
-      );
-      throw error;
-    }
+  async getAllParameters(actor: IJwtPayload) {
+    return await getAllParametersCached(this.service, actor);
   }
 
-  async getParameterById(
-    actor: IJwtPayload,
-    id: string
-  ): Promise<IParameter | null> {
-    'use cache';
-    cacheTag(ECacheTag.PARAMETERS);
-    cacheLife(CACHE_LIFE.HOURS);
-    try {
-      return await this.service.getParameterById(actor, id);
-    } catch (error) {
-      console.error(
-        '[CPIS-ERROR] CachedParameterService.getParameterById:',
-        error
-      );
-      throw error;
-    }
+  async getParameterById(actor: IJwtPayload, id: string) {
+    return await getParameterByIdCached(this.service, actor, id);
   }
 
-  async createParameter(
-    actor: IJwtPayload,
-    data: TCreateParameter
-  ): Promise<IParameter> {
+  async createParameter(actor: IJwtPayload, data: TCreateParameter) {
     try {
       return await this.service.createParameter(actor, data);
     } catch (error) {
@@ -61,10 +54,7 @@ export class CachedParameterService {
     }
   }
 
-  async updateParameter(
-    actor: IJwtPayload,
-    data: TUpdateParameter
-  ): Promise<IParameter> {
+  async updateParameter(actor: IJwtPayload, data: TUpdateParameter) {
     try {
       return await this.service.updateParameter(actor, data);
     } catch (error) {
@@ -76,7 +66,7 @@ export class CachedParameterService {
     }
   }
 
-  async deleteParameter(actor: IJwtPayload, id: string): Promise<IParameter> {
+  async deleteParameter(actor: IJwtPayload, id: string) {
     try {
       return await this.service.deleteParameter(actor, id);
     } catch (error) {

@@ -9,64 +9,58 @@ import {
   TCreateProject,
   TUpdateProject,
   TProjectAssignmentInput,
+  TProjectParameterOverride,
   IProject,
   IProjectDashboardCard,
 } from './types';
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
-import { CACHE_LIFE } from '../cache/life-profiles';
+
+// Cached function wrappers (outside class)
+async function getProjectsCached(service: typeof original, actor: IJwtPayload) {
+  'use cache';
+  cacheTag(ECacheTag.PROJECTS);
+  cacheLife('hours');
+  return await service.getProjects(actor);
+}
+
+async function getDashboardProjectsCached(
+  service: typeof original,
+  actor: IJwtPayload
+) {
+  'use cache';
+  cacheTag(ECacheTag.PROJECTS_DASHBOARD);
+  cacheLife('minutes');
+  return await service.getDashboardProjects(actor);
+}
+
+async function getProjectByIdCached(
+  service: typeof original,
+  actor: IJwtPayload,
+  id: string
+) {
+  'use cache';
+  cacheTag(ECacheTag.PROJECTS);
+  cacheLife('hours');
+  return await service.getProjectById(actor, id);
+}
 
 export class CachedProjectService {
   constructor(private readonly service: typeof original = original) {}
 
-  async getProjects(actor: IJwtPayload): Promise<IProject[]> {
-    'use cache';
-    cacheTag(ECacheTag.PROJECTS);
-    cacheLife(CACHE_LIFE.DEFAULT);
-    try {
-      return await this.service.getProjects(actor);
-    } catch (error) {
-      console.error('[CPIS-ERROR] CachedProjectService.getProjects:', error);
-      throw error;
-    }
+  async getProjects(actor: IJwtPayload) {
+    return await getProjectsCached(this.service, actor);
   }
 
-  async getDashboardProjects(
-    actor: IJwtPayload
-  ): Promise<IProjectDashboardCard[]> {
-    'use cache';
-    cacheTag(ECacheTag.PROJECTS_DASHBOARD);
-    cacheLife(CACHE_LIFE.SHORT);
-    try {
-      return await this.service.getDashboardProjects(actor);
-    } catch (error) {
-      console.error(
-        '[CPIS-ERROR] CachedProjectService.getDashboardProjects:',
-        error
-      );
-      throw error;
-    }
+  async getDashboardProjects(actor: IJwtPayload) {
+    return await getDashboardProjectsCached(this.service, actor);
   }
 
-  async getProjectById(
-    actor: IJwtPayload,
-    id: string
-  ): Promise<IProject | null> {
-    'use cache';
-    cacheTag(ECacheTag.PROJECTS);
-    cacheLife(CACHE_LIFE.DEFAULT);
-    try {
-      return await this.service.getProjectById(actor, id);
-    } catch (error) {
-      console.error('[CPIS-ERROR] CachedProjectService.getProjectById:', error);
-      throw error;
-    }
+  async getProjectById(actor: IJwtPayload, id: string) {
+    return await getProjectByIdCached(this.service, actor, id);
   }
 
-  async createProject(
-    actor: IJwtPayload,
-    data: TCreateProject
-  ): Promise<IProject> {
+  async createProject(actor: IJwtPayload, data: TCreateProject) {
     try {
       return await this.service.createProject(actor, data);
     } catch (error) {
@@ -75,10 +69,7 @@ export class CachedProjectService {
     }
   }
 
-  async updateProject(
-    actor: IJwtPayload,
-    data: TUpdateProject
-  ): Promise<IProject> {
+  async updateProject(actor: IJwtPayload, data: TUpdateProject) {
     try {
       return await this.service.updateProject(actor, data);
     } catch (error) {
@@ -91,7 +82,7 @@ export class CachedProjectService {
     actor: IJwtPayload,
     projectId: string,
     assignments: TProjectAssignmentInput[]
-  ): Promise<unknown[]> {
+  ) {
     try {
       return await this.service.setProjectAssignments(
         actor,
@@ -107,10 +98,7 @@ export class CachedProjectService {
     }
   }
 
-  async assertCanAccessProject(
-    actor: IJwtPayload,
-    projectId: string
-  ): Promise<void> {
+  async assertCanAccessProject(actor: IJwtPayload, projectId: string) {
     try {
       return await this.service.assertCanAccessProject(actor, projectId);
     } catch (error) {
@@ -122,12 +110,51 @@ export class CachedProjectService {
     }
   }
 
-  async getAccessibleProjectIds(actor: IJwtPayload): Promise<string[] | null> {
+  async getAccessibleProjectIds(actor: IJwtPayload) {
     try {
       return await this.service.getAccessibleProjectIds(actor);
     } catch (error) {
       console.error(
         '[CPIS-ERROR] CachedProjectService.getAccessibleProjectIds:',
+        error
+      );
+      throw error;
+    }
+  }
+
+  async getProjectAssignments(
+    actor: IJwtPayload,
+    projectId: string
+  ): Promise<unknown[]> {
+    try {
+      return await this.service.getProjectAssignments(actor, projectId);
+    } catch (error) {
+      console.error(
+        '[CPIS-ERROR] CachedProjectService.getProjectAssignments:',
+        error
+      );
+      throw error;
+    }
+  }
+
+  async deleteProject(actor: IJwtPayload, id: string) {
+    try {
+      return await this.service.deleteProject(actor, id);
+    } catch (error) {
+      console.error('[CPIS-ERROR] CachedProjectService.deleteProject:', error);
+      throw error;
+    }
+  }
+
+  async upsertProjectParameterOverride(
+    actor: IJwtPayload,
+    data: TProjectParameterOverride
+  ) {
+    try {
+      return await this.service.upsertProjectParameterOverride(actor, data);
+    } catch (error) {
+      console.error(
+        '[CPIS-ERROR] CachedProjectService.upsertProjectParameterOverride:',
         error
       );
       throw error;

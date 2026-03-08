@@ -5,7 +5,6 @@
 
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
-import { CACHE_LIFE } from '../cache/life-profiles';
 import {
   getDashboardMetrics as originalGetDashboardMetrics,
   getRecentLogSheetPhotos as originalGetRecentLogSheetPhotos,
@@ -19,6 +18,39 @@ import type {
   IGetRecentActivitiesResult,
 } from './types';
 
+// Cached function wrappers (outside class)
+async function getDashboardMetricsCached(
+  impl: typeof originalGetDashboardMetrics,
+  projectIds?: string[],
+  range?: { start: Date; end: Date }
+) {
+  'use cache';
+  cacheTag(ECacheTag.DASHBOARD_METRICS);
+  cacheLife('hours');
+  return await impl(projectIds, range);
+}
+
+async function getRecentLogSheetPhotosCached(
+  impl: typeof originalGetRecentLogSheetPhotos,
+  projectIds?: string[],
+  limit: number = 50
+) {
+  'use cache';
+  cacheTag(ECacheTag.DASHBOARD_PHOTOS);
+  cacheLife('minutes');
+  return await impl(projectIds, limit);
+}
+
+async function getRecentActivitiesCached(
+  activityService: IActivityService,
+  input: IGetRecentActivitiesInput
+) {
+  'use cache';
+  cacheTag(ECacheTag.DASHBOARD_ACTIVITIES);
+  cacheLife('minutes');
+  return await activityService.getRecentActivities(input);
+}
+
 export class CachedDashboardService {
   constructor(
     private readonly getDashboardMetricsImpl: typeof originalGetDashboardMetrics,
@@ -29,54 +61,24 @@ export class CachedDashboardService {
   async getDashboardMetrics(
     projectIds?: string[],
     range?: { start: Date; end: Date }
-  ): Promise<IDashboardMetric[]> {
-    'use cache';
-    cacheTag(ECacheTag.DASHBOARD_METRICS);
-    cacheLife(CACHE_LIFE.DEFAULT);
-    try {
-      return await this.getDashboardMetricsImpl(projectIds, range);
-    } catch (error) {
-      console.error(
-        '[CPIS-ERROR] CachedDashboardService.getDashboardMetrics:',
-        error
-      );
-      throw error;
-    }
+  ) {
+    return await getDashboardMetricsCached(
+      this.getDashboardMetricsImpl,
+      projectIds,
+      range
+    );
   }
 
-  async getRecentLogSheetPhotos(
-    projectIds?: string[],
-    limit: number = 50
-  ): Promise<unknown[]> {
-    'use cache';
-    cacheTag(ECacheTag.DASHBOARD_PHOTOS);
-    cacheLife(CACHE_LIFE.SHORT);
-    try {
-      return await this.getRecentLogSheetPhotosImpl(projectIds, limit);
-    } catch (error) {
-      console.error(
-        '[CPIS-ERROR] CachedDashboardService.getRecentLogSheetPhotos:',
-        error
-      );
-      throw error;
-    }
+  async getRecentLogSheetPhotos(projectIds?: string[], limit: number = 50) {
+    return await getRecentLogSheetPhotosCached(
+      this.getRecentLogSheetPhotosImpl,
+      projectIds,
+      limit
+    );
   }
 
-  async getRecentActivities(
-    input: IGetRecentActivitiesInput
-  ): Promise<IGetRecentActivitiesResult> {
-    'use cache';
-    cacheTag(ECacheTag.DASHBOARD_ACTIVITIES);
-    cacheLife(CACHE_LIFE.SHORT);
-    try {
-      return await this.activityService.getRecentActivities(input);
-    } catch (error) {
-      console.error(
-        '[CPIS-ERROR] CachedDashboardService.getRecentActivities:',
-        error
-      );
-      throw error;
-    }
+  async getRecentActivities(input: IGetRecentActivitiesInput) {
+    return await getRecentActivitiesCached(this.activityService, input);
   }
 }
 
