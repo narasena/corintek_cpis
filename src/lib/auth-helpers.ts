@@ -38,6 +38,19 @@ export async function getCurrentUser(): Promise<IJwtPayload | null> {
 }
 
 /**
+ * Get standard authentication cookie options (Infrastructure Policy)
+ */
+export function getAuthCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    maxAge: AUTH_INFRA_CONFIG.COOKIE_MAX_AGE,
+    path: '/',
+  };
+}
+
+/**
  * Set an authenticated session cookie
  * @param payload - User data to store in JWT
  */
@@ -47,13 +60,11 @@ export async function setAuthSession(
   const token = await generateToken(payload);
   const cookieStore = await cookies();
 
-  cookieStore.set(AUTH_INFRA_CONFIG.COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: AUTH_INFRA_CONFIG.COOKIE_MAX_AGE,
-    path: '/',
-  });
+  cookieStore.set(
+    AUTH_INFRA_CONFIG.COOKIE_NAME,
+    token,
+    getAuthCookieOptions()
+  );
 }
 
 /**

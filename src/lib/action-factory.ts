@@ -2,8 +2,9 @@ import { z } from 'zod/v4';
 import { AuthenticationError } from './auth-helpers';
 import { ensureAccess, TRbacResource, TRbacCapability } from './rbac';
 import { requireActor } from '@/features/auth/lib/user-context';
+import { ERROR_MESSAGES } from '@/features/auth/constants';
 
-import { TActionResult, err, unauthorized } from './action-helpers';
+import { TActionResult, err } from './action-helpers';
 
 /**
  * Metadata for a protected action
@@ -89,19 +90,22 @@ function validate<T>(data: T, schema?: z.ZodType<T>): T {
  */
 function handleActionFailure(error: any): TActionResult<any> {
   if (error instanceof AuthenticationError || error.name === 'AuthenticationError') {
-    return unauthorized();
+    return {
+      success: false,
+      error: ERROR_MESSAGES.SESSION_EXPIRED,
+    };
   }
 
   // Handle ZodError more robustly by checking typeName or instanceof
   if (error instanceof z.ZodError || error.name === 'ZodError') {
     return {
       success: false,
-      error: error.errors?.[0]?.message || error.message || 'Input tidak valid',
+      error: error.errors?.[0]?.message || error.message || ERROR_MESSAGES.INPUT_INVALID,
     };
   }
 
   // Centralized error logging via existing helper
-  return err(error, 'Gagal');
+  return err(error, ERROR_MESSAGES.GENERIC_ERROR);
 }
 
 /**

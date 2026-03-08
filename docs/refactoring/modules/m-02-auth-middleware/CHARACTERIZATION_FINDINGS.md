@@ -134,17 +134,66 @@ These journeys represent the most critical paths for Auth & Middleware.
 **Implication:** Catch blocks relying strictly on `EXPIRED` for refresh logic might fail.
 **Risk if changed:** Medium.
 
-### 7.3 actionFactory Raw Error Leak
+### 7.3 actionFactory Raw Error Leak (RESOLVED)
 **Location:** `src/lib/action-factory.ts`
-**Behavior:** When `requireActor` fails in a non-browser environment (or where cookies are missing), the factory returns a raw `Unauthorized` string instead of the localized "Sesi kedaluwarsa..." message expected in the UI.
-**Implication:** Characterization tests must expect the raw internal string.
+**Behavior:** When `requireActor` fails, the factory now returns localized `ERROR_MESSAGES.SESSION_EXPIRED` instead of the internal "Unauthorized" string.
+**Resolution:** Mapped internal `AuthenticationError` to centralized error constant in `handleActionFailure`.
 **Risk if changed:** Low.
 
-### 7.4 Hardcoded Indonesian Localization
-**Location:** `src/features/auth/service.ts`
-**Behavior:** Authentication failure messages (e.g., "Email atau kata sandi tidak valid") are hardcoded in Indonesian within the service layer.
-**Implication:** The system is currently single-locale (Indonesian) at the service level.
-**Risk if changed:** Low (would improve i18n but requires updating tests).
+### 7.4 Hardcoded Indonesian Localization (RESOLVED)
+**Location:** `src/features/auth/service.ts`, `src/lib/action-factory.ts`
+**Behavior:** Authentication failure messages and action factory errors were previously hardcoded.
+**Resolution:** All UI and error strings are now centralized in `src/features/auth/constants.ts` under `ERROR_MESSAGES` and `SUCCESS_MESSAGES`.
+**Benefit:** Enables easy i18n/localization and ensures consistent error feedback across the system.
+**Risk if changed:** Low.
+
+### 7.5 User Identity Data Leakage (RESOLVED)
+**Location:** `src/features/users/utils.ts`, `src/@types/user.type.ts`
+**Behavior:** Previously, `deletedAt` metadata was included in the public-facing `TUserResponse`, exposing soft-delete internals to the UI.
+**Resolution:** Split user schemas into `userInternalSchema` (inclusive) and `userResponseSchema` (public). Updated `toUserResponse` mapper to strip `deletedAt` before returning data.
+**Benefit:** Improved data privacy and adherence to Least Privilege principles for API responses.
+
+### 7.6 Loose Typing in User Mappers (RESOLVED)
+**Location:** `src/features/users/utils.ts`
+**Behavior:** `toUserResponse` accepted `unknown` input, relying solely on runtime Zod parsing.
+**Resolution:** Specialised the input type to `TUserInternal`, ensuring compile-time verification that the database object contains the necessary fields for mapping.
+**Benefit:** Better IDE support and early detection of schema mismatches.
+
+### 7.7 Data Duplication in Client Policies (RESOLVED)
+**Location:** `src/lib/rbac/policies/client.policy.ts`
+**Behavior:** `CLIENT` and `CLIENT_SUPERVISOR` roles previously shared fully duplicated permission sets and landing pages.
+**Resolution:** Extracted common permissions into `BASE_CLIENT_POLICY` and used spread operator for role-specific overrides.
+**Benefit:** Improved maintainability; changes to base client permissions now only need to be made in one place.
+
+### 7.8 Redundant Data Mapping in User Context (RESOLVED)
+**Location:** `src/features/auth/lib/user-context.ts`
+**Behavior:** `getCurrentUserDetails` previously manually picked and re-mapped individual user fields.
+**Resolution:** Re-defined `ICurrentUserDetails` as a type alias for `TUserResponse` and delegated the mapping entirely to `authService.validateSessionUser`.
+**Benefit:** Reduced boilerplate and maintenance risk; the user context now automatically stays in sync with the global user response schema.
+
+### 7.9 Implicit Work Factor in Crypto (RESOLVED)
+**Location:** `src/features/auth/crypto.ts`
+**Behavior:** `hashPassword` previously used a fixed work factor from constants, preventing override for higher-security accounts or faster testing.
+**Resolution:** Parameterized `hashPassword` to accept an optional `rounds` argument, defaulting to the system constant.
+**Benefit:** Increased flexibility for future security tiering and improved test performance.
+
+### 7.10 Procedural Error Handling in Public Actions (RESOLVED)
+**Location:** `src/features/auth/actions.ts`
+**Behavior:** `loginAction` previously manually extracted error messages, leading to inconsistent formatting for Zod validation errors compared to protected actions.
+**Resolution:** Standardized the `catch` block to use the same extraction logic as `actionFactory` (picking the first Zod error message) and unified the logging format.
+**Benefit:** Consistent user feedback regardless of whether the action is public or protected, and better observability via standardized logs.
+
+### 7.11 Leaky Cookie Security Policy (RESOLVED)
+**Location:** `src/lib/auth-helpers.ts`
+**Behavior:** Cookie security options (httpOnly, secure, etc.) were previously hardcoded directly in `setAuthSession`, coupling the session mechanism with security policy.
+**Resolution:** Extracted cookie options into a dedicated `getAuthCookieOptions` helper function.
+**Benefit:** Centralized control over cookie security policy and cleaner separation of concerns within the infrastructure layer.
+
+### 7.12 Procedural/String-Based Logging (RESOLVED)
+**Location:** `src/features/auth/service.ts`, `src/lib/logger.ts`
+**Behavior:** Log messages were previously manually concatenated with template literals, making them difficult to aggregate and monitor at scale.
+**Resolution:** Introduced a project-wide `CPIS Structured Logger` in `src/lib/logger.ts` and migrated the auth service to use it.
+**Benefit:** Centralized formatting, machine-readable context, and automated prefixing (`[CPIS-AUTH]`, `[CPIS-ERROR]`) ensuring adherence to project conventions.
 
 ---
 

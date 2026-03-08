@@ -443,6 +443,50 @@ Encapsulate timing-attack and user-existence verification logic within a special
 
 ---
 
+## ADR-014: Structured Logging Standardization
+
+**Date:** 2026-03-08  
+**Status:** Accepted  
+**Scope:** Observability, Maintenance, Security
+
+### Context
+
+The system previously used procedural logging via manual `console.error` and `console.info` calls with template literals. While following a `[CPIS-TYPE]` prefix convention, this was prone to human error, inconsistent formatting, and made log aggregation difficult. As the system scales, a more robust and machine-readable logging strategy is required.
+
+### Decision
+
+Implement a project-wide structured logger in `src/lib/logger.ts` that encapsulates the `[CPIS-TYPE]` convention and supports structured metadata.
+
+### Implementation
+
+- **Location:** `src/lib/logger.ts`
+- **Standardized Prefixes:**
+  - `[CPIS-ERROR]`: For catch blocks and error states.
+  - `[CPIS-AUTH]`: For security and authentication events (login, logout, session verification).
+  - `[CPIS-SYSTEM]`: For general system information.
+  - `[CPIS-WARN]`: For non-critical warnings.
+- **Usage Pattern:**
+  ```typescript
+  import { logger } from '@/lib/logger';
+  
+  logger.error('Feature', 'Method', 'Message', { metadata: 'value' });
+  ```
+
+### Rationale
+
+- **Consistency:** Automates the prefixing convention mandated in project rules.
+- **Observability:** Structured metadata allows for easier searching and filtering in log management systems.
+- **Maintainability:** Logging logic is centralized; changes to format or destination (e.g., external monitoring service) only require one update.
+- **Separation of Concerns:** Developers focus on "what" to log, while the logger handles "how" it's formatted.
+
+### Consequences
+
+- All manual `console` calls with `[CPIS-*]` prefixes must be migrated to the new `logger`.
+- Future feature implementation MUST use the structured logger for all internal observability.
+- Ensures a clean, uniform output across the entire system's server logs.
+
+---
+
 ## How to Add New Decisions
 
 1. Use format: `ADR-XXX: Title`

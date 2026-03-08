@@ -5,7 +5,7 @@ import { authenticateUser } from '@/features/auth/service';
 import { actionFactory } from '@/lib/action-factory';
 import { middleware } from '@/middleware';
 import { NextRequest, NextResponse } from 'next/server';
-import { AUTH_CONFIG } from '@/features/auth/constants';
+import { AUTH_CONFIG, ERROR_MESSAGES } from '@/features/auth/constants';
 import { prisma } from '@/lib/prisma';
 
 // Mock prisma for authenticateUser
@@ -123,7 +123,7 @@ describe('M-02 Top 5 Riskiest Functions — Characterization', () => {
       
       // Returns success: false because requireActor (cookies) fails in test env
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Unauthorized');
+      expect(result.error).toBe(ERROR_MESSAGES.SESSION_EXPIRED);
     });
   });
 

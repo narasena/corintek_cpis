@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { actionFactory } from './action-factory';
 import { AuthenticationError } from './auth-helpers';
 import { z } from 'zod';
+import { ERROR_MESSAGES } from '@/features/auth/constants';
 
 // Mock dependencies
 vi.mock('@/features/auth/lib/user-context', () => ({
@@ -60,7 +61,7 @@ describe('actionFactory characterization', () => {
 
     const result = await action({});
 
-    expect(result).toEqual({ success: false, error: 'Unauthorized' });
+    expect(result).toEqual({ success: false, error: ERROR_MESSAGES.SESSION_EXPIRED });
     expect(handler).not.toHaveBeenCalled();
   });
 
@@ -100,6 +101,6 @@ describe('actionFactory characterization', () => {
     const result = await action({});
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Gagal');
+    expect(result.error).toBe(ERROR_MESSAGES.GENERIC_ERROR);
   });
 });

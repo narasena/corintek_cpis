@@ -8,6 +8,7 @@ import {
 } from '../users/utils';
 import { ERROR_MESSAGES } from './constants';
 import { secureCompare } from './crypto';
+import { logger } from '@/lib/logger';
 
 /**
  * Authenticate user with email and password
@@ -35,18 +36,18 @@ export async function authenticateUser(
   // 3. Final validation (all failures return the same generic message to prevent account enumeration)
   // Check both the password/existence check and the account lifecycle status.
   if (!isAuthValid) {
-    console.error(`[CPIS-ERROR] Auth.authenticateUser: Invalid credentials (password mismatch or user not found) | email: ${email}`);
+    logger.error('Auth', 'authenticateUser', 'Invalid credentials (password mismatch or user not found)', { email });
     throw new Error(ERROR_MESSAGES.AUTHENTICATION_FAILED);
   }
 
   // user is guaranteed to be non-null if isAuthValid is true (per secureCompare implementation)
   if (!isUserAuthValid(user!)) {
-    console.error(`[CPIS-ERROR] Auth.authenticateUser: User status invalid (blocked/inactive/deleted) | email: ${email} | userId: ${user!.id}`);
+    logger.error('Auth', 'authenticateUser', 'User status invalid (blocked/inactive/deleted)', { email, userId: user!.id });
     throw new Error(ERROR_MESSAGES.AUTHENTICATION_FAILED);
   }
 
   // 4. Audit Log Success (for security monitoring and audit trail)
-  console.info(`[CPIS-AUTH] Auth.authenticateUser: Login successful | email: ${email} | userId: ${user!.id} | role: ${user!.role}`);
+  logger.auth('Auth', 'authenticateUser', 'Login successful', { email, userId: user!.id, role: user!.role });
 
   // 5. Return validated user data (schema strips the password)
   return toUserResponse(user!);
@@ -69,12 +70,12 @@ export async function validateSessionUser(
 
   // Return null if user doesn't exist or fails authentication lifecycle validation
   if (!user) {
-    console.error(`[CPIS-ERROR] Auth.validateSessionUser: Active session user not found: ${userId}`);
+    logger.error('Auth', 'validateSessionUser', 'Active session user not found', { userId });
     return null;
   }
 
   if (!isUserAuthValid(user)) {
-    console.error(`[CPIS-ERROR] Auth.validateSessionUser: Session user status invalid (blocked/inactive/deleted): ${userId}`);
+    logger.error('Auth', 'validateSessionUser', 'Session user status invalid (blocked/inactive/deleted)', { userId });
     return null;
   }
 

@@ -76,7 +76,7 @@ export function ProjectAssignmentsSection({
   }, [mode, projectId]);
 
   const activeUsers = useMemo(
-    () => users.filter(u => u.isActive && !u.isBlocked && !u.deletedAt),
+    () => users.filter(u => u.isActive && !u.isBlocked),
     [users]
   );
 

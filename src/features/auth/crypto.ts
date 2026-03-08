@@ -4,10 +4,14 @@ import { AUTH_CONFIG, FAKE_PASSWORD_HASH } from './constants';
 /**
  * Hash a password using bcrypt
  * @param password - Plain text password
+ * @param rounds - Optional cost factor (defaults to AUTH_CONFIG.SALT_ROUNDS)
  * @returns Hashed password
  */
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, AUTH_CONFIG.SALT_ROUNDS);
+export async function hashPassword(
+  password: string,
+  rounds: number = AUTH_CONFIG.SALT_ROUNDS
+): Promise<string> {
+  return bcrypt.hash(password, rounds);
 }
 
 /**

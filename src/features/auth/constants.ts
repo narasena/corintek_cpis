@@ -15,6 +15,10 @@ export const ERROR_MESSAGES = {
   ...AUTH_INFRA_ERROR,
   AUTHENTICATION_FAILED: 'Email atau kata sandi tidak valid',
   LOGIN_FAILED: 'Login gagal',
+  SESSION_EXPIRED: 'Sesi kedaluwarsa atau tidak valid. Silakan login kembali.',
+  UNAUTHORIZED: 'Anda tidak memiliki akses ke sumber daya ini',
+  INPUT_INVALID: 'Input tidak valid',
+  GENERIC_ERROR: 'Gagal memproses permintaan',
 } as const;
 
 export const SUCCESS_MESSAGES = {

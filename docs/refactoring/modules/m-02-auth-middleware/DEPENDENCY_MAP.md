@@ -16,11 +16,11 @@
 
 | #   | File                                  | Lines | Role                                      |
 | --- | ------------------------------------- | ----: | ----------------------------------------- |
-| 1   | src/features/auth/actions.ts          |    71 | Public Server Actions (Login/Logout)      |
-| 2   | src/features/auth/service.ts          |    82 | Auth business logic & Prisma interaction  |
-| 3   | src/features/auth/crypto.ts           |    46 | Password hashing & comparison primitives  |
-| 4   | src/features/auth/constants.ts        |    35 | Auth domain constants & routes            |
-| 5   | src/features/auth/lib/user-context.ts |    59 | Server-side user identity resolution      |
+| 1   | src/features/auth/actions.ts          |    80 | Public Server Actions (Standardized)      |
+| 2   | src/features/auth/service.ts          |    83 | Auth business logic (Hardened)            |
+| 3   | src/features/auth/crypto.ts           |    50 | Password hashing & comparison primitives  |
+| 4   | src/features/auth/constants.ts        |    39 | Auth domain constants & routes            |
+| 5   | src/features/auth/lib/user-context.ts |    43 | Server-side user identity resolution      |
 
 ### Infrastructure Layer (Security Helpers)
 
@@ -28,11 +28,12 @@
 | --- | ------------------------------------- | ----: | ----------------------------------------- |
 | 1   | src/lib/rbac.ts                       |   121 | Core RBAC Registry & Access Checks        |
 | 2   | src/lib/jwt.ts                        |    96 | JWT utilities (jose-based)                |
-| 3   | src/lib/auth-helpers.ts               |    72 | Shared session & cookie helpers           |
-| 4   | src/lib/action-factory.ts             |   111 | Type-safe Server Action Factory           |
+| 3   | src/lib/auth-helpers.ts               |    83 | Shared session & cookie helpers           |
+| 4   | src/lib/action-factory.ts             |   115 | Type-safe Server Action Factory           |
 | 5   | src/lib/rbac/types.ts                 |    46 | RBAC type definitions                     |
-| 6   | src/lib/rbac/policies/*.ts            |   164 | Granular role-based policies (3 files)    |
-| 7   | src/features/users/utils.ts           |    59 | Shared user mappers & auth status guards  |
+| 6   | src/lib/rbac/policies/*.ts            |   156 | Granular role-based policies (3 files)    |
+| 7   | src/features/users/utils.ts           |    68 | Shared user mappers & auth status guards  |
+| 8   | src/lib/logger.ts                     |    49 | Project-wide structured logger (New)      |
 
 ---
 
@@ -57,6 +58,7 @@ graph TD
         AH[auth-helpers.ts]
         AF[action-factory.ts]
         UUTL[users/utils.ts]
+        LOG[logger.ts]
     end
 
     MW --> JWT
@@ -67,6 +69,7 @@ graph TD
     
     SVC --> CRYP
     SVC --> UUTL
+    SVC --> LOG
     
     UC --> AH
     
@@ -105,6 +108,7 @@ graph TD
 | ----- | ------------------------------------------------ | ------------------------------- | ------ |
 | DUP-1 | `JWT_SECRET` retrieval & encoding                 | `lib/jwt.ts`, `lib/auth-helpers.ts` (Partial) | Fixed  |
 | DUP-2 | User account status check (blocked/inactive)     | `service.ts`, `users/utils.ts`  | Fixed  |
+| DUP-3 | Log prefixing [CPIS-TYPE]                        | All module services             | Fixed (Logger extracted) |
 
 ---
 
@@ -118,5 +122,6 @@ graph TD
 | **Imported By** | All Feature Modules        | `actions.ts`   | Use `actionFactory` for protected actions |
 | **Imported By** | All Feature Modules        | `service.ts`   | Use `requireActor` / `ensureAccess`       |
 | **Imported By** | Layout Components          | `nav.tsx`      | Use `filterNavItems` for conditional UI   |
+| **Imported By** | Project-wide               | `logger.ts`    | Standardized logging for all modules      |
 
 **Rule:** M-02 is the **security anchor** of the system. Any changes to `rbac.ts`, `jwt.ts`, or `action-factory.ts` have system-wide impact. All refactoring in this module MUST be verified against the global test suite.

@@ -1,19 +1,13 @@
 import { getCurrentUser, AuthenticationError } from '@/lib/auth-helpers';
 import { IJwtPayload } from '@/@types/auth.type';
-import { TUserRole } from '@/@types/user.type';
+import { TUserResponse } from '@/@types/user.type';
 import * as authService from '../service';
 
 /**
- * User context details returned to components
+ * User context details returned to components.
+ * Standardized to match the public user response.
  */
-export interface ICurrentUserDetails {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string | null;
-  avatarUrl: string | null;
-  role: TUserRole;
-}
+export type ICurrentUserDetails = TUserResponse;
 
 /**
  * Get the full details of the current authenticated user from the database.
@@ -24,18 +18,8 @@ export async function getCurrentUserDetails(): Promise<ICurrentUserDetails | nul
   if (!payload) return null;
 
   // Validate session user status using the centralized auth service
-  const user = await authService.validateSessionUser(payload.id);
-
-  if (!user) return null;
-
-  return {
-    id: user.id,
-    email: user.email,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    avatarUrl: user.avatarUrl,
-    role: user.role as TUserRole,
-  };
+  // and return the standardized response object directly.
+  return authService.validateSessionUser(payload.id);
 }
 
 /**

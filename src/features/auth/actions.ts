@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod/v4';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { authenticateUser } from './service';
@@ -50,9 +51,17 @@ export async function loginAction(
         role: user.role,
       },
     };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : ERROR_MESSAGES.LOGIN_FAILED;
-    console.error(`[CPIS-ERROR] Auth.loginAction: ${message}`);
+  } catch (error: any) {
+    let message = ERROR_MESSAGES.LOGIN_FAILED;
+
+    if (error instanceof z.ZodError || error.name === 'ZodError') {
+      message =
+        error.errors?.[0]?.message || error.message || ERROR_MESSAGES.INPUT_INVALID;
+    } else if (error instanceof Error) {
+      message = error.message;
+    }
+
+    console.error('[CPIS-ERROR] Auth.loginAction', error);
 
     return {
       success: false,

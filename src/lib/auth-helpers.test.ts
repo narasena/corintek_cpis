@@ -201,14 +201,14 @@ describe('getCurrentUserDetails', () => {
 
     const result = await getCurrentUserDetails();
 
-    expect(result).toEqual({
+    expect(result).toEqual(expect.objectContaining({
       id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       email: 'test@example.com',
       firstName: 'John',
       lastName: 'Doe',
       avatarUrl: null,
       role: 'TECHNICIAN',
-    });
+    }));
   });
 });
 
