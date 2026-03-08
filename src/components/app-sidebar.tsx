@@ -23,13 +23,13 @@ export function AppSidebar({
 }: React.ComponentProps<typeof Sidebar> & {
   user: { name: string; email: string; avatar: string | null; role: string };
 }) {
-  // Filter all categories through RBAC
-  const categories = {
-    platform: filterNavItems(user.role, [...NAV_CONFIG.platform]),
-    operations: filterNavItems(user.role, [...NAV_CONFIG.operations]),
-    inventory: filterNavItems(user.role, [...NAV_CONFIG.inventory]),
-    administration: filterNavItems(user.role, [...NAV_CONFIG.administration]),
-  };
+  // Navigation sections configuration with display labels
+  const navSections = [
+    { items: NAV_CONFIG.platform },
+    { items: NAV_CONFIG.operations, label: 'Operasional' },
+    { items: NAV_CONFIG.inventory, label: 'Inventori & Master' },
+    { items: NAV_CONFIG.administration, label: 'Administrasi' },
+  ];
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -56,10 +56,13 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={categories.platform} />
-        <NavMain items={categories.operations} label="Operasional" />
-        <NavMain items={categories.inventory} label="Inventori & Master" />
-        <NavMain items={categories.administration} label="Administrasi" />
+        {navSections.map((section, index) => (
+          <NavMain
+            key={section.label ?? `nav-section-${index}`}
+            items={filterNavItems(user.role, [...section.items])}
+            label={section.label}
+          />
+        ))}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
