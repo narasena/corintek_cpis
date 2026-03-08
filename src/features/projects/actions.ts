@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { getCacheContainer } from '@/features/cache/di';
 import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
+import { withMetrics } from '../cache/metrics';
 import {
   CreateProjectSchema,
   UpdateProjectSchema,
@@ -178,11 +179,13 @@ export async function getProjectsAction() {
   try {
     ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
     const { projects: projectsService } = getCacheContainer();
-    const projects = await projectsService.getProjects({
-      id: actor.id,
-      email: actor.email,
-      role: actor.role,
-    });
+    const projects = await withMetrics(ECacheTag.PROJECTS, async () =>
+      projectsService.getProjects({
+        id: actor.id,
+        email: actor.email,
+        role: actor.role,
+      })
+    );
     return { success: true, data: projects };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.List:', error);
@@ -200,11 +203,13 @@ export async function getDashboardProjectsAction() {
   try {
     ensureAccess(actor.role, RbacResource.DASHBOARD, 'read');
     const { projects: projectsService } = getCacheContainer();
-    const projects = await projectsService.getDashboardProjects({
-      id: actor.id,
-      email: actor.email,
-      role: actor.role,
-    });
+    const projects = await withMetrics(ECacheTag.PROJECTS_DASHBOARD, async () =>
+      projectsService.getDashboardProjects({
+        id: actor.id,
+        email: actor.email,
+        role: actor.role,
+      })
+    );
     return { success: true, data: projects };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.DashboardList:', error);
@@ -225,13 +230,15 @@ export async function getProjectAction(id: string) {
   try {
     ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
     const { projects } = getCacheContainer();
-    const project = await projects.getProjectById(
-      {
-        id: actor.id,
-        email: actor.email,
-        role: actor.role,
-      },
-      id
+    const project = await withMetrics(ECacheTag.PROJECTS, async () =>
+      projects.getProjectById(
+        {
+          id: actor.id,
+          email: actor.email,
+          role: actor.role,
+        },
+        id
+      )
     );
     if (!project) {
       return { success: false, error: 'Proyek tidak ditemukan' };

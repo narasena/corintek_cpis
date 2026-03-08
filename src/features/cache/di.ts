@@ -12,26 +12,13 @@
 
 import { PrismaClient } from '@/generated/prisma/client';
 
-// Import original service modules (concrete dependencies)
-import * as parameterService from '../parameters/service';
-import * as clientService from '../clients/service';
-import * as projectService from '../projects/service';
-import * as userService from '../users/service';
-import {
-  getDashboardMetrics,
-  getRecentLogSheetPhotos,
-} from '../dashboard/service';
-
 // Import cached service classes
 import { CachedParameterService } from '../parameters/CachedParameterService';
 import { CachedClientService } from '../clients/CachedClientService';
 import { CachedProjectService } from '../projects/CachedProjectService';
 import { CachedUserService } from '../users/CachedUserService';
-import { CachedDashboardService } from '../dashboard/CachedDashboardService';
-
-// Import DI helpers for dashboard
-import { composeDashboardModule } from '../dashboard/di';
-import type { IActivityService } from '../dashboard/di';
+import { createCachedDashboardService } from '../dashboard/CachedDashboardService';
+import type { CachedDashboardService } from '../dashboard/CachedDashboardService';
 
 // ============================================================================
 // Container Interface
@@ -50,7 +37,7 @@ export interface ICacheContainer {
   projects: CachedProjectService;
   /** User domain cached service */
   users: CachedUserService;
-  /** Dashboard cached service (requires ActivityService) */
+  /** Dashboard cached service (uses global dashboard DI) */
   dashboard: CachedDashboardService;
 }
 
@@ -69,15 +56,6 @@ let container: ICacheContainer | null = null;
  * Call this once at application startup (e.g., in root layout or server startup)
  *
  * @param prisma - PrismaClient instance (shared)
- *
- * @example
- * ```typescript
- * // In app/layout.tsx or a startup script
- * import { prisma } from '@/lib/prisma';
- * import { initializeCacheContainer } from '@/features/cache/di';
- *
- * initializeCacheContainer(prisma);
- * ```
  */
 export function initializeCacheContainer(prisma: PrismaClient): void {
   if (container) {
@@ -85,21 +63,12 @@ export function initializeCacheContainer(prisma: PrismaClient): void {
     return;
   }
 
-  // Compose dashboard module to get ActivityService dependency
-  const dashboardComposition = composeDashboardModule(prisma);
-  const activityService: IActivityService =
-    dashboardComposition.activityService;
-
-  // Create cached service instances (injecting original service modules)
-  const parameters = new CachedParameterService(parameterService);
-  const clients = new CachedClientService(clientService);
-  const projects = new CachedProjectService(projectService);
-  const users = new CachedUserService(userService);
-  const dashboard = new CachedDashboardService(
-    getDashboardMetrics,
-    getRecentLogSheetPhotos,
-    activityService
-  );
+  // Create cached service instances (no constructor args needed)
+  const parameters = new CachedParameterService();
+  const clients = new CachedClientService();
+  const projects = new CachedProjectService();
+  const users = new CachedUserService();
+  const dashboard = createCachedDashboardService();
 
   container = {
     parameters,
@@ -116,13 +85,6 @@ export function initializeCacheContainer(prisma: PrismaClient): void {
  * Get the initialized container
  *
  * @throws Error if container not initialized
- *
- * @example
- * ```typescript
- * // In a server action or server component
- * const { parameters } = getCacheContainer();
- * const data = await parameters.getAllParameters(actor);
- * ```
  */
 export function getCacheContainer(): ICacheContainer {
   if (!container) {

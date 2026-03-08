@@ -12,6 +12,7 @@ import {
 import { getCacheContainer } from '@/features/cache/di';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { getCurrentUser } from '@/lib/auth-helpers';
+import { withMetrics } from '../cache/metrics';
 import { uploadToR2 } from '@/lib/r2-upload';
 import { ECacheTag } from '../cache/tags';
 
@@ -72,7 +73,9 @@ export async function getAllUsersAction(): Promise<
 
   try {
     const { users: usersService } = getCacheContainer();
-    const users = await usersService.getAllUsers(actor);
+    const users = await withMetrics(ECacheTag.USERS, async () =>
+      usersService.getAllUsers(actor)
+    );
 
     return {
       success: true,
@@ -101,7 +104,10 @@ export async function getTechniciansListAction(): Promise<
 
   try {
     const { users } = getCacheContainer();
-    const technicians = await users.getTechniciansList(actor);
+    const technicians = await withMetrics(
+      ECacheTag.USERS_TECHNICIANS,
+      async () => users.getTechniciansList(actor)
+    );
 
     return {
       success: true,
@@ -134,7 +140,9 @@ export async function getUserByIdAction(
     }
 
     const { users } = getCacheContainer();
-    const user = await users.getUserById(actor, id);
+    const user = await withMetrics(ECacheTag.USERS, async () =>
+      users.getUserById(actor, id)
+    );
 
     return {
       success: true,
@@ -238,7 +246,9 @@ export async function getCurrentUserProfileAction(): Promise<
 
   try {
     const { users } = getCacheContainer();
-    const profile = await users.getCurrentUserProfile(user.id);
+    const profile = await withMetrics(ECacheTag.USERS, async () =>
+      users.getCurrentUserProfile(user.id)
+    );
     return { success: true, data: profile };
   } catch (error) {
     console.error('[CPIS-ERROR] Users.GetCurrentProfile:', error);

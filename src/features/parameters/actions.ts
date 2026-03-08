@@ -2,6 +2,7 @@
 
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { getCacheContainer } from '@/features/cache/di';
+import { withMetrics } from '../cache/metrics';
 import * as limitService from './limits-service';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import {
@@ -31,7 +32,9 @@ export async function getParametersAction() {
 
   try {
     const { parameters } = getCacheContainer();
-    const data = await parameters.getAllParameters(actor);
+    const data = await withMetrics(ECacheTag.PARAMETERS, async () =>
+      parameters.getAllParameters(actor)
+    );
     return { success: true, data };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Parameters.List:', error);

@@ -6,88 +6,71 @@
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
 import { CACHE_LIFE } from '../cache/life-profiles';
-import {
-  getDashboardMetrics as originalGetDashboardMetrics,
-  getRecentLogSheetPhotos as originalGetRecentLogSheetPhotos,
-} from './service';
-import { composeDashboardModule } from './di';
-import { prisma } from '@/lib/prisma';
-import type { IActivityService } from './di';
+import { getDashboardMetrics } from './service';
+import { getRecentLogSheetPhotos } from './service';
+import { getActivityService } from './di';
 import type { IDashboardMetric } from './service';
 import type {
   IGetRecentActivitiesInput,
   IGetRecentActivitiesResult,
 } from './types';
 
-// Cached function wrappers (outside class)
+// Cached wrapper for metrics
 async function getDashboardMetricsCached(
-  impl: typeof originalGetDashboardMetrics,
   projectIds?: string[],
   range?: { start: Date; end: Date }
-) {
+): Promise<IDashboardMetric[]> {
   'use cache';
   cacheTag(ECacheTag.DASHBOARD_METRICS);
   cacheLife(CACHE_LIFE.DEFAULT);
-  return await impl(projectIds, range);
+  return await getDashboardMetrics(projectIds, range);
 }
 
+// Cached wrapper for photos
 async function getRecentLogSheetPhotosCached(
-  impl: typeof originalGetRecentLogSheetPhotos,
   projectIds?: string[],
   limit: number = 50
 ) {
   'use cache';
   cacheTag(ECacheTag.DASHBOARD_PHOTOS);
   cacheLife(CACHE_LIFE.SHORT);
-  return await impl(projectIds, limit);
+  return await getRecentLogSheetPhotos(projectIds, limit);
 }
 
+// Cached wrapper for activities - uses global dashboard container
 async function getRecentActivitiesCached(
-  activityService: IActivityService,
   input: IGetRecentActivitiesInput
-) {
+): Promise<IGetRecentActivitiesResult> {
   'use cache';
   cacheTag(ECacheTag.DASHBOARD_ACTIVITIES);
   cacheLife(CACHE_LIFE.SHORT);
+  const activityService = getActivityService();
   return await activityService.getRecentActivities(input);
 }
 
+/**
+ * Cached Dashboard Service
+ * Methods are thin wrappers around cached functions.
+ */
 export class CachedDashboardService {
-  constructor(
-    private readonly getDashboardMetricsImpl: typeof originalGetDashboardMetrics,
-    private readonly getRecentLogSheetPhotosImpl: typeof originalGetRecentLogSheetPhotos,
-    private readonly activityService: IActivityService
-  ) {}
-
   async getDashboardMetrics(
     projectIds?: string[],
     range?: { start: Date; end: Date }
-  ) {
-    return await getDashboardMetricsCached(
-      this.getDashboardMetricsImpl,
-      projectIds,
-      range
-    );
+  ): Promise<IDashboardMetric[]> {
+    return await getDashboardMetricsCached(projectIds, range);
   }
 
   async getRecentLogSheetPhotos(projectIds?: string[], limit: number = 50) {
-    return await getRecentLogSheetPhotosCached(
-      this.getRecentLogSheetPhotosImpl,
-      projectIds,
-      limit
-    );
+    return await getRecentLogSheetPhotosCached(projectIds, limit);
   }
 
-  async getRecentActivities(input: IGetRecentActivitiesInput) {
-    return await getRecentActivitiesCached(this.activityService, input);
+  async getRecentActivities(
+    input: IGetRecentActivitiesInput
+  ): Promise<IGetRecentActivitiesResult> {
+    return await getRecentActivitiesCached(input);
   }
 }
 
 export function createCachedDashboardService(): CachedDashboardService {
-  const comp = composeDashboardModule(prisma);
-  return new CachedDashboardService(
-    originalGetDashboardMetrics,
-    originalGetRecentLogSheetPhotos,
-    comp.activityService
-  );
+  return new CachedDashboardService();
 }

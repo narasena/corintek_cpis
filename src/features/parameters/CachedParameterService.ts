@@ -3,49 +3,43 @@
  * @module features/parameters/CachedParameterService
  */
 
-import * as original from './service';
+import * as originalService from './service';
+import { getAllParameters as _getAllParameters } from './service';
+import { getParameterById as _getParameterById } from './service';
+
 import type { IJwtPayload } from '@/@types/auth.type';
+import type { TCreateParameter, TUpdateParameter, IParameter } from './types';
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
 import { CACHE_LIFE } from '../cache/life-profiles';
-import type { TCreateParameter, TUpdateParameter, IParameter } from './types';
 
-// Cached function wrappers (outside class)
-async function getAllParametersCached(
-  service: typeof original,
-  actor: IJwtPayload
-) {
+// Cached wrappers
+async function getAllParametersCached(actor: IJwtPayload) {
   'use cache';
   cacheTag(ECacheTag.PARAMETERS);
   cacheLife(CACHE_LIFE.HOURS);
-  return await service.getAllParameters(actor);
+  return await _getAllParameters(actor);
 }
 
-async function getParameterByIdCached(
-  service: typeof original,
-  actor: IJwtPayload,
-  id: string
-) {
+async function getParameterByIdCached(actor: IJwtPayload, id: string) {
   'use cache';
   cacheTag(ECacheTag.PARAMETERS);
   cacheLife(CACHE_LIFE.HOURS);
-  return await service.getParameterById(actor, id);
+  return await _getParameterById(actor, id);
 }
 
 export class CachedParameterService {
-  constructor(private readonly service: typeof original = original) {}
-
   async getAllParameters(actor: IJwtPayload) {
-    return await getAllParametersCached(this.service, actor);
+    return await getAllParametersCached(actor);
   }
 
   async getParameterById(actor: IJwtPayload, id: string) {
-    return await getParameterByIdCached(this.service, actor, id);
+    return await getParameterByIdCached(actor, id);
   }
 
   async createParameter(actor: IJwtPayload, data: TCreateParameter) {
     try {
-      return await this.service.createParameter(actor, data);
+      return await originalService.createParameter(actor, data);
     } catch (error) {
       console.error(
         '[CPIS-ERROR] CachedParameterService.createParameter:',
@@ -57,7 +51,7 @@ export class CachedParameterService {
 
   async updateParameter(actor: IJwtPayload, data: TUpdateParameter) {
     try {
-      return await this.service.updateParameter(actor, data);
+      return await originalService.updateParameter(actor, data);
     } catch (error) {
       console.error(
         '[CPIS-ERROR] CachedParameterService.updateParameter:',
@@ -69,7 +63,7 @@ export class CachedParameterService {
 
   async deleteParameter(actor: IJwtPayload, id: string) {
     try {
-      return await this.service.deleteParameter(actor, id);
+      return await originalService.deleteParameter(actor, id);
     } catch (error) {
       console.error(
         '[CPIS-ERROR] CachedParameterService.deleteParameter:',

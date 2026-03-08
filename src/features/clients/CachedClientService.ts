@@ -3,51 +3,45 @@
  * @module features/clients/CachedClientService
  */
 
-import * as original from './service';
+import * as originalService from './service';
+import { getAllClients as _getAllClients } from './service';
+import { getClientById as _getClientById } from './service';
+
 import type { IJwtPayload } from '@/@types/auth.type';
-import { cacheTag, cacheLife } from 'next/cache';
-import { ECacheTag } from '../cache/tags';
-import { CACHE_LIFE } from '../cache/life-profiles';
 import type {
   TClientCreateInput,
   TClientUpdateInput,
   TClientResponse,
 } from '@/@types/client.type';
+import { cacheTag, cacheLife } from 'next/cache';
+import { ECacheTag } from '../cache/tags';
+import { CACHE_LIFE } from '../cache/life-profiles';
 
-// Cached function wrappers (outside class)
-async function getAllClientsCached(
-  service: typeof original,
-  actor: IJwtPayload
-) {
+// Cached wrappers
+async function getAllClientsCached(actor: IJwtPayload) {
   'use cache';
   cacheTag(ECacheTag.CLIENTS);
   cacheLife(CACHE_LIFE.HOURS);
-  return await service.getAllClients(actor);
+  return await _getAllClients(actor);
 }
 
-async function getClientByIdCached(
-  service: typeof original,
-  actor: IJwtPayload,
-  id: string
-) {
+async function getClientByIdCached(actor: IJwtPayload, id: string) {
   'use cache';
   cacheTag(ECacheTag.CLIENTS);
   cacheLife(CACHE_LIFE.HOURS);
-  return await service.getClientById(actor, id);
+  return await _getClientById(actor, id);
 }
 
 export class CachedClientService {
-  constructor(private readonly service: typeof original = original) {}
-
   async getAllClients(actor: IJwtPayload): Promise<TClientResponse[]> {
-    return await getAllClientsCached(this.service, actor);
+    return await getAllClientsCached(actor);
   }
 
   async getClientById(
     actor: IJwtPayload,
     id: string
   ): Promise<TClientResponse> {
-    return await getClientByIdCached(this.service, actor, id);
+    return await getClientByIdCached(actor, id);
   }
 
   async createClient(
@@ -55,7 +49,7 @@ export class CachedClientService {
     data: TClientCreateInput
   ): Promise<TClientResponse> {
     try {
-      return await this.service.createClient(actor, data);
+      return await originalService.createClient(actor, data);
     } catch (error) {
       console.error('[CPIS-ERROR] CachedClientService.createClient:', error);
       throw error;
@@ -68,7 +62,7 @@ export class CachedClientService {
     data: TClientUpdateInput
   ): Promise<TClientResponse> {
     try {
-      return await this.service.updateClient(actor, id, data);
+      return await originalService.updateClient(actor, id, data);
     } catch (error) {
       console.error('[CPIS-ERROR] CachedClientService.updateClient:', error);
       throw error;
@@ -80,7 +74,7 @@ export class CachedClientService {
     id: string
   ): Promise<{ success: boolean }> {
     try {
-      return await this.service.deleteClient(actor, id);
+      return await originalService.deleteClient(actor, id);
     } catch (error) {
       console.error('[CPIS-ERROR] CachedClientService.deleteClient:', error);
       throw error;

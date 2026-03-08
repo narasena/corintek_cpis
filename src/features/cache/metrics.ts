@@ -34,6 +34,14 @@ function increment(map: Map<string, number>, tag: string) {
 export function recordHit(tag: string) {
   if (!isEnabled()) return;
   increment(metrics.hits, tag);
+  console.log(
+    JSON.stringify({
+      level: 'CACHE',
+      event: 'hit',
+      tag,
+      timestamp: Date.now(),
+    })
+  );
 }
 
 /**
@@ -42,6 +50,14 @@ export function recordHit(tag: string) {
 export function recordMiss(tag: string) {
   if (!isEnabled()) return;
   increment(metrics.misses, tag);
+  console.log(
+    JSON.stringify({
+      level: 'CACHE',
+      event: 'miss',
+      tag,
+      timestamp: Date.now(),
+    })
+  );
 }
 
 /**
@@ -50,6 +66,14 @@ export function recordMiss(tag: string) {
 export function recordError(tag: string) {
   if (!isEnabled()) return;
   increment(metrics.errors, tag);
+  console.error(
+    JSON.stringify({
+      level: 'CACHE_ERROR',
+      event: 'error',
+      tag,
+      timestamp: Date.now(),
+    })
+  );
 }
 
 /**
@@ -118,17 +142,28 @@ function estimatedSize(
 }
 
 /**
- * Middleware to automatically record hits/misses around a cached operation
- * Use in helper functions
+ * Execute an operation with metrics recording
+ * - Records a "miss" before execution (since we don't know if it was cached)
+ * - Records "hit" on success
+ * - Records "error" on failure
  */
-export function withMetrics<T>(
+export async function withMetrics<T>(
   tag: string,
   operation: () => Promise<T>
 ): Promise<T> {
-  if (!isEnabled()) return operation();
-
-  return operation().catch(error => {
-    recordError(tag);
+  if (isEnabled()) {
+    recordMiss(tag);
+  }
+  try {
+    const result = await operation();
+    if (isEnabled()) {
+      recordHit(tag);
+    }
+    return result;
+  } catch (error) {
+    if (isEnabled()) {
+      recordError(tag);
+    }
     throw error;
-  });
+  }
 }

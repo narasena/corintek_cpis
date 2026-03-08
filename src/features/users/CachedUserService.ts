@@ -3,7 +3,14 @@
  * @module features/users/CachedUserService
  */
 
-import * as original from './service';
+import * as originalService from './service';
+import {
+  getAllUsers as _getAllUsers,
+  getTechniciansList as _getTechniciansList,
+  getUserById as _getUserById,
+  getCurrentUserProfile as _getCurrentUserProfile,
+} from './service';
+
 import type { IJwtPayload } from '@/@types/auth.type';
 import {
   TUserCreateInput,
@@ -16,71 +23,59 @@ import { ECacheTag } from '../cache/tags';
 import { CACHE_LIFE } from '../cache/life-profiles';
 import { canAccess, RbacResource } from '@/lib/rbac';
 
-// Cached function wrappers (outside class)
-async function getAllUsersCached(service: typeof original, actor: IJwtPayload) {
+// Cached wrappers
+async function getAllUsersCached(actor: IJwtPayload) {
   'use cache';
   cacheTag(ECacheTag.USERS);
   cacheLife(CACHE_LIFE.HOURS);
   if (!canAccess(actor.role, RbacResource.USERS_ADMIN, 'read')) {
     throw new Error('Unauthorized');
   }
-  return await service.getAllUsers(actor);
+  return await _getAllUsers(actor);
 }
 
-async function getTechniciansListCached(
-  service: typeof original,
-  actor: IJwtPayload
-) {
+async function getTechniciansListCached(actor: IJwtPayload) {
   'use cache';
   cacheTag(ECacheTag.USERS_TECHNICIANS);
   cacheLife(CACHE_LIFE.HOURS);
   if (!canAccess(actor.role, RbacResource.LOG_SHEETS, 'read')) {
     throw new Error('Unauthorized');
   }
-  return await service.getTechniciansList(actor);
+  return await _getTechniciansList(actor);
 }
 
-async function getUserByIdCached(
-  service: typeof original,
-  actor: IJwtPayload,
-  id: string
-) {
+async function getUserByIdCached(actor: IJwtPayload, id: string) {
   'use cache';
   cacheTag(ECacheTag.USERS);
   cacheLife(CACHE_LIFE.HOURS);
   if (!canAccess(actor.role, RbacResource.USERS_ADMIN, 'read')) {
     throw new Error('Unauthorized');
   }
-  return await service.getUserById(actor, id);
+  return await _getUserById(actor, id);
 }
 
-async function getCurrentUserProfileCached(
-  service: typeof original,
-  userId: string
-) {
+async function getCurrentUserProfileCached(userId: string) {
   'use cache';
   cacheTag(ECacheTag.USERS);
   cacheLife(CACHE_LIFE.HOURS);
-  return await service.getCurrentUserProfile(userId);
+  return await _getCurrentUserProfile(userId);
 }
 
 export class CachedUserService {
-  constructor(private readonly service: typeof original = original) {}
-
   async getAllUsers(actor: IJwtPayload) {
-    return await getAllUsersCached(this.service, actor);
+    return await getAllUsersCached(actor);
   }
 
   async getTechniciansList(actor: IJwtPayload) {
-    return await getTechniciansListCached(this.service, actor);
+    return await getTechniciansListCached(actor);
   }
 
   async getUserById(actor: IJwtPayload, id: string) {
-    return await getUserByIdCached(this.service, actor, id);
+    return await getUserByIdCached(actor, id);
   }
 
   async getCurrentUserProfile(userId: string) {
-    return await getCurrentUserProfileCached(this.service, userId);
+    return await getCurrentUserProfileCached(userId);
   }
 
   async createUser(
@@ -91,7 +86,7 @@ export class CachedUserService {
       throw new Error('Unauthorized');
     }
     try {
-      return await this.service.createUser(actor, data);
+      return await originalService.createUser(actor, data);
     } catch (error) {
       console.error('[CPIS-ERROR] CachedUserService.createUser:', error);
       throw error;
@@ -103,7 +98,7 @@ export class CachedUserService {
       throw new Error('Unauthorized');
     }
     try {
-      return await this.service.updateUser(actor, id, data);
+      return await originalService.updateUser(actor, id, data);
     } catch (error) {
       console.error('[CPIS-ERROR] CachedUserService.updateUser:', error);
       throw error;
@@ -115,7 +110,7 @@ export class CachedUserService {
       throw new Error('Unauthorized');
     }
     try {
-      return await this.service.deleteUser(actor, id);
+      return await originalService.deleteUser(actor, id);
     } catch (error) {
       console.error('[CPIS-ERROR] CachedUserService.deleteUser:', error);
       throw error;
@@ -124,7 +119,7 @@ export class CachedUserService {
 
   async updateCurrentUserProfile(userId: string, data: TProfileUpdateInput) {
     try {
-      return await this.service.updateCurrentUserProfile(userId, data);
+      return await originalService.updateCurrentUserProfile(userId, data);
     } catch (error) {
       console.error(
         '[CPIS-ERROR] CachedUserService.updateCurrentUserProfile:',

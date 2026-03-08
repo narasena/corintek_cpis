@@ -62,10 +62,8 @@ vi.mock('../dashboard/service', () => ({
 }));
 
 vi.mock('../dashboard/di', () => ({
-  composeDashboardModule: vi.fn(() => ({
-    activityService: { getRecentActivities: vi.fn() as any },
-    projectAccessService: {},
-    activityRepository: {},
+  getActivityService: vi.fn(() => ({
+    getRecentActivities: vi.fn() as any,
   })),
 }));
 
@@ -240,7 +238,10 @@ describe('Cache Integration', () => {
       mocks.dashboard.getDashboardMetrics.mockResolvedValue({ total: 100 });
       await container.dashboard.getDashboardMetrics();
       expect(mockCacheTagFn).toHaveBeenCalledWith(ECacheTag.DASHBOARD_METRICS);
-      expect(mockCacheLifeFn).toHaveBeenCalledWith('hours');
+      expect(mockCacheLifeFn).toHaveBeenCalledWith({
+        stale: 900,
+        revalidate: 900,
+      });
 
       mockCacheTagFn.mockClear();
       mockCacheLifeFn.mockClear();
@@ -248,7 +249,10 @@ describe('Cache Integration', () => {
       mocks.dashboard.getRecentLogSheetPhotos.mockResolvedValue([]);
       await container.dashboard.getRecentLogSheetPhotos();
       expect(mockCacheTagFn).toHaveBeenCalledWith(ECacheTag.DASHBOARD_PHOTOS);
-      expect(mockCacheLifeFn).toHaveBeenCalledWith('minutes');
+      expect(mockCacheLifeFn).toHaveBeenCalledWith({
+        stale: 60,
+        revalidate: 300,
+      });
     });
 
     it('getCurrentUserProfile uses USERS tag', async () => {

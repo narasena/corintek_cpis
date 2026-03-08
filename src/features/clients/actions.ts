@@ -10,6 +10,7 @@ import {
 import { getCacheContainer } from '@/features/cache/di';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { getCurrentUser } from '@/lib/auth-helpers';
+import { withMetrics } from '../cache/metrics';
 import { ECacheTag } from '../cache/tags';
 
 type TActionResponse<T = unknown> = {
@@ -63,7 +64,9 @@ export async function getAllClientsAction(): Promise<
 
   try {
     const { clients: clientsService } = getCacheContainer();
-    const clients = await clientsService.getAllClients(actor);
+    const clients = await withMetrics(ECacheTag.CLIENTS, async () =>
+      clientsService.getAllClients(actor)
+    );
 
     return {
       success: true,
@@ -94,7 +97,9 @@ export async function getClientByIdAction(
     }
 
     const { clients } = getCacheContainer();
-    const client = await clients.getClientById(actor, id);
+    const client = await withMetrics(ECacheTag.CLIENTS, async () =>
+      clients.getClientById(actor, id)
+    );
 
     return {
       success: true,
