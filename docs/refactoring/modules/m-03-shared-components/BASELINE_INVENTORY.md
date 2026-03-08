@@ -8,7 +8,7 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) | 12,688 | 12,662|    -26 |
+| Total Lines of Code (ts/tsx) | 12,688 | 12,664|    -24 |
 | Code Files (.ts/.tsx)        |    124 |   124 |      0 |
 | Largest File (LOC)           |    726 |   726 |      0 |
 | Files >500 lines             |      1 |     1 |      0 |
@@ -27,7 +27,7 @@
 | 2   | src/lib/search-filter-service.ts              |   358 | Core filtering infrastructure              |
 | 3   | src/components/data-table.tsx                 |   306 | Main DataTable Orchestrator                |
 | 4   | src/components/camera-input.tsx               |   276 | Image capture and processing UI            |
-| 5   | src/lib/error-handler-service.ts              |   178 | Global error handling logic                |
+| 5   | src/lib/error-handler-service.ts              |   180 | Global error handling logic                |
 | 6   | src/components/loading.tsx                    |   171 | Loading states and skeleton                |
 | 7   | src/components/multi-select.tsx               |   163 | Multi-select input component               |
 | 8   | src/components/filter-controls.tsx            |   161 | DataTable filter UI                        |

@@ -89,7 +89,18 @@ This document captures surprising, non-obvious, or potentially problematic behav
 
 ---
 
-## 8. Summary of Findings
+## 8. Error Handling (src/lib/error-handler-service.ts)
+
+### 8.1 Static Indonesian Mapping
+**Location:** `getUserMessage`
+**Behavior:** Previously hardcoded dictionary inside the method.
+**Refactoring Result:** Extracted to **ERROR_TRANSLATIONS constant**. Added a `DEFAULT` fallback and parameterized `formatErrorMessage` to support dynamic logging contexts.
+**Impact:** Improved maintainability and standardized log prefixes (`[CPIS-ERROR] Feature.Method`).
+**Risk after change:** Low.
+
+---
+
+## 9. Summary of Findings
 
 | #   | Category    | Finding                                | Risk | Action |
 | --- | ----------- | -------------------------------------- | ---- | ------ |
@@ -100,5 +111,6 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | 5   | Camera      | Missing `revokeObjectURL`              | Med  | Add cleanup |
 | 6   | Sidebar     | Manual category repetition             | Low  | ✅ Refactored |
 | 7   | JWT         | Exception-based flow control           | Low  | ✅ Refactored |
+| 8   | Error       | Hardcoded localized messages           | Low  | ✅ Refactored |
 
 **⚠️ Characterization Complete. Proceed to Phase 3: Map.**

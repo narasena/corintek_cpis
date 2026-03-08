@@ -15,6 +15,7 @@ Priority = f(Pain, Risk, Value)
 | Search/Camera Leaks  | Medium     | Medium     | High           |    P2    | Missing cache/object-url cleanups       |
 | DataTable Complexity | Low        | High       | High           |    P3    | Simultaneous DOM rendering (dual-view)  |
 | JWT Result Pattern   | Low        | Low        | High           |  Done    | Standardized on TActionResult           |
+| Localization Cleanup | Low        | Low        | Low            |  Done    | Extracted to context-aware constants    |
 | Sidebar Repetition   | Low        | Low        | Low            |  Done    | Refactored to Data-Driven Mapping       |
 
 ---
@@ -52,7 +53,7 @@ Priority = f(Pain, Risk, Value)
   - Implement `useEffect` cleanup to call `URL.revokeObjectURL` for all previews.
 - [ ] **Task 1.2: Search Cache Management** (`search-filter-service.ts`)
   - Update `useDataTableSearch` hook to call `searchService.clearCache()` on unmount or query reset.
-- [ ] **Task 1.3: Localization Cleanup** (`error-handler-service.ts`)
+- [x] **Task 1.3: Localization Cleanup** (`error-handler-service.ts`)
   - Extract hardcoded Indonesian messages into a typed constant dictionary.
 
 ### Phase 2: Functional Standardization (MEDIUM to HIGH RISK)
