@@ -5,9 +5,10 @@ import {
   deleteUser, 
   getTechniciansList,
   getAllUsers,
-  getUserById
+  getUserById,
+  restoreUser,
+  permanentlyDeleteUser
 } from './service';
-import { restoreUser, permanentlyDeleteUser } from './service-admin';
 import { isUserAuthValid } from './utils';
 import { prisma } from '@/lib/prisma';
 import { canAccess } from '@/lib/rbac';
@@ -159,9 +160,9 @@ describe('Users Service Characterization Tests', () => {
 
   describe('3. deleteUser (Soft Delete)', () => {
     it('sets deletedAt for an existing user', async () => {
-      prismaMock.user.findUnique.mockResolvedValue({ id: 'id', deletedAt: null } as any);
+      prismaMock.user.findUnique.mockResolvedValue(makeMockUser({ deletedAt: null }));
       
-      const result = await deleteUser(mockActor as any, 'id');
+      const result = await deleteUser(mockActor as any, mockActor.id);
 
       expect(result.success).toBe(true);
       expect(prismaMock.user.update).toHaveBeenCalledWith(expect.objectContaining({
@@ -170,21 +171,22 @@ describe('Users Service Characterization Tests', () => {
     });
 
     it('throws error if already deleted', async () => {
-      prismaMock.user.findUnique.mockResolvedValue({ id: 'id', deletedAt: new Date() } as any);
-      await expect(deleteUser(mockActor as any, 'id')).rejects.toThrow('Pengguna sudah dihapus');
+      prismaMock.user.findUnique.mockResolvedValue(makeMockUser({ deletedAt: new Date() }));
+      await expect(deleteUser(mockActor as any, mockActor.id)).rejects.toThrow('Pengguna sudah dihapus');
     });
   });
 
   describe('4. restoreUser', () => {
     it('clears deletedAt for a soft-deleted user', async () => {
-      prismaMock.user.findUnique.mockResolvedValue({ id: 'id', deletedAt: new Date() } as any);
-      prismaMock.user.update.mockResolvedValue({ id: 'id', deletedAt: null } as any);
+      prismaMock.user.findUnique.mockResolvedValue(makeMockUser({ deletedAt: new Date() }));
+      prismaMock.user.update.mockResolvedValue(makeMockUser({ deletedAt: null }));
 
-      const result = await restoreUser('id');
+      const result = await restoreUser(mockActor.id);
 
-      expect(result.deletedAt).toBeNull();
+      // toUserResponse strips deletedAt
+      expect((result as any).deletedAt).toBeUndefined();
       expect(prismaMock.user.update).toHaveBeenCalledWith({
-        where: { id: 'id' },
+        where: { id: mockActor.id },
         data: { deletedAt: null },
         select: expect.any(Object)
       });

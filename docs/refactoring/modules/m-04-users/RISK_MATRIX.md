@@ -31,8 +31,7 @@ Output a Risk Table."
 | F3 | `src/features/users/actions.ts` | 154 | 🟡 | **ENTRY POINT**: Cross-layer dependency between UI and Service. Used by multiple external pages. |
 | F4 | `src/features/users/components/profile-form.tsx` | 226 | 🟡 | **COMPLEX UI**: Handles profile updates and avatar uploads (R2 integration). |
 | F5 | `src/features/users/utils.ts` | 68 | 🟡 | **SHARED INFRA**: Defines the Prisma select object used by all service methods. Change impacts every read. |
-| F6 | `src/features/users/service-admin.ts` | 66 | 🟢 | **ISOLATED**: Handles specific admin utilities (restore/delete). Low coupling. |
-| F7 | `src/features/users/components/user-dialog.tsx` | 46 | 🟢 | **UI WRAPPER**: Simple dialog container for the form. Low complexity. |
+| F6 | `src/features/users/components/user-dialog.tsx` | 46 | 🟢 | **UI WRAPPER**: Simple dialog container for the form. Low complexity. |
 
 ---
 
@@ -42,4 +41,4 @@ Output a Risk Table."
 | :--------: | :---: | ----- |
 |  🔴 HIGH   |   2   | `service.ts`, `user-form.tsx` |
 | 🟡 MEDIUM  |   3   | `actions.ts`, `profile-form.tsx`, `utils.ts` |
-|   🟢 LOW   |   2   | `service-admin.ts`, `user-dialog.tsx` |
+|   🟢 LOW   |   1   | `user-dialog.tsx` |

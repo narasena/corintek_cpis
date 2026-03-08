@@ -45,9 +45,9 @@ Priority = f(Pain, Risk, Value)
 ## 4. Phased Execution
 
 ### Phase 1: Service Consolidation (Low Risk)
-- [ ] **1.1 Move Admin Utilities**: Move `restoreUser` and `permanentlyDeleteUser` from `service-admin.ts` to `service.ts`.
-- [ ] **1.2 Clean Duplication**: Remove redundant `UserSelect` in `service-admin.ts` and use `toUserResponse` mapper from `utils.ts` (Resolves DUP-1, DUP-2).
-- [ ] **1.3 Validate**: Run all 54 tests.
+- [x] **1.1 Move Admin Utilities**: Move `restoreUser` and `permanentlyDeleteUser` from `service-admin.ts` to `service.ts`.
+- [x] **1.2 Clean Duplication**: Remove redundant `UserSelect` in `service-admin.ts` and use `toUserResponse` mapper from `utils.ts` (Resolves DUP-1, DUP-2).
+- [x] **1.3 Validate**: Run all 54 tests.
 
 ### Phase 2: Action & Hook Abstraction (Medium Risk)
 - [ ] **2.1 Extract Client Fetching**: Create a reusable hook for fetching the clients list used in `UserForm`.

@@ -35,9 +35,8 @@ Do NOT suggest fixes yet. Just map the current state."
 
 | #   | File                                | Lines | Role                                           |
 | --- | ----------------------------------- | ----: | ---------------------------------------------- |
-| 5   | `src/features/users/service.ts`     |   319 | Core business logic and Prisma operations      |
-| 6   | `src/features/users/service-admin.ts` |    66 | Administrative utilities (restore/hard-delete) |
-| 7   | `src/features/users/utils.ts`       |    68 | Data mappers and shared Prisma select objects  |
+| 5   | `src/features/users/service.ts`     |   367 | Core logic + Administrative utilities          |
+| 6   | `src/features/users/utils.ts`       |    68 | Data mappers and shared Prisma select objects  |
 
 ---
 
@@ -53,12 +52,10 @@ graph TD
 
     subgraph "Domain Layer"
         UA --> US[service.ts]
-        UA --> USA[service-admin.ts]
     end
 
     subgraph "Service/Infra Layer"
         US --> UU[utils.ts]
-        USA --> UU
         US --> DB[(Prisma)]
     end
 
@@ -77,9 +74,6 @@ graph TD
 
 **Result: 0 module-level circular dependencies.**
 
-- The layer flow is strictly top-down: Components → Actions → Services → Utils.
-- `UserForm` calls `actions.ts` which is standard for Next.js Server Actions.
-
 ---
 
 ## 4. God Classes / Oversized Files
@@ -87,7 +81,7 @@ graph TD
 | File | Lines | Exports | Verdict |
 | ---- | ----: | :-----: | ------- |
 | `src/features/users/components/user-form.tsx` | 417 | 1 | **GOD COMPONENT**: Handles create/edit logic, role-based conditional fields (Client selection), and complex validation. |
-| `src/features/users/service.ts` | 319 | 9 | **THICK SERVICE**: Contains all user CRUD. While under 500 lines, it manages many concerns (auth, status, list, search). |
+| `src/features/users/service.ts` | 367 | 11 | **THICK SERVICE**: Contains all user CRUD. While under 500 lines, it manages many concerns (auth, status, list, search, admin). |
 
 ---
 
@@ -95,8 +89,8 @@ graph TD
 
 | ID | Description | Locations | Status |
 | -- | ----------- | --------- | ------ |
-| DUP-1 | Redundant `Prisma.UserSelect` block | `service-admin.ts` (lines 27-41) matches `utils.ts` `userResponseSelect` | Open |
-| DUP-2 | Manual `toUserResponse` mapping | `service-admin.ts` manually defines returning object instead of using `toUserResponse` from `utils.ts` | Open |
+| DUP-1 | Redundant `Prisma.UserSelect` block | `service.ts` | Resolved |
+| DUP-2 | Manual `toUserResponse` mapping | `service.ts` | Resolved |
 
 ---
 

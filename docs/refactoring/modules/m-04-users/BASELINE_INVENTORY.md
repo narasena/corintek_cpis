@@ -23,14 +23,14 @@ This proves the refactoring improved the codebase."
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) |   1296 |     0 |      — |
-| Code Files (.ts/.tsx)        |      7 |     0 |      — |
-| Largest File (LOC)           |    417 |     0 |      — |
+| Total Lines of Code (ts/tsx) |   1296 |  1278 |    -18 |
+| Code Files (.ts/.tsx)        |      7 |     6 |     -1 |
+| Largest File (LOC)           |    417 |   417 |      0 |
 | Files >500 lines             |      0 |     0 |      — |
-| Methods >50 lines            |      2 |     0 |      — |
+| Methods >50 lines            |      2 |     2 |      — |
 | TODO/FIXME/HACK Comments     |      0 |     0 |      — |
-| Est. Cyclomatic Complexity   |   ~5-8 |     0 |      — |
-| Tests Passing                |     11 |     0 |      — |
+| Est. Cyclomatic Complexity   |   ~5-8 |  ~5-8 |      — |
+| Tests Passing                |     11 |    54 |    +43 |
 
 ---
 
@@ -39,12 +39,12 @@ This proves the refactoring improved the codebase."
 | #   | File                                       | Lines | Notes                                      |
 | --- | ------------------------------------------ | ----: | ------------------------------------------ |
 | 1   | `src/features/users/components/user-dialog.tsx` |    46 | Simple wrapper dialog                      |
-| 2   | `src/features/users/service-admin.ts`      |    66 | Admin-only utilities (restore/perm-delete) |
-| 3   | `src/features/users/utils.ts`              |    68 | Prisma select and simple transformation    |
-| 4   | `src/features/users/actions.ts`            |   154 | Server actions with RBAC                   |
-| 5   | `src/features/users/components/profile-form.tsx` |   226 | User profile management form               |
-| 6   | `src/features/users/service.ts`            |   319 | Core business logic                        |
-| 7   | `src/features/users/components/user-form.tsx` |   417 | Large complex form with conditional logic  |
+| 2   | `src/features/users/utils.ts`              |    68 | Prisma select and simple transformation    |
+| 3   | `src/features/users/actions.ts`            |   154 | Server actions with RBAC                   |
+| 4   | `src/features/users/components/profile-form.tsx` |   226 | User profile management form               |
+| 5   | `src/features/users/service.ts`            |   367 | Core logic + Admin utilities (Consolidated)|
+| 6   | `src/features/users/components/user-form.tsx` |   417 | Large complex form with conditional logic  |
+
 
 ---
 
