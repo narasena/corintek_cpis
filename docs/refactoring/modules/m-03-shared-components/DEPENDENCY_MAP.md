@@ -10,7 +10,7 @@
 
 | #   | File                                          | Lines | Role                                       |
 | --- | --------------------------------------------- | ----: | ------------------------------------------ |
-| 1   | src/components/data-table.tsx                 |   269 | Main DataTable Orchestrator (Refactored)   |
+| 1   | src/components/data-table.tsx                 |   215 | Main DataTable Orchestrator (Refactored)   |
 | 2   | src/components/crud-dialog.tsx                |    45 | Reusable Dialog wrapper for forms          |
 | 3   | src/components/camera-input.tsx               |   300 | Image capture and processing UI            |
 | 4   | src/components/action-cell.tsx                |   119 | DataTable row actions                      |

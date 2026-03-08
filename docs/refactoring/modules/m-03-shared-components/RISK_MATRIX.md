@@ -18,7 +18,7 @@
 
 | ID   | File                                          | Lines | Risk | Reason                                      |
 | ---- | --------------------------------------------- | ----: | :--: | ------------------------------------------- |
-| F1   | `src/components/data-table.tsx`               |   269 |  🟡  | Decoupled to sub-components; improved SRP   |
+| F1   | `src/components/data-table.tsx`               |   215 |  🟢  | Orchestrator logic extracted to hook        |
 | F2   | `src/lib/search-filter-service.ts`            |   310 |  🟢  | Algorithms extracted; bounded cache         |
 | F3   | `src/lib/rbac.ts`                             |   128 |  🟢  | Fixed greedy matching; strict boundaries    |
 | F4   | `src/lib/action-factory.ts`                   |   106 |  🟢  | Pure foundation; DI composition in Feature  |
@@ -38,5 +38,5 @@
 | Risk Level | Count | Files                                                                 |
 | :--------: | :---: | --------------------------------------------------------------------- |
 |  🔴 HIGH   |   0   | — |
-| 🟡 MEDIUM  |   1   | `data-table.tsx` |
-|   🟢 LOW   |   11  | `search-filter-service.ts`, `rbac.ts`, `action-factory.ts`, `camera-input.tsx`, `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |
+| 🟡 MEDIUM  |   0   | — |
+|   🟢 LOW   |   12  | All module files refactored and standardized.                         |

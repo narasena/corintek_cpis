@@ -13,7 +13,7 @@ Priority = f(Pain, Risk, Value)
 | DI Inversion         | Low        | Low        | Medium         |  Done    | Reversed foundation-to-feature coupling |
 | RBAC Path Matching   | Low        | Low        | Critical       |  Done    | Implemented strict boundary matching    |
 | Search/Camera Leaks  | Low        | Low        | High           |  Done    | Implemented automatic resource cleanup  |
-| DataTable Complexity | Low        | Medium     | High           |  Done    | Decoupled toolbar and layout logic      |
+| DataTable Complexity | Low        | Low        | High           |  Done    | Extracted hook and decoupled sub-views  |
 | Action Error Format  | Low        | Low        | Medium         |  Done    | Implemented recursive Zod formatting    |
 | Action DI/Wiring     | Low        | Low        | High           |  Done    | Composition moved to Feature layer      |
 | JWT Result Pattern   | Low        | Low        | High           |  Done    | Standardized on TActionResult           |
@@ -74,7 +74,7 @@ Priority = f(Pain, Risk, Value)
   - Refactor `matchPathToResource` to prevent greedy matching (e.g., `/users/settings` shouldn't match `/users` unless intended).
 - [x] **Task 3.3: DataTable View Decoupling** (`data-table.tsx`)
   - Separate Desktop and Mobile view rendering logic more cleanly.
-  - (Optional) Implement a mechanism to prevent dual-DOM rendering for better performance.
+  - Extracted state orchestration to `useDataTableOrchestrator` hook.
 - [x] **Task 3.4: Action Factory Dependency Inversion** (`action-factory.ts`)
   - Move singleton instantiation to `src/features/auth/di.ts`.
   - Remove feature-layer imports from the foundational factory logic.

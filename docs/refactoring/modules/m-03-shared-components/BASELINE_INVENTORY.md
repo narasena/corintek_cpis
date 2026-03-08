@@ -8,13 +8,13 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) | 12,688 | 12,555|   -133 |
-| Code Files (.ts/.tsx)        |    124 |   124 |      0 |
+| Total Lines of Code (ts/tsx) | 12,688 | 12,505|   -183 |
+| Code Files (.ts/.tsx)        |    124 |   123 |     -1 |
 | Largest File (LOC)           |    726 |   726 |      0 |
 | Files >500 lines             |      1 |     1 |      0 |
 | Methods >50 lines            |     ~8 |    ~8 |      0 |
 | TODO/FIXME/HACK Comments     |     13 |    13 |      0 |
-| Est. Cyclomatic Complexity   | Medium-High | Low-Medium | — |
+| Est. Cyclomatic Complexity   | Medium-High | Low | — |
 | Tests Passing                | 342/346| 342/346|     — |
 
 ---
@@ -25,7 +25,7 @@
 | --- | --------------------------------------------- | ----: | ------------------------------------------ |
 | 1   | src/components/ui/sidebar.tsx                 |   726 | Shadcn Component (Largest)                 |
 | 2   | src/lib/search-filter-service.ts              |   310 | Core filtering infrastructure (Refactored) |
-| 3   | src/components/data-table.tsx                 |   269 | Main DataTable Orchestrator (Refactored)   |
+| 3   | src/components/data-table.tsx                 |   215 | Main DataTable Orchestrator (Refactored)   |
 | 4   | src/components/camera-input.tsx               |   300 | Image capture and processing UI            |
 | 5   | src/lib/error-handler-service.ts              |   180 | Global error handling logic                |
 | 6   | src/components/loading.tsx                    |   171 | Loading states and skeleton                |
@@ -58,7 +58,7 @@
 
 | #   | File                           | Method      | Lines | Notes                               |
 | --- | ------------------------------ | ----------- | ----: | ----------------------------------- |
-| 1   | src/components/data-table.tsx  | DataTable   |  ~120 | Orchestrates complex state/tabs     |
+| 1   | src/components/data-table.tsx  | DataTable   |   ~40 | Simplified to layout orchestration  |
 | 2   | src/components/camera-input.tsx| CameraInput |  ~200 | Handles media stream and processing |
 | 3   | src/lib/search-filter-service.ts| applyGlobalFilterWithRanking | ~40 | Close to limit but clean |
 
@@ -70,7 +70,7 @@
 | ------------------------------- | ------: | --------------------------- |
 | src/lib/search-filter-service.ts|       6 | Simplified via extraction   |
 | src/lib/rbac.ts                 |       7 | Permission evaluation loops |
-| src/components/data-table.tsx   |       6 | Tab and filter state sync   |
+| src/components/data-table.tsx   |       4 | Pure layout logic           |
 
 ---
 
@@ -80,11 +80,11 @@
 ┌──────────────────────────────┬──────────┐
 │ Metric                       │ Baseline │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (ts/tsx)           │   12,555 │
+│ Total LOC (ts/tsx)           │   12,505 │
 │ File count                   │      123 │
 │ Max file size                │      726 │
 │ Max method size              │      200 │
-│ Total cyclomatic complexity  │ Low-Med  │
+│ Total cyclomatic complexity  │ Low      │
 │ Duplicated code blocks       │      Low │
 └──────────────────────────────┴──────────┘
 ```

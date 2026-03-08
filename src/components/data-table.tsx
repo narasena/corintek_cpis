@@ -26,23 +26,14 @@ import { filterFns } from '@/lib/filter-utils';
 export type { ITableTab } from './data-table/types';
 
 /**
- * Main DataTable Orchestrator
- * Handles Tabs, Global Sorting State, Search, Filtering, and Pagination.
+ * Custom hook to orchestrate DataTable state, search, and filtering
  */
-export function DataTable<TData, TValue>(
+function useDataTableOrchestrator<TData, TValue>(
   props: IDataTableProps<TData, TValue>
 ) {
   const {
-    columns: cols,
     data,
-    emptyMessage = 'Belum ada data.',
-    tabs,
-    tab,
-    onTabChange,
     searchConfig,
-    disableSearch = false,
-    serverPagination,
-    columnFilters: enableColumnFilters = false,
     filterConfigs = [],
     onColumnFiltersChange,
     persistFiltersInUrl = false,
@@ -93,6 +84,51 @@ export function DataTable<TData, TValue>(
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  return {
+    sorting,
+    setSorting,
+    columnFilters,
+    setColumnFilters,
+    query,
+    setQuery,
+    clearQuery,
+    filteredData,
+    isSearching,
+  };
+}
+
+/**
+ * Main DataTable Orchestrator
+ * Handles Tabs, Global Sorting State, Search, Filtering, and Pagination.
+ */
+export function DataTable<TData, TValue>(
+  props: IDataTableProps<TData, TValue>
+) {
+  const {
+    columns: cols,
+    emptyMessage = 'Belum ada data.',
+    tabs,
+    tab,
+    onTabChange,
+    searchConfig,
+    disableSearch = false,
+    serverPagination,
+    columnFilters: enableColumnFilters = false,
+    filterConfigs = [],
+  } = props;
+
+  const {
+    sorting,
+    setSorting,
+    columnFilters,
+    setColumnFilters,
+    query,
+    setQuery,
+    clearQuery,
+    filteredData,
+    isSearching,
+  } = useDataTableOrchestrator(props);
 
   // 3. Sub-Component Rendering Helpers
   const renderToolbar = () => (

@@ -34,9 +34,9 @@ This document captures surprising, non-obvious, or potentially problematic behav
 ### 2.1 Double DOM Rendering
 **Location:** `DataTable` Component
 **Behavior:** Previously rendered both desktop and mobile views into the DOM simultaneously for both Simple and Tabbed modes.
-**Refactoring Result:** Implemented **Extract Sub-Component**. Moved Toolbar logic to `DataTableToolbar` and unified layout orchestration.
-**Impact:** Reduced internal state complexity. Fixed logic where inactive tabs still processed data by introducing `isActive` prop and strict data passing.
-**Risk after change:** Medium.
+**Refactoring Result:** Implemented **Extract Sub-Component** and **Extract Hook**. Moved orchestration logic to `useDataTableOrchestrator`.
+**Impact:** Component complexity significantly reduced. State management and URL synchronization are now encapsulated in a reusable hook. Rendering is purely focused on layout.
+**Risk after change:** Low.
 
 ---
 
@@ -125,7 +125,7 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | --- | ----------- | -------------------------------------- | ---- | ------ |
 | 1   | RBAC        | `ADMIN` restricted on `PROJECTS_LIST`  | Med  | Preserve |
 | 2   | RBAC        | `PUBLIC` bypasses security             | High | Preserve |
-| 3   | UI          | Double rendering (Mobile/Desktop)      | Med  | ✅ Refactored |
+| 3   | UI          | Double rendering (Mobile/Desktop)      | Low  | ✅ Refactored |
 | 4   | Search      | Cache never cleared in hook            | Low  | ✅ Refactored |
 | 5   | Camera      | Missing `revokeObjectURL`              | Low  | ✅ Refactored |
 | 6   | Sidebar     | Manual category repetition             | Low  | ✅ Refactored |
