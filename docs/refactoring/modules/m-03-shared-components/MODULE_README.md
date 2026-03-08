@@ -4,11 +4,12 @@ This module provides the foundational infrastructure and shared UI primitives fo
 
 ## 🏗️ Architecture
 
-Following the refactoring in Group A, M-03 is strictly separated into:
+Following the refactoring in Group A, M-03 is strictly separated and **decoupled from feature-layer logic**:
 
-1.  **Infrastructure (`src/lib/`)**: Atomic utilities for JWT, Prisma, RBAC, and R2.
-2.  **Shared Components (`src/components/`)**: Domain-agnostic UI patterns (DataTable, MultiSelect).
-3.  **UI Primitives (`src/components/ui/`)**: Specialized shadcn/ui components.
+1.  **Infrastructure (`src/lib/`)**: Pure utilities for JWT, Prisma, RBAC, and Action logic. All structural layer inversions (where lib depended on features) have been resolved by moving composition roots to feature domains.
+2.  **Shared Hooks (`src/hooks/`)**: Lifecycle management hooks (e.g., `useObjectURL`, `useDataTableOrchestrator`).
+3.  **Shared Components (`src/components/`)**: Domain-agnostic UI patterns (DataTable, MultiSelect).
+4.  **UI Primitives (`src/components/ui/`)**: Specialized shadcn/ui components.
 
 ## 🔒 Security & RBAC
 
@@ -21,7 +22,7 @@ The RBAC system is modularized into role-based policies:
 ### Server Action Factory
 All server actions should be wrapped using the `actionFactory` to ensure standardized authentication, authorization, and validation.
 ```typescript
-import { actionFactory } from '@/lib/action-factory';
+import { actionFactory } from '@/features/auth/di';
 export const myAction = actionFactory.protected(async ({ input, actor }) => { ... });
 ```
 
