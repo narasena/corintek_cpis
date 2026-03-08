@@ -12,7 +12,7 @@ Status: `[B] Baseline` | `[C] Characterized` | `[R] Refactored` | `[V] Verified`
 
 ## Group B: Master Data CRUD
 
-- [C] **M-04: Users** — `src/features/users/`
+- [C] **M-04: Users** — `src/features/users/` [B][C]
 - [ ] **M-05: Clients** — `src/features/clients/`
 - [ ] **M-06: Chemicals** — `src/features/chemicals/`
 - [ ] **M-07: Parameters & Limits** — `src/features/parameters/`

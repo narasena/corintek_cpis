@@ -24,6 +24,12 @@ vi.mock('@/lib/r2-upload', () => ({
 vi.mock('./service', () => ({
   getCurrentUserProfile: vi.fn(),
   updateCurrentUserProfile: vi.fn(),
+  createUser: vi.fn(),
+  getAllUsers: vi.fn(),
+  getTechniciansList: vi.fn(),
+  getUserById: vi.fn(),
+  updateUser: vi.fn(),
+  deleteUser: vi.fn(),
 }));
 
 // Now we can import the actions and the mocked helpers
@@ -31,16 +37,37 @@ import {
   getCurrentUserProfileAction,
   updateCurrentUserProfileAction,
   uploadAvatarAction,
+  createUserAction,
+  getAllUsersAction,
+  getTechniciansListAction,
+  getUserByIdAction,
+  updateUserAction,
+  deleteUserAction,
 } from './actions';
 import { getCurrentUserDetails, requireActor } from '@/features/auth/lib/user-context';
 import { uploadToR2 } from '@/lib/r2-upload';
-import { getCurrentUserProfile, updateCurrentUserProfile } from './service';
+import { 
+  getCurrentUserProfile, 
+  updateCurrentUserProfile,
+  createUser,
+  getAllUsers,
+  getTechniciansList,
+  getUserById,
+  updateUser,
+  deleteUser,
+} from './service';
 
 const mockGetCurrentUserDetails = vi.mocked(getCurrentUserDetails);
 const mockRequireActor = vi.mocked(requireActor);
 const mockUploadToR2 = vi.mocked(uploadToR2);
 const mockGetCurrentUserProfile = vi.mocked(getCurrentUserProfile);
 const mockUpdateCurrentUserProfile = vi.mocked(updateCurrentUserProfile);
+const mockCreateUser = vi.mocked(createUser);
+const mockGetAllUsers = vi.mocked(getAllUsers);
+const mockGetTechniciansList = vi.mocked(getTechniciansList);
+const mockGetUserById = vi.mocked(getUserById);
+const mockUpdateUser = vi.mocked(updateUser);
+const mockDeleteUser = vi.mocked(deleteUser);
 
 function makeUser(overrides: Record<string, unknown> = {}) {
   return {
@@ -329,5 +356,68 @@ describe('uploadAvatarAction', () => {
     if (!result.success) {
       expect(result.error).toBe('Ukuran file maksimal 5MB');
     }
+  });
+});
+
+describe('User Admin Actions', () => {
+  const actor = makeUser({ role: 'ADMIN' });
+  const targetUser = makeProfile({ id: '7f9c9c3e-8c3d-4c3e-8c3d-4c3e8c3d4c3e' });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRequireActor.mockResolvedValue(actor as any);
+  });
+
+  it('createUserAction creates user and revalidates', async () => {
+    mockCreateUser.mockResolvedValue(targetUser as any);
+    const input = {
+      firstName: 'New',
+      lastName: 'User',
+      email: 'new@example.com',
+      phoneNumber: '0812',
+      password: 'password123',
+      confirmPassword: 'password123',
+      role: 'TECHNICIAN' as any,
+      employmentStatus: 'PERMANENT' as any,
+    };
+
+    const result = await createUserAction(input);
+
+    expect(result.success).toBe(true);
+    expect(mockCreateUser).toHaveBeenCalled();
+  });
+
+  it('getAllUsersAction returns all users', async () => {
+    mockGetAllUsers.mockResolvedValue([targetUser] as any);
+    const result = await getAllUsersAction();
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toHaveLength(1);
+  });
+
+  it('getTechniciansListAction returns technicians', async () => {
+    mockGetTechniciansList.mockResolvedValue([targetUser] as any);
+    const result = await getTechniciansListAction();
+    expect(result.success).toBe(true);
+  });
+
+  it('getUserByIdAction returns user', async () => {
+    mockGetUserById.mockResolvedValue(targetUser as any);
+    const result = await getUserByIdAction(targetUser.id);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data?.id).toBe(targetUser.id);
+  });
+
+  it('updateUserAction updates user', async () => {
+    mockUpdateUser.mockResolvedValue(targetUser as any);
+    const result = await updateUserAction({ id: targetUser.id, firstName: 'Updated' } as any);
+    expect(result.success).toBe(true);
+    expect(mockUpdateUser).toHaveBeenCalled();
+  });
+
+  it('deleteUserAction soft deletes user', async () => {
+    mockDeleteUser.mockResolvedValue({ success: true });
+    const result = await deleteUserAction(targetUser.id);
+    expect(result.success).toBe(true);
+    expect(mockDeleteUser).toHaveBeenCalled();
   });
 });
