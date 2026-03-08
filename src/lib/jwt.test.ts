@@ -1,4 +1,11 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { vi } from 'vitest';
+
+vi.hoisted(() => {
+  // Set environment variable BEFORE any imports that use it at top level
+  process.env.JWT_SECRET = 'test-secret-key-that-is-long-enough-for-hs256';
+});
+
+import { describe, it, expect, beforeEach } from 'vitest';
 import { generateToken, verifyToken, decodeToken, JWTError } from './jwt';
 import * as jose from 'jose';
 
@@ -13,10 +20,6 @@ vi.mock('jose', async (importOriginal) => {
 
 describe('JWT Utilities (Characterization)', () => {
   const mockPayload = { id: '550e8400-e29b-41d4-a716-446655440000', email: 'test@test.com', role: 'ADMIN' as any };
-
-  beforeAll(() => {
-    process.env.JWT_SECRET = 'test-secret-key-that-is-long-enough-for-hs256';
-  });
 
   beforeEach(async () => {
     // Reset mock to original behavior by default for every test

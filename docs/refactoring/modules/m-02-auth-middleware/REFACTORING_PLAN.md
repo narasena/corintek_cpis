@@ -48,13 +48,18 @@ Priority = f(Pain, Risk, Value)
 
 ### Phase 2: Error Standardization (F3, F4)
 
-- [ ] **src/lib/jwt.ts**: Refine `verifyToken` to ensure `jose` expiration errors are consistently mapped to `EXPIRED` code.
-- [ ] **src/lib/action-factory.ts**: Update `handleActionFailure` to map internal "Unauthorized" to localized `ERROR_MESSAGES.SESSION_EXPIRED`.
+- [x] **src/lib/jwt.ts**: Refine `verifyToken` to ensure `jose` expiration errors are consistently mapped to `EXPIRED` code.
+- [x] **src/lib/jwt.ts**: Remove global mutable `cachedSecret` in favor of fail-fast top-level initialization.
+- [x] **src/lib/action-factory.ts**: Update `handleActionFailure` to map internal "Unauthorized" to localized `ERROR_MESSAGES.SESSION_EXPIRED`.
 
 ### Phase 3: RBAC & Perimeter Refinement (F1, F2)
 
-- [ ] **src/lib/rbac.ts**: Update `matchPathToResource` to distinguish between root path `/` (DASHBOARD) and empty string `''` (UNKNOWN).
-- [ ] **src/middleware.ts**: Verify redirect logic when `matchPathToResource` returns `UNKNOWN` for authenticated users.
+- [x] **src/lib/rbac.ts**: Update `matchPathToResource` to distinguish between root path `/` (DASHBOARD) and empty string `''` (UNKNOWN).
+- [x] **src/lib/rbac.ts**: Replace procedural `permissionSet` function with a declarative `PERMISSION_LEVEL_MAP` for capability resolution.
+- [x] **src/lib/rbac.ts**: Refactor `matchPathToResource` from procedural loop to declarative `.find()` method.
+- [x] **src/middleware.ts**: Verify redirect logic when `matchPathToResource` returns `UNKNOWN` for authenticated users.
+- [x] **src/middleware.ts**: Decompose procedural `middleware` function into focused `handleAuthGuard` and `handleRbacGuard` handlers.
+- [x] **src/middleware.ts**: Standardize URL construction via `redirectTo` helper to remove infrastructure duplication.
 
 ---
 

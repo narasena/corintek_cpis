@@ -27,20 +27,14 @@ const ROLE_CONFIG: Record<TRbacRole, IRbacRoleConfig> = {
 } as Record<TRbacRole, IRbacRoleConfig>;
 
 /**
- * Internal helper to convert permission level to granular capability set
+ * Declarative mapping of permission levels to granular capability sets
  */
-function permissionSet(level: TRbacLevel): TRbacPermissionSet {
-  if (level === 'CRUD') {
-    return { create: true, read: true, update: true, delete: true };
-  }
-  if (level === 'CRU') {
-    return { create: true, read: true, update: true, delete: false };
-  }
-  if (level === 'R') {
-    return { create: false, read: true, update: false, delete: false };
-  }
-  return { create: false, read: false, update: false, delete: false };
-}
+const PERMISSION_LEVEL_MAP: Record<TRbacLevel, TRbacPermissionSet> = {
+  'CRUD': { create: true, read: true, update: true, delete: true },
+  'CRU': { create: true, read: true, update: true, delete: false },
+  'R': { create: false, read: true, update: false, delete: false },
+  '-': { create: false, read: false, update: false, delete: false },
+};
 
 /**
  * Core RBAC check
@@ -52,8 +46,8 @@ export function canAccess(
 ) {
   if (resource === RbacResource.PUBLIC) return true;
   const config = ROLE_CONFIG[role as TRbacRole];
-  const level = config?.permissions[resource] ?? '-';
-  return permissionSet(level)[capability];
+  const level = (config?.permissions[resource] ?? '-') as TRbacLevel;
+  return PERMISSION_LEVEL_MAP[level][capability];
 }
 
 /**
@@ -100,14 +94,10 @@ const PATH_RESOURCE_MAP: Array<{
 ];
 
 export function matchPathToResource(pathname: string): TRbacResource {
-  for (const { pattern, resource } of PATH_RESOURCE_MAP) {
-    if (typeof pattern === 'string') {
-      if (pathname === pattern) return resource;
-    } else if (pattern.test(pathname)) {
-      return resource;
-    }
-  }
-  return RbacResource.UNKNOWN;
+  const match = PATH_RESOURCE_MAP.find(({ pattern }) =>
+    pattern instanceof RegExp ? pattern.test(pathname) : pathname === pattern
+  );
+  return match?.resource ?? RbacResource.UNKNOWN;
 }
 
 export function filterNavItems<T extends { url: string }>(

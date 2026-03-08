@@ -18,10 +18,10 @@
 
 | ID   | File                                  | Lines | Risk | Reason                                                                 |
 | ---- | ------------------------------------- | ----: | :--: | ---------------------------------------------------------------------- |
-| F1   | src/lib/rbac.ts                       |   121 |  🔴  | **RBAC Engine**: Central source of truth for all access control.        |
-| F2   | src/middleware.ts                     |    67 |  🔴  | **Security Perimeter**: Global entry point for all requests.            |
-| F3   | src/lib/jwt.ts                        |    96 |  🔴  | **Token Handler**: Handles crypto, secret retrieval, and verification. |
-| F4   | src/lib/action-factory.ts             |   111 |  🔴  | **Action Guard**: Injected into every feature action in the system.    |
+| F1   | src/lib/rbac.ts                       |   121 |  🟢  | **Refactored**: Declarative capability mapping. Declarative path matching. |
+| F2   | src/middleware.ts                     |    67 |  🟢  | **Refactored**: Standardized redirects. Atomic guard handlers.         |
+| F3   | src/lib/jwt.ts                        |    96 |  🟢  | **Refactored**: Fail-fast init. No global mutable state.               |
+| F4   | src/lib/action-factory.ts             |   111 |  🟢  | **Refactored**: Strategy pattern for error handling. Decoupled from Zod. |
 | F5   | src/features/auth/service.ts          |    83 |  🟢  | **Domain Service**: Core login logic (Hardened/Structured Logs).      |
 | F6   | src/lib/auth-helpers.ts               |    83 |  🟢  | **Session Helper**: Shared session/cookie management (Hardened).       |
 | F7   | src/features/auth/actions.ts          |    80 |  🟢  | **Server Actions**: Public API for auth (Standardized).                |
@@ -38,6 +38,6 @@
 
 | Risk Level | Count | Files |
 | :--------: | :---: | ----- |
-|  🔴 HIGH   |   4   | `rbac.ts`, `middleware.ts`, `jwt.ts`, `action-factory.ts` |
-| 🟡 MEDIUM  |   0   |       |
-|   🟢 LOW   |   9   | `constants.ts`, `types.ts`, `utils.ts`, `policies/*.ts`, `user-context.ts`, `crypto.ts`, `actions.ts`, `auth-helpers.ts`, `service.ts` |
+|  🔴 HIGH   |   0   | None remaining. Core security engine stabilized.                        |
+| 🟡 MEDIUM  |   0   | None remaining. Infrastructure refactored to atomic units.              |
+|   🟢 LOW   |   13  | `constants.ts`, `types.ts`, `utils.ts`, `policies/*.ts`, `user-context.ts`, `crypto.ts`, `actions.ts`, `auth-helpers.ts`, `service.ts`, `action-factory.ts`, `jwt.ts`, `middleware.ts`, `rbac.ts` |

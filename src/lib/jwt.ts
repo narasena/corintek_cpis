@@ -2,8 +2,6 @@ import { SignJWT, jwtVerify, decodeJwt, errors } from 'jose';
 import { IJwtPayload, jwtPayloadSchema } from '@/@types/auth.type';
 import { JWT_INFRA_CONFIG, AUTH_INFRA_ERROR } from './constants/auth';
 
-let cachedSecret: Uint8Array | null = null;
-
 export class JWTError extends Error {
   constructor(message: string, public code: 'EXPIRED' | 'INVALID' | 'SECRET_MISSING' | 'VALIDATION_FAILED') {
     super(message);
@@ -12,23 +10,18 @@ export class JWTError extends Error {
 }
 
 /**
- * Internal helper to get and encode JWT_SECRET (memoized)
- * @param context - Function name for error reporting
+ * Fail-fast initialization of the JWT secret key (Encapsulated Constant)
  */
-function getEncodedSecret(context: string): Uint8Array {
-  if (cachedSecret) return cachedSecret;
-
+const SECRET_KEY = (() => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     throw new JWTError(
-      `[CPIS-ERROR] ${context}: ${AUTH_INFRA_ERROR.JWT_SECRET_REQUIRED}`,
+      `[CPIS-ERROR] JWT.init: ${AUTH_INFRA_ERROR.JWT_SECRET_REQUIRED}`,
       'SECRET_MISSING'
     );
   }
-
-  cachedSecret = new TextEncoder().encode(secret);
-  return cachedSecret;
-}
+  return new TextEncoder().encode(secret);
+})();
 
 /**
  * Generate a JWT token for authenticated user
@@ -38,8 +31,6 @@ function getEncodedSecret(context: string): Uint8Array {
 export async function generateToken(
   payload: Omit<IJwtPayload, 'iat' | 'exp'>
 ): Promise<string> {
-  const SECRET_KEY = getEncodedSecret('JWT.generateToken');
-
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: JWT_INFRA_CONFIG.ALGORITHM })
     .setIssuedAt()
@@ -53,31 +44,38 @@ export async function generateToken(
  * @returns Decoded payload if valid
  */
 export async function verifyToken(token: string): Promise<IJwtPayload> {
-  const SECRET_KEY = getEncodedSecret('JWT.verifyToken');
-
   try {
     const { payload } = await jwtVerify(token, SECRET_KEY);
     return jwtPayloadSchema.parse(payload);
   } catch (error) {
-    if (error instanceof errors.JWTExpired) {
-      throw new JWTError(
-        `[CPIS-ERROR] JWT.verifyToken: ${AUTH_INFRA_ERROR.TOKEN_EXPIRED}`,
-        'EXPIRED'
-      );
-    }
-    
-    if (error instanceof Error && error.name === 'ZodError') {
-      throw new JWTError(
-        `[CPIS-ERROR] JWT.verifyToken: ${AUTH_INFRA_ERROR.PAYLOAD_VALIDATION_FAILED}: ${error.message}`,
-        'VALIDATION_FAILED'
-      );
-    }
+    throw handleJwtError(error, 'JWT.verifyToken');
+  }
+}
 
-    throw new JWTError(
-      `[CPIS-ERROR] JWT.verifyToken: ${AUTH_INFRA_ERROR.TOKEN_INVALID}`,
-      'INVALID'
+/**
+ * Internal helper to map library errors to domain-specific JWTError
+ * @param error - Caught error from verification process
+ * @param context - Function name for error reporting
+ */
+function handleJwtError(error: any, context: string): JWTError {
+  if (error instanceof errors.JWTExpired) {
+    return new JWTError(
+      `[CPIS-ERROR] ${context}: ${AUTH_INFRA_ERROR.TOKEN_EXPIRED}`,
+      'EXPIRED'
     );
   }
+
+  if (error instanceof Error && (error.name === 'ZodError' || (error as any).issues)) {
+    return new JWTError(
+      `[CPIS-ERROR] ${context}: ${AUTH_INFRA_ERROR.PAYLOAD_VALIDATION_FAILED}: ${error.message}`,
+      'VALIDATION_FAILED'
+    );
+  }
+
+  return new JWTError(
+    `[CPIS-ERROR] ${context}: ${AUTH_INFRA_ERROR.TOKEN_INVALID}`,
+    'INVALID'
+  );
 }
 
 /**

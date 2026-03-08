@@ -89,22 +89,24 @@ function validate<T>(data: T, schema?: z.ZodType<T>): T {
  * Centralized error handling for server actions
  */
 function handleActionFailure(error: any): TActionResult<any> {
-  if (error instanceof AuthenticationError || error.name === 'AuthenticationError') {
+  // Strategy registry for known error types
+  const ERROR_STRATEGIES: Record<string, (err: any) => string> = {
+    AuthenticationError: () => ERROR_MESSAGES.SESSION_EXPIRED,
+    ZodError: (err: z.ZodError) => err.errors?.[0]?.message || err.message || ERROR_MESSAGES.INPUT_INVALID,
+  };
+
+  // Resolve strategy by class name or error name property
+  const errorType = error.constructor?.name || error.name;
+  const strategy = ERROR_STRATEGIES[errorType];
+
+  if (strategy) {
     return {
       success: false,
-      error: ERROR_MESSAGES.SESSION_EXPIRED,
+      error: strategy(error),
     };
   }
 
-  // Handle ZodError more robustly by checking typeName or instanceof
-  if (error instanceof z.ZodError || error.name === 'ZodError') {
-    return {
-      success: false,
-      error: error.errors?.[0]?.message || error.message || ERROR_MESSAGES.INPUT_INVALID,
-    };
-  }
-
-  // Centralized error logging via existing helper
+  // Fallback to generic error logging
   return err(error, ERROR_MESSAGES.GENERIC_ERROR);
 }
 

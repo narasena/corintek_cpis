@@ -72,10 +72,35 @@ This document captures behaviors and improvements in the Auth & Middleware modul
 **Pattern:** Standardized `[CPIS-ERROR]` for debugging failures and `[CPIS-AUTH]` for successful audit logs.
 **Benefit:** Improved production observability and security compliance.
 
-### 2.4 Identity Resolution Helper
+### 2.5 Fail-Fast JWT Initialization
+**Location:** `src/lib/jwt.ts`
+**Pattern:** Replaced lazy-initialization of `SECRET_KEY` with a top-level IIFE constant.
+**Benefit:** Ensures `JWT_SECRET` is present and valid at module load time; removes global mutable `cachedSecret`.
+
+### 2.6 Identity Resolution Helper
 **Location:** `src/middleware.ts`
 **Pattern:** Extracted `getIdentity` helper to encapsulate token retrieval, verification, and schema parsing.
 **Benefit:** Improved testability and reusability of identity resolution logic.
+
+### 2.7 Guard Handler Decomposition
+**Location:** `src/middleware.ts`
+**Pattern:** Decomposed procedural `middleware` into `handleAuthGuard` and `handleRbacGuard`.
+**Benefit:** Isolates authentication redirects from authorization checks; improves auditability of the security perimeter.
+
+### 2.8 Middleware Redirect Helper
+**Location:** `src/middleware.ts`
+**Pattern:** Introduced `redirectTo(request, path, params)` to encapsulate Next.js URL/redirect construction.
+**Benefit:** Standardizes redirect behavior and removes repetitive infrastructure code from security guards.
+
+### 2.9 Declarative RBAC Capability Mapping
+**Location:** `src/lib/rbac.ts`
+**Pattern:** Replaced procedural `permissionSet` function with `PERMISSION_LEVEL_MAP` object.
+**Benefit:** Decouples permission definitions from logic; improves extensibility for new permission levels.
+
+### 2.10 Declarative Path Matching
+**Location:** `src/lib/rbac.ts`
+**Pattern:** Replaced procedural `for...of` loop in `matchPathToResource` with `.find()` call.
+**Benefit:** Simplifies path-to-resource resolution and removes unused procedural branches.
 
 ---
 
@@ -122,22 +147,22 @@ These journeys represent the most critical paths for Auth & Middleware.
 
 ## 7. Surprising Behaviors Discovered During Characterization (2026-03-07)
 
-### 7.1 matchPathToResource Fallback Divergence
+### 7.1 matchPathToResource Fallback Divergence (RESOLVED)
 **Location:** `src/lib/rbac.ts`
-**Behavior:** While unknown random paths correctly return `UNKNOWN`, an empty string `''` or root path `/` returns `DASHBOARD`. This is due to the first regex pattern `^\/?$`.
-**Implication:** Access to the root path is implicitly tied to DASHBOARD permissions.
+**Resolution:** Updated `PATH_RESOURCE_MAP` to use explicit regex `^\/?$` for DASHBOARD.
+**Benefit:** Ensures root and empty paths are explicitly mapped to Dashboard, while other unknown paths correctly fall back to `UNKNOWN`.
 **Risk if changed:** Medium.
 
-### 7.2 verifyToken Generic Error Code
+### 7.2 verifyToken Generic Error Code (RESOLVED)
 **Location:** `src/lib/jwt.ts`
-**Behavior:** In certain failure modes (like expired tokens depending on the `jose` version or mock state), the error code returned is `VALIDATION_FAILED` instead of the more specific `EXPIRED`.
-**Implication:** Catch blocks relying strictly on `EXPIRED` for refresh logic might fail.
+**Resolution:** Extracted error handling to `handleJwtError`. Ensured `jose.errors.JWTExpired` is always mapped to `EXPIRED` code, and Zod validation errors return `VALIDATION_FAILED`.
+**Benefit:** Catch blocks relying on specific codes for refresh logic are now reliable.
 **Risk if changed:** Medium.
 
 ### 7.3 actionFactory Raw Error Leak (RESOLVED)
 **Location:** `src/lib/action-factory.ts`
 **Behavior:** When `requireActor` fails, the factory now returns localized `ERROR_MESSAGES.SESSION_EXPIRED` instead of the internal "Unauthorized" string.
-**Resolution:** Mapped internal `AuthenticationError` to centralized error constant in `handleActionFailure`.
+**Resolution:** Implemented **Replace Conditional with Strategy** pattern in `handleActionFailure` to map internal `AuthenticationError` and `ZodError` to centralized error constants.
 **Risk if changed:** Low.
 
 ### 7.4 Hardcoded Indonesian Localization (RESOLVED)
