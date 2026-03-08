@@ -196,12 +196,54 @@ export default async function DashboardPage() {
 
 ---
 
+## Phase 5: Performance Testing Results
+
+**Date:** March 8, 2026  
+**Status:** Cache infrastructure working, but limited impact due to architecture
+
+### Findings
+
+1. **Cache IS working** - Console logs confirm hit/miss events:
+
+   ```
+   {"level":"CACHE","event":"miss","tag":"users","timestamp":...}
+   {"level":"CACHE","event":"hit","tag":"users","timestamp":...}
+   ```
+
+2. **Timing results:**
+   - First request (cache miss): ~300ms
+   - Subsequent rapid request (cache hit): ~80-300ms
+   - Dev server introduces variability
+
+3. **Limitation:** Due to client-side fetching pattern (all pages use `'use client'` with `useEffect`), caching benefits are limited to rapid repeated requests within same session.
+
+### Architecture Reality
+
+| Pattern                      | Cache Impact                                  |
+| ---------------------------- | --------------------------------------------- |
+| Client Component + useEffect | Limited (each navigation = new request)       |
+| Server Component             | Full benefit (Next.js caches rendered output) |
+
+### Load Test (k6)
+
+- 10 VUs, 3 minutes
+- Error rate: 0%
+- p95 latency: 262ms
+- Note: k6 testing limited by Next.js server action auth (requires browser)
+
+### Verdict
+
+**Caching infrastructure is functional.** For internal tool (<40 users), current approach is acceptable. Future optimization: migrate to Server Components for full caching benefits.
+
+---
+
 ## Reference
 
 - **CG-05 Spec:** `docs/conversation/kilo/cg-05-caching-specification.md`
 - **Design ADR:** `docs/DECISIONS.md` (ADR-009)
 - **Architecture Rules:** `AGENTS.md` (Server Actions Only, no REST API)
 - **Service Pattern:** Original service modules in `src/features/*/service.ts`
+- **Phase 5 Report:** `docs/PHASE_5_CACHING_REPORT.md`
 
 ---
 

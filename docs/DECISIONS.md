@@ -420,6 +420,41 @@ export class CachedParameterService {
 
 ---
 
+## ADR-010: Caching Implementation - Architecture Trade-offs
+
+**Date:** 2026-03-08  
+**Status:** Accepted  
+**Scope:** Performance, Caching, Architecture
+
+### Context
+
+Implemented Next.js cache tags at server action level (`revalidateTag()`). Testing revealed cache IS functional (hit/miss events logged), but impact is limited due to existing architecture.
+
+### Decision
+
+Accept current caching implementation as-is for Phase 5. Cache infrastructure works correctly; full performance benefits require future architecture changes.
+
+### Rationale
+
+1. **All data-fetching pages use Client Components** (`'use client'`) with `useEffect` to fetch data
+2. **Each page navigation triggers fresh request** - server-side cache doesn't persist across navigations
+3. **Cache DOES help** with rapid repeated requests within same session
+4. **For internal tool (<40 users)**, current approach is acceptable
+
+### Consequences
+
+- ✅ Cache infrastructure in place and functional
+- ⚠️ Limited performance impact until migrated to Server Components
+- 📋 Future: Migrate to Server Components for full caching benefits
+- 📋 Future: Add Redis for shared cache across server instances
+
+### Related
+
+- `docs/CACHING.md` - Implementation details
+- `docs/PHASE_5_CACHING_REPORT.md` - Testing results
+
+---
+
 ## How to Add New Decisions
 
 1. Use format: `ADR-XXX: Title`
