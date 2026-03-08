@@ -10,7 +10,7 @@ Priority = f(Pain, Risk, Value)
 
 | Area                 | Pain Level | Risk Level | Business Value | Priority | Evidence                                |
 | -------------------- | ---------- | ---------- | -------------- | :------: | --------------------------------------- |
-| DI Inversion         | High       | High       | Medium         |    P1    | Foundational DI depends on Feature code |
+| DI Inversion         | Low        | High       | Medium         |  Done    | Reversed foundation-to-feature coupling |
 | RBAC Path Matching   | Medium     | High       | Critical       |    P1    | Regex matches sub-paths greedily        |
 | Search/Camera Leaks  | Low        | Low        | High           |  Done    | Implemented automatic resource cleanup  |
 | DataTable Complexity | Low        | High       | High           |    P3    | Simultaneous DOM rendering (dual-view)  |
@@ -66,7 +66,7 @@ Priority = f(Pain, Risk, Value)
 
 ### Phase 3: Structural Realignment (HIGH RISK)
 
-- [ ] **Task 3.1: Reverse DI Inversion** (`lib/di/factories.ts`)
+- [x] **Task 3.1: Reverse DI Inversion** (`lib/di/factories.ts`)
   - Remove imports from `@/features/*` in the foundational `lib` folder.
   - Move service registration factories to their respective feature directories.
 - [ ] **Task 3.2: Secure RBAC Paths** (`rbac.ts`)
@@ -79,7 +79,7 @@ Priority = f(Pain, Risk, Value)
 
 ## 5. Verification Plan
 
-- [ ] All 350+ unit tests pass.
+- [x] All 350+ unit tests pass.
 - [ ] E2E suite (`shared-components.spec.ts`) passes across all roles.
 - [ ] Memory check: Verify ObjectURLs are revoked after clearing image in `CameraInput`.
 - [ ] Security check: Verify that non-admin sub-paths are correctly blocked by RBAC.

@@ -64,9 +64,10 @@ This document captures surprising, non-obvious, or potentially problematic behav
 
 ### 5.1 Static Indonesian Mapping
 **Location:** `getUserMessage`
-**Behavior:** Hardcoded dictionary for `NetworkError`, `TimeoutError`, etc.
-**Implication:** If a new error type is introduced without updating this service, the user receives a generic "Maaf, terjadi kesalahan" even if the error name is descriptive.
-**Risk if changed:** Low (UX degradation).
+**Behavior:** Previously hardcoded dictionary inside the method.
+**Refactoring Result:** Extracted to **ERROR_TRANSLATIONS constant**. Added a `DEFAULT` fallback and parameterized `formatErrorMessage` to support dynamic logging contexts.
+**Impact:** Improved maintainability and standardized log prefixes (`[CPIS-ERROR] Feature.Method`).
+**Risk after change:** Low.
 
 ---
 
@@ -91,29 +92,18 @@ This document captures surprising, non-obvious, or potentially problematic behav
 
 ---
 
-## 8. Error Handling (src/lib/error-handler-service.ts)
+## 8. DI Infrastructure (src/lib/di/factories.ts)
 
-### 8.1 Static Indonesian Mapping
-**Location:** `getUserMessage`
-**Behavior:** Previously hardcoded dictionary inside the method.
-**Refactoring Result:** Extracted to **ERROR_TRANSLATIONS constant**. Added a `DEFAULT` fallback and parameterized `formatErrorMessage` to support dynamic logging contexts.
-**Impact:** Improved maintainability and standardized log prefixes (`[CPIS-ERROR] Feature.Method`).
-**Risk after change:** Low.
-
----
-
-## 9. Action Factory (src/lib/action-factory.ts)
-
-### 9.1 Brittle Error Strategy Mapping
-**Location:** `handleActionFailure`
-**Behavior:** Previously relied on string-based constructor name matching and ignored nested Zod errors.
-**Refactoring Result:** Migrated to **Replace Conditional with Polymorphism (Explicit Type Checking)**. Implemented a recursive `formatZodError` helper.
-**Impact:** Zod errors are now returned as flat, human-readable strings (e.g., "email: Invalid format; age: Too young") instead of generic messages. Standardized on `unknown` error typing.
-**Risk after change:** Medium (Downgraded from High).
+### 8.1 Structural Layer Inversion
+**Location:** `factories.ts`
+**Behavior:** Foundational layer (`src/lib`) was importing concrete service implementations from the feature layer (`src/features`).
+**Refactoring Result:** Implemented **Dependency Inversion**. Concrete factories were moved to their respective feature directories (`src/features/*/di.ts`).
+**Impact:** Circular dependency risks eliminated. The foundation layer is now purely abstract, and the feature layer correctly depends on it.
+**Risk after change:** High (Structural change).
 
 ---
 
-## 10. Summary of Findings
+## 9. Summary of Findings
 
 | #   | Category    | Finding                                | Risk | Action |
 | --- | ----------- | -------------------------------------- | ---- | ------ |
@@ -125,6 +115,7 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | 6   | Sidebar     | Manual category repetition             | Low  | ✅ Refactored |
 | 7   | JWT         | Exception-based flow control           | Low  | ✅ Refactored |
 | 8   | Error       | Hardcoded localized messages           | Low  | ✅ Refactored |
-| 9   | Factory     | Brittle error mapping                  | Med  | ✅ Refactored |
+| 9   | DI          | Structural layer inversion             | High | ✅ Refactored |
+| 10  | Factory     | Brittle error mapping                  | Med  | ✅ Refactored |
 
 **⚠️ Characterization Complete. Proceed to Phase 3: Map.**

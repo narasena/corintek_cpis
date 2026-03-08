@@ -8,8 +8,8 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) | 12,688 | 12,692|     +4 |
-| Code Files (.ts/.tsx)        |    124 |   124 |      0 |
+| Total Lines of Code (ts/tsx) | 12,688 | 12,645|    -43 |
+| Code Files (.ts/.tsx)        |    124 |   123 |     -1 |
 | Largest File (LOC)           |    726 |   726 |      0 |
 | Files >500 lines             |      1 |     1 |      0 |
 | Methods >50 lines            |     ~8 |    ~8 |      0 |
@@ -80,11 +80,11 @@
 ┌──────────────────────────────┬──────────┐
 │ Metric                       │ Baseline │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (ts/tsx)           │   12,690 │
-│ File count                   │      124 │
+│ Total LOC (ts/tsx)           │   12,645 │
+│ File count                   │      123 │
 │ Max file size                │      726 │
 │ Max method size              │      200 │
-│ Total cyclomatic complexity  │ Med-High │
+│ Total cyclomatic complexity  │ Medium   │
 │ Duplicated code blocks       │      Low │
 └──────────────────────────────┴──────────┘
 ```

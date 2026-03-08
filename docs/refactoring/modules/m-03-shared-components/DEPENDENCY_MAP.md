@@ -30,7 +30,6 @@
 | 5   | src/lib/jwt.ts                                |    88 | Session token management                   |
 | 6   | src/lib/search-filter-service.ts              |   360 | Fuzzy search and dataset filtering         |
 | 7   | src/lib/di/container.ts                       |    80 | IoC Container implementation               |
-| 8   | src/lib/di/factories.ts                       |    45 | Service instantiation wiring               |
 
 ---
 
@@ -50,9 +49,8 @@ graph TD
         C --> RX[@radix-ui/*]
         L --> PR[prisma]
         
-        %% Circular/Inversion Risk
-        DI_F[lib/di/factories.ts] -.-> AT[@/features/attendance]
-        DI_F -.-> LS[@/features/log-sheets]
+        %% Composition Root Direction
+        CR[lib/di/composition-root.ts] -.-> F_DI[@/features/*/di.ts]
         NS[components/nav-user.tsx] --> AU[@/features/auth]
     end
 ```
@@ -61,11 +59,11 @@ graph TD
 
 ## 3. Circular Dependency Analysis
 
-**Result: 1 structural inversion identified.**
+**Result: Structural inversion resolved.**
 
 | ID   | Cycle Path                                | Severity | Resolution                                 |
 | ---- | ----------------------------------------- | -------- | ------------------------------------------ |
-| CIR-1| `lib/di/factories.ts` -> `features/*`     | Medium   | Move factories to feature domains          |
+| CIR-1| `lib/di/factories.ts` -> `features/*`     | Resolved | Factories moved to feature DI files        |
 | CIR-2| `components/nav-user.tsx` -> `auth/actions`| Low      | Standard practice for logout logic         |
 
 ---
@@ -75,7 +73,7 @@ graph TD
 | File                            | Lines | Exports | Verdict                               |
 | ------------------------------- | ----: | :-----: | ------------------------------------- |
 | src/components/ui/sidebar.tsx   |   726 |   15+   | SHADCN GOD FILE (Generated)           |
-| src/lib/search-filter-service.ts|   358 |    1    | COMPLEX SERVICE (Fuzzy Logic)         |
+| src/lib/search-filter-service.ts|   360 |    1    | COMPLEX SERVICE (Fuzzy Logic)         |
 | src/components/data-table.tsx   |   306 |    2    | ORCHESTRATOR (High coupling to hooks) |
 
 ---
@@ -97,7 +95,7 @@ graph TD
 | Direction       | External Module            | Files Affected         | Impact                    |
 | --------------- | -------------------------- | ---------------------- | ------------------------- |
 | **Imports**     | `@/features/auth`          | `nav-user.tsx`         | Logout functionality      |
-| **Imports**     | `@/features/attendance`    | `lib/di/factories.ts`  | Service wiring            |
+| **Imports**     | `@/features/*`             | `composition-root.ts`  | Global DI wiring          |
 | **Imported By** | **ALL MODULES (M-04 to M-20)**| All feature components | Foundation for CRUD/Logic |
 
 **Rule:** Any change to `DataTable`, `rbac.ts`, or `actionFactory` requires regression testing across the entire application.

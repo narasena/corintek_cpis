@@ -20,17 +20,16 @@
 | ---- | --------------------------------------------- | ----: | :--: | ------------------------------------------- |
 | F1   | `src/lib/rbac.ts`                             |   121 |  🔴  | System security foundation; greedy matching |
 | F2   | `src/components/data-table.tsx`               |   306 |  🔴  | High UI coupling; simultaneous DOM rendering|
-| F3   | `src/lib/di/factories.ts`                     |    45 |  🔴  | Structural inversion; foundation-to-feature  |
-| F4   | `src/lib/search-filter-service.ts`            |   360 |  🟡  | Capped cache & flattened logic              |
-| F5   | `src/lib/action-factory.ts`                   |   116 |  🟡  | Refactored to typed error resolution        |
-| F6   | `src/components/camera-input.tsx`             |   300 |  🟢  | Added URL revocation lifecycle              |
-| F7   | `src/lib/error-handler-service.ts`            |   180 |  🟢  | Refactored to context-aware constants       |
-| F8   | `src/lib/jwt.ts`                               |    88 |  🟢  | Refactored to TActionResult pattern         |
-| F9   | `src/components/app-sidebar.tsx`              |    51 |  🟢  | Refactored to data-driven mapping           |
-| F10  | `src/components/multi-select.tsx`             |   163 |  🟢  | UI Component; well-encapsulated logic       |
-| F11  | `src/components/virtual-list.tsx`             |   141 |  🟢  | Performance UI; isolated logic              |
-| F12  | `src/components/crud-dialog.tsx`              |    45 |  🟢  | Simple UI Wrapper                           |
-| F13  | `src/lib/prisma.ts`                           |    30 |  🟢  | Simple singleton factory                    |
+| F3   | `src/lib/search-filter-service.ts`            |   360 |  🟡  | Capped cache & flattened logic              |
+| F4   | `src/lib/action-factory.ts`                   |   116 |  🟡  | Refactored to typed error resolution        |
+| F5   | `src/components/camera-input.tsx`             |   300 |  🟢  | Added URL revocation lifecycle              |
+| F6   | `src/lib/error-handler-service.ts`            |   180 |  🟢  | Refactored to context-aware constants       |
+| F7   | `src/lib/jwt.ts`                               |    88 |  🟢  | Refactored to TActionResult pattern         |
+| F8   | `src/components/app-sidebar.tsx`              |    51 |  🟢  | Refactored to data-driven mapping           |
+| F9   | `src/components/multi-select.tsx`             |   163 |  🟢  | UI Component; well-encapsulated logic       |
+| F10  | `src/components/virtual-list.tsx`             |   141 |  🟢  | Performance UI; isolated logic              |
+| F11  | `src/components/crud-dialog.tsx`              |    45 |  🟢  | Simple UI Wrapper                           |
+| F12  | `src/lib/prisma.ts`                           |    30 |  🟢  | Simple singleton factory                    |
 
 ---
 
@@ -38,6 +37,6 @@
 
 | Risk Level | Count | Files                                                                 |
 | :--------: | :---: | --------------------------------------------------------------------- |
-|  🔴 HIGH   |   3   | `rbac.ts`, `data-table.tsx`, `di/factories.ts` |
+|  🔴 HIGH   |   2   | `rbac.ts`, `data-table.tsx` |
 | 🟡 MEDIUM  |   2   | `search-filter-service.ts`, `action-factory.ts` |
 |   🟢 LOW   |   8   | `camera-input.tsx`, `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |
