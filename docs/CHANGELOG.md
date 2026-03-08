@@ -6,6 +6,21 @@
 
 ---
 
+## v0.3.0 — Shared Components & Infrastructure Baseline (2026-03-08)
+
+**Branch:** `refactor/global`
+
+### M-03: Foundation Characterization & Planning
+
+- [x] **Baseline Analysis:** Inventoried 12,688 LOC across 124 files in M-03.
+- [x] **Characterization Suite:** Implemented comprehensive logic lock for RBAC, Search, DataTable, and Image Pipelines.
+- [x] **Test Infrastructure:** Standardized `ResizeObserver` and `PointerEvent` mocks in global setup.
+- [x] **Coverage Improvements:** Increased coverage for `MultiSelect` (90%+) and `VirtualList` (100%).
+- [x] **Planning:** Identified structural inversion in DI and memory leaks in ObjectURL handling.
+- [x] **Artifacts:** Generated Baseline, Findings, Map, Risk, and Refactoring Plan documents.
+
+---
+
 ## v0.2.0 — Client Portal & Notifications (2026-02-25)
 
 **Branch:** `feat/client-portal-cp01` (merged to `development_v2`)
