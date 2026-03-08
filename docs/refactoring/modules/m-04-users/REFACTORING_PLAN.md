@@ -60,8 +60,8 @@ Priority = f(Pain, Risk, Value)
 - [x] **3.3 RBAC Cleanup**: Address inconsistent RBAC check in `getTechniciansList` (Characterization Finding 1.1). (Added documentation and maintained locked behavior).
 
 ### Phase 4: UI Decomposition (High Risk)
-- [ ] **4.1 Split `UserForm`**: Decompose the 400-line `UserForm` into `UserBasicFields`, `UserSecurityFields`, and `UserClientFields`.
-- [ ] **4.2 Mode Separation**: Extract `EditUserLogic` and `CreateUserLogic` into separate hooks or helper functions to reduce component branches.
+- [x] **4.1 Split `UserForm`**: Decompose the 400-line `UserForm` into `UserBasicFields`, `UserSecurityFields`, and `UserRoleFields`.
+- [x] **4.2 Mode Separation**: Extract `EditUserLogic` and `CreateUserLogic` into separate hooks or helper functions to reduce component branches. (Consolidated into `useUserForm` hook).
 
 ---
 

@@ -23,13 +23,13 @@ This proves the refactoring improved the codebase."
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) |   1296 |  1309 |    +13 |
-| Code Files (.ts/.tsx)        |      7 |     9 |     +2 |
-| Largest File (LOC)           |    417 |   403 |    -14 |
+| Total Lines of Code (ts/tsx) |   1296 |  1411 |   +115 |
+| Code Files (.ts/.tsx)        |      7 |    12 |     +5 |
+| Largest File (LOC)           |    417 |   367 |    -50 |
 | Files >500 lines             |      0 |     0 |      — |
-| Methods >50 lines            |      2 |     2 |      — |
+| Methods >50 lines            |      2 |     1 |     -1 |
 | TODO/FIXME/HACK Comments     |      0 |     0 |      — |
-| Est. Cyclomatic Complexity   |   ~5-8 |  ~3-5 |     ↓  |
+| Est. Cyclomatic Complexity   |   ~5-8 |  ~2-3 |     ↓↓ |
 | Tests Passing                |     11 |    54 |    +43 |
 
 ---
@@ -41,12 +41,16 @@ This proves the refactoring improved the codebase."
 | 1   | `src/features/users/service.ts`            |     9 | Facade re-exporting services               |
 | 2   | `src/features/users/hooks/use-user-clients.ts`|    28 | Extracted hook for client fetching         |
 | 3   | `src/features/users/components/user-dialog.tsx` |    46 | Simple wrapper dialog                      |
-| 4   | `src/features/users/utils.ts`              |    68 | Prisma select and simple transformation    |
-| 5   | `src/features/users/services/user-queries.ts` |   119 | Decomposed: Focused on Read operations     |
-| 6   | `src/features/users/actions.ts`            |   159 | Standardized revalidation paths            |
-| 7   | `src/features/users/components/profile-form.tsx` |   231 | Consistent error handling pattern          |
-| 8   | `src/features/users/services/user-mutations.ts`|   255 | Decomposed: Focused on Write operations    |
-| 9   | `src/features/users/components/user-form.tsx` |   403 | God Component (Shrinking)                  |
+| 4   | `src/features/users/components/form-sections/UserSecurityFields.tsx` | 60 | Extracted password fields |
+| 5   | `src/features/users/utils.ts`              |    68 | Prisma select and simple transformation    |
+| 6   | `src/features/users/components/user-form.tsx` |   73 | Refactored: Clean orchestrator             |
+| 7   | `src/features/users/components/form-sections/UserBasicFields.tsx` | 118 | Extracted basic info fields |
+| 8   | `src/features/users/services/user-queries.ts` |   119 | Decomposed: Focused on Read operations     |
+| 9   | `src/features/users/hooks/use-user-form.ts`|   123 | Extracted form logic & submission hook     |
+| 10  | `src/features/users/components/form-sections/UserRoleFields.tsx` | 131 | Extracted role & client logic |
+| 11  | `src/features/users/actions.ts`            |   159 | Standardized revalidation paths            |
+| 12  | `src/features/users/components/profile-form.tsx` |   231 | Consistent error handling pattern          |
+| 13  | `src/features/users/services/user-mutations.ts`|   255 | Decomposed: Focused on Write operations    |
 
 
 ---

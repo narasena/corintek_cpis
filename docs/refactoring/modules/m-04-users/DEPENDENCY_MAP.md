@@ -20,25 +20,29 @@ Do NOT suggest fixes yet. Just map the current state."
 
 | #   | File                                       | Lines | Role                                         |
 | --- | ------------------------------------------ | ----: | -------------------------------------------- |
-| 1   | `src/features/users/components/user-form.tsx` |   403 | Main form for creating and editing users     |
-| 2   | `src/features/users/components/profile-form.tsx` |   231 | Specialized form for self-profile management |
-| 3   | `src/features/users/hooks/use-user-clients.ts`|    28 | Reusable hook for client fetching logic      |
-| 4   | `src/features/users/components/user-dialog.tsx` |    46 | Dialog wrapper for the `UserForm`            |
+| 1   | `src/features/users/components/user-form.tsx` |    73 | Refactored: Orchestrator component           |
+| 2   | `src/features/users/hooks/use-user-form.ts`|   123 | Form logic, initialization & submission      |
+| 3   | `src/features/users/components/form-sections/UserBasicFields.tsx` | 118 | UI: Basic info fields |
+| 4   | `src/features/users/components/form-sections/UserRoleFields.tsx` | 131 | UI: Role & Client fields |
+| 5   | `src/features/users/components/form-sections/UserSecurityFields.tsx` | 60 | UI: Password fields |
+| 6   | `src/features/users/components/profile-form.tsx` |   231 | Self-profile management                      |
+| 7   | `src/features/users/hooks/use-user-clients.ts`|    28 | Reusable client fetching logic               |
+| 8   | `src/features/users/components/user-dialog.tsx` |    46 | Dialog wrapper for `UserForm`                |
 
 ### Domain/Action Layer
 
 | #   | File                             | Lines | Role                                          |
 | --- | -------------------------------- | ----: | --------------------------------------------- |
-| 5   | `src/features/users/actions.ts`  |   159 | Server actions (entry points) with RBAC gates |
+| 9   | `src/features/users/actions.ts`  |   159 | Server actions entry points                   |
 
 ### Service/Infrastructure Layer
 
 | #   | File                                | Lines | Role                                           |
 | --- | ----------------------------------- | ----: | ---------------------------------------------- |
-| 6   | `src/features/users/services/user-queries.ts` |   119 | Decomposed Read operations                     |
-| 7   | `src/features/users/services/user-mutations.ts`|   255 | Decomposed Write operations                    |
-| 8   | `src/features/users/service.ts`     |     9 | Backward-compatible facade (exports all)       |
-| 9   | `src/features/users/utils.ts`       |    68 | Data mappers and shared Prisma select objects  |
+| 10  | `src/features/users/services/user-queries.ts` |   119 | Decomposed Read operations                     |
+| 11  | `src/features/users/services/user-mutations.ts`|   255 | Decomposed Write operations                    |
+| 12  | `src/features/users/service.ts`     |     9 | Backward-compatible facade (exports all)       |
+| 13  | `src/features/users/utils.ts`       |    68 | Data mappers and shared Prisma select objects  |
 
 ---
 
@@ -48,9 +52,13 @@ Do NOT suggest fixes yet. Just map the current state."
 graph TD
     subgraph "Presentation Layer"
         UD[user-dialog.tsx] --> UF[user-form.tsx]
-        UF --> UA[actions.ts]
-        PF[profile-form.tsx] --> UA
-        UF --> UH[use-user-clients.ts]
+        UF --> UFH[use-user-form.ts]
+        UF --> UB[UserBasicFields.tsx]
+        UF --> UR[UserRoleFields.tsx]
+        UF --> USec[UserSecurityFields.tsx]
+        PF[profile-form.tsx] --> UA[actions.ts]
+        UFH --> UA
+        UFH --> UH[use-user-clients.ts]
     end
 
     subgraph "Domain Layer"
@@ -76,9 +84,6 @@ graph TD
     end
 ```
 
-    end
-```
-
 ---
 
 ## 3. Circular Dependency Analysis
@@ -91,8 +96,7 @@ graph TD
 
 | File | Lines | Exports | Verdict |
 | ---- | ----: | :-----: | ------- |
-| `src/features/users/components/user-form.tsx` | 417 | 1 | **GOD COMPONENT**: Handles create/edit logic, role-based conditional fields (Client selection), and complex validation. |
-| `src/features/users/service.ts` | 367 | 11 | **THICK SERVICE**: Contains all user CRUD. While under 500 lines, it manages many concerns (auth, status, list, search, admin). |
+| None | < 300 | - | **RESOLVED**: All files are now under the 300-line threshold. |
 
 ---
 
@@ -111,8 +115,8 @@ graph TD
 
 | Direction | External Module | Files Affected | Impact |
 | --- | --- | --- | --- |
-| **Imports** | `@/features/clients` | `user-form.tsx` | Fetches client list for role-based assignments. |
-| **Imports** | `@/features/auth` | `service.ts`, `actions.ts` | Uses `hashPassword` and `actionFactory`. |
+| **Imports** | `@/features/clients` | `use-user-clients.ts` | Fetches client list for role-based assignments. |
+| **Imports** | `@/features/auth` | `services/*`, `actions.ts` | Uses `hashPassword` and `actionFactory`. |
 | **Imported By** | `@/features/log-sheets` | `use-log-sheet-technicians.ts` | Fetches technicians list for dropdowns. |
 | **Imported By** | `@/features/projects` | `project-assignments-section.tsx` | Fetches all users for assignment. |
 | **Imported By** | `app/(main)/attendance` | `admin/page.tsx` | Lists users for attendance management. |
