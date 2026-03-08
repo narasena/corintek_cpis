@@ -1,9 +1,17 @@
 import { SignJWT, jwtVerify, decodeJwt, errors } from 'jose';
 import { IJwtPayload, jwtPayloadSchema } from '@/@types/auth.type';
 import { JWT_INFRA_CONFIG, AUTH_INFRA_ERROR } from './constants/auth';
+import { TActionResult, ok } from './action-helpers';
 
 export class JWTError extends Error {
-  constructor(message: string, public code: 'EXPIRED' | 'INVALID' | 'SECRET_MISSING' | 'VALIDATION_FAILED') {
+  constructor(
+    message: string,
+    public code:
+      | 'EXPIRED'
+      | 'INVALID'
+      | 'SECRET_MISSING'
+      | 'VALIDATION_FAILED'
+  ) {
     super(message);
     this.name = 'JWTError';
   }
@@ -41,41 +49,46 @@ export async function generateToken(
 /**
  * Verify and decode a JWT token
  * @param token - JWT token string to verify
- * @returns Decoded payload if valid
+ * @returns Standardized action result containing payload or error string
  */
-export async function verifyToken(token: string): Promise<IJwtPayload> {
+export async function verifyToken(
+  token: string
+): Promise<TActionResult<IJwtPayload>> {
   try {
     const { payload } = await jwtVerify(token, SECRET_KEY);
-    return jwtPayloadSchema.parse(payload);
+    const data = jwtPayloadSchema.parse(payload);
+    return ok(data);
   } catch (error) {
-    throw handleJwtError(error, 'JWT.verifyToken');
+    return mapJwtErrorToActionResult(error, 'JWT.verifyToken');
   }
 }
 
 /**
- * Internal helper to map library errors to domain-specific JWTError
+ * Internal helper to map library errors to standardized TActionResult
  * @param error - Caught error from verification process
  * @param context - Function name for error reporting
  */
-function handleJwtError(error: any, context: string): JWTError {
+function mapJwtErrorToActionResult(
+  error: unknown,
+  context: string
+): TActionResult<never> {
+  let message = AUTH_INFRA_ERROR.TOKEN_INVALID;
+
   if (error instanceof errors.JWTExpired) {
-    return new JWTError(
-      `[CPIS-ERROR] ${context}: ${AUTH_INFRA_ERROR.TOKEN_EXPIRED}`,
-      'EXPIRED'
-    );
+    message = AUTH_INFRA_ERROR.TOKEN_EXPIRED;
+  } else if (
+    error instanceof Error &&
+    (error.name === 'ZodError' || (error as any).issues)
+  ) {
+    message = `${AUTH_INFRA_ERROR.PAYLOAD_VALIDATION_FAILED}: ${error.message}`;
   }
 
-  if (error instanceof Error && (error.name === 'ZodError' || (error as any).issues)) {
-    return new JWTError(
-      `[CPIS-ERROR] ${context}: ${AUTH_INFRA_ERROR.PAYLOAD_VALIDATION_FAILED}: ${error.message}`,
-      'VALIDATION_FAILED'
-    );
-  }
+  console.error(`[CPIS-ERROR] ${context}: ${message}`);
 
-  return new JWTError(
-    `[CPIS-ERROR] ${context}: ${AUTH_INFRA_ERROR.TOKEN_INVALID}`,
-    'INVALID'
-  );
+  return {
+    success: false,
+    error: message,
+  };
 }
 
 /**

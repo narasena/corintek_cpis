@@ -25,8 +25,8 @@
 | F5   | `src/lib/action-factory.ts`                   |   110 |  🔴  | Foundation for all server-side operations   |
 | F6   | `src/components/camera-input.tsx`             |   276 |  🟡  | Media lifecycle; memory leak (ObjectURL)    |
 | F7   | `src/lib/error-handler-service.ts`            |   178 |  🟡  | Critical UX; hardcoded Indonesian mapping   |
-| F8   | `src/lib/jwt.ts`                               |    96 |  🟡  | Security logic; moderate coupling            |
-| F9   | `src/components/app-sidebar.tsx`              |    69 |  🟡  | Large generated file; navigation dependency |
+| F8   | `src/lib/jwt.ts`                               |    88 |  🟢  | Refactored to TActionResult pattern         |
+| F9   | `src/components/app-sidebar.tsx`              |    51 |  🟢  | Refactored to data-driven mapping           |
 | F10  | `src/components/multi-select.tsx`             |   163 |  🟢  | UI Component; well-encapsulated logic       |
 | F11  | `src/components/virtual-list.tsx`             |   141 |  🟢  | Performance UI; isolated logic              |
 | F12  | `src/components/crud-dialog.tsx`              |    45 |  🟢  | Simple UI Wrapper                           |
@@ -39,5 +39,5 @@
 | Risk Level | Count | Files                                                                 |
 | :--------: | :---: | --------------------------------------------------------------------- |
 |  🔴 HIGH   |   5   | `rbac.ts`, `data-table.tsx`, `di/factories.ts`, `search-filter-service.ts`, `action-factory.ts` |
-| 🟡 MEDIUM  |   4   | `camera-input.tsx`, `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx` |
-|   🟢 LOW   |   4   | `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |
+| 🟡 MEDIUM  |   2   | `camera-input.tsx`, `error-handler-service.ts` |
+|   🟢 LOW   |   6   | `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |

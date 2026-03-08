@@ -30,8 +30,8 @@ export async function getCurrentUser(): Promise<IJwtPayload | null> {
       return null;
     }
 
-    const payload = await verifyToken(token);
-    return payload;
+    const result = await verifyToken(token);
+    return result.success ? result.data : null;
   } catch {
     return null;
   }

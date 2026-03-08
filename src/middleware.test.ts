@@ -48,10 +48,13 @@ describe('Middleware', () => {
   it('redirects authenticated user away from login to /users', async () => {
     const req = new NextRequest(new URL('/login', baseUrl));
     req.cookies.set('auth_token', 'valid-token');
-    vi.mocked(verifyToken).mockResolvedValue({ id: '1', role: 'ADMIN' });
-    
+    vi.mocked(verifyToken).mockResolvedValue({
+      success: true,
+      data: { id: '1', role: 'ADMIN' },
+    });
+
     const res = await middleware(req);
-    
+
     expect(res.type).toBe('redirect');
     expect(res.url.toString()).toContain('/users');
   });
@@ -59,10 +62,13 @@ describe('Middleware', () => {
   it('allows authenticated user with correct role to access protected route', async () => {
     const req = new NextRequest(new URL('/users', baseUrl));
     req.cookies.set('auth_token', 'valid-token');
-    vi.mocked(verifyToken).mockResolvedValue({ id: '1', role: 'ADMIN' });
-    
+    vi.mocked(verifyToken).mockResolvedValue({
+      success: true,
+      data: { id: '1', role: 'ADMIN' },
+    });
+
     const res = await middleware(req);
-    
+
     expect(NextResponse.next).toHaveBeenCalled();
   });
 
@@ -70,10 +76,13 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/users', baseUrl));
     req.cookies.set('auth_token', 'valid-token');
     // Technician cannot access /users (ADMIN only)
-    vi.mocked(verifyToken).mockResolvedValue({ id: '2', role: 'TECHNICIAN' });
-    
+    vi.mocked(verifyToken).mockResolvedValue({
+      success: true,
+      data: { id: '2', role: 'TECHNICIAN' },
+    });
+
     const res = await middleware(req);
-    
+
     expect(res.type).toBe('redirect');
     expect(res.url.toString()).toContain('/forbidden');
   });
@@ -82,10 +91,13 @@ describe('Middleware', () => {
     const req = new NextRequest(new URL('/users', baseUrl));
     req.cookies.set('auth_token', 'valid-token');
     // Simulate invalid payload (no role)
-    vi.mocked(verifyToken).mockResolvedValue({ id: '1', email: 'test@example.com' } as any);
-    
+    vi.mocked(verifyToken).mockResolvedValue({
+      success: true,
+      data: { id: '1', email: 'test@example.com' } as any,
+    });
+
     const res = await middleware(req);
-    
+
     expect(res.type).toBe('redirect');
     expect(res.url.toString()).toContain('/forbidden');
   });

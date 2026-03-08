@@ -56,26 +56,35 @@ describe('auth-helpers (Actual Logic)', () => {
 
   it('getCurrentUser: returns null if token invalid', async () => {
     vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
-    vi.mocked(verifyToken).mockRejectedValue(new Error('fail'));
+    vi.mocked(verifyToken).mockResolvedValue({ success: false, error: 'fail' });
     expect(await getCurrentUser()).toBeNull();
   });
 
   it('getCurrentUser: returns payload on success', async () => {
     vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
-    vi.mocked(verifyToken).mockResolvedValue(mockPayload as any);
+    vi.mocked(verifyToken).mockResolvedValue({
+      success: true,
+      data: mockPayload as any,
+    });
     expect(await getCurrentUser()).toEqual(mockPayload);
   });
 
   it('getCurrentUserDetails: returns null if user not found', async () => {
     vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
-    vi.mocked(verifyToken).mockResolvedValue(mockPayload as any);
+    vi.mocked(verifyToken).mockResolvedValue({
+      success: true,
+      data: mockPayload as any,
+    });
     vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
     expect(await getCurrentUserDetails()).toBeNull();
   });
 
   it('getCurrentUserDetails: returns details on success', async () => {
     vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
-    vi.mocked(verifyToken).mockResolvedValue(mockPayload as any);
+    vi.mocked(verifyToken).mockResolvedValue({
+      success: true,
+      data: mockPayload as any,
+    });
     vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
     const result = await getCurrentUserDetails();
     expect(result?.email).toBe('test@example.com');
@@ -88,15 +97,27 @@ describe('auth-helpers (Actual Logic)', () => {
 
   it('requireActor: throws if user blocked', async () => {
     vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
-    vi.mocked(verifyToken).mockResolvedValue(mockPayload as any);
-    vi.mocked(prisma.user.findUnique).mockResolvedValue({ ...mockUser, isBlocked: true } as any);
+    vi.mocked(verifyToken).mockResolvedValue({
+      success: true,
+      data: mockPayload as any,
+    });
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      ...mockUser,
+      isBlocked: true,
+    } as any);
     await expect(requireActor()).rejects.toThrow(AuthenticationError);
   });
 
   it('getActorOrNull: returns null if inactive', async () => {
     vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
-    vi.mocked(verifyToken).mockResolvedValue(mockPayload as any);
-    vi.mocked(prisma.user.findUnique).mockResolvedValue({ ...mockUser, isActive: false } as any);
+    vi.mocked(verifyToken).mockResolvedValue({
+      success: true,
+      data: mockPayload as any,
+    });
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      ...mockUser,
+      isActive: false,
+    } as any);
     expect(await getActorOrNull()).toBeNull();
   });
 

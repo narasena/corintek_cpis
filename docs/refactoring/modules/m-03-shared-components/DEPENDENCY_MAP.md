@@ -17,7 +17,7 @@
 | 5   | src/components/virtual-list.tsx               |   141 | Large dataset virtualization               |
 | 6   | src/components/multi-select.tsx               |   163 | Multi-select input with badges             |
 | 7   | src/components/error-boundary.tsx             |    95 | Client-side error catching UI              |
-| 8   | src/components/app-sidebar.tsx                |    69 | Main application sidebar                   |
+| 8   | src/components/app-sidebar.tsx                |    51 | Main application sidebar                   |
 
 ### Infrastructure Layer (Lib)
 
@@ -27,7 +27,7 @@
 | 2   | src/lib/action-factory.ts                     |   110 | Server Action Dependency Injection factory |
 | 3   | src/lib/error-handler-service.ts              |   178 | Global error processing and localization   |
 | 4   | src/lib/prisma.ts                             |    30 | Prisma Client Singleton                    |
-| 5   | src/lib/jwt.ts                                |    96 | Session token management                   |
+| 5   | src/lib/jwt.ts                                |    88 | Session token management                   |
 | 6   | src/lib/search-filter-service.ts              |   358 | Fuzzy search and dataset filtering         |
 | 7   | src/lib/di/container.ts                       |    80 | IoC Container implementation               |
 | 8   | src/lib/di/factories.ts                       |    45 | Service instantiation wiring               |

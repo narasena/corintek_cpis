@@ -101,7 +101,7 @@ describe('getCurrentUser', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
 
     const result = await getCurrentUser();
 
@@ -112,7 +112,10 @@ describe('getCurrentUser', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'invalid-token' }),
     } as never);
-    verifyTokenMock.mockRejectedValue(new Error('Invalid token'));
+    verifyTokenMock.mockResolvedValue({
+      success: false,
+      error: 'Invalid token',
+    });
 
     const result = await getCurrentUser();
 
@@ -140,7 +143,7 @@ describe('getCurrentUserDetails', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
     prismaMock.user.findUnique.mockResolvedValue(null);
 
     const result = await getCurrentUserDetails();
@@ -154,7 +157,7 @@ describe('getCurrentUserDetails', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
     prismaMock.user.findUnique.mockResolvedValue(user as never);
 
     const result = await getCurrentUserDetails();
@@ -168,7 +171,7 @@ describe('getCurrentUserDetails', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
     prismaMock.user.findUnique.mockResolvedValue(user as never);
 
     const result = await getCurrentUserDetails();
@@ -182,7 +185,7 @@ describe('getCurrentUserDetails', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
     prismaMock.user.findUnique.mockResolvedValue(user as never);
 
     const result = await getCurrentUserDetails();
@@ -196,7 +199,7 @@ describe('getCurrentUserDetails', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
     prismaMock.user.findUnique.mockResolvedValue(user as never);
 
     const result = await getCurrentUserDetails();
@@ -232,7 +235,7 @@ describe('requireActor', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
     prismaMock.user.findUnique.mockResolvedValue(user as never);
 
     await expect(requireActor()).rejects.toThrow(AuthenticationError);
@@ -244,7 +247,7 @@ describe('requireActor', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
     prismaMock.user.findUnique.mockResolvedValue(user as never);
 
     const result = await requireActor();
@@ -262,7 +265,7 @@ describe('requireActor', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
     prismaMock.user.findUnique.mockResolvedValue(user as never);
 
     const result = await requireActor();
@@ -296,7 +299,7 @@ describe('getActorOrNull', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
     prismaMock.user.findUnique.mockResolvedValue(user as never);
 
     const result = await getActorOrNull();
@@ -310,7 +313,7 @@ describe('getActorOrNull', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
     prismaMock.user.findUnique.mockResolvedValue(user as never);
 
     const result = await getActorOrNull();
@@ -328,7 +331,7 @@ describe('getActorOrNull', () => {
     cookiesMock.mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: 'valid-token' }),
     } as never);
-    verifyTokenMock.mockResolvedValue(payload);
+    verifyTokenMock.mockResolvedValue({ success: true, data: payload });
     prismaMock.user.findUnique.mockResolvedValue(user as never);
 
     const result = await getActorOrNull();

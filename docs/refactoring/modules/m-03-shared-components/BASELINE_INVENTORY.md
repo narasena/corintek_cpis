@@ -8,14 +8,14 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) | 12,688 |     — |      — |
-| Code Files (.ts/.tsx)        |    124 |     — |      — |
-| Largest File (LOC)           |    726 |     — |      — |
-| Files >500 lines             |      1 |     — |      — |
-| Methods >50 lines            |     ~8 |     — |      — |
-| TODO/FIXME/HACK Comments     |     13 |     — |      — |
-| Est. Cyclomatic Complexity   | Medium-High |     — |      — |
-| Tests Passing                | 342/346|     — |      — |
+| Total Lines of Code (ts/tsx) | 12,688 | 12,662|    -26 |
+| Code Files (.ts/.tsx)        |    124 |   124 |      0 |
+| Largest File (LOC)           |    726 |   726 |      0 |
+| Files >500 lines             |      1 |     1 |      0 |
+| Methods >50 lines            |     ~8 |    ~8 |      0 |
+| TODO/FIXME/HACK Comments     |     13 |    13 |      0 |
+| Est. Cyclomatic Complexity   | Medium-High | Medium-High | — |
+| Tests Passing                | 342/346| 342/346|     — |
 
 ---
 
@@ -36,7 +36,7 @@
 | 11  | src/components/action-cell.tsx                |   119 | DataTable row actions                      |
 | 12  | src/lib/action-factory.ts                     |   110 | Server Action Dependency Injection         |
 | 13  | src/lib/rbac.ts                               |   121 | Role-Based Access Control logic            |
-| 14  | src/lib/jwt.ts                                |    96 | JWT utility for session tokens             |
+| 14  | src/lib/jwt.ts                                |    88 | Session token management                   |
 | 15  | src/lib/auth-helpers.ts                       |    72 | Authentication helper functions            |
 | 16  | src/lib/action-helpers.ts                     |    40 | Action result standardizers                |
 | 17  | src/lib/utils/image-compression.ts            |    92 | Image compression pipeline                 |

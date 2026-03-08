@@ -1,4 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.hoisted(() => {
+  process.env.JWT_SECRET = 'test-secret-at-least-32-characters-long';
+});
+
 import { loginAction, logoutAction } from '@/features/auth/actions';
 import { secureCompare } from '@/features/auth/crypto';
 import { matchPathToResource } from '@/lib/rbac';
@@ -26,9 +31,6 @@ vi.mock('@/lib/auth-helpers', () => ({
 vi.mock('@/features/auth/service', () => ({
   authenticateUser: vi.fn(),
 }));
-
-// Mock process.env for JWT
-process.env.JWT_SECRET = 'test-secret-at-least-32-characters-long';
 
 describe('M-02 Coverage Gaps', () => {
   
@@ -96,13 +98,8 @@ describe('M-02 Coverage Gaps', () => {
     });
 
     it('verifyToken: characterizes catch block for invalid tokens', async () => {
-      // Line 94 in jwt.ts is likely the catch block in verifyToken or similar
-      // We already have some coverage, but let's be explicit
-      try {
-        await verifyToken('invalid-token');
-      } catch (error: any) {
-        expect(error.name).toBe('JWTError');
-      }
+      const result = await verifyToken('invalid-token');
+      expect(result.success).toBe(false);
     });
   });
 

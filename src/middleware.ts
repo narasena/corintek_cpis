@@ -12,11 +12,8 @@ async function getIdentity(request: NextRequest): Promise<IJwtPayload | null> {
   const token = request.cookies.get(AUTH_CONFIG.COOKIE_NAME)?.value;
   if (!token) return null;
 
-  try {
-    return await verifyToken(token);
-  } catch {
-    return null;
-  }
+  const result = await verifyToken(token);
+  return result.success ? result.data : null;
 }
 
 /**

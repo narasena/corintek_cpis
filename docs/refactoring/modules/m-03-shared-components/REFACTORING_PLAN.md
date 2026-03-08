@@ -14,6 +14,8 @@ Priority = f(Pain, Risk, Value)
 | RBAC Path Matching   | Medium     | High       | Critical       |    P1    | Regex matches sub-paths greedily        |
 | Search/Camera Leaks  | Medium     | Medium     | High           |    P2    | Missing cache/object-url cleanups       |
 | DataTable Complexity | Low        | High       | High           |    P3    | Simultaneous DOM rendering (dual-view)  |
+| JWT Result Pattern   | Low        | Low        | High           |  Done    | Standardized on TActionResult           |
+| Sidebar Repetition   | Low        | Low        | Low            |  Done    | Refactored to Data-Driven Mapping       |
 
 ---
 
@@ -21,7 +23,7 @@ Priority = f(Pain, Risk, Value)
 
 > **LOW risk → MEDIUM risk → HIGH risk**
 
-1. **Quick Wins:** Isolated UI components (`MultiSelect`, `VirtualList`) and singletons (`Prisma`).
+1. **Quick Wins (Partially Done):** Isolated UI components (`MultiSelect`, `VirtualList`, `AppSidebar`).
 2. **Resource Hygiene:** Fixing memory leaks in `CameraInput` and `SearchFilterService`.
 3. **UX Standardization:** Improving `ErrorHandlerService` and `ActionFactory` error reporting.
 4. **Architectural Realignment:** Reversing DI inversion and tightening RBAC security.
@@ -44,6 +46,8 @@ Priority = f(Pain, Risk, Value)
 
 ### Phase 1: Resource Hygiene & Quick Wins (LOW to MEDIUM RISK)
 
+- [x] **Task 1.0: Sidebar Dynamic Mapping** (`app-sidebar.tsx`)
+  - Migrate hardcoded categories to dynamic configuration array.
 - [ ] **Task 1.1: Camera Cleanup** (`camera-input.tsx`)
   - Implement `useEffect` cleanup to call `URL.revokeObjectURL` for all previews.
 - [ ] **Task 1.2: Search Cache Management** (`search-filter-service.ts`)
@@ -55,7 +59,7 @@ Priority = f(Pain, Risk, Value)
 
 - [ ] **Task 2.1: Action Error Formatting** (`action-factory.ts`)
   - Improve Zod error parsing to return human-readable strings instead of JSON blobs to the client.
-- [ ] **Task 2.2: JWT Result Pattern** (`jwt.ts`)
+- [x] **Task 2.2: JWT Result Pattern** (`jwt.ts`)
   - Standardize error results using the `TActionResult` pattern used in newer modules.
 
 ### Phase 3: Structural Realignment (HIGH RISK)

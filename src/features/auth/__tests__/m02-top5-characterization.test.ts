@@ -1,4 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.hoisted(() => {
+  process.env.JWT_SECRET = 'test-secret-at-least-32-characters-long';
+});
+
 import { matchPathToResource, canAccess, RbacResource } from '@/lib/rbac';
 import { verifyToken, generateToken } from '@/lib/jwt';
 import { authenticateUser } from '@/features/auth/service';
@@ -47,14 +52,15 @@ describe('M-02 Top 5 Riskiest Functions — Characterization', () => {
     it('locks down error behavior for expired tokens', async () => {
       const payload = { sub: '123', email: 'test@example.com', role: 'ADMIN' };
       const expiredToken = await generateToken(payload, -1000); // Expired 1s ago
-      
-      try {
-        await verifyToken(expiredToken);
-        throw new Error('Should have failed');
-      } catch (error: any) {
+
+      const result = await verifyToken(expiredToken);
+      expect(result.success).toBe(false);
+      if (!result.success) {
         // SYSTEM BEHAVIOR: jose might throw validation failed for expired tokens depending on version/config
-        expect(['EXPIRED', 'VALIDATION_FAILED']).toContain(error.code);
-        expect(error.name).toBe('JWTError');
+        expect(
+          result.error.includes('Sesi telah berakhir') ||
+            result.error.includes('Data token tidak valid')
+        ).toBe(true);
       }
     });
 
@@ -64,12 +70,11 @@ describe('M-02 Top 5 Riskiest Functions — Characterization', () => {
       const parts = token.split('.');
       // Tamper with payload (middle part)
       const tamperedToken = `${parts[0]}.eyJoYWNrZWQiOnRydWV9.${parts[2]}`;
-      
-      try {
-        await verifyToken(tamperedToken);
-        throw new Error('Should have failed');
-      } catch (error: any) {
-        expect(error.code).toBe('INVALID');
+
+      const result = await verifyToken(tamperedToken);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain('Token tidak valid');
       }
     });
   });

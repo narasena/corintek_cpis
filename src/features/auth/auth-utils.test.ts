@@ -76,7 +76,10 @@ describe('Auth Utilities & Helpers', () => {
     it('returns payload when valid token exists', async () => {
       const mockCookie = { get: vi.fn().mockReturnValue({ value: 'token' }) };
       vi.mocked(cookies).mockResolvedValue(mockCookie as any);
-      vi.mocked(verifyToken).mockResolvedValue({ id: '1', email: 'a@b.com', role: 'ADMIN' });
+      vi.mocked(verifyToken).mockResolvedValue({
+        success: true,
+        data: { id: '1', email: 'a@b.com', role: 'ADMIN' },
+      });
 
       const result = await getCurrentUser();
       expect(result?.id).toBe('1');
@@ -116,7 +119,13 @@ describe('Auth Utilities & Helpers', () => {
       } as any);
       const mockCookie = { get: vi.fn().mockReturnValue({ value: 'token' }) };
       vi.mocked(cookies).mockResolvedValue(mockCookie as any);
-      vi.mocked(verifyToken).mockResolvedValue({ id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', role: 'ADMIN' });
+      vi.mocked(verifyToken).mockResolvedValue({
+        success: true,
+        data: {
+          id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+          role: 'ADMIN',
+        } as any,
+      });
 
       const result = await requireActor();
       expect(result.id).toBe('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11');

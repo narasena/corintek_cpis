@@ -68,7 +68,28 @@ This document captures surprising, non-obvious, or potentially problematic behav
 
 ---
 
-## 6. Summary of Findings
+## 6. Sidebar (src/components/app-sidebar.tsx)
+
+### 6.1 Manual Logic Repetition
+**Location:** `AppSidebar` Component
+**Behavior:** Previously hardcoded four distinct filtering and rendering calls for navigation categories.
+**Refactoring Result:** Successfully migrated to **Data-Driven Mapping**. The component now iterates over a configuration array, reducing LOC by 26% and improving maintainability.
+**Risk after change:** Low.
+
+---
+
+## 7. JWT Infrastructure (src/lib/jwt.ts)
+
+### 7.1 Exception-based Flow Control
+**Location:** `verifyToken` function
+**Behavior:** Previously threw `JWTError` on any failure, requiring `try/catch` at every call site.
+**Refactoring Result:** Migrated to **TActionResult pattern**. The function now returns a standardized `{ success: true, data }` or `{ success: false, error }` object.
+**Impact:** 8+ test files and core middleware updated to handle the new return type. Call sites are now cleaner and follow the project's standard result pattern.
+**Risk after change:** Low.
+
+---
+
+## 8. Summary of Findings
 
 | #   | Category    | Finding                                | Risk | Action |
 | --- | ----------- | -------------------------------------- | ---- | ------ |
@@ -77,5 +98,7 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | 3   | UI          | Double rendering (Mobile/Desktop)      | Low  | Preserve (Fix in Ph5?) |
 | 4   | Search      | Cache never cleared in hook            | Low  | Add `useEffect` cleanup |
 | 5   | Camera      | Missing `revokeObjectURL`              | Med  | Add cleanup |
+| 6   | Sidebar     | Manual category repetition             | Low  | ✅ Refactored |
+| 7   | JWT         | Exception-based flow control           | Low  | ✅ Refactored |
 
 **⚠️ Characterization Complete. Proceed to Phase 3: Map.**

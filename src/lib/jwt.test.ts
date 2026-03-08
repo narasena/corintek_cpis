@@ -32,35 +32,46 @@ describe('JWT Utilities (Characterization)', () => {
   it('should generate and verify a valid token', async () => {
     const token = await generateToken(mockPayload);
     expect(token).toBeDefined();
-    
-    const decoded = await verifyToken(token);
-    expect(decoded).toMatchObject(mockPayload);
+
+    const result = await verifyToken(token);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toMatchObject(mockPayload);
+    }
   });
 
-  it('should throw JWTError with code INVALID for tampered tokens', async () => {
-    const err = await verifyToken('invalid.token.here').catch(e => e);
-    expect(err).toBeInstanceOf(JWTError);
-    expect(err.code).toBe('INVALID');
-    expect(err.message).toContain('Token tidak valid');
+  it('should return failure for tampered tokens', async () => {
+    const result = await verifyToken('invalid.token.here');
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('Token tidak valid');
+    }
   });
 
-  it('should throw JWTError with code EXPIRED when token is expired', async () => {
+  it('should return failure when token is expired', async () => {
     vi.mocked(jose.jwtVerify).mockRejectedValue(
-      new jose.errors.JWTExpired('expired', { payload: {}, protectedHeader: { alg: 'HS256' } })
+      new jose.errors.JWTExpired('expired', {
+        payload: {},
+        protectedHeader: { alg: 'HS256' },
+      })
     );
 
-    const err = await verifyToken('some.token').catch(e => e);
-    expect(err.code).toBe('EXPIRED');
-    expect(err.message).toContain('Sesi telah berakhir');
+    const result = await verifyToken('some.token');
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('Sesi telah berakhir');
+    }
   });
 
-  it('should throw JWTError with code VALIDATION_FAILED for malformed payload', async () => {
+  it('should return failure for malformed payload', async () => {
     // @ts-ignore - intentional invalid payload
     const token = await generateToken({ email: 'no-id' } as any);
-    
-    const err = await verifyToken(token).catch(e => e);
-    expect(err.code).toBe('VALIDATION_FAILED');
-    expect(err.message).toContain('Data token tidak valid');
+
+    const result = await verifyToken(token);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('Data token tidak valid');
+    }
   });
 
   it('should decode a token without verification', async () => {
