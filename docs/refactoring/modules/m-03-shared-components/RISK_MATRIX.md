@@ -18,7 +18,7 @@
 
 | ID   | File                                          | Lines | Risk | Reason                                      |
 | ---- | --------------------------------------------- | ----: | :--: | ------------------------------------------- |
-| F1   | `src/lib/rbac.ts`                             |   121 |  🔴  | System security foundation; greedy matching |
+| F1   | `src/lib/rbac.ts`                             |   128 |  🟢  | Fixed greedy matching; strict boundaries    |
 | F2   | `src/components/data-table.tsx`               |   306 |  🔴  | High UI coupling; simultaneous DOM rendering|
 | F3   | `src/lib/search-filter-service.ts`            |   360 |  🟡  | Capped cache & flattened logic              |
 | F4   | `src/lib/action-factory.ts`                   |   116 |  🟡  | Refactored to typed error resolution        |
@@ -37,6 +37,6 @@
 
 | Risk Level | Count | Files                                                                 |
 | :--------: | :---: | --------------------------------------------------------------------- |
-|  🔴 HIGH   |   2   | `rbac.ts`, `data-table.tsx` |
+|  🔴 HIGH   |   1   | `data-table.tsx` |
 | 🟡 MEDIUM  |   2   | `search-filter-service.ts`, `action-factory.ts` |
-|   🟢 LOW   |   8   | `camera-input.tsx`, `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |
+|   🟢 LOW   |   9   | `rbac.ts`, `camera-input.tsx`, `error-handler-service.ts`, `jwt.ts`, `app-sidebar.tsx`, `multi-select.tsx`, `virtual-list.tsx`, `crud-dialog.tsx`, `prisma.ts` |

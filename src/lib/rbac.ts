@@ -71,32 +71,40 @@ export function getLandingPage(role: string) {
   return ROLE_CONFIG[role as TRbacRole]?.landingPage ?? '/';
 }
 
+/**
+ * Creates a strict regex pattern for a path that ensures it matches exactly
+ * or is a sub-path, but not a sibling path (e.g. /users matches /users/1 but not /users-backup)
+ */
+function createPathPattern(path: string): RegExp {
+  // Escape special characters and ensure boundary matches end of string, slash, query, or hash
+  const escapedPath = path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`^${escapedPath}($|/|\\?|#)`);
+}
+
 const PATH_RESOURCE_MAP: Array<{
-  pattern: string | RegExp;
+  pattern: RegExp;
   resource: TRbacResource;
 }> = [
   { pattern: /^\/?$/, resource: RbacResource.DASHBOARD },
-  { pattern: /^\/summary-reports/, resource: RbacResource.SUMMARY_REPORTS },
-  { pattern: /^\/log-sheets/, resource: RbacResource.LOG_SHEETS },
-  { pattern: /^\/work-reports/, resource: RbacResource.WORK_REPORTS },
-  { pattern: /^\/reports/, resource: RbacResource.REPORTS },
-  { pattern: /^\/lab-analyses/, resource: RbacResource.LAB_ANALYSES },
-  { pattern: /^\/attendance/, resource: RbacResource.ATTENDANCE },
-  { pattern: /^\/absence/, resource: RbacResource.ATTENDANCE },
-  { pattern: /^\/users/, resource: RbacResource.USERS_ADMIN },
-  { pattern: /^\/my-projects/, resource: RbacResource.PROJECTS_LIST },
-  { pattern: /^\/projects/, resource: RbacResource.PROJECTS_ADMIN },
-  { pattern: /^\/clients/, resource: RbacResource.CLIENTS },
-  { pattern: /^\/chemicals/, resource: RbacResource.CHEMICALS },
-  { pattern: /^\/parameters/, resource: RbacResource.PARAMETERS },
-  { pattern: /^\/machines/, resource: RbacResource.MACHINES },
-  { pattern: /^\/notifications/, resource: RbacResource.NOTIFICATIONS },
+  { pattern: createPathPattern('/summary-reports'), resource: RbacResource.SUMMARY_REPORTS },
+  { pattern: createPathPattern('/log-sheets'), resource: RbacResource.LOG_SHEETS },
+  { pattern: createPathPattern('/work-reports'), resource: RbacResource.WORK_REPORTS },
+  { pattern: createPathPattern('/reports'), resource: RbacResource.REPORTS },
+  { pattern: createPathPattern('/lab-analyses'), resource: RbacResource.LAB_ANALYSES },
+  { pattern: createPathPattern('/attendance'), resource: RbacResource.ATTENDANCE },
+  { pattern: createPathPattern('/absence'), resource: RbacResource.ATTENDANCE },
+  { pattern: createPathPattern('/users'), resource: RbacResource.USERS_ADMIN },
+  { pattern: createPathPattern('/my-projects'), resource: RbacResource.PROJECTS_LIST },
+  { pattern: createPathPattern('/projects'), resource: RbacResource.PROJECTS_ADMIN },
+  { pattern: createPathPattern('/clients'), resource: RbacResource.CLIENTS },
+  { pattern: createPathPattern('/chemicals'), resource: RbacResource.CHEMICALS },
+  { pattern: createPathPattern('/parameters'), resource: RbacResource.PARAMETERS },
+  { pattern: createPathPattern('/machines'), resource: RbacResource.MACHINES },
+  { pattern: createPathPattern('/notifications'), resource: RbacResource.NOTIFICATIONS },
 ];
 
 export function matchPathToResource(pathname: string): TRbacResource {
-  const match = PATH_RESOURCE_MAP.find(({ pattern }) =>
-    pattern instanceof RegExp ? pattern.test(pathname) : pathname === pattern
-  );
+  const match = PATH_RESOURCE_MAP.find(({ pattern }) => pattern.test(pathname));
   return match?.resource ?? RbacResource.UNKNOWN;
 }
 

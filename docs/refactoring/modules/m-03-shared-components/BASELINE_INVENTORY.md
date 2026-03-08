@@ -8,7 +8,7 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) | 12,688 | 12,645|    -43 |
+| Total Lines of Code (ts/tsx) | 12,688 | 12,652|    -36 |
 | Code Files (.ts/.tsx)        |    124 |   123 |     -1 |
 | Largest File (LOC)           |    726 |   726 |      0 |
 | Files >500 lines             |      1 |     1 |      0 |
@@ -35,7 +35,7 @@
 | 10  | src/lib/utils/canvas.ts                       |   135 | Canvas utility for image processing        |
 | 11  | src/components/action-cell.tsx                |   119 | DataTable row actions                      |
 | 12  | src/lib/action-factory.ts                     |   116 | Server Action Dependency Injection         |
-| 13  | src/lib/rbac.ts                               |   121 | Role-Based Access Control logic            |
+| 13  | src/lib/rbac.ts                               |   128 | Role-Based Access Control logic            |
 | 14  | src/lib/jwt.ts                                |    88 | Session token management                   |
 | 15  | src/lib/auth-helpers.ts                       |    72 | Authentication helper functions            |
 | 16  | src/lib/action-helpers.ts                     |    40 | Action result standardizers                |
@@ -80,7 +80,7 @@
 ┌──────────────────────────────┬──────────┐
 │ Metric                       │ Baseline │
 ├──────────────────────────────┼──────────┤
-│ Total LOC (ts/tsx)           │   12,645 │
+│ Total LOC (ts/tsx)           │   12,652 │
 │ File count                   │      123 │
 │ Max file size                │      726 │
 │ Max method size              │      200 │

@@ -11,7 +11,7 @@ Priority = f(Pain, Risk, Value)
 | Area                 | Pain Level | Risk Level | Business Value | Priority | Evidence                                |
 | -------------------- | ---------- | ---------- | -------------- | :------: | --------------------------------------- |
 | DI Inversion         | Low        | High       | Medium         |  Done    | Reversed foundation-to-feature coupling |
-| RBAC Path Matching   | Medium     | High       | Critical       |    P1    | Regex matches sub-paths greedily        |
+| RBAC Path Matching   | Low        | High       | Critical       |  Done    | Implemented strict boundary matching    |
 | Search/Camera Leaks  | Low        | Low        | High           |  Done    | Implemented automatic resource cleanup  |
 | DataTable Complexity | Low        | High       | High           |    P3    | Simultaneous DOM rendering (dual-view)  |
 | Action Error Format  | Low        | Medium     | Medium         |  Done    | Implemented recursive Zod formatting    |
@@ -69,7 +69,7 @@ Priority = f(Pain, Risk, Value)
 - [x] **Task 3.1: Reverse DI Inversion** (`lib/di/factories.ts`)
   - Remove imports from `@/features/*` in the foundational `lib` folder.
   - Move service registration factories to their respective feature directories.
-- [ ] **Task 3.2: Secure RBAC Paths** (`rbac.ts`)
+- [x] **Task 3.2: Secure RBAC Paths** (`rbac.ts`)
   - Refactor `matchPathToResource` to prevent greedy matching (e.g., `/users/settings` shouldn't match `/users` unless intended).
 - [ ] **Task 3.3: DataTable View Decoupling** (`data-table.tsx`)
   - Separate Desktop and Mobile view rendering logic more cleanly.

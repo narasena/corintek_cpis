@@ -22,9 +22,10 @@ This document captures surprising, non-obvious, or potentially problematic behav
 
 ### 1.3 Greedy Path Matching
 **Location:** `matchPathToResource`
-**Behavior:** Uses `RegExp.test(pathname)`. For example, `/users` matches `RbacResource.USERS_ADMIN`.
-**Implication:** Sub-paths like `/users/123/edit` are automatically categorized under `USERS_ADMIN` because the regex `/^\/users/` matches any path *starting* with `/users`.
-**Risk if changed:** Medium (Broken navigation/authorization).
+**Behavior:** Previously used open-ended `RegExp.test(pathname)`, causing incorrect matches for sibling paths (e.g. `/users-backup` matching `/users`).
+**Refactoring Result:** Implemented **Standardize Path Boundary Logic**. Introduced `createPathPattern` helper that ensures strict boundaries (`$`, `/`, `?`, or `#`).
+**Impact:** Security vulnerability resolved. Sibling paths no longer inherit parent permissions unless explicitly mapped.
+**Risk after change:** Low.
 
 ---
 
@@ -117,5 +118,6 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | 8   | Error       | Hardcoded localized messages           | Low  | ✅ Refactored |
 | 9   | DI          | Structural layer inversion             | High | ✅ Refactored |
 | 10  | Factory     | Brittle error mapping                  | Med  | ✅ Refactored |
+| 11  | RBAC        | Greedy path matching                   | Low  | ✅ Refactored |
 
 **⚠️ Characterization Complete. Proceed to Phase 3: Map.**
