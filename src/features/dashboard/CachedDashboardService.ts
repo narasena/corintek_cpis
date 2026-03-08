@@ -5,6 +5,7 @@
 
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
+import { CACHE_LIFE } from '../cache/life-profiles';
 import {
   getDashboardMetrics as originalGetDashboardMetrics,
   getRecentLogSheetPhotos as originalGetRecentLogSheetPhotos,
@@ -26,7 +27,7 @@ async function getDashboardMetricsCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.DASHBOARD_METRICS);
-  cacheLife('hours');
+  cacheLife(CACHE_LIFE.DEFAULT);
   return await impl(projectIds, range);
 }
 
@@ -37,7 +38,7 @@ async function getRecentLogSheetPhotosCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.DASHBOARD_PHOTOS);
-  cacheLife('minutes');
+  cacheLife(CACHE_LIFE.SHORT);
   return await impl(projectIds, limit);
 }
 
@@ -47,7 +48,7 @@ async function getRecentActivitiesCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.DASHBOARD_ACTIVITIES);
-  cacheLife('minutes');
+  cacheLife(CACHE_LIFE.SHORT);
   return await activityService.getRecentActivities(input);
 }
 

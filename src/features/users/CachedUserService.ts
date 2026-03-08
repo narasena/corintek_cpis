@@ -13,13 +13,14 @@ import {
 } from '@/@types/user.type';
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
+import { CACHE_LIFE } from '../cache/life-profiles';
 import { canAccess, RbacResource } from '@/lib/rbac';
 
 // Cached function wrappers (outside class)
 async function getAllUsersCached(service: typeof original, actor: IJwtPayload) {
   'use cache';
   cacheTag(ECacheTag.USERS);
-  cacheLife('hours');
+  cacheLife(CACHE_LIFE.HOURS);
   if (!canAccess(actor.role, RbacResource.USERS_ADMIN, 'read')) {
     throw new Error('Unauthorized');
   }
@@ -32,7 +33,7 @@ async function getTechniciansListCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.USERS_TECHNICIANS);
-  cacheLife('hours');
+  cacheLife(CACHE_LIFE.HOURS);
   if (!canAccess(actor.role, RbacResource.LOG_SHEETS, 'read')) {
     throw new Error('Unauthorized');
   }
@@ -46,7 +47,7 @@ async function getUserByIdCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.USERS);
-  cacheLife('hours');
+  cacheLife(CACHE_LIFE.HOURS);
   if (!canAccess(actor.role, RbacResource.USERS_ADMIN, 'read')) {
     throw new Error('Unauthorized');
   }
@@ -59,7 +60,7 @@ async function getCurrentUserProfileCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.USERS);
-  cacheLife('hours');
+  cacheLife(CACHE_LIFE.HOURS);
   return await service.getCurrentUserProfile(userId);
 }
 

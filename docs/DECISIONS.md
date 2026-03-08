@@ -394,6 +394,30 @@ export class CachedParameterService {
 - **Serialization requirement**: All function arguments must be serializable (Dates OK, Maps/Sets NO)
 - **Dynamic data rule**: Cannot call `cookies()`, `headers()` inside cached functions; must pass as arguments
 
+### Implementation Notes (2026-03-08)
+
+**Deviations from original plan:**
+
+1. **Helper Function Pattern**: Next.js 16 does NOT allow `'use cache'` in class instance methods. Implementation uses helper functions outside the class, with class methods delegating to them. This maintains the class interface while satisfying compiler restrictions.
+
+2. **Suspense Boundaries Required**: Layout and pages calling uncached server components (e.g., `getCurrentUserDetails()`) must be wrapped in `<Suspense>`. Added Suspense to `app/(main)/layout.tsx` and `my-projects/[projectId]/page.tsx`.
+
+3. **Dynamic Export Incompatible**: `export const dynamic = 'force-dynamic'` conflicts with `cacheComponents`. Resolved by using cached services and Suspense instead.
+
+**Build Outcome:**
+
+- All 32 pages build successfully with `npm run build`
+- TypeScript checks pass
+- No pre-render blocking errors
+
+**Missing Methods Added:**
+
+- `CachedProjectService`: Added `deleteProject`, `getProjectAssignments`, `upsertProjectParameterOverride` (were omitted from initial stub)
+
+**Type Annotations:**
+
+- Cached service methods now explicitly return concrete types (e.g., `TClientResponse[]`) instead of `unknown` to satisfy action type requirements.
+
 ---
 
 ## How to Add New Decisions

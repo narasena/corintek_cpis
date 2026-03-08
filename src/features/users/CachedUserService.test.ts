@@ -7,7 +7,7 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('@/lib/rbac', () => ({
-  canAccess: vi.fn(),
+  canAccess: vi.fn(() => true),
   RbacResource: {
     USERS_ADMIN: 'USERS_ADMIN',
     LOG_SHEETS: 'LOG_SHEETS',

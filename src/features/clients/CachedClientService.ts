@@ -7,6 +7,7 @@ import * as original from './service';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
+import { CACHE_LIFE } from '../cache/life-profiles';
 import type {
   TClientCreateInput,
   TClientUpdateInput,
@@ -20,7 +21,7 @@ async function getAllClientsCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.CLIENTS);
-  cacheLife('hours');
+  cacheLife(CACHE_LIFE.HOURS);
   return await service.getAllClients(actor);
 }
 
@@ -31,7 +32,7 @@ async function getClientByIdCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.CLIENTS);
-  cacheLife('hours');
+  cacheLife(CACHE_LIFE.HOURS);
   return await service.getClientById(actor, id);
 }
 

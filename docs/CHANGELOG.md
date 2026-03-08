@@ -51,6 +51,36 @@
 
 ---
 
+## v0.3.0 — Caching Layer (2026-03-08)
+
+**Branch:** `feat/caching/nextjs-cache-components` (in progress)
+
+### Next.js 16 Cache Components (CG-05)
+
+- [x] Enable `cacheComponents` in Next.js config
+- [x] Create cache infrastructure: `ECacheTag` enum, TTL profiles
+- [x] Implement cached service wrappers for 5 domains:
+  - [x] Parameters (`CachedParameterService`)
+  - [x] Clients (`CachedClientService`)
+  - [x] Projects (`CachedProjectService`)
+  - [x] Users (`CachedUserService`)
+  - [x] Dashboard (`CachedDashboardService`)
+- [x] Refactor all actions to use cached services
+- [x] Add tag-based invalidation (`revalidateTag()`) on all mutations
+- [x] Implement helper function pattern (Next.js 16 requires `'use cache'` outside class methods)
+- [x] Add Suspense boundaries to layout and pages to handle uncached async calls
+- [x] Build passes: `npm run build` succeeds (32 pages, TypeScript clean)
+- [ ] **Testing:** QA validation pending (cache hit rates, invalidation, concurrent users)
+
+**Technical Details:**
+
+- Cache strategy: tag-based invalidation with graduated TTL profiles
+- Build-time cache Components enabled (`cacheComponents: true` in next.config)
+- All read-heavy service methods cached; writes bypass cache
+- Rollback available via config flag
+
+---
+
 ## v0.1.5 — Log Sheet Stabilization (2026-02-20)
 
 **Branch:** `refactor/log-sheet-stabilization` (LS-STAB)

@@ -15,12 +15,13 @@ import {
 } from './types';
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
+import { CACHE_LIFE } from '../cache/life-profiles';
 
 // Cached function wrappers (outside class)
 async function getProjectsCached(service: typeof original, actor: IJwtPayload) {
   'use cache';
   cacheTag(ECacheTag.PROJECTS);
-  cacheLife('hours');
+  cacheLife(CACHE_LIFE.HOURS);
   return await service.getProjects(actor);
 }
 
@@ -30,7 +31,7 @@ async function getDashboardProjectsCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.PROJECTS_DASHBOARD);
-  cacheLife('minutes');
+  cacheLife(CACHE_LIFE.SHORT);
   return await service.getDashboardProjects(actor);
 }
 
@@ -41,7 +42,7 @@ async function getProjectByIdCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.PROJECTS);
-  cacheLife('hours');
+  cacheLife(CACHE_LIFE.HOURS);
   return await service.getProjectById(actor, id);
 }
 

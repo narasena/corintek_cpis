@@ -7,6 +7,7 @@ import * as original from './service';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
+import { CACHE_LIFE } from '../cache/life-profiles';
 import type { TCreateParameter, TUpdateParameter, IParameter } from './types';
 
 // Cached function wrappers (outside class)
@@ -16,7 +17,7 @@ async function getAllParametersCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.PARAMETERS);
-  cacheLife('hours');
+  cacheLife(CACHE_LIFE.HOURS);
   return await service.getAllParameters(actor);
 }
 
@@ -27,7 +28,7 @@ async function getParameterByIdCached(
 ) {
   'use cache';
   cacheTag(ECacheTag.PARAMETERS);
-  cacheLife('hours');
+  cacheLife(CACHE_LIFE.HOURS);
   return await service.getParameterById(actor, id);
 }
 
