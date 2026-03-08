@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { WorkReportPhotoType } from '@/generated/prisma/client';
 
@@ -23,6 +23,7 @@ import {
 import { createPrismaWorkReportSignatureRepository } from './work-report-signature-repository-prisma';
 import { createPrismaProjectAssignmentRepository } from './project-assignment-repository-prisma';
 import { createR2WorkReportSignatureStorage } from './signature-storage-r2';
+import { ECacheTag } from '../cache/tags';
 
 const SaveWorkReportSignatureSchema = z.object({
   workReportId: z.string().uuid('Work report ID tidak valid'),
@@ -170,6 +171,9 @@ export async function createWorkReportAction(formData: FormData) {
       }
     }
 
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.WORK_REPORTS, 'max');
+    revalidateTag(ECacheTag.DASHBOARD_ACTIVITIES, 'max');
     revalidatePath(`/work-reports/${validated.projectId}`);
     revalidatePath(`/my-projects/${validated.projectId}`);
     revalidatePath(`/`);
@@ -248,13 +252,9 @@ export async function updateWorkReportAction(formData: FormData) {
       projectId: existing.projectId,
     });
 
-    // Handle New Photos (Optional for Update)
-    // For update, we treat photos as additive and non-transactional (legacy behavior)
-    // or we can make it transactional too.
-    // User only asked for "work report should be reverted back" which implies Creation.
-    // For Update, reverting is harder (need to restore old state).
-    // So we'll keep Update as is, but we CAN allow adding photos here too for convenience.
-
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.WORK_REPORTS, 'max');
+    revalidateTag(ECacheTag.DASHBOARD_ACTIVITIES, 'max');
     revalidatePath(`/work-reports/${validated.projectId}`);
     revalidatePath(`/my-projects/${validated.projectId}`);
     revalidatePath(`/`);
@@ -298,6 +298,9 @@ export async function updateWorkReportStatusAction(data: unknown) {
 
     if (!report) return { success: false, message: 'Not found' };
 
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.WORK_REPORTS, 'max');
+    revalidateTag(ECacheTag.DASHBOARD_ACTIVITIES, 'max');
     revalidatePath(`/work-reports/${report.projectId}`);
     revalidatePath(`/my-projects/${report.projectId}`);
     revalidatePath(`/`);
@@ -345,6 +348,9 @@ export async function deleteWorkReportAction(formData: FormData) {
     await projectService.assertCanAccessProject(actor, existing.projectId);
 
     await service.deleteWorkReport(validatedId);
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.WORK_REPORTS, 'max');
+    revalidateTag(ECacheTag.DASHBOARD_ACTIVITIES, 'max');
     revalidatePath(`/work-reports/${existing.projectId}`);
     revalidatePath(`/my-projects/${existing.projectId}`);
     revalidatePath(`/`);
@@ -380,6 +386,8 @@ export async function uploadWorkReportPhotoAction(formData: FormData) {
     );
 
     if (!skipRevalidate) {
+      revalidateTag(ECacheTag.WORK_REPORTS, 'max');
+      revalidateTag(ECacheTag.DASHBOARD_ACTIVITIES, 'max');
       revalidatePath(`/work-reports/${projectId}/${workReportId}`);
     }
     return { success: true, url, id: photo.id };
@@ -422,6 +430,8 @@ export async function deleteWorkReportPhotoAction(formData: FormData) {
   }
 
   if (projectId && workReportId) {
+    revalidateTag(ECacheTag.WORK_REPORTS, 'max');
+    revalidateTag(ECacheTag.DASHBOARD_ACTIVITIES, 'max');
     revalidatePath(`/work-reports/${projectId}/${workReportId}`);
   }
   return { success: true };
@@ -478,6 +488,8 @@ export async function saveWorkReportSignatureAction(
     });
 
     const projectId = result.report.projectId;
+    revalidateTag(ECacheTag.WORK_REPORTS, 'max');
+    revalidateTag(ECacheTag.DASHBOARD_ACTIVITIES, 'max');
     revalidatePath(`/work-reports/${projectId}`);
     revalidatePath(`/work-reports/${projectId}/${validated.workReportId}`);
     revalidatePath(`/my-projects/${projectId}`);

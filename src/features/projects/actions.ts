@@ -1,9 +1,10 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-import * as projectService from './service';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { getCacheContainer } from '@/features/cache/di';
 import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
+import { withMetrics } from '../cache/metrics';
 import {
   CreateProjectSchema,
   UpdateProjectSchema,
@@ -13,6 +14,7 @@ import {
   TUpdateProject,
   TProjectParameterOverride,
 } from './types';
+import { ECacheTag } from '../cache/tags';
 
 // =============================================================================
 // Project Actions - Server Actions Entry Point
@@ -28,6 +30,7 @@ export async function upsertProjectParameterOverrideAction(
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
+    const { projects: projectService } = getCacheContainer();
     const validatedData = ProjectParameterOverrideSchema.parse(data);
 
     if (!validatedData.projectId || !validatedData.parameterId) {
@@ -50,9 +53,10 @@ export async function upsertProjectParameterOverrideAction(
       }
     );
 
-    revalidatePath(`/projects`); // Revalidate list just in case
-    // revalidatePath(`/projects/${validatedData.projectId}`); // Dynamic path not easily guessable here if we are on edit page, but we can try.
-    // Actually, usually we revalidate the specific path.
+    // Invalidate cache for projects and dashboard projections
+    revalidateTag(ECacheTag.PROJECTS, 'max');
+    revalidateTag(ECacheTag.PROJECTS_DASHBOARD, 'max');
+    revalidatePath(`/projects`); // Fallback for page router components
 
     return { success: true, data: override };
   } catch (error: any) {
@@ -73,7 +77,8 @@ export async function createProjectAction(data: TCreateProject) {
 
   try {
     const validatedData = CreateProjectSchema.parse(data);
-    const project = await projectService.createProject(
+    const { projects } = getCacheContainer();
+    const project = await projects.createProject(
       {
         id: actor.id,
         email: actor.email,
@@ -82,7 +87,11 @@ export async function createProjectAction(data: TCreateProject) {
       validatedData
     );
 
-    revalidatePath('/projects');
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.PROJECTS, 'max');
+    revalidateTag(ECacheTag.PROJECTS_DASHBOARD, 'max');
+    // revalidatePath('/projects'); // fallback
+
     return { success: true, data: project };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.Create:', error);
@@ -102,7 +111,8 @@ export async function updateProjectAction(data: TUpdateProject) {
 
   try {
     const validatedData = UpdateProjectSchema.parse(data);
-    const project = await projectService.updateProject(
+    const { projects } = getCacheContainer();
+    const project = await projects.updateProject(
       {
         id: actor.id,
         email: actor.email,
@@ -111,7 +121,11 @@ export async function updateProjectAction(data: TUpdateProject) {
       validatedData
     );
 
-    revalidatePath('/projects');
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.PROJECTS, 'max');
+    revalidateTag(ECacheTag.PROJECTS_DASHBOARD, 'max');
+    // revalidatePath('/projects'); // fallback
+
     return { success: true, data: project };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.Update:', error);
@@ -130,7 +144,8 @@ export async function deleteProjectAction(id: string) {
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
-    await projectService.deleteProject(
+    const { projects } = getCacheContainer();
+    await projects.deleteProject(
       {
         id: actor.id,
         email: actor.email,
@@ -139,7 +154,11 @@ export async function deleteProjectAction(id: string) {
       id
     );
 
-    revalidatePath('/projects');
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.PROJECTS, 'max');
+    revalidateTag(ECacheTag.PROJECTS_DASHBOARD, 'max');
+    // revalidatePath('/projects'); // fallback
+
     return { success: true };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.Delete:', error);
@@ -159,11 +178,14 @@ export async function getProjectsAction() {
 
   try {
     ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
-    const projects = await projectService.getProjects({
-      id: actor.id,
-      email: actor.email,
-      role: actor.role,
-    });
+    const { projects: projectsService } = getCacheContainer();
+    const projects = await withMetrics(ECacheTag.PROJECTS, async () =>
+      projectsService.getProjects({
+        id: actor.id,
+        email: actor.email,
+        role: actor.role,
+      })
+    );
     return { success: true, data: projects };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.List:', error);
@@ -180,11 +202,14 @@ export async function getDashboardProjectsAction() {
 
   try {
     ensureAccess(actor.role, RbacResource.DASHBOARD, 'read');
-    const projects = await projectService.getDashboardProjects({
-      id: actor.id,
-      email: actor.email,
-      role: actor.role,
-    });
+    const { projects: projectsService } = getCacheContainer();
+    const projects = await withMetrics(ECacheTag.PROJECTS_DASHBOARD, async () =>
+      projectsService.getDashboardProjects({
+        id: actor.id,
+        email: actor.email,
+        role: actor.role,
+      })
+    );
     return { success: true, data: projects };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.DashboardList:', error);
@@ -204,13 +229,16 @@ export async function getProjectAction(id: string) {
 
   try {
     ensureAccess(actor.role, RbacResource.PROJECTS_LIST, 'read');
-    const project = await projectService.getProjectById(
-      {
-        id: actor.id,
-        email: actor.email,
-        role: actor.role,
-      },
-      id
+    const { projects } = getCacheContainer();
+    const project = await withMetrics(ECacheTag.PROJECTS, async () =>
+      projects.getProjectById(
+        {
+          id: actor.id,
+          email: actor.email,
+          role: actor.role,
+        },
+        id
+      )
     );
     if (!project) {
       return { success: false, error: 'Proyek tidak ditemukan' };
@@ -234,7 +262,8 @@ export async function getProjectAssignmentsAction(projectId: string) {
     const validatedProjectId =
       SetProjectAssignmentsSchema.shape.projectId.parse(projectId);
 
-    const assignments = await projectService.getProjectAssignments(
+    const { projects } = getCacheContainer();
+    const assignments = await projects.getProjectAssignments(
       { id: actor.id, email: actor.email, role: actor.role },
       validatedProjectId
     );
@@ -257,13 +286,18 @@ export async function setProjectAssignmentsAction(input: unknown) {
     ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'update');
     const parsed = SetProjectAssignmentsSchema.parse(input);
 
-    const assignments = await projectService.setProjectAssignments(
+    const { projects } = getCacheContainer();
+    const assignments = await projects.setProjectAssignments(
       { id: actor.id, email: actor.email, role: actor.role },
       parsed.projectId,
       parsed.assignments
     );
 
-    revalidatePath('/projects');
+    // CG-05: Cache invalidation (affects dashboard project cards and user assignment lists)
+    revalidateTag(ECacheTag.PROJECTS_DASHBOARD, 'max');
+    revalidateTag(ECacheTag.USERS, 'max');
+    // revalidatePath('/projects'); // fallback
+
     return { success: true, data: assignments };
   } catch (error: any) {
     console.error('[CPIS-ERROR] Projects.Assignments.Set:', error);

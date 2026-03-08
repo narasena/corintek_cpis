@@ -9,19 +9,12 @@ import {
   TUserResponse,
   ICurrentUserProfile,
 } from '@/@types/user.type';
-import {
-  createUser,
-  getAllUsers,
-  getTechniciansList,
-  getUserById,
-  updateUser,
-  deleteUser,
-  getCurrentUserProfile,
-  updateCurrentUserProfile,
-} from './service';
-import { revalidatePath } from 'next/cache';
+import { getCacheContainer } from '@/features/cache/di';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getCurrentUser } from '@/lib/auth-helpers';
+import { withMetrics } from '../cache/metrics';
 import { uploadToR2 } from '@/lib/r2-upload';
+import { ECacheTag } from '../cache/tags';
 
 type TActionResponse<T = unknown> = {
   success: boolean;
@@ -47,11 +40,14 @@ export async function createUserAction(
     const { confirmPassword, ...userData } = validatedData;
 
     // Call service
-    const user = await createUser(actor, userData);
+    const { users } = getCacheContainer();
+    const user = await users.createUser(actor, userData);
 
-    // Revalidate user list pages
-    revalidatePath('/users');
-    revalidatePath('/test/users');
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.USERS, 'max');
+    revalidateTag(ECacheTag.USERS_TECHNICIANS, 'max');
+    // revalidatePath('/users'); // fallback
+    // revalidatePath('/test/users'); // fallback
 
     return {
       success: true,
@@ -76,7 +72,10 @@ export async function getAllUsersAction(): Promise<
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
-    const users = await getAllUsers(actor);
+    const { users: usersService } = getCacheContainer();
+    const users = await withMetrics(ECacheTag.USERS, async () =>
+      usersService.getAllUsers(actor)
+    );
 
     return {
       success: true,
@@ -104,7 +103,11 @@ export async function getTechniciansListAction(): Promise<
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
-    const technicians = await getTechniciansList(actor);
+    const { users } = getCacheContainer();
+    const technicians = await withMetrics(
+      ECacheTag.USERS_TECHNICIANS,
+      async () => users.getTechniciansList(actor)
+    );
 
     return {
       success: true,
@@ -136,7 +139,10 @@ export async function getUserByIdAction(
       throw new Error('ID pengguna tidak valid');
     }
 
-    const user = await getUserById(actor, id);
+    const { users } = getCacheContainer();
+    const user = await withMetrics(ECacheTag.USERS, async () =>
+      users.getUserById(actor, id)
+    );
 
     return {
       success: true,
@@ -173,12 +179,15 @@ export async function updateUserAction(
     const validatedData = userUpdateSchema.parse(input);
 
     // Call service
-    const user = await updateUser(actor, id, validatedData);
+    const { users } = getCacheContainer();
+    const user = await users.updateUser(actor, id, validatedData);
 
-    // Revalidate user pages
-    revalidatePath('/users');
-    revalidatePath('/test/users');
-    revalidatePath(`/users/${id}`);
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.USERS, 'max');
+    revalidateTag(ECacheTag.USERS_TECHNICIANS, 'max');
+    // revalidatePath('/users'); // fallback
+    // revalidatePath('/test/users'); // fallback
+    // revalidatePath(`/users/${id}`); // fallback
 
     return {
       success: true,
@@ -206,11 +215,14 @@ export async function deleteUserAction(id: string): Promise<TActionResponse> {
       throw new Error('ID pengguna tidak valid');
     }
 
-    await deleteUser(actor, id);
+    const { users } = getCacheContainer();
+    await users.deleteUser(actor, id);
 
-    // Revalidate user pages
-    revalidatePath('/users');
-    revalidatePath('/test/users');
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.USERS, 'max');
+    revalidateTag(ECacheTag.USERS_TECHNICIANS, 'max');
+    // revalidatePath('/users'); // fallback
+    // revalidatePath('/test/users'); // fallback
 
     return {
       success: true,
@@ -233,7 +245,10 @@ export async function getCurrentUserProfileAction(): Promise<
   if (!user) return { success: false, error: 'Unauthorized' };
 
   try {
-    const profile = await getCurrentUserProfile(user.id);
+    const { users } = getCacheContainer();
+    const profile = await withMetrics(ECacheTag.USERS, async () =>
+      users.getCurrentUserProfile(user.id)
+    );
     return { success: true, data: profile };
   } catch (error) {
     console.error('[CPIS-ERROR] Users.GetCurrentProfile:', error);
@@ -253,8 +268,14 @@ export async function updateCurrentUserProfileAction(
 
   try {
     const validatedData = profileUpdateSchema.parse(input);
-    const profile = await updateCurrentUserProfile(user.id, validatedData);
-    revalidatePath('/my-profile');
+    const { users } = getCacheContainer();
+    const profile = await users.updateCurrentUserProfile(
+      user.id,
+      validatedData
+    );
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.USERS, 'max');
+    // revalidatePath('/my-profile'); // fallback
     return { success: true, data: profile };
   } catch (error) {
     console.error('[CPIS-ERROR] Users.UpdateCurrentProfile:', error);

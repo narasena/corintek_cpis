@@ -1,9 +1,10 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { attendanceListFiltersSchema } from './types';
 import * as service from './service';
+import { ECacheTag } from '../cache/tags';
 
 type TActionResponse<T = unknown> =
   | { success: true; data: T }
@@ -111,6 +112,8 @@ export async function clockInAction(
       clockInPhotoUrl: photoUrl,
     });
 
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.ATTENDANCE, 'max');
     revalidatePath('/attendance');
     revalidatePath('/attendance/admin');
 
@@ -150,6 +153,8 @@ export async function clockOutAction(
       clockOutPhotoUrl: photoUrl,
     });
 
+    // CG-05: Cache invalidation
+    revalidateTag(ECacheTag.ATTENDANCE, 'max');
     revalidatePath('/attendance');
     revalidatePath('/attendance/admin');
 

@@ -3,14 +3,15 @@
 import { z } from 'zod/v4';
 import { getCurrentUserDetails } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
-import * as dashboardService from './service';
+import { getCacheContainer } from '@/features/cache/di';
+import { withMetrics } from '../cache/metrics';
 import * as projectService from '@/features/projects/service';
 import { resolveTargetProjectIds } from './utils';
 import type { IJwtPayload } from '@/@types/auth.type';
 import type { IGetRecentActivitiesActionResult } from './types';
 import { getVisibleActivityTypes } from './config';
-import { composeDashboardModule, type IActivityRepository } from './di';
 import { prisma } from '@/lib/prisma';
+import { ECacheTag } from '../cache/tags';
 
 async function requireActor(): Promise<IJwtPayload> {
   const user = await getCurrentUserDetails();
@@ -51,9 +52,9 @@ export async function getDashboardMetricsAction(data: unknown) {
     );
     if (targetProjectIds === 'empty') return { success: true, data: [] };
 
-    const metrics = await dashboardService.getDashboardMetrics(
-      targetProjectIds,
-      validatedData.range
+    const { dashboard } = getCacheContainer();
+    const metrics = await withMetrics(ECacheTag.DASHBOARD_METRICS, async () =>
+      dashboard.getDashboardMetrics(targetProjectIds, validatedData.range)
     );
     return { success: true, data: metrics };
   } catch (error) {
@@ -84,9 +85,9 @@ export async function getRecentPhotosAction(data: unknown) {
     );
     if (targetProjectIds === 'empty') return { success: true, data: [] };
 
-    const photos = await dashboardService.getRecentLogSheetPhotos(
-      targetProjectIds,
-      validatedData.limit
+    const { dashboard } = getCacheContainer();
+    const photos = await withMetrics(ECacheTag.DASHBOARD_PHOTOS, async () =>
+      dashboard.getRecentLogSheetPhotos(targetProjectIds, validatedData.limit)
     );
     return { success: true, data: photos };
   } catch (error) {
@@ -125,15 +126,16 @@ export async function getRecentActivitiesAction(
       };
     }
 
-    const { activityService } = composeDashboardModule(prisma);
-
-    const result = await activityService.getRecentActivities({
-      actor,
-      projectIds: targetIds ?? undefined,
-      timeRange: validated.timeRange,
-      limit: validated.limit,
-      types: getVisibleActivityTypes(actor.role),
-    });
+    const { dashboard } = getCacheContainer();
+    const result = await withMetrics(ECacheTag.DASHBOARD_ACTIVITIES, async () =>
+      dashboard.getRecentActivities({
+        actor,
+        projectIds: targetIds ?? undefined,
+        timeRange: validated.timeRange,
+        limit: validated.limit,
+        types: getVisibleActivityTypes(actor.role),
+      })
+    );
 
     return {
       success: true,

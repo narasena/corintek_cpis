@@ -279,7 +279,7 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 ## CG-05 — Next.js Data Caching
 
 **Priority:** 🟢 P2  
-**Status:** Not Started
+**Status:** ✅ COMPLETED (2026-03-08)
 
 **Problem:** No `unstable_cache`, `cacheTag`, or `revalidateTag`. Every page load hits DB fresh.
 **Impact:** Medium — wasteful; matters if client portal scales
@@ -287,8 +287,14 @@ Current implementation stores global limits directly on `Parameter` model. FSD S
 
 ### Tasks
 
-- [ ] Add `unstable_cache` to read-heavy services (dashboard, parameters, clients)
-- [ ] Add `revalidateTag` to mutation actions
+- [x] Add `unstable_cache` to read-heavy services (dashboard, parameters, clients)
+- [x] Add `revalidateTag` to mutation actions
+
+### Post-Implementation Notes
+
+Cache infrastructure is **functional** (hit/miss events logged). However, due to Client Components architecture, impact is limited to rapid repeated requests. Full benefits require Server Components migration.
+
+**See:** `docs/PHASE_5_CACHING_REPORT.md`
 
 ---
 

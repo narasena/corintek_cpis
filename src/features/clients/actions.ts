@@ -7,15 +7,11 @@ import {
   TClientUpdateInput,
   TClientResponse,
 } from '@/@types/client.type';
-import {
-  createClient,
-  getAllClients,
-  getClientById,
-  updateClient,
-  deleteClient,
-} from './service';
-import { revalidatePath } from 'next/cache';
+import { getCacheContainer } from '@/features/cache/di';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getCurrentUser } from '@/lib/auth-helpers';
+import { withMetrics } from '../cache/metrics';
+import { ECacheTag } from '../cache/tags';
 
 type TActionResponse<T = unknown> = {
   success: boolean;
@@ -37,10 +33,12 @@ export async function createClientAction(
     const validatedData = clientCreateSchema.parse(input);
 
     // Call service
-    const client = await createClient(actor, validatedData);
+    const { clients } = getCacheContainer();
+    const client = await clients.createClient(actor, validatedData);
 
-    // Revalidate client list pages
-    revalidatePath('/clients');
+    // CG-05: Cache invalidation - tag-based
+    revalidateTag(ECacheTag.CLIENTS, 'max');
+    // revalidatePath('/clients'); // fallback
 
     return {
       success: true,
@@ -65,7 +63,10 @@ export async function getAllClientsAction(): Promise<
   if (!actor) return { success: false, error: 'Unauthorized' };
 
   try {
-    const clients = await getAllClients(actor);
+    const { clients: clientsService } = getCacheContainer();
+    const clients = await withMetrics(ECacheTag.CLIENTS, async () =>
+      clientsService.getAllClients(actor)
+    );
 
     return {
       success: true,
@@ -95,7 +96,10 @@ export async function getClientByIdAction(
       throw new Error('ID klien tidak valid');
     }
 
-    const client = await getClientById(actor, id);
+    const { clients } = getCacheContainer();
+    const client = await withMetrics(ECacheTag.CLIENTS, async () =>
+      clients.getClientById(actor, id)
+    );
 
     return {
       success: true,
@@ -130,11 +134,13 @@ export async function updateClientAction(
     const validatedData = clientUpdateSchema.parse(input);
 
     // Call service
-    const client = await updateClient(actor, id, validatedData);
+    const { clients } = getCacheContainer();
+    const client = await clients.updateClient(actor, id, validatedData);
 
-    // Revalidate client pages
-    revalidatePath('/clients');
-    revalidatePath(`/clients/${id}`);
+    // CG-05: Cache invalidation - tag-based
+    revalidateTag(ECacheTag.CLIENTS, 'max');
+    // revalidatePath('/clients'); // fallback
+    // revalidatePath(`/clients/${id}`); // fallback for detail page
 
     return {
       success: true,
@@ -161,10 +167,12 @@ export async function deleteClientAction(id: string): Promise<TActionResponse> {
       throw new Error('ID klien tidak valid');
     }
 
-    await deleteClient(actor, id);
+    const { clients } = getCacheContainer();
+    await clients.deleteClient(actor, id);
 
-    // Revalidate client pages
-    revalidatePath('/clients');
+    // CG-05: Cache invalidation - tag-based
+    revalidateTag(ECacheTag.CLIENTS, 'max');
+    // revalidatePath('/clients'); // fallback
 
     return {
       success: true,

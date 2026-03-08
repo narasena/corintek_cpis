@@ -2,7 +2,7 @@
 
 > CPIS — Corintek Project Information System
 
-**Last Updated:** 2026-03-04
+**Last Updated:** 2026-03-08
 
 ## Active Gotchas ⚠️
 
@@ -16,6 +16,7 @@
 
 ## Active Decisions 🤔
 
+- **Caching (CG-05):** Implemented but limited impact due to Client Components architecture. Cache works (hit/miss logged), but full benefits require Server Components migration. See `docs/PHASE_5_CACHING_REPORT.md`
 - **Next Priority:** Browser UI Tests (`QA`)
 - **Deferred:** Video attachments to Log Sheet (Scope `LS-ADJ`) — decision pending cost analysis
 - **Deferred:** Summary Report Analytics (`SR-02`) — dashboard charts provide sufficient visibility
@@ -27,6 +28,7 @@
 - **Limit Breach Notifications (NT-01)** — Bell UI with unread count, triggered on log sheet submission
 - **Work Reports** — Full approval workflow with signatures
 - **DB-01 Dashboard Recent Activity** — Fully implemented with RBAC, 7d/30d range, infinite scroll
+- **CG-05 Data Caching** — Next.js cache tags implemented (see `docs/CACHING.md`)
 
 ## NOT Implemented (For Reference) 🔴
 
