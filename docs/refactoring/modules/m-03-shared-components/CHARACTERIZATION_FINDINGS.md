@@ -42,9 +42,10 @@ This document captures surprising, non-obvious, or potentially problematic behav
 
 ### 3.1 Persistent Levenshtein Cache
 **Location:** `SearchFilterService.levenshteinCache`
-**Behavior:** The service uses a private `Map` to cache distance calculations. While a `clearCache()` method exists, it is **never called** by the `useDataTableSearch` hook.
-**Implication:** In a long-running session where a user performs many unique fuzzy searches, the memory usage of this cache will grow monotonically.
-**Risk if changed:** Low (Memory leak potential in extreme cases).
+**Behavior:** Previously used a private `Map` without size limits, relying on external calls to `clearCache()`.
+**Refactoring Result:** Implemented **Capped Cache & Flattened Logic**. Added a `CACHE_LIMIT` (1000) and automatic flush when full.
+**Impact:** Memory growth is now strictly bounded regardless of session length. Cyclomatic complexity reduced by extracting row-ranking logic and using array primitives (`some`, `map`).
+**Risk after change:** Medium.
 
 ---
 
@@ -119,7 +120,7 @@ This document captures surprising, non-obvious, or potentially problematic behav
 | 1   | RBAC        | `ADMIN` restricted on `PROJECTS_LIST`  | Med  | Preserve |
 | 2   | RBAC        | `PUBLIC` bypasses security             | High | Preserve |
 | 3   | UI          | Double rendering (Mobile/Desktop)      | Low  | Preserve (Fix in Ph5?) |
-| 4   | Search      | Cache never cleared in hook            | Low  | Add `useEffect` cleanup |
+| 4   | Search      | Cache never cleared in hook            | Med  | ✅ Refactored |
 | 5   | Camera      | Missing `revokeObjectURL`              | Low  | ✅ Refactored |
 | 6   | Sidebar     | Manual category repetition             | Low  | ✅ Refactored |
 | 7   | JWT         | Exception-based flow control           | Low  | ✅ Refactored |

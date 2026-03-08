@@ -52,7 +52,7 @@ Priority = f(Pain, Risk, Value)
   - Migrate hardcoded categories to dynamic configuration array.
 - [x] **Task 1.1: Camera Cleanup** (`camera-input.tsx`)
   - Implement `useEffect` cleanup to call `URL.revokeObjectURL` for all previews.
-- [ ] **Task 1.2: Search Cache Management** (`search-filter-service.ts`)
+- [x] **Task 1.2: Search Cache Management** (`search-filter-service.ts`)
   - Update `useDataTableSearch` hook to call `searchService.clearCache()` on unmount or query reset.
 - [x] **Task 1.3: Localization Cleanup** (`error-handler-service.ts`)
   - Extract hardcoded Indonesian messages into a typed constant dictionary.

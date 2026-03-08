@@ -28,7 +28,7 @@
 | 3   | src/lib/error-handler-service.ts              |   180 | Global error processing and localization   |
 | 4   | src/lib/prisma.ts                             |    30 | Prisma Client Singleton                    |
 | 5   | src/lib/jwt.ts                                |    88 | Session token management                   |
-| 6   | src/lib/search-filter-service.ts              |   358 | Fuzzy search and dataset filtering         |
+| 6   | src/lib/search-filter-service.ts              |   360 | Fuzzy search and dataset filtering         |
 | 7   | src/lib/di/container.ts                       |    80 | IoC Container implementation               |
 | 8   | src/lib/di/factories.ts                       |    45 | Service instantiation wiring               |
 

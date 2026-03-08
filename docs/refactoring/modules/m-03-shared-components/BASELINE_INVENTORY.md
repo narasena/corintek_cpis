@@ -8,13 +8,13 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) | 12,688 | 12,690|     +2 |
+| Total Lines of Code (ts/tsx) | 12,688 | 12,692|     +4 |
 | Code Files (.ts/.tsx)        |    124 |   124 |      0 |
 | Largest File (LOC)           |    726 |   726 |      0 |
 | Files >500 lines             |      1 |     1 |      0 |
 | Methods >50 lines            |     ~8 |    ~8 |      0 |
 | TODO/FIXME/HACK Comments     |     13 |    13 |      0 |
-| Est. Cyclomatic Complexity   | Medium-High | Medium-High | — |
+| Est. Cyclomatic Complexity   | Medium-High | Medium | — |
 | Tests Passing                | 342/346| 342/346|     — |
 
 ---
@@ -24,7 +24,7 @@
 | #   | File                                          | Lines | Notes                                      |
 | --- | --------------------------------------------- | ----: | ------------------------------------------ |
 | 1   | src/components/ui/sidebar.tsx                 |   726 | Shadcn Component (Largest)                 |
-| 2   | src/lib/search-filter-service.ts              |   358 | Core filtering infrastructure              |
+| 2   | src/lib/search-filter-service.ts              |   360 | Core filtering infrastructure              |
 | 3   | src/components/data-table.tsx                 |   306 | Main DataTable Orchestrator                |
 | 4   | src/components/camera-input.tsx               |   300 | Image capture and processing UI            |
 | 5   | src/lib/error-handler-service.ts              |   180 | Global error handling logic                |
