@@ -1,6 +1,6 @@
 # M-03: Shared Components & Infrastructure — Refactoring Plan
 
-This module serves as the foundational "Infrastructure" layer for the entire project. The current state contains several God components, duplicated Canvas logic, and a critical circular dependency between the infrastructure layer and the Auth feature.
+This module provides the foundational UI and infrastructure for the entire CPIS system. Current pain points include structural inversions in DI, greedy RBAC path matching, and minor memory leaks in media/search handling.
 
 ---
 
@@ -8,13 +8,12 @@ This module serves as the foundational "Infrastructure" layer for the entire pro
 
 Priority = f(Pain, Risk, Value)
 
-| Area                 | Pain Level | Risk Level | Business Value | Priority | Evidence                     |
-| -------------------- | ---------- | ---------- | -------------- | :------: | ---------------------------- |
-| Auth Helpers (CIR-1) | High       | High       | Critical       |    P1    | Circular Dep with Auth feature |
-| Image/Canvas Logic   | Medium     | Medium     | High           |    P2    | Duplicated `getContext('2d')` |
-| DataTable            | High       | High       | High           |    P2    | 300+ LOC, God Component      |
-| RBAC Configuration   | Low        | High       | Critical       |    P3    | 300+ LOC Config file         |
-| Machine Form Section | Medium     | Medium     | Medium         |    P3    | Domain logic leaked to M-03  |
+| Area                 | Pain Level | Risk Level | Business Value | Priority | Evidence                                |
+| -------------------- | ---------- | ---------- | -------------- | :------: | --------------------------------------- |
+| DI Inversion         | High       | High       | Medium         |    P1    | Foundational DI depends on Feature code |
+| RBAC Path Matching   | Medium     | High       | Critical       |    P1    | Regex matches sub-paths greedily        |
+| Search/Camera Leaks  | Medium     | Medium     | High           |    P2    | Missing cache/object-url cleanups       |
+| DataTable Complexity | Low        | High       | High           |    P3    | Simultaneous DOM rendering (dual-view)  |
 
 ---
 
@@ -22,10 +21,10 @@ Priority = f(Pain, Risk, Value)
 
 > **LOW risk → MEDIUM risk → HIGH risk**
 
-1. **Step 1: Leaf Utilities** (`r2-upload.ts`, `prisma.ts`, `jwt.ts`) — Clean up interfaces and types.
-2. **Step 2: Logic Consolidation** (`image-compression.ts`, `camera-input.tsx`) — Extract raw Canvas manipulation to a dedicated utility to kill DUP-1.
-3. **Step 3: Feature Decoupling** (`machine-form-section.tsx`) — Move domain-specific leaks to their respective feature modules (M-09).
-4. **Step 4: Core Structural Refactoring** (`auth-helpers.ts`, `rbac.ts`, `data-table.tsx`) — Break down God classes and resolve CIR-1.
+1. **Quick Wins:** Isolated UI components (`MultiSelect`, `VirtualList`) and singletons (`Prisma`).
+2. **Resource Hygiene:** Fixing memory leaks in `CameraInput` and `SearchFilterService`.
+3. **UX Standardization:** Improving `ErrorHandlerService` and `ActionFactory` error reporting.
+4. **Architectural Realignment:** Reversing DI inversion and tightening RBAC security.
 
 ---
 
@@ -33,37 +32,48 @@ Priority = f(Pain, Risk, Value)
 
 ### What to test first
 
-| Priority | What               | Why                                      | Type |
-| :------: | ------------------ | ---------------------------------------- | ---- |
-|    1     | Auth Primitives    | High fan-out, critical for security      | Unit |
-|    2     | Compression Engine | Prone to silent WebP conversion errors   | Unit |
-|    3     | DataTable Tabs     | Complex UI branching (Mobile vs Desktop) | E2E  |
+| Priority | What               | Why                                | Type |
+| :------: | ------------------ | ---------------------------------- | ---- |
+|    1     | `canAccess`        | Prevents security regressions      | Unit |
+|    2     | `actionFactory`    | Foundation for all server-side ops | Unit |
+|    3     | `DataTable`        | Ensures data integrity in views    | E2E  |
 
 ---
 
 ## 4. Phased Execution
 
-### Phase 1: Foundation & Quick Wins (Low Risk)
-- [x] **F12 (Prisma):** Refactored with Encapsulated Lazy Initialization and environment validation.
-- [ ] **F11 (R2):** Ensure strict interface adherence (I/T prefix) and add missing documentation.
-- [x] **F10 (Multi-Select):** Extracted `MultiSelectBadge` sub-component and standardized interfaces.
-- [x] **F9 (JWT):** Decoupled from feature layer via `src/lib/constants/auth.ts` and implemented discriminated `JWTError` handling.
+### Phase 1: Resource Hygiene & Quick Wins (LOW to MEDIUM RISK)
 
-### Phase 2: Logic Consolidation (Medium Risk)
-- [x] **Canvas Extraction (DUP-1):** Created `src/lib/utils/canvas.ts`. Moved common scaling and promisified `toBlob` logic from `image-compression.ts`.
-- [x] **F5 (Camera Input):** Refactored to use the unified `processImagePipeline`. Removed redundant internal canvas logic and refs.
-- [x] **F7 (Domain Leak):** Moved `machine-form-section.tsx` to its proper domain (`src/features/machines/components/`) and extracted factory helper.
-- [x] **F8 (App Sidebar):** Modularized sidebar into subgroups (Operasional, Administrasi, etc.) and extracted schema to `src/lib/constants/navigation.ts`.
+- [ ] **Task 1.1: Camera Cleanup** (`camera-input.tsx`)
+  - Implement `useEffect` cleanup to call `URL.revokeObjectURL` for all previews.
+- [ ] **Task 1.2: Search Cache Management** (`search-filter-service.ts`)
+  - Update `useDataTableSearch` hook to call `searchService.clearCache()` on unmount or query reset.
+- [ ] **Task 1.3: Localization Cleanup** (`error-handler-service.ts`)
+  - Extract hardcoded Indonesian messages into a typed constant dictionary.
 
-### Phase 3: Structural Refactoring (High Risk)
-- [x] **F2 (Auth Helpers):** Resolved CIR-1. Split into `src/lib/auth-helpers.ts` (foundational) and `src/features/auth/lib/user-context.ts` (domain-aware).
-- [ ] **F4 (DataTable):** Split `data-table.tsx` into `DataTableDesktop` and `DataTableMobile`. Centralize the Tab-switching logic.
-- [x] **F3 (RBAC):** Decomposed the massive `ROLE_CONFIG` into modular, role-based policy files in `src/lib/rbac/policies/`. Extracted types to `src/lib/rbac/types.ts`.
+### Phase 2: Functional Standardization (MEDIUM to HIGH RISK)
+
+- [ ] **Task 2.1: Action Error Formatting** (`action-factory.ts`)
+  - Improve Zod error parsing to return human-readable strings instead of JSON blobs to the client.
+- [ ] **Task 2.2: JWT Result Pattern** (`jwt.ts`)
+  - Standardize error results using the `TActionResult` pattern used in newer modules.
+
+### Phase 3: Structural Realignment (HIGH RISK)
+
+- [ ] **Task 3.1: Reverse DI Inversion** (`lib/di/factories.ts`)
+  - Remove imports from `@/features/*` in the foundational `lib` folder.
+  - Move service registration factories to their respective feature directories.
+- [ ] **Task 3.2: Secure RBAC Paths** (`rbac.ts`)
+  - Refactor `matchPathToResource` to prevent greedy matching (e.g., `/users/settings` shouldn't match `/users` unless intended).
+- [ ] **Task 3.3: DataTable View Decoupling** (`data-table.tsx`)
+  - Separate Desktop and Mobile view rendering logic more cleanly.
+  - (Optional) Implement a mechanism to prevent dual-DOM rendering for better performance.
 
 ---
 
 ## 5. Verification Plan
-- [ ] Run 71+ Unit/Characterization tests after every Micro-Refactoring.
-- [ ] Execute `src/__tests__/e2e/infrastructure/shared-components.spec.ts` after Phase 2 and 3.
-- [ ] Verify 0 new circular dependencies via build check.
-- [ ] Architecture check: Ensure no domain leaks remaining in `src/lib`.
+
+- [ ] All 350+ unit tests pass.
+- [ ] E2E suite (`shared-components.spec.ts`) passes across all roles.
+- [ ] Memory check: Verify ObjectURLs are revoked after clearing image in `CameraInput`.
+- [ ] Security check: Verify that non-admin sub-paths are correctly blocked by RBAC.

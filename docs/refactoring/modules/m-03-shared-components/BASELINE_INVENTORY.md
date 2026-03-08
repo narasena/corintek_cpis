@@ -1,6 +1,6 @@
 # M-03: Shared Components & Infrastructure — Baseline Inventory
 
-> Snapshot: 2026-03-06
+> Snapshot: 2026-03-08
 
 ---
 
@@ -8,14 +8,14 @@
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) |  7,232 | 6,860 |   -372 |
-| Code Files (.ts/.tsx)        |     59 |    66 |    +7 |
-| Largest File (LOC)           |    726 |   726 |      0 |
-| Files >300 lines             |      5 |     2 |     -3 |
-| Methods >50 lines            |      6 |     3 |     -3 |
-| TODO/FIXME/HACK Comments     |      0 |     0 |      0 |
-| Est. Cyclomatic Complexity   | High   | Medium |      — |
-| Tests Passing                |    N/A |  1137 |      — |
+| Total Lines of Code (ts/tsx) | 12,688 |     — |      — |
+| Code Files (.ts/.tsx)        |    124 |     — |      — |
+| Largest File (LOC)           |    726 |     — |      — |
+| Files >500 lines             |      1 |     — |      — |
+| Methods >50 lines            |     ~8 |     — |      — |
+| TODO/FIXME/HACK Comments     |     13 |     — |      — |
+| Est. Cyclomatic Complexity   | Medium-High |     — |      — |
+| Tests Passing                | 342/346|     — |      — |
 
 ---
 
@@ -23,42 +23,68 @@
 
 | #   | File                                          | Lines | Notes                                      |
 | --- | --------------------------------------------- | ----: | ------------------------------------------ |
-| 1   | src/components/data-table.tsx                 |   110 | **Refactored**: Pure orchestrator          |
-| 2   | src/lib/rbac.ts                               |   121 | **Refactored**: Pure logic coordinator     |
-| 3   | src/lib/rbac/policies/staff.policy.ts         |    88 | **New**: Staff permission policy           |
-| 4   | src/lib/rbac/policies/client.policy.ts        |    54 | **New**: Client permission policy          |
-| 5   | src/lib/rbac/types.ts                         |    46 | **New**: RBAC type definitions             |
-| 6   | src/lib/rbac/policies/admin.policy.ts         |    22 | **New**: Admin permission policy           |
-| 7   | src/components/camera-input.tsx               |   276 | **Refactored**: Uses unified pipeline      |
-| 8   | src/components/multi-select.tsx               |   163 | **Refactored**: Extracted sub-components   |
-| 9   | src/lib/auth-helpers.ts                       |    72 | **Refactored**: Pure session/JWT logic     |
-| 10  | src/lib/jwt.ts                                |    96 | **Refactored**: Discriminated Error codes  |
-| 11  | src/lib/utils/image-compression.ts            |    92 | **Refactored**: Uses canvas utility        |
-| 12  | src/lib/utils/canvas.ts                       |   135 | **Refactored**: Internal context factory   |
-| 13  | src/lib/constants/auth.ts                     |    23 | **New**: Security primitives               |
-| 14  | src/lib/constants/navigation.ts               |    84 | **New**: Navigation Schema                 |
-| 15  | src/components/app-sidebar.tsx                |    69 | **Refactored**: Modular subgroups          |
-| 16  | src/components/nav-main.tsx                   |    56 | **Refactored**: Supports group labels      |
-| 17  | src/components/data-table/data-table-view.tsx |    32 | **New**: Responsive view switcher          |
-| 18  | src/components/data-table/desktop-view.tsx    |    82 | **New**: Table-based desktop view          |
-| 19  | src/components/data-table/mobile-view.tsx     |    92 | **New**: Card-based mobile view            |
-| 20  | src/components/data-table/types.ts            |    25 | **New**: DataTable interfaces              |
-| 21  | src/lib/action-factory.ts                     |   110 | **Refactored**: Dependency Injection       |
-| 22  | src/lib/action-helpers.ts                     |    40 | **Refactored**: Standardized TActionResult |
+| 1   | src/components/ui/sidebar.tsx                 |   726 | Shadcn Component (Largest)                 |
+| 2   | src/lib/search-filter-service.ts              |   358 | Core filtering infrastructure              |
+| 3   | src/components/data-table.tsx                 |   306 | Main DataTable Orchestrator                |
+| 4   | src/components/camera-input.tsx               |   276 | Image capture and processing UI            |
+| 5   | src/lib/error-handler-service.ts              |   178 | Global error handling logic                |
+| 6   | src/components/loading.tsx                    |   171 | Loading states and skeleton                |
+| 7   | src/components/multi-select.tsx               |   163 | Multi-select input component               |
+| 8   | src/components/filter-controls.tsx            |   161 | DataTable filter UI                        |
+| 9   | src/components/virtual-list.tsx               |   141 | Large dataset virtualization               |
+| 10  | src/lib/utils/canvas.ts                       |   135 | Canvas utility for image processing        |
+| 11  | src/components/action-cell.tsx                |   119 | DataTable row actions                      |
+| 12  | src/lib/action-factory.ts                     |   110 | Server Action Dependency Injection         |
+| 13  | src/lib/rbac.ts                               |   121 | Role-Based Access Control logic            |
+| 14  | src/lib/jwt.ts                                |    96 | JWT utility for session tokens             |
+| 15  | src/lib/auth-helpers.ts                       |    72 | Authentication helper functions            |
+| 16  | src/lib/action-helpers.ts                     |    40 | Action result standardizers                |
+| 17  | src/lib/utils/image-compression.ts            |    92 | Image compression pipeline                 |
+| 18  | src/lib/pagination-helpers.ts                 |    68 | Pagination logic                           |
+| 19  | src/lib/circuit-breaker.ts                    |    65 | Resilience pattern implementation          |
+| 20  | src/lib/rate-limiter.ts                       |    48 | API rate limiting utility                  |
+
+---
+
+## 3. Largest Files (>500 lines)
+
+| File                          | Lines | Functions | Description                             |
+| ----------------------------- | ----: | :-------: | --------------------------------------- |
+| src/components/ui/sidebar.tsx |   726 |    ~15    | Shadcn sidebar with many sub-components |
+
+---
+
+## 4. Longest Methods (>50 lines)
+
+| #   | File                           | Method      | Lines | Notes                               |
+| --- | ------------------------------ | ----------- | ----: | ----------------------------------- |
+| 1   | src/components/data-table.tsx  | DataTable   |  ~120 | Orchestrates complex state/tabs     |
+| 2   | src/components/camera-input.tsx| CameraInput |  ~200 | Handles media stream and processing |
+| 3   | src/lib/search-filter-service.ts| applyGlobalFilterWithRanking | ~40 | Close to limit but clean |
+
+---
+
+## 5. Cyclomatic Complexity Hotspots
+
+| File                            | Est. CC | Hotspots                    |
+| ------------------------------- | ------: | --------------------------- |
+| src/lib/search-filter-service.ts|       8 | Fuzzy matching logic        |
+| src/lib/rbac.ts                 |       7 | Permission evaluation loops |
+| src/components/data-table.tsx   |       6 | Tab and filter state sync   |
 
 ---
 
 ## 6. Baseline Comparison (Snapshot)
 
 ```
-┌──────────────────────────────┬──────────┬──────────┐
-│ Metric                       │ Baseline │  Current │
-├──────────────────────────────┼──────────┼──────────┤
-│ Total LOC (ts/tsx)           │    7,232 │    6,860 │
-│ File count                   │       59 │       66 │
-│ Max file size                │      726 │      726 │
-│ Max method size              │      180 │      180 │
-│ Total cyclomatic complexity  │     High │   Medium │
-│ Duplicated code blocks       │   Medium │      Low │
-└──────────────────────────────┴──────────┴──────────┘
+┌──────────────────────────────┬──────────┐
+│ Metric                       │ Baseline │
+├──────────────────────────────┼──────────┤
+│ Total LOC (ts/tsx)           │   12,688 │
+│ File count                   │      124 │
+│ Max file size                │      726 │
+│ Max method size              │      200 │
+│ Total cyclomatic complexity  │ Med-High │
+│ Duplicated code blocks       │      Low │
+└──────────────────────────────┴──────────┘
 ```

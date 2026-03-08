@@ -1,107 +1,81 @@
 # M-03: Shared Components & Infrastructure — Characterization Test Findings
 
-> Date: 2026-03-06
+> Snapshot: 2026-03-08
 
-This document captures surprising/buggy behavior discovered while writing characterization tests. These behaviors are **current behavior** that should be preserved during refactoring.
+This document captures surprising, non-obvious, or potentially problematic behaviors discovered during the Phase 2 Characterization. These behaviors are part of the "Current State" and must be explicitly handled during refactoring.
 
 ---
 
 ## 1. RBAC (src/lib/rbac.ts)
 
 ### 1.1 ADMIN Role Restricted on PROJECTS_LIST
+**Location:** `src/lib/rbac.ts`
+**Behavior:** The `ADMIN` role is explicitly restricted to `R` (Read) on `PROJECTS_LIST`, while having `CRUD` on almost every other resource.
+**Implication:** A global "Admin can do everything" refactor would break this specific constraint.
+**Risk if changed:** Medium.
 
-**Location:** `src/lib/rbac.ts:133`
+### 1.2 PUBLIC Resource Access
+**Location:** `src/lib/rbac.ts`
+**Behavior:** `canAccess` returns `true` for `RbacResource.PUBLIC` immediately, bypassing all role/capability checks.
+**Implication:** Any "UNKNOWN" or unauthenticated role has full access to these resources.
+**Risk if changed:** High (Security regression).
 
-**Behavior:** The `ADMIN` role is explicitly restricted to `R` (Read) on `PROJECTS_LIST`, unlike almost all other resources where it has `CRUD`.
-
-**Implication:** If a developer refactors `ADMIN` to have `CRUD` by default, this restriction will be lost, potentially allowing ADMINs to perform unintended write operations on project lists (if any exist).
-
-**Risk if changed:** Medium
-
-### 1.2 PUBLIC Resource Accessible to UNKNOWN Roles
-
-**Location:** `src/lib/rbac.ts:223`
-
-**Behavior:** `canAccess` returns `true` for `RbacResource.PUBLIC` immediately, bypassing the role check entirely.
-
-**Implication:** This is intended for "Public" routes, but it means an `UNKNOWN` role (unauthenticated) has the same access as `ADMIN` for these specific resources.
-
-**Risk if changed:** High (security regressions)
+### 1.3 Greedy Path Matching
+**Location:** `matchPathToResource`
+**Behavior:** Uses `RegExp.test(pathname)`. For example, `/users` matches `RbacResource.USERS_ADMIN`.
+**Implication:** Sub-paths like `/users/123/edit` are automatically categorized under `USERS_ADMIN` because the regex `/^\/users/` matches any path *starting* with `/users`.
+**Risk if changed:** Medium (Broken navigation/authorization).
 
 ---
 
-## 2. Action Factory (src/lib/action-factory.ts)
+## 2. DataTable (src/components/data-table.tsx)
 
-### 2.1 Zod Error Stringification
-
-**Location:** `src/lib/action-factory.ts:98`
-
-**Behavior:** When validation fails and `error.errors?.[0]?.message` is unavailable, `actionFactory` returns `error.message`. By default, Zod's `error.message` is a JSON-stringified array of all errors.
-
-**Implication:** Client-side components receiving this error will see a JSON string instead of a human-readable message unless they explicitly parse it.
-
-**Risk if changed:** Low (UI consistency)
+### 2.1 Double DOM Rendering
+**Location:** `DataTable` Component
+**Behavior:** The component renders both the `<div className="hidden md:block">` (Desktop Table) and `<div className="md:hidden">` (Mobile Cards) into the DOM simultaneously.
+**Implication:** Characterization tests using `getByText` will fail with "Found multiple elements". Developers must use `getAllByText` and understand that CSS `hidden` does not remove elements from the DOM.
+**Risk if changed:** Low (Performance impact if removed, but logic remains same).
 
 ---
 
-## 3. Image Compression (src/lib/utils/image-compression.ts)
+## 3. Search & Filtering (src/lib/search-filter-service.ts)
 
-### 3.1 Silent Format Conversion to WebP
-
-**Location:** `src/lib/utils/image-compression.ts:50`
-
-**Behavior:** The V2 engine defaults to `image/webp`. If a user uploads a `.jpg`, the engine silently converts it and changes the file extension to `.webp` in the output `File` object.
-
-**Implication:** Storage systems expecting specific extensions may need adjustment.
-
-**Risk if changed:** Low
+### 3.1 Persistent Levenshtein Cache
+**Location:** `SearchFilterService.levenshteinCache`
+**Behavior:** The service uses a private `Map` to cache distance calculations. While a `clearCache()` method exists, it is **never called** by the `useDataTableSearch` hook.
+**Implication:** In a long-running session where a user performs many unique fuzzy searches, the memory usage of this cache will grow monotonically.
+**Risk if changed:** Low (Memory leak potential in extreme cases).
 
 ---
 
-## 4. Summary of Findings
+## 4. Camera & Media (src/components/camera-input.tsx)
 
-| #   | Location                   | Finding                                   | Risk Level | Action Needed |
-| --- | -------------------------- | ----------------------------------------- | ---------- | ------------- |
-| 1   | `src/lib/rbac.ts`          | `ADMIN` restricted on `PROJECTS_LIST`     | Medium     | Document      |
-| 2   | `src/lib/rbac.ts`          | `PUBLIC` bypasses all role checks         | High       | Preserve      |
-| 3   | `src/lib/action-factory.ts` | Zod errors are JSON strings by default    | Low        | Improve later |
-| 4   | `src/lib/utils/...`        | JPEG to WebP silent conversion            | Low        | Document      |
-
----
-
-## 5. Test Coverage Summary
-
-**Created test files:**
-
-1. `src/lib/rbac.test.ts` (enhanced)
-2. `src/lib/auth-helpers.test.ts` (verified)
-3. `src/lib/utils/image-compression.test.ts` (new)
-4. `src/lib/action-factory.test.ts` (new)
-5. `src/lib/m03-final-characterization.test.ts` (consolidated coverage)
-6. `src/components/data-table.test.tsx` (component logic)
-
-**Total:** 71 characterization tests
+### 4.1 Object URL Leakage
+**Location:** `capturePhoto` and `handleFileChange`
+**Behavior:** Uses `URL.createObjectURL(compressedFile)` to generate a preview URL.
+**Implication:** There is no corresponding `URL.revokeObjectURL` call when the component unmounts or when the image is cleared/replaced. 
+**Risk if changed:** Medium (Memory leak in browser-based sessions).
 
 ---
 
-## 6. E2E / Critical User Journeys
+## 5. Error Handling (src/lib/error-handler-service.ts)
 
-**End-to-End Scenarios identified to run against the full application:**
-
-| #   | Scenario Name           | Description                                                        | Status    |
-| --- | ----------------------- | ------------------------------------------------------------------ | --------- |
-| 1   | RBAC Shield & Nav       | Technician login: verify "Users" and "Clients" are NOT in sidebar. | {Pending} |
-| 2   | DataTable Discovery     | Switch tabs: verify data and columns update correctly.             | {Pending} |
-| 3   | Secure Media Capture    | Take photo: verify 1:1 crop and WebP upload to R2.                 | {Pending} |
-| 4   | Protected Action Guard  | Call a protected action without session: verify 401/unauthorized.  | {Pending} |
+### 5.1 Static Indonesian Mapping
+**Location:** `getUserMessage`
+**Behavior:** Hardcoded dictionary for `NetworkError`, `TimeoutError`, etc.
+**Implication:** If a new error type is introduced without updating this service, the user receives a generic "Maaf, terjadi kesalahan" even if the error name is descriptive.
+**Risk if changed:** Low (UX degradation).
 
 ---
 
-## 7. Coverage Gate
+## 6. Summary of Findings
 
-| Risk Level      | Target | Current |  Status  |
-| --------------- | -----: | ------: | :------: |
-| Critical paths  |   75%+ |     95% |    ✅    |
-| HIGH risk areas |   60%+ |     92% |    ✅    |
+| #   | Category    | Finding                                | Risk | Action |
+| --- | ----------- | -------------------------------------- | ---- | ------ |
+| 1   | RBAC        | `ADMIN` restricted on `PROJECTS_LIST`  | Med  | Preserve |
+| 2   | RBAC        | `PUBLIC` bypasses security             | High | Preserve |
+| 3   | UI          | Double rendering (Mobile/Desktop)      | Low  | Preserve (Fix in Ph5?) |
+| 4   | Search      | Cache never cleared in hook            | Low  | Add `useEffect` cleanup |
+| 5   | Camera      | Missing `revokeObjectURL`              | Med  | Add cleanup |
 
-**⚠️ Thresholds met. Proceeding to Phase 3.**
+**⚠️ Characterization Complete. Proceed to Phase 3: Map.**

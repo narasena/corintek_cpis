@@ -28,6 +28,17 @@ if (typeof window !== 'undefined') {
   if (!window.scrollTo) {
     window.scrollTo = vi.fn();
   }
+  if (!window.ResizeObserver) {
+    window.ResizeObserver = class ResizeObserver {
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    };
+  }
+  if (!window.PointerEvent) {
+    // @ts-ignore
+    window.PointerEvent = class PointerEvent extends MouseEvent {};
+  }
 }
 
 afterEach(() => {

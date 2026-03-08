@@ -1,7 +1,8 @@
 /** @vitest-environment jsdom */
 import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import { VirtualList } from './virtual-list';
+import React from 'react';
 
 interface TestItem {
   id: string;
@@ -213,5 +214,27 @@ describe('VirtualList', () => {
     );
 
     expect(container.textContent).toContain('Test Item');
+  });
+
+  it('triggers onEndReached when scrolling to bottom', () => {
+    const onEndReached = vi.fn();
+    const { container } = render(
+      <VirtualList<TestItem>
+        data={testData}
+        renderItem={({ item }) => <div>{item.name}</div>}
+        containerHeight={200}
+        itemHeight={50}
+        onEndReached={onEndReached}
+      />
+    );
+
+    const listContainer = container.firstChild as HTMLElement;
+    
+    // totalHeight = 100 * 50 = 5000
+    // containerHeight = 200
+    // scrollBottom = 4800 + 200 = 5000 (totalHeight)
+    fireEvent.scroll(listContainer, { target: { scrollTop: 4800 } });
+    
+    expect(onEndReached).toHaveBeenCalled();
   });
 });
