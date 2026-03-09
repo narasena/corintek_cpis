@@ -47,7 +47,7 @@ describe('getCurrentUserProfile', () => {
     expect(result.lastName).toBe('Doe');
     expect(result.email).toBe('john@example.com');
     expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
-      where: { id: VALID_UUID, deletedAt: null },
+      where: { id: VALID_UUID },
       select: expect.objectContaining({
         id: true,
         firstName: true,
@@ -57,6 +57,7 @@ describe('getCurrentUserProfile', () => {
         avatarUrl: true,
         role: true,
         employmentStatus: true,
+        deletedAt: true,
       }),
     });
   });

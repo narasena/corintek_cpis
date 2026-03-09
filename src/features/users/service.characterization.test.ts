@@ -252,7 +252,7 @@ describe('Users Service Characterization Tests', () => {
 
     it('throws error if user is deleted', async () => {
       prismaMock.user.findUnique.mockResolvedValue(makeMockUser({ id: userId, deletedAt: new Date() }));
-      await expect(getUserById(mockActor as any, userId)).rejects.toThrow('Pengguna telah dihapus');
+      await expect(getUserById(mockActor as any, userId)).rejects.toThrow('Pengguna tidak ditemukan');
     });
   });
 
