@@ -2,7 +2,14 @@ import { prisma } from '@/lib/prisma';
 import { ICurrentUserProfile } from '@/@types/user.type';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { canAccess, RbacResource } from '@/lib/rbac';
-import { toUserResponse, userResponseSelect } from '../utils';
+import {
+  toUserResponse,
+  userResponseSelect,
+  technicianResponseSelect,
+  profileResponseSelect,
+  toProfileResponse,
+  toTechnicianResponse,
+} from '../utils';
 
 function ensureUsersReadAccess(actor: IJwtPayload) {
   if (!canAccess(actor.role, RbacResource.USERS_ADMIN, 'read')) {
@@ -26,26 +33,13 @@ export async function getTechniciansList(actor: IJwtPayload) {
       deletedAt: null,
       role: 'TECHNICIAN',
     },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      role: true,
-      clientId: true,
-      client: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
+    select: technicianResponseSelect,
     orderBy: {
       firstName: 'asc',
     },
   });
 
-  return technicians as any[];
+  return technicians.map(toTechnicianResponse);
 }
 
 /**
@@ -99,21 +93,12 @@ export async function getCurrentUserProfile(
 ): Promise<ICurrentUserProfile> {
   const user = await prisma.user.findUnique({
     where: { id: userId, deletedAt: null },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      phoneNumber: true,
-      avatarUrl: true,
-      role: true,
-      employmentStatus: true,
-    },
+    select: profileResponseSelect,
   });
 
   if (!user) {
     throw new Error('Pengguna tidak ditemukan');
   }
 
-  return user as ICurrentUserProfile;
+  return toProfileResponse(user);
 }

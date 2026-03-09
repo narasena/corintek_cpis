@@ -205,8 +205,8 @@ describe('Users Service Characterization Tests', () => {
   describe('5. getTechniciansList', () => {
     it('returns list of technicians if authorized', async () => {
       prismaMock.user.findMany.mockResolvedValue([
-        { id: '1', role: 'TECHNICIAN' },
-        { id: '2', role: 'TECHNICIAN' }
+        makeMockUser({ id: '7f9c9c3e-8c3d-4c3e-8c3d-4c3e8c3d4c3e', role: 'TECHNICIAN' }),
+        makeMockUser({ id: '8f9c9c3e-8c3d-4c3e-8c3d-4c3e8c3d4c3e', role: 'TECHNICIAN' })
       ] as any);
 
       const result = await getTechniciansList(mockActor as any);
@@ -218,6 +218,7 @@ describe('Users Service Characterization Tests', () => {
     });
 
     it('checks LOG_SHEETS read access instead of USERS_ADMIN', async () => {
+      prismaMock.user.findMany.mockResolvedValue([]);
       // Mock authorized for log sheets, but not users admin (default is true, so we test the specific resource)
       await getTechniciansList(mockActor as any);
       expect(canAccessMock).toHaveBeenCalledWith(mockActor.role, 'LOG_SHEETS', 'read');

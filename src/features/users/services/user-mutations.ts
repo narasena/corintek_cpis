@@ -8,7 +8,12 @@ import {
 import type { IJwtPayload } from '@/@types/auth.type';
 import { canAccess, RbacResource } from '@/lib/rbac';
 import { hashPassword } from '@/features/auth/crypto';
-import { toUserResponse, userResponseSelect } from '../utils';
+import {
+  toUserResponse,
+  userResponseSelect,
+  profileResponseSelect,
+  toProfileResponse,
+} from '../utils';
 
 function ensureUsersWriteAccess(
   actor: IJwtPayload,
@@ -193,19 +198,10 @@ export async function updateCurrentUserProfile(
       phoneNumber: data.phoneNumber,
       avatarUrl: data.avatarUrl ?? null,
     },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      phoneNumber: true,
-      avatarUrl: true,
-      role: true,
-      employmentStatus: true,
-    },
+    select: profileResponseSelect,
   });
 
-  return user as ICurrentUserProfile;
+  return toProfileResponse(user);
 }
 
 /**

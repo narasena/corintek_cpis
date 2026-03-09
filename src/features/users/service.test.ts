@@ -14,9 +14,12 @@ vi.mock('@/lib/prisma', () => ({
 
 const prismaMock = vi.mocked(await import('@/lib/prisma').then(m => m.prisma));
 
+const VALID_UUID = '7f9c9c3e-8c3d-4c3e-8c3d-4c3e8c3d4c3e';
+const ANOTHER_UUID = '8f9c9c3e-8c3d-4c3e-8c3d-4c3e8c3d4c3e';
+
 function makeUser(overrides: Record<string, unknown> = {}) {
   return {
-    id: 'user-1',
+    id: VALID_UUID,
     firstName: 'John',
     lastName: 'Doe',
     email: 'john@example.com',
@@ -37,14 +40,14 @@ describe('getCurrentUserProfile', () => {
     const mockUser = makeUser();
     prismaMock.user.findUnique.mockResolvedValue(mockUser as never);
 
-    const result = await getCurrentUserProfile('user-1');
+    const result = await getCurrentUserProfile(VALID_UUID);
 
-    expect(result.id).toBe('user-1');
+    expect(result.id).toBe(VALID_UUID);
     expect(result.firstName).toBe('John');
     expect(result.lastName).toBe('Doe');
     expect(result.email).toBe('john@example.com');
     expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
-      where: { id: 'user-1', deletedAt: null },
+      where: { id: VALID_UUID, deletedAt: null },
       select: expect.objectContaining({
         id: true,
         firstName: true,
@@ -61,7 +64,7 @@ describe('getCurrentUserProfile', () => {
   it('throws error when user not found', async () => {
     prismaMock.user.findUnique.mockResolvedValue(null);
 
-    await expect(getCurrentUserProfile('non-existent')).rejects.toThrow(
+    await expect(getCurrentUserProfile(ANOTHER_UUID)).rejects.toThrow(
       'Pengguna tidak ditemukan'
     );
   });
@@ -69,7 +72,7 @@ describe('getCurrentUserProfile', () => {
   it('throws error when user is soft-deleted', async () => {
     prismaMock.user.findUnique.mockResolvedValue(null);
 
-    await expect(getCurrentUserProfile('deleted-user')).rejects.toThrow(
+    await expect(getCurrentUserProfile(ANOTHER_UUID)).rejects.toThrow(
       'Pengguna tidak ditemukan'
     );
   });
@@ -92,7 +95,7 @@ describe('updateCurrentUserProfile', () => {
     prismaMock.user.findFirst.mockResolvedValue(null);
     prismaMock.user.update.mockResolvedValue(updatedUser as never);
 
-    const result = await updateCurrentUserProfile('user-1', {
+    const result = await updateCurrentUserProfile(VALID_UUID, {
       firstName: 'Jane',
       lastName: 'Doe',
       phoneNumber: '+62899999999',
@@ -114,7 +117,7 @@ describe('updateCurrentUserProfile', () => {
     prismaMock.user.findUnique.mockResolvedValue(existingUser as never);
     prismaMock.user.update.mockResolvedValue(updatedUser as never);
 
-    const result = await updateCurrentUserProfile('user-1', {
+    const result = await updateCurrentUserProfile(VALID_UUID, {
       firstName: 'Jane',
       lastName: 'Smith',
       phoneNumber: '+62812345678',
@@ -130,7 +133,7 @@ describe('updateCurrentUserProfile', () => {
     prismaMock.user.findUnique.mockResolvedValue(null);
 
     await expect(
-      updateCurrentUserProfile('non-existent', {
+      updateCurrentUserProfile(ANOTHER_UUID, {
         firstName: 'Jane',
         lastName: 'Doe',
         phoneNumber: '+62899999999',
@@ -142,7 +145,7 @@ describe('updateCurrentUserProfile', () => {
   it('throws error when phone number already in use', async () => {
     const existingUser = makeUser();
     const duplicateUser = makeUser({
-      id: 'user-2',
+      id: ANOTHER_UUID,
       phoneNumber: '+62899999999',
     });
 
@@ -150,7 +153,7 @@ describe('updateCurrentUserProfile', () => {
     prismaMock.user.findFirst.mockResolvedValue(duplicateUser as never);
 
     await expect(
-      updateCurrentUserProfile('user-1', {
+      updateCurrentUserProfile(VALID_UUID, {
         firstName: 'John',
         lastName: 'Doe',
         phoneNumber: '+62899999999',
@@ -166,7 +169,7 @@ describe('updateCurrentUserProfile', () => {
     prismaMock.user.findUnique.mockResolvedValue(existingUser as never);
     prismaMock.user.update.mockResolvedValue(updatedUser as never);
 
-    const result = await updateCurrentUserProfile('user-1', {
+    const result = await updateCurrentUserProfile(VALID_UUID, {
       firstName: 'Jane',
       lastName: 'Doe',
       phoneNumber: '+62812345678',
@@ -187,7 +190,7 @@ describe('updateCurrentUserProfile', () => {
     prismaMock.user.findUnique.mockResolvedValue(existingUser as never);
     prismaMock.user.update.mockResolvedValue(updatedUser as never);
 
-    const result = await updateCurrentUserProfile('user-1', {
+    const result = await updateCurrentUserProfile(VALID_UUID, {
       firstName: 'John',
       lastName: 'Doe',
       phoneNumber: '+62812345678',
@@ -206,7 +209,7 @@ describe('updateCurrentUserProfile', () => {
     prismaMock.user.findUnique.mockResolvedValue(existingUser as never);
     prismaMock.user.update.mockResolvedValue(updatedUser as never);
 
-    const result = await updateCurrentUserProfile('user-1', {
+    const result = await updateCurrentUserProfile(VALID_UUID, {
       firstName: 'John',
       lastName: 'Doe',
       phoneNumber: '+62812345678',
@@ -223,7 +226,7 @@ describe('updateCurrentUserProfile', () => {
     prismaMock.user.findUnique.mockResolvedValue(existingUser as never);
     prismaMock.user.update.mockResolvedValue(updatedUser as never);
 
-    const result = await updateCurrentUserProfile('user-1', {
+    const result = await updateCurrentUserProfile(VALID_UUID, {
       firstName: 'John',
       lastName: 'Smith',
       phoneNumber: '+62812345678',
