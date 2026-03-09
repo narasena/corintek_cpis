@@ -101,6 +101,7 @@ const PATH_RESOURCE_MAP: Array<{
   { pattern: createPathPattern('/parameters'), resource: RbacResource.PARAMETERS },
   { pattern: createPathPattern('/machines'), resource: RbacResource.MACHINES },
   { pattern: createPathPattern('/notifications'), resource: RbacResource.NOTIFICATIONS },
+  { pattern: createPathPattern('/my-profile'), resource: RbacResource.PUBLIC },
 ];
 
 export function matchPathToResource(pathname: string): TRbacResource {
