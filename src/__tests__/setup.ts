@@ -6,6 +6,10 @@ if (!process.env.DATABASE_URL) {
   process.env.DATABASE_URL = 'postgresql://mock:mock@localhost:5432/mock';
 }
 
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'mock-secret-for-testing-only-1234567890';
+}
+
 if (typeof Element !== 'undefined') {
   if (!Element.prototype.hasPointerCapture) {
     Element.prototype.hasPointerCapture = vi.fn(() => false);
