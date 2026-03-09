@@ -175,7 +175,7 @@ export function ProfileLimitsForm({
 
   // Fetch available parameters for adding to profile
   const fetchAvailableParameters = useCallback(async () => {
-    const result = await getParametersAction();
+    const result = await getParametersAction({});
     if (result.success && result.data) {
       const existingIds = new Set(
         profileData?.limits.map(l => l.parameterId) || []

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ok, err, unauthorized, type ActionResult } from './action-helpers';
+import { ok, err, unauthorized, type TActionResult } from './action-helpers';
 
 describe('ok', () => {
   it('returns success response with data', () => {
@@ -88,8 +88,8 @@ describe('unauthorized', () => {
     });
   });
 
-  it('returns ActionResult type compatible with other helpers', () => {
-    const result: ActionResult<never> = unauthorized();
+  it('returns TActionResult type compatible with other helpers', () => {
+    const result: TActionResult<never> = unauthorized();
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -98,10 +98,10 @@ describe('unauthorized', () => {
   });
 });
 
-describe('ActionResult type', () => {
+describe('TActionResult type', () => {
   it('discriminates success and error variants', () => {
-    const successResult: ActionResult<string> = ok('data');
-    const errorResult: ActionResult<string> = err(
+    const successResult: TActionResult<string> = ok('data');
+    const errorResult: TActionResult<string> = err(
       new Error('fail'),
       'Fallback'
     );

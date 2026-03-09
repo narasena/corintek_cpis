@@ -1,3 +1,9 @@
+import {
+  calculateLevenshtein,
+  highlightMatches,
+  IHighlightPart,
+} from './utils/string-algorithms';
+
 /**
  * Search filter configuration
  */
@@ -54,6 +60,7 @@ interface IRankedResult<TData> {
 export class SearchFilterService {
   private readonly config: ISearchFilterServiceConfig;
   private readonly levenshteinCache = new Map<string, number>();
+  private readonly CACHE_LIMIT = 1000;
 
   /**
    * Constructor with dependency injection
@@ -79,11 +86,14 @@ export class SearchFilterService {
   ): IFilterResult<TData> {
     const minLength =
       filter.minQueryLength ?? this.config.defaultMinQueryLength ?? 1;
+
     if (!filter.query || filter.query.length < minLength) {
       return { filteredData: data, matchCount: data.length, isFiltered: false };
     }
+
     const predicate = this.createFilterPredicate(filter);
     const filteredData = data.filter(predicate);
+
     return {
       filteredData,
       matchCount: filteredData.length,
@@ -103,6 +113,7 @@ export class SearchFilterService {
       filter.caseInsensitive !== false
         ? filter.query.toLowerCase()
         : filter.query;
+
     return (item: TData) => {
       const values = this.extractSearchableValues(item, filter.columnKeys);
       return values.some(value => {
@@ -126,9 +137,11 @@ export class SearchFilterService {
     caseInsensitive: boolean = true
   ): boolean {
     if (value === null || value === undefined) return false;
+
     const strValue = String(value);
     const normalizedValue = caseInsensitive ? strValue.toLowerCase() : strValue;
     const normalizedQuery = caseInsensitive ? query.toLowerCase() : query;
+
     return normalizedValue.includes(normalizedQuery);
   }
 
@@ -143,6 +156,7 @@ export class SearchFilterService {
     keys?: string[]
   ): string[] {
     const targetKeys = keys?.length ? keys : Object.keys(obj);
+
     return targetKeys
       .map(key => obj[key])
       .filter(
@@ -152,48 +166,25 @@ export class SearchFilterService {
   }
 
   /**
-   * Calculate Levenshtein distance with caching
+   * Calculate Levenshtein distance with caching and automatic limit
    * @param a - First string
    * @param b - Second string
    * @returns Edit distance
    */
   private levenshteinDistance(a: string, b: string): number {
     const cacheKey = `${a}|${b}`;
-    if (this.levenshteinCache.has(cacheKey)) {
-      return this.levenshteinCache.get(cacheKey)!;
+    const cached = this.levenshteinCache.get(cacheKey);
+    if (cached !== undefined) return cached;
+
+    const result = calculateLevenshtein(a, b);
+
+    // Self-cleaning: prevent unbounded growth
+    if (this.levenshteinCache.size >= this.CACHE_LIMIT) {
+      this.levenshteinCache.clear();
     }
-    const result = this.calculateLevenshtein(a, b);
+
     this.levenshteinCache.set(cacheKey, result);
     return result;
-  }
-
-  /**
-   * Core Levenshtein calculation
-   * @param a - First string
-   * @param b - Second string
-   * @returns Edit distance
-   */
-  private calculateLevenshtein(a: string, b: string): number {
-    const matrix: number[][] = [];
-    for (let i = 0; i <= b.length; i++) {
-      matrix[i] = [i];
-    }
-    for (let j = 0; j <= a.length; j++) {
-      matrix[0][j] = j;
-    }
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        matrix[i][j] =
-          b[i - 1] === a[j - 1]
-            ? matrix[i - 1][j - 1]
-            : Math.min(
-                matrix[i - 1][j - 1] + 1,
-                matrix[i][j - 1] + 1,
-                matrix[i - 1][j] + 1
-              );
-      }
-    }
-    return matrix[b.length][a.length];
   }
 
   /**
@@ -205,33 +196,27 @@ export class SearchFilterService {
    */
   fuzzyMatch(value: unknown, query: string, tolerance: number = 2): boolean {
     if (value === null || value === undefined) return false;
+
     const strValue = String(value).toLowerCase();
     const normalizedQuery = query.toLowerCase();
 
-    // Check for exact substring match first
+    // 1. Exact substring check (Fast path)
     if (strValue.includes(normalizedQuery)) return true;
 
-    // Split value into words/tokens and check each one
+    // 2. Tokenized check
     const tokens = strValue.split(/[\s.]+/).filter(t => t.length > 0);
 
-    for (const token of tokens) {
-      // Quick length check per token
-      if (Math.abs(token.length - normalizedQuery.length) > tolerance) {
-        continue;
+    return tokens.some(token => {
+      // Length optimization
+      if (Math.abs(token.length - normalizedQuery.length) <= tolerance) {
+        if (this.levenshteinDistance(token, normalizedQuery) <= tolerance) {
+          return true;
+        }
       }
 
-      // Check if this token is a fuzzy match
-      if (this.levenshteinDistance(token, normalizedQuery) <= tolerance) {
-        return true;
-      }
-
-      // Also check if query is a substring of this token
-      if (token.includes(normalizedQuery)) {
-        return true;
-      }
-    }
-
-    return false;
+      // Substring check within tokens
+      return token.includes(normalizedQuery);
+    });
   }
 
   /**
@@ -245,32 +230,8 @@ export class SearchFilterService {
     text: string,
     query: string,
     caseInsensitive: boolean = true
-  ): Array<{ text: string; isMatch: boolean }> {
-    if (!query) return [{ text, isMatch: false }];
-    if (!text) return [{ text: '', isMatch: false }];
-    const normalizedText = caseInsensitive ? text.toLowerCase() : text;
-    const normalizedQuery = caseInsensitive ? query.toLowerCase() : query;
-    const result: Array<{ text: string; isMatch: boolean }> = [];
-    let lastIndex = 0;
-    let index = normalizedText.indexOf(normalizedQuery, lastIndex);
-    while (index !== -1) {
-      if (index > lastIndex) {
-        result.push({
-          text: text.slice(lastIndex, index),
-          isMatch: false,
-        });
-      }
-      result.push({
-        text: text.slice(index, index + query.length),
-        isMatch: true,
-      });
-      lastIndex = index + query.length;
-      index = normalizedText.indexOf(normalizedQuery, lastIndex);
-    }
-    if (lastIndex < text.length) {
-      result.push({ text: text.slice(lastIndex), isMatch: false });
-    }
-    return result;
+  ): IHighlightPart[] {
+    return highlightMatches(text, query, caseInsensitive);
   }
 
   /**
@@ -286,9 +247,11 @@ export class SearchFilterService {
     if (value === null || value === undefined) {
       return { score: 0, matchType: 'fuzzy' };
     }
+
     const strValue = String(value).toLowerCase();
     const normalizedQuery = query.toLowerCase();
 
+    // Strategy Ranking
     if (strValue === normalizedQuery) {
       return { score: 1, matchType: 'exact' };
     }
@@ -298,9 +261,12 @@ export class SearchFilterService {
     if (strValue.includes(normalizedQuery)) {
       return { score: 0.6, matchType: 'contains' };
     }
+
+    // Fuzzy Fallback
     const distance = this.levenshteinDistance(strValue, normalizedQuery);
     const maxDistance = Math.max(strValue.length, normalizedQuery.length);
     const score = Math.max(0, 1 - distance / maxDistance) * 0.4;
+
     return { score, matchType: 'fuzzy' };
   }
 
@@ -316,6 +282,7 @@ export class SearchFilterService {
   ): IRankedResult<TData>[] {
     const minLength =
       filter.minQueryLength ?? this.config.defaultMinQueryLength ?? 1;
+
     if (!filter.query || filter.query.length < minLength) {
       return data.map(item => ({
         item,
@@ -325,28 +292,36 @@ export class SearchFilterService {
     }
 
     const ranked = data
-      .map(item => {
-        const values = this.extractSearchableValues(item, filter.columnKeys);
-        let bestScore = 0;
-        let bestMatchType: IRankedResult<TData>['matchType'] = 'fuzzy';
-
-        for (const value of values) {
-          const { score, matchType } = this.calculateMatchScore(
-            value,
-            filter.query
-          );
-          if (score > bestScore) {
-            bestScore = score;
-            bestMatchType = matchType;
-          }
-        }
-
-        return { item, score: bestScore, matchType: bestMatchType };
-      })
+      .map(item => this.rankDataItem(item, filter))
       .filter(result => result.score > 0)
       .sort((a, b) => b.score - a.score);
 
     return filter.maxResults ? ranked.slice(0, filter.maxResults) : ranked;
+  }
+
+  /**
+   * Rank a single data item based on best matching column
+   */
+  private rankDataItem<TData extends Record<string, unknown>>(
+    item: TData,
+    filter: IGlobalFilterInput
+  ): IRankedResult<TData> {
+    const values = this.extractSearchableValues(item, filter.columnKeys);
+    let bestScore = 0;
+    let bestMatchType: IRankedResult<TData>['matchType'] = 'fuzzy';
+
+    for (const value of values) {
+      const { score, matchType } = this.calculateMatchScore(
+        value,
+        filter.query
+      );
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatchType = matchType;
+      }
+    }
+
+    return { item, score: bestScore, matchType: bestMatchType };
   }
 
   /**

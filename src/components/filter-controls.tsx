@@ -35,19 +35,18 @@ export function FilterSelect<TData>({
   onClear,
 }: IFilterSelectProps<TData>) {
   const handleValueChange = (newValue: string) => {
-    //Treat the special 'all' value as undefined (clears filter)
-    onChange(newValue === 'all' ? undefined : newValue);
+
   };
 
   return (
-    <Select value={value ?? ''} onValueChange={handleValueChange}>
+    <Select value={value ?? 'all'} onValueChange={handleValueChange}>
       <SelectTrigger className="w-full sm:w-[180px]">
         <SelectValue
           placeholder={config.placeholder ?? config.label ?? 'Filter'}
         />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">Semua</SelectItem>
+
         {config.options?.map(opt => (
           <SelectItem key={opt.value} value={opt.value}>
             {opt.label}

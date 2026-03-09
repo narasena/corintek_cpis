@@ -1,5 +1,4 @@
 /** @vitest-environment jsdom */
-import '@testing-library/jest-dom';
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Loading, TableSkeleton, CardSkeleton, Spinner } from './loading';
@@ -8,14 +7,14 @@ describe('Loading', () => {
   it('renders spinner variant by default', () => {
     render(<Loading />);
 
-    expect(screen.getByText('Memuat...')).toBeInTheDocument();
-    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+    expect(screen.getByText('Memuat...')).not.toBeNull();
+    expect(document.querySelector('.animate-spin')).not.toBeNull();
   });
 
   it('renders with custom message', () => {
     render(<Loading message="Loading data..." />);
 
-    expect(screen.getByText('Loading data...')).toBeInTheDocument();
+    expect(screen.getByText('Loading data...')).not.toBeNull();
   });
 
   it('renders skeleton variant', () => {

@@ -278,7 +278,7 @@ export function LabAnalysisForm({
 
         const baseInput = {
           projectId,
-          date: date.toISOString(),
+          date: date,
           attention,
           cc,
           customer,
@@ -301,7 +301,7 @@ export function LabAnalysisForm({
 
         if (!result.success) {
           toast.error('Gagal menyimpan', {
-            description: result.message || 'Terjadi kesalahan',
+            description: (result as any).message || 'Terjadi kesalahan',
           });
           return;
         }

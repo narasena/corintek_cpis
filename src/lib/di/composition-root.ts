@@ -10,11 +10,9 @@
 import { container } from './container';
 import { DI_TOKENS } from './tokens';
 import { prisma } from '@/lib/prisma';
-import {
-  createAttendanceService,
-  createLogSheetService,
-  createWorkReportService,
-} from './factories';
+import { createAttendanceService } from '@/features/attendance/di';
+import { createLogSheetService } from '@/features/log-sheets/di';
+import { createWorkReportService } from '@/features/work-reports/di';
 
 /**
  * Initialize DI container with all services

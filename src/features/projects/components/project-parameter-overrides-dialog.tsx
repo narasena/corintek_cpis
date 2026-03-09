@@ -69,7 +69,7 @@ export function ProjectParameterOverridesDialog({
   const fetchParameters = async () => {
     setLoading(true);
     try {
-      const result = await getParametersAction();
+      const result = await getParametersAction({});
       if (result.success && result.data) {
         setParameters(result.data);
       } else {

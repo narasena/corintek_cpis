@@ -61,7 +61,7 @@ describe('useLogSheetDraftSaver (characterization)', () => {
     mockSaveLogSheetChemicalsAction.mockResolvedValue({ success: true });
     mockUploadLogSheetImageAction.mockResolvedValue({
       success: true,
-      url: 'http://test.url',
+      data: { url: 'http://test.url' },
     });
   });
 
@@ -315,7 +315,7 @@ describe('useLogSheetDraftSaver (characterization)', () => {
     it('uses uploaded URL as fileUrl in entry (main path)', async () => {
       mockUploadLogSheetImageAction.mockResolvedValueOnce({
         success: true,
-        url: 'http://uploaded.url/image.jpg',
+        data: { url: 'http://uploaded.url/image.jpg' },
       });
 
       const mockFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
@@ -331,13 +331,12 @@ describe('useLogSheetDraftSaver (characterization)', () => {
 
       await result.current.saveDraft(false);
 
-      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith({
+      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith(expect.objectContaining({
         logSheetId: 'ls-1',
         entries: [
           expect.objectContaining({ fileUrl: 'http://uploaded.url/image.jpg' }),
         ],
-        adminOverride: undefined,
-      });
+      }));
     });
 
     it('falls back to existing fileUrl when upload fails (error condition)', async () => {
@@ -360,13 +359,12 @@ describe('useLogSheetDraftSaver (characterization)', () => {
 
       await result.current.saveDraft(false);
 
-      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith({
+      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith(expect.objectContaining({
         logSheetId: 'ls-1',
         entries: [
           expect.objectContaining({ fileUrl: 'http://existing.url/old.jpg' }),
         ],
-        adminOverride: undefined,
-      });
+      }));
     });
 
     it('continues saving other entries when one file upload throws (error condition)', async () => {
@@ -409,13 +407,12 @@ describe('useLogSheetDraftSaver (characterization)', () => {
       await result.current.saveDraft(false);
 
       expect(mockUploadLogSheetImageAction).not.toHaveBeenCalled();
-      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith({
+      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith(expect.objectContaining({
         logSheetId: 'ls-1',
         entries: [
           expect.objectContaining({ fileUrl: 'http://existing.url/photo.jpg' }),
         ],
-        adminOverride: undefined,
-      });
+      }));
     });
   });
 

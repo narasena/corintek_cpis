@@ -33,7 +33,7 @@ describe('ParameterHeader', () => {
       const { container } = render(
         <ParameterHeader name="pH" unit={null} minValue={6.5} maxValue={8.5} />
       );
-      expect(container.textContent).toContain('Target:');
+      expect(container.textContent).toContain('Limit:');
     });
 
     it('does not render target text when no limits', () => {
@@ -78,7 +78,7 @@ describe('ParameterHeader', () => {
           maxValue={null}
         />
       );
-      expect(container.textContent).toContain('Target:');
+      expect(container.textContent).toContain('Limit:');
     });
 
     it('handles maxValue only', () => {
@@ -90,14 +90,14 @@ describe('ParameterHeader', () => {
           maxValue={5}
         />
       );
-      expect(container.textContent).toContain('Target:');
+      expect(container.textContent).toContain('Limit:');
     });
 
     it('handles zero values for limits', () => {
       const { container } = render(
         <ParameterHeader name="Offset" unit={null} minValue={0} maxValue={0} />
       );
-      expect(container.textContent).toContain('Target:');
+      expect(container.textContent).toContain('Limit:');
     });
 
     it('handles negative values for limits', () => {
@@ -109,7 +109,7 @@ describe('ParameterHeader', () => {
           maxValue={-5}
         />
       );
-      expect(container.textContent).toContain('Target:');
+      expect(container.textContent).toContain('Limit:');
     });
 
     it('applies custom className', () => {

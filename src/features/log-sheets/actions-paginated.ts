@@ -6,7 +6,7 @@
  * @responsibility Server actions with DI-based service resolution
  */
 
-import { getCurrentUserDetails } from '@/lib/auth-helpers';
+import { getCurrentUserDetails } from '@/features/auth/lib/user-context';
 import { initializeContainer, getLogSheetService } from '@/lib/di';
 
 // Ensure DI container is initialized

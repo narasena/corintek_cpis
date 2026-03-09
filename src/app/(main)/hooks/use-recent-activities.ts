@@ -69,7 +69,7 @@ export function useRecentActivities(
           setHasMore(result.data.hasMore);
           setCursor(result.data.nextCursor);
         } else {
-          setError(result.error ?? 'Gagal memuat aktivitas');
+          setError((result as any).error ?? 'Gagal memuat aktivitas');
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Gagal memuat aktivitas');

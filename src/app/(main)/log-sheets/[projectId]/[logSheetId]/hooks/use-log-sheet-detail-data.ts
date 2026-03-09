@@ -14,11 +14,11 @@ export function useLogSheetDetailData(logSheetId: string) {
       const result = await getLogSheetDetailAction(logSheetId);
       if (!result.success) {
         toast.error('Gagal mengambil detail log sheet', {
-          description: result.error,
+          description: (result as any).error,
         });
         return;
       }
-      setDetail(result.data as unknown as TDetail);
+      setDetail((result.data as unknown as TDetail) ?? null);
     } catch {
       toast.error('Terjadi kesalahan saat memuat data');
     } finally {

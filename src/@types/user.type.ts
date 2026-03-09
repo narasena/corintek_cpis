@@ -110,9 +110,9 @@ export const userUpdateSchema = z
   );
 
 /**
- * Schema for user response (excludes sensitive data like password)
+ * Schema for internal user data (includes soft-delete metadata)
  */
-export const userResponseSchema = z.object({
+export const userInternalSchema = z.object({
   id: z.uuid(),
   firstName: z.string(),
   lastName: z.string().nullable(),
@@ -138,6 +138,11 @@ export const userResponseSchema = z.object({
   updatedAt: z.coerce.date(),
   deletedAt: z.coerce.date().nullable(),
 });
+
+/**
+ * Schema for user response (safe to expose, excludes soft-delete metadata)
+ */
+export const userResponseSchema = userInternalSchema.omit({ deletedAt: true });
 
 /**
  * Schema for user login
@@ -181,7 +186,10 @@ export type TUserCreateInput = z.infer<typeof userCreateSchema>;
 /** Input type for updating a user */
 export type TUserUpdateInput = z.infer<typeof userUpdateSchema>;
 
-/** User response type (safe to expose, no password) */
+/** Internal user data including metadata */
+export type TUserInternal = z.infer<typeof userInternalSchema>;
+
+/** User response type (safe to expose, no password, no deletedAt) */
 export type TUserResponse = z.infer<typeof userResponseSchema>;
 
 /** Login credentials */

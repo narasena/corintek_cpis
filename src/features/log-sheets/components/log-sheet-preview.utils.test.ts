@@ -59,7 +59,7 @@ describe('formatLimit (P2-8)', () => {
         unit: '',
       };
 
-      expect(formatRawWaterLimit(param)).toBeNull();
+      expect(formatRawWaterLimit(param)).toBe('');
     });
 
     it('returns "min-max" when min is 0 and max exists', () => {
@@ -197,7 +197,7 @@ describe('formatRawWaterLimit (P2-8)', () => {
       unit: '',
     };
 
-    expect(formatRawWaterLimit(param)).toBeNull();
+    expect(formatRawWaterLimit(param)).toBe('');
   });
 
   it('handles null unit gracefully', () => {

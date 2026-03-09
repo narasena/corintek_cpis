@@ -2,27 +2,27 @@
  * Standard action response type for Server Actions
  * Use this as the return type for all server actions
  */
-export type ActionResult<T> =
+export type TActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
 
 /**
- * Alias for ActionResult - maintains backward compatibility
- * Prefer ActionResult for new code
+ * Alias for TActionResult - maintains backward compatibility
+ * Prefer TActionResult for new code
  */
-export type TActionResponse<T = unknown> = ActionResult<T>;
+export type TActionResponse<T = unknown> = TActionResult<T>;
 
 /**
  * Create a successful action response
  */
-export function ok<T>(data: T): ActionResult<T> {
+export function ok<T>(data: T): TActionResult<T> {
   return { success: true, data };
 }
 
 /**
  * Create a failed action response with error logging
  */
-export function err(error: unknown, fallback: string): ActionResult<never> {
+export function err(error: unknown, fallback: string): TActionResult<never> {
   console.error('[CPIS-ERROR]', error);
   return {
     success: false,
@@ -33,6 +33,6 @@ export function err(error: unknown, fallback: string): ActionResult<never> {
 /**
  * Create an unauthorized response
  */
-export function unauthorized(): ActionResult<never> {
+export function unauthorized(): TActionResult<never> {
   return { success: false, error: 'Unauthorized' };
 }

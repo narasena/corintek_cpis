@@ -22,7 +22,7 @@ interface TParentOption {
 }
 
 async function fetchParentProjects(clientId: string): Promise<TParentOption[]> {
-  const res = await getProjectsAction();
+  const res = await getProjectsAction({});
   if (!res.success) {
     throw new Error(res.error || 'Gagal mengambil project utama');
   }

@@ -30,6 +30,48 @@ export function useLogSheetDraftState(detail: TDetail | null) {
         fileUrl: entry.fileUrl,
       };
     }
+
+    // Characterization requirement: Auto-initialize BOOLEAN parameters for active CTs if missing
+    // Specifically for certain categories
+    const AUTO_INIT_CATEGORIES = [
+      'COOLING_WATER_QUALITY',
+      'GENERAL_CONDITION',
+      'JOB_DESCRIPTION',
+    ];
+
+    if (detail.activeMachineIds.coolingTowers.length > 0) {
+      const boolParams = detail.parameters.filter(
+        p => p.valueType === 'BOOLEAN' && AUTO_INIT_CATEGORIES.includes(p.category)
+      );
+
+      for (const p of boolParams) {
+        for (const ctId of detail.activeMachineIds.coolingTowers) {
+          const key = makeEntryKey(p.id, ctId, 'VALUE');
+          if (initial[key] === undefined) {
+            initial[key] = {
+              valueType: 'BOOLEAN',
+              boolValue: false,
+              numericValue: null,
+              textValue: null,
+            };
+          }
+        }
+
+        // Also check RAW_WATER for COOLING_WATER_QUALITY
+        if (p.category === 'COOLING_WATER_QUALITY') {
+          const rawKey = makeEntryKey(p.id, null, 'RAW_WATER');
+          if (initial[rawKey] === undefined) {
+            initial[rawKey] = {
+              valueType: 'BOOLEAN',
+              boolValue: false,
+              numericValue: null,
+              textValue: null,
+            };
+          }
+        }
+      }
+    }
+
     setEntryState(initial);
 
     const chemicals = detail.chemicalUsages.map(u => ({

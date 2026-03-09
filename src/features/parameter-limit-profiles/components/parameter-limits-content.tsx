@@ -26,7 +26,7 @@ export function ParameterLimitsContent() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getParameterLimitsAction();
+      const result = await getParameterLimitsAction({});
       if (result.success && result.data) {
         setLimits(result.data);
       } else {

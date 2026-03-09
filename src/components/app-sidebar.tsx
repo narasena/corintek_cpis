@@ -1,24 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import {
-  BookUser,
-  Building2,
-  ClipboardList,
-  Clock,
-  FileSpreadsheet,
-  FileText,
-  FlaskConical,
-  LayoutDashboard,
-  Microscope,
-  SlidersHorizontal,
-  Users,
-} from 'lucide-react';
 import Image from 'next/image';
 
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { filterNavItems } from '@/lib/rbac';
+import { NAV_CONFIG } from '@/lib/constants/navigation';
 import {
   Sidebar,
   SidebarContent,
@@ -29,80 +17,23 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 
-const navMain = [
-  {
-    title: 'Dashboard',
-    url: '/',
-    icon: LayoutDashboard,
-    isActive: true,
-  },
-  {
-    title: 'Clients',
-    url: '/clients',
-    icon: BookUser,
-  },
-  {
-    title: 'Projects',
-    url: '/projects',
-    icon: Building2,
-  },
-  {
-    title: 'Summary Reports',
-    url: '/summary-reports',
-    icon: ClipboardList,
-  },
-  {
-    title: 'Log Sheets',
-    url: '/log-sheets',
-    icon: FileSpreadsheet,
-  },
-  {
-    title: 'Work Reports',
-    url: '/work-reports',
-    icon: FileText,
-  },
-  {
-    title: 'Lab Analyses',
-    url: '/lab-analyses',
-    icon: Microscope,
-  },
-  {
-    title: 'Chemicals',
-    url: '/chemicals',
-    icon: FlaskConical,
-  },
-  {
-    title: 'Parameters',
-    url: '/parameters',
-    icon: SlidersHorizontal,
-  },
-  {
-    title: 'Users',
-    url: '/users',
-    icon: Users,
-  },
-  {
-    title: 'Absensi',
-    url: '/attendance',
-    icon: Clock,
-  },
-];
-
 export function AppSidebar({
   user,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user: { name: string; email: string; avatar: string | null; role: string };
 }) {
-  const items = filterNavItems(user.role, navMain);
+  // Navigation sections configuration with display labels
+  const navSections = [
+    { items: NAV_CONFIG.platform },
+    { items: NAV_CONFIG.operations, label: 'Operasional' },
+    { items: NAV_CONFIG.inventory, label: 'Inventori & Master' },
+    { items: NAV_CONFIG.administration, label: 'Administrasi' },
+  ];
 
   return (
-    <Sidebar
-      collapsible="offcanvas"
-      className="border-r border-border/40 bg-muted/20"
-      {...props}
-    >
-      <SidebarHeader className="py-4">
+    <Sidebar collapsible="offcanvas" {...props}>
+      <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -114,7 +45,7 @@ export function AppSidebar({
                 <Image
                   src="/logo.png"
                   alt="Logo"
-                  width={140}
+                  width={130}
                   height={15}
                   className="object-contain"
                   priority
@@ -132,10 +63,16 @@ export function AppSidebar({
           </p>
         </div>
       </SidebarHeader>
-      <SidebarContent className="px-2 pt-2 gap-0">
-        <NavMain items={items} />
+      <SidebarContent>
+        {navSections.map((section, index) => (
+          <NavMain
+            key={section.label ?? `nav-section-${index}`}
+            items={filterNavItems(user.role, [...section.items])}
+            label={section.label}
+          />
+        ))}
       </SidebarContent>
-      <SidebarFooter className="p-4 pt-2">
+      <SidebarFooter>
         <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>

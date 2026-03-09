@@ -10,7 +10,7 @@ export async function createClient(
   actor: IJwtPayload,
   data: TClientCreateInput
 ) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'create');
+  ensureAccess(actor.role, RbacResource.CLIENTS, 'create');
 
   // Check for existing client with same name (including soft-deleted)
   const existingClient = await prisma.client.findFirst({
@@ -56,7 +56,7 @@ export async function createClient(
  * Get all non-deleted clients
  */
 export async function getAllClients(actor: IJwtPayload) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+  ensureAccess(actor.role, RbacResource.CLIENTS, 'read');
 
   const clients = await prisma.client.findMany({
     where: {
@@ -85,7 +85,7 @@ export async function getAllClients(actor: IJwtPayload) {
  * Get a single client by ID
  */
 export async function getClientById(actor: IJwtPayload, id: string) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+  ensureAccess(actor.role, RbacResource.CLIENTS, 'read');
 
   const client = await prisma.client.findUnique({
     where: {
@@ -123,7 +123,7 @@ export async function updateClient(
   id: string,
   data: TClientUpdateInput
 ) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
+  ensureAccess(actor.role, RbacResource.CLIENTS, 'update');
 
   // Check if client exists
   const existingClient = await prisma.client.findUnique({
@@ -182,7 +182,7 @@ export async function updateClient(
  * Soft delete a client by setting deletedAt timestamp
  */
 export async function deleteClient(actor: IJwtPayload, id: string) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'delete');
+  ensureAccess(actor.role, RbacResource.CLIENTS, 'delete');
 
   // Check if client exists
   const existingClient = await prisma.client.findUnique({

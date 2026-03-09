@@ -45,6 +45,17 @@ interface IProcessedError {
 }
 
 /**
+ * Indonesian error message translations
+ */
+const ERROR_TRANSLATIONS: Record<string, string> = {
+  NetworkError: 'Gagal terhubung ke server. Periksa koneksi internet Anda.',
+  TimeoutError: 'Waktu permintaan habis. Silakan coba lagi.',
+  NotFoundError: 'Data tidak ditemukan.',
+  PermissionError: 'Anda tidak memiliki izin untuk melakukan ini.',
+  DEFAULT: 'Maaf, terjadi kesalahan. Silakan coba lagi.',
+};
+
+/**
  * Service: ErrorHandlerService
  * Responsibility: Process errors for display and logging
  * Pattern: Class-based service with constructor injection
@@ -79,16 +90,19 @@ export class ErrorHandlerService {
   /**
    * Log error with context
    * @param error - Error to log
-   * @param context - Additional context
+   * @param context - Additional context (String like 'Feature.Method' or Record object)
    */
-  logError(error: Error, context?: Record<string, unknown>): void {
-    // TODO: Implement error logging
-    // - Format error with CPIS prefix convention
-    // - Call injected logger.error()
-    // - Include stack trace if available
-    const formattedMessage = this.formatErrorMessage(error);
+  logError(
+    error: Error,
+    context: string | Record<string, unknown> = 'General'
+  ): void {
+    const contextName = typeof context === 'string' ? context : 'General';
+    const contextData = typeof context === 'object' ? context : {};
+
+    const formattedMessage = this.formatErrorMessage(error, contextName);
     this.config.logger.error(formattedMessage, {
-      ...context,
+      ...contextData,
+      context: contextName,
       errorName: error.name,
       digest: (error as Error & { digest?: string }).digest,
     });
@@ -100,9 +114,6 @@ export class ErrorHandlerService {
    * @param context - Additional context
    */
   reportError(error: Error, context?: Record<string, unknown>): void {
-    // TODO: Implement error reporting
-    // - Check if tracker is configured
-    // - Call tracker.captureError() with context
     if (this.config.tracker) {
       this.config.tracker.captureError(error, context);
     }
@@ -114,11 +125,6 @@ export class ErrorHandlerService {
    * @returns True if error allows retry
    */
   isRecoverable(error: Error): boolean {
-    // TODO: Implement recoverability check
-    // - Check error type/name
-    // - Network errors are typically recoverable
-    // - Syntax/parsing errors are not recoverable
-    // - Return boolean result
     const nonRecoverableTypes = ['SyntaxError', 'ReferenceError', 'TypeError'];
     return !nonRecoverableTypes.includes(error.name);
   }
@@ -129,31 +135,17 @@ export class ErrorHandlerService {
    * @returns Localized user message
    */
   getUserMessage(error: Error): string {
-    // TODO: Implement message mapping
-    // - Map common error types to Indonesian messages
-    // - Return generic message for unknown errors
-    const messageMap: Record<string, string> = {
-      NetworkError: 'Gagal terhubung ke server. Periksa koneksi internet Anda.',
-      TimeoutError: 'Waktu permintaan habis. Silakan coba lagi.',
-      NotFoundError: 'Data tidak ditemukan.',
-      PermissionError: 'Anda tidak memiliki izin untuk melakukan ini.',
-    };
-    return (
-      messageMap[error.name] ?? 'Maaf, terjadi kesalahan. Silakan coba lagi.'
-    );
+    return ERROR_TRANSLATIONS[error.name] ?? ERROR_TRANSLATIONS.DEFAULT;
   }
 
   /**
    * Format error for logging with CPIS prefix
    * @param error - Error to format
+   * @param context - Context where the error occurred
    * @returns Formatted error string
    */
-  private formatErrorMessage(error: Error): string {
-    // TODO: Implement CPIS error formatting
-    // - Prefix with [CPIS-ERROR]
-    // - Include error name and message
-    // - Return formatted string
-    return `[CPIS-ERROR] ErrorBoundary.Render: ${error.name}: ${error.message}`;
+  private formatErrorMessage(error: Error, context: string): string {
+    return `[CPIS-ERROR] ${context}: ${error.name}: ${error.message}`;
   }
 }
 

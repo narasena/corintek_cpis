@@ -17,6 +17,7 @@ export default defineConfig({
   reporter: 'html',
   use: {
     baseURL: 'http://localhost:3000',
+    viewport: { width: 1280, height: 720 },
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -101,6 +102,16 @@ export default defineConfig({
       use: {
         storageState: '.auth/technician.json',
       },
+    },
+    {
+      name: 'infrastructure',
+      testMatch: /infrastructure\/.*\.spec\.ts/,
+      dependencies: ['setup:admin', 'setup:technician'],
+    },
+    {
+      name: 'users',
+      testMatch: /users\/.*\.spec\.ts/,
+      dependencies: ['setup:admin', 'setup:technician'],
     },
     {
       name: 'client-portal',

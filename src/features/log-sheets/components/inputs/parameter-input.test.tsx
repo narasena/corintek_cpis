@@ -212,7 +212,9 @@ describe('ParameterInput', () => {
     });
 
     it('shows clear button when showClearButton is true', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({
+        'test-key': { valueType: 'BOOLEAN', boolValue: true },
+      });
       const { container } = render(
         <ParameterInput
           entryKey="test-key"
@@ -221,11 +223,13 @@ describe('ParameterInput', () => {
         />,
         { wrapper }
       );
-      expect(container.textContent).toContain('Kosongkan');
+      expect(container.textContent).toContain('Hapus');
     });
 
     it('hides clear button when showClearButton is false', () => {
-      const wrapper = createWrapper();
+      const wrapper = createWrapper({
+        'test-key': { valueType: 'BOOLEAN', boolValue: true },
+      });
       const { container } = render(
         <ParameterInput
           entryKey="test-key"
@@ -234,7 +238,7 @@ describe('ParameterInput', () => {
         />,
         { wrapper }
       );
-      expect(container.textContent).not.toContain('Kosongkan');
+      expect(container.textContent).not.toContain('Hapus');
     });
   });
 

@@ -209,10 +209,14 @@ describe('useLogSheetDraftState (characterization)', () => {
       expect(result.current.entryState[valueKey]).toEqual({
         valueType: 'BOOLEAN',
         boolValue: false,
+        numericValue: null,
+        textValue: null,
       });
       expect(result.current.entryState[rawKey]).toEqual({
         valueType: 'BOOLEAN',
         boolValue: false,
+        numericValue: null,
+        textValue: null,
       });
     });
 
@@ -244,6 +248,8 @@ describe('useLogSheetDraftState (characterization)', () => {
       expect(result.current.entryState[valueKey]).toEqual({
         valueType: 'BOOLEAN',
         boolValue: false,
+        numericValue: null,
+        textValue: null,
       });
     });
 
@@ -275,6 +281,8 @@ describe('useLogSheetDraftState (characterization)', () => {
       expect(result.current.entryState[valueKey]).toEqual({
         valueType: 'BOOLEAN',
         boolValue: false,
+        numericValue: null,
+        textValue: null,
       });
     });
 

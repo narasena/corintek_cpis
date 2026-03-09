@@ -18,7 +18,7 @@ import {
   IProject,
 } from '@/features/projects/types';
 import { TClientResponse } from '@/@types/client.type';
-import { MachineFormSection } from '@/components/machine-form-section';
+import { MachineFormSection } from '@/features/machines/components/machine-form-section';
 import { ProjectMetaSection } from './project-meta-section';
 import { ProjectAssignmentsSection } from './project-assignments-section';
 import { buildProjectFormDefaultValues } from './project-form-defaults';

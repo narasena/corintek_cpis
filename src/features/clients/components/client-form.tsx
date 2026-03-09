@@ -113,10 +113,10 @@ export function ClientForm({
           });
           return;
         }
-        result = await updateClientAction(
-          defaultValues.id,
-          processedData as TClientUpdateInput
-        );
+        result = await updateClientAction({ 
+          id: defaultValues.id,
+          data: processedData as TClientUpdateInput 
+        });
       }
 
       if (result.success) {

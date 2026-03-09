@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   compressImageV2,
-  CompressionV2Options,
+  ICompressionV2Options,
 } from '@/lib/utils/image-compression';
 import { toast } from 'sonner';
 
@@ -12,7 +12,7 @@ interface UseImageCompressionReturn {
 }
 
 export function useImageCompression(
-  defaultOptions: CompressionV2Options = {}
+  defaultOptions: ICompressionV2Options = {}
 ): UseImageCompressionReturn {
   const [isCompressing, setIsCompressing] = useState(false);
   const [error, setError] = useState<Error | null>(null);

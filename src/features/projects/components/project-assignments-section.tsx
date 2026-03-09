@@ -44,14 +44,14 @@ export function ProjectAssignmentsSection({
 
     (async () => {
       const [usersRes, assignmentsRes] = await Promise.all([
-        getAllUsersAction(),
+        getAllUsersAction({}),
         getProjectAssignmentsAction(projectId),
       ]);
 
       if (usersRes.success && usersRes.data) {
         setUsers(usersRes.data);
       } else {
-        toast.error(usersRes.error || 'Gagal mengambil data pengguna');
+        toast.error((usersRes as any).error || 'Gagal mengambil data pengguna');
       }
 
       if (assignmentsRes.success && assignmentsRes.data) {
@@ -70,13 +70,13 @@ export function ProjectAssignmentsSection({
           assignments.filter(a => a.role === 'TECHNICIAN').map(a => a.userId)
         );
       } else {
-        toast.error(assignmentsRes.error || 'Gagal mengambil data penugasan');
+        toast.error((assignmentsRes as any).error || (assignmentsRes as any).error || 'Gagal mengambil data penugasan');
       }
     })();
   }, [mode, projectId]);
 
   const activeUsers = useMemo(
-    () => users.filter(u => u.isActive && !u.isBlocked && !u.deletedAt),
+    () => users.filter(u => u.isActive && !u.isBlocked),
     [users]
   );
 

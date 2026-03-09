@@ -41,16 +41,21 @@ export type TAuthLoginInput = z.infer<typeof authLoginSchema>;
 export type TAuthLoginResponse = z.infer<typeof authLoginResponseSchema>;
 
 // =============================================================================
-// JWT Payload Interface
+// JWT Payload Schema & Interface
 // =============================================================================
 
 /**
  * JWT token payload structure
  */
-export interface IJwtPayload {
-  id: string;
-  email: string;
-  role: TUserRole;
-  iat?: number;
-  exp?: number;
-}
+export const jwtPayloadSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  role: z.string(), // We keep it as string for flexibility, but can be refined if needed
+  iat: z.number().optional(),
+  exp: z.number().optional(),
+});
+
+/**
+ * JWT token payload structure
+ */
+export interface IJwtPayload extends z.infer<typeof jwtPayloadSchema> {}

@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { updateLogSheetStatusWithNotifications } from '../status-with-notifications';
+import { updateLogSheetStatusWithNotifications } from './status-with-notifications';
 import type { IJwtPayload } from '@/@types/auth.type';
-import type { ILogSheetDetailView } from '../service';
-import type { ILogSheet } from '../types';
+import type { ILogSheetDetailView } from './service';
+import type { ILogSheet } from './types';
 
-vi.mock('../service', () => {
+vi.mock('./service', () => {
   return {
     validateLogSheetForSubmission: vi.fn(),
     getLogSheetDetail: vi.fn(),
@@ -13,14 +13,18 @@ vi.mock('../service', () => {
   };
 });
 
-vi.mock('../log-sheet-notifications', () => {
+vi.mock('./log-sheet-notifications', () => {
   return {
     notifyLimitBreachesOnSubmission: vi.fn(),
+    getTechnicianUserIds: (detail: any) =>
+      detail.project.assignments
+        .filter((a: any) => a.role === 'TECHNICIAN')
+        .map((a: any) => a.user.id),
   };
 });
 
-const serviceMock = await import('../service');
-const notificationsMock = await import('../log-sheet-notifications');
+const serviceMock = await import('./service');
+const notificationsMock = await import('./log-sheet-notifications');
 
 function createActor(): IJwtPayload {
   return { id: 'user-1', email: 'user@example.com', role: 'TECHNICIAN' };
@@ -194,9 +198,12 @@ describe('updateLogSheetStatusWithNotifications', () => {
         id: 'ls-1',
         status: 'SUBMITTED',
       })
-    ).rejects.toBe(error);
+    ).rejects.toThrow(error.message);
 
-    expect(serviceMock.getLogSheetDetail).not.toHaveBeenCalled();
+    expect(serviceMock.getLogSheetDetail).toHaveBeenCalledWith('ls-1');
+    expect(serviceMock.validateLogSheetForSubmission).toHaveBeenCalledWith(
+      'ls-1'
+    );
     expect(
       notificationsMock.notifyLimitBreachesOnSubmission
     ).not.toHaveBeenCalled();

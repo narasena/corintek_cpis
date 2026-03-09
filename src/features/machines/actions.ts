@@ -4,8 +4,6 @@ import { revalidatePath } from 'next/cache';
 import {
   CreateMachineSchema,
   UpdateMachineSchema,
-  TCreateMachine,
-  TUpdateMachine,
 } from './types';
 import {
   createMachine,
@@ -14,216 +12,92 @@ import {
   getMachinesByProject,
   getMachineById,
 } from './service';
-import { getCurrentUser } from '@/lib/auth-helpers';
-import { ensureAccess, RbacResource } from '@/lib/rbac';
+import { actionFactory } from '@/features/auth/di';
+import { RbacResource } from '@/lib/rbac';
+import { z } from 'zod/v4';
 
 // =============================================================================
 // Machine Actions - Server Action Layer
 // =============================================================================
 
-type ActionResult<T = unknown> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-};
-
 /**
  * Create a new machine
  */
-export async function createMachineAction(
-  data: TCreateMachine
-): Promise<ActionResult> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    // Validate input
-    const validated = CreateMachineSchema.parse(data);
-
-    // Call service
-    const machine = await createMachine(actor, validated);
-
-    // Revalidate project page to show new machine
+export const createMachineAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const machine = await createMachine(actor, input);
     revalidatePath(`/projects/${machine.projectId}`);
     revalidatePath('/projects');
-
-    return {
-      success: true,
-      data: machine,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Machines.Create:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal membuat mesin. Silakan coba lagi.',
-    };
+    return machine;
+  },
+  {
+    schema: CreateMachineSchema,
+    metadata: { rbac: { resource: RbacResource.MACHINES, capability: 'create' } },
   }
-}
+);
 
 /**
  * Update an existing machine
  */
-export async function updateMachineAction(
-  data: TUpdateMachine
-): Promise<ActionResult> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    // Validate input
-    const validated = UpdateMachineSchema.parse(data);
-
-    if (!validated.id) {
-      return {
-        success: false,
-        error: 'ID mesin wajib diisi',
-      };
-    }
-
-    // Call service
-    const machine = await updateMachine(actor, validated.id, validated);
-
-    // Revalidate project page
+export const updateMachineAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const machine = await updateMachine(actor, input.id!, input);
     revalidatePath(`/projects/${machine.projectId}`);
     revalidatePath('/projects');
-
-    return {
-      success: true,
-      data: machine,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Machines.Update:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal memperbarui mesin. Silakan coba lagi.',
-    };
+    return machine;
+  },
+  {
+    schema: UpdateMachineSchema,
+    metadata: { rbac: { resource: RbacResource.MACHINES, capability: 'update' } },
   }
-}
+);
 
 /**
  * Delete a machine (soft delete)
  */
-export async function deleteMachineAction(id: string): Promise<ActionResult> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
+export const deleteMachineAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const machine = await getMachineById(actor, input);
+    if (!machine) throw new Error('Mesin tidak ditemukan');
 
-  try {
-    if (!id) {
-      return {
-        success: false,
-        error: 'ID mesin wajib diisi',
-      };
-    }
+    await deleteMachine(actor, input);
 
-    // Get machine to find projectId for revalidation
-    const machine = await getMachineById(actor, id);
-    if (!machine) {
-      return {
-        success: false,
-        error: 'Mesin tidak ditemukan',
-      };
-    }
-
-    // Call service
-    await deleteMachine(actor, id);
-
-    // Revalidate project page
     revalidatePath(`/projects/${machine.projectId}`);
     revalidatePath('/projects');
-
-    return {
-      success: true,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Machines.Delete:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menghapus mesin. Silakan coba lagi.',
-    };
+    return { success: true };
+  },
+  {
+    schema: z.string().min(1, 'ID mesin wajib diisi'),
+    metadata: { rbac: { resource: RbacResource.MACHINES, capability: 'delete' } },
   }
-}
+);
 
 /**
  * Get all machines for a project
  */
-export async function getMachinesByProjectAction(
-  projectId: string
-): Promise<ActionResult> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    if (!projectId) {
-      return {
-        success: false,
-        error: 'ID proyek wajib diisi',
-      };
-    }
-
-    ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'read');
-    const machines = await getMachinesByProject(projectId);
-
-    return {
-      success: true,
-      data: machines,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Machines.ListByProject:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil data mesin. Silakan coba lagi.',
-    };
+export const getMachinesByProjectAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    // Note: service.getMachinesByProject doesn't have ensureAccess internally currently
+    // but we protect it here with MACHINES:read
+    return getMachinesByProject(input);
+  },
+  {
+    schema: z.string().min(1, 'ID proyek wajib diisi'),
+    metadata: { rbac: { resource: RbacResource.MACHINES, capability: 'read' } },
   }
-}
+);
 
 /**
  * Get a single machine by ID
  */
-export async function getMachineByIdAction(id: string): Promise<ActionResult> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    if (!id) {
-      return {
-        success: false,
-        error: 'ID mesin wajib diisi',
-      };
-    }
-
-    const machine = await getMachineById(actor, id);
-
-    if (!machine) {
-      return {
-        success: false,
-        error: 'Mesin tidak ditemukan',
-      };
-    }
-
-    return {
-      success: true,
-      data: machine,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Machines.GetById:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengambil data mesin. Silakan coba lagi.',
-    };
+export const getMachineByIdAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const machine = await getMachineById(actor, input);
+    if (!machine) throw new Error('Mesin tidak ditemukan');
+    return machine;
+  },
+  {
+    schema: z.string().min(1, 'ID mesin wajib diisi'),
+    metadata: { rbac: { resource: RbacResource.MACHINES, capability: 'read' } },
   }
-}
+);

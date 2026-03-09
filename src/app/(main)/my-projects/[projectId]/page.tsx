@@ -4,8 +4,9 @@ import { Suspense } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCurrentUserDetails } from '@/lib/auth-helpers';
+import { getCurrentUserDetails } from '@/features/auth/lib/user-context';
 import { getCacheContainer } from '@/features/cache/di';
+import { getProjectById } from '@/features/projects/service';
 
 interface PageProps {
   params: Promise<{ projectId: string }>;

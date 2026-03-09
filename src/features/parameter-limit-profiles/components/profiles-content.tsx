@@ -24,7 +24,7 @@ export function ProfilesContent() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getProfilesAction();
+      const result = await getProfilesAction({});
       if (result.success && result.data) {
         setProfiles(result.data);
       } else {
