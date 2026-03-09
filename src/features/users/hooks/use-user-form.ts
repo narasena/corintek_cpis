@@ -27,48 +27,72 @@ const CLIENT_ROLES: TUserRole[] = [
   'CLIENT_SUPERVISOR',
 ];
 
-export function useUserForm({ mode, defaultValues, onSuccess }: IUseUserFormProps) {
+/**
+ * Factory to generate initial form values based on mode.
+ */
+function getFormDefaults(
+  mode: 'create' | 'edit',
+  defaultValues?: Partial<TUserResponse>
+): TUserCreateInput | TUserUpdateInput {
+  if (mode === 'create') {
+    return {
+      firstName: '',
+      lastName: '',
+      idNumber: '',
+      email: '',
+      phoneNumber: '',
+      password: '',
+      confirmPassword: '',
+      address: '',
+      role: undefined,
+      employmentStatus: undefined,
+      clientId: null,
+    };
+  }
+
+  return {
+    firstName: defaultValues?.firstName || '',
+    lastName: defaultValues?.lastName || '',
+    idNumber: defaultValues?.idNumber || '',
+    email: defaultValues?.email || '',
+    phoneNumber: defaultValues?.phoneNumber || '',
+    address: defaultValues?.address || '',
+    role: defaultValues?.role,
+    employmentStatus: defaultValues?.employmentStatus,
+    clientId: defaultValues?.clientId || null,
+  };
+}
+
+export function useUserForm({
+  mode,
+  defaultValues,
+  onSuccess,
+}: IUseUserFormProps) {
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<TUserCreateInput | TUserUpdateInput>({
     resolver: zodResolver(
       mode === 'create' ? userCreateSchema : userUpdateSchema
     ),
-    defaultValues:
-      mode === 'create'
-        ? {
-            firstName: '',
-            lastName: '',
-            idNumber: '',
-            email: '',
-            phoneNumber: '',
-            password: '',
-            confirmPassword: '',
-            address: '',
-            role: undefined,
-            employmentStatus: undefined,
-            clientId: null,
-          }
-        : {
-            firstName: defaultValues?.firstName || '',
-            lastName: defaultValues?.lastName || '',
-            idNumber: defaultValues?.idNumber || '',
-            email: defaultValues?.email || '',
-            phoneNumber: defaultValues?.phoneNumber || '',
-            address: defaultValues?.address || '',
-            role: defaultValues?.role,
-            employmentStatus: defaultValues?.employmentStatus,
-            clientId: defaultValues?.clientId || null,
-          },
+    defaultValues: getFormDefaults(mode, defaultValues),
   });
 
   const selectedRole = useWatch({ control: form.control, name: 'role' });
   const isClientRole =
     selectedRole && CLIENT_ROLES.includes(selectedRole as TUserRole);
 
-  const { clients, isLoading: isLoadingClients } = useUserClients(!!isClientRole);
+  const { clients, isLoading: isLoadingClients } = useUserClients(
+    !!isClientRole
+  );
 
   const onSubmit = async (data: TUserCreateInput | TUserUpdateInput) => {
+    const MESSAGES = {
+      success:
+        mode === 'create' ? 'Pengguna berhasil dibuat' : 'Pengguna berhasil diperbarui',
+      error:
+        mode === 'create' ? 'Gagal membuat pengguna' : 'Gagal memperbarui pengguna',
+    };
+
     startTransition(async () => {
       let result;
 
@@ -88,22 +112,13 @@ export function useUserForm({ mode, defaultValues, onSuccess }: IUseUserFormProp
       }
 
       if (result.success) {
-        toast.success(
-          mode === 'create'
-            ? 'Pengguna berhasil dibuat'
-            : 'Pengguna berhasil diperbarui'
-        );
+        toast.success(MESSAGES.success);
         form.reset();
         onSuccess?.();
       } else {
-        toast.error(
-          mode === 'create'
-            ? 'Gagal membuat pengguna'
-            : 'Gagal memperbarui pengguna',
-          {
-            description: result.error || 'Terjadi kesalahan',
-          }
-        );
+        toast.error(MESSAGES.error, {
+          description: result.error || 'Terjadi kesalahan',
+        });
         form.setError('root', {
           type: 'manual',
           message: result.error || 'An error occurred',

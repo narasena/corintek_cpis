@@ -18,6 +18,28 @@ function ensureUsersReadAccess(actor: IJwtPayload) {
 }
 
 /**
+ * Internal helper to find an active user or throw error.
+ */
+async function findActiveUserOrThrow<T extends Prisma.UserSelect>(
+  id: string,
+  select: T
+) {
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      ...select,
+      deletedAt: true,
+    },
+  });
+
+  if (!user || (user as any).deletedAt) {
+    throw new Error('Pengguna tidak ditemukan');
+  }
+
+  return user;
+}
+
+/**
  * Get all users with TECHNICIAN role (for dropdowns/assignments)
  * Accessible by any authenticated user who can view log sheets
  * 
@@ -67,20 +89,7 @@ export async function getAllUsers(actor: IJwtPayload) {
 export async function getUserById(actor: IJwtPayload, id: string) {
   ensureUsersReadAccess(actor);
 
-  const user = await prisma.user.findUnique({
-    where: {
-      id,
-    },
-    select: userResponseSelect,
-  });
-
-  if (!user) {
-    throw new Error('Pengguna tidak ditemukan');
-  }
-
-  if (user.deletedAt) {
-    throw new Error('Pengguna telah dihapus');
-  }
+  const user = await findActiveUserOrThrow(id, userResponseSelect);
 
   return toUserResponse(user);
 }
@@ -91,14 +100,7 @@ export async function getUserById(actor: IJwtPayload, id: string) {
 export async function getCurrentUserProfile(
   userId: string
 ): Promise<ICurrentUserProfile> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId, deletedAt: null },
-    select: profileResponseSelect,
-  });
-
-  if (!user) {
-    throw new Error('Pengguna tidak ditemukan');
-  }
+  const user = await findActiveUserOrThrow(userId, profileResponseSelect);
 
   return toProfileResponse(user);
 }

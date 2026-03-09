@@ -18,10 +18,10 @@ import {
   getUserById,
   getCurrentUserProfile,
 } from './services/user-queries';
+import { uploadUserAvatar } from './services/user-media';
 import { revalidatePath } from 'next/cache';
 import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
-import { uploadToR2 } from '@/lib/r2-upload';
 import { z } from 'zod/v4';
 
 const USER_PATHS = ['/users', '/test/users'] as const;
@@ -145,16 +145,8 @@ export const updateCurrentUserProfileAction = actionFactory.protected(
 
 export const uploadAvatarAction = actionFactory.protected(
   async ({ input: formData, actor }) => {
-    const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
-
     const file = formData.get('file') as File | null;
-    if (!file) throw new Error('File tidak ditemukan');
-    if (!file.type.startsWith('image/')) throw new Error('File harus berupa gambar');
-    if (file.size > MAX_AVATAR_SIZE) throw new Error('Ukuran file maksimal 5MB');
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const key = `avatars/${actor.id}/${Date.now()}-${file.name}`;
-    const url = await uploadToR2({ key, body: buffer, contentType: file.type });
+    const url = await uploadUserAvatar(actor.id, file);
 
     return { url };
   }

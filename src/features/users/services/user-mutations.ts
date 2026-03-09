@@ -25,19 +25,22 @@ function ensureUsersWriteAccess(
 }
 
 /**
- * Internal helper to ensure phone number uniqueness
+ * Internal helper to ensure email and phone are unique.
+ * Returns the duplicate user if found (including soft-deleted ones).
  */
-async function ensurePhoneNumberIsUnique(
-  phoneNumber: string,
-  excludeUserId: string
+async function findDuplicateUser(
+  data: { email?: string; phoneNumber?: string },
+  excludeId?: string
 ) {
-  const duplicate = await prisma.user.findFirst({
-    where: { phoneNumber, deletedAt: null, NOT: { id: excludeUserId } },
+  return await prisma.user.findFirst({
+    where: {
+      OR: [
+        ...(data.email ? [{ email: data.email }] : []),
+        ...(data.phoneNumber ? [{ phoneNumber: data.phoneNumber }] : []),
+      ],
+      NOT: excludeId ? { id: excludeId } : undefined,
+    },
   });
-
-  if (duplicate) {
-    throw new Error('Nomor telepon sudah digunakan');
-  }
 }
 
 /**
@@ -49,14 +52,13 @@ export async function createUser(
 ) {
   ensureUsersWriteAccess(actor, 'create');
 
-  const existingUser = await prisma.user.findFirst({
-    where: {
-      OR: [{ email: data.email }, { phoneNumber: data.phoneNumber }],
-    },
+  const duplicate = await findDuplicateUser({
+    email: data.email,
+    phoneNumber: data.phoneNumber,
   });
 
-  if (existingUser) {
-    if (existingUser.deletedAt) {
+  if (duplicate) {
+    if (duplicate.deletedAt) {
       throw new Error(
         `Pengguna yang dihapus dengan email atau telepon ini sudah ada. Silakan gunakan email/telepon lain, atau hubungi admin untuk memulihkan akun.`
       );
@@ -109,18 +111,12 @@ export async function updateUser(
   }
 
   if (data.email || data.phoneNumber) {
-    const duplicateUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          ...(data.email ? [{ email: data.email }] : []),
-          ...(data.phoneNumber ? [{ phoneNumber: data.phoneNumber }] : []),
-        ],
-        NOT: { id },
-        deletedAt: null,
-      },
-    });
+    const duplicate = await findDuplicateUser(
+      { email: data.email, phoneNumber: data.phoneNumber },
+      id
+    );
 
-    if (duplicateUser) {
+    if (duplicate && !duplicate.deletedAt) {
       throw new Error('Email atau nomor telepon sudah digunakan');
     }
   }
@@ -187,7 +183,13 @@ export async function updateCurrentUserProfile(
   }
 
   if (data.phoneNumber && data.phoneNumber !== existingUser.phoneNumber) {
-    await ensurePhoneNumberIsUnique(data.phoneNumber, userId);
+    const duplicate = await findDuplicateUser(
+      { phoneNumber: data.phoneNumber },
+      userId
+    );
+    if (duplicate && !duplicate.deletedAt) {
+      throw new Error('Nomor telepon sudah digunakan');
+    }
   }
 
   const user = await prisma.user.update({

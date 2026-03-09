@@ -8,22 +8,20 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
 /**
- * Reusable Prisma select object for standard user responses.
- * Matches fields required by TUserResponse (userResponseSchema).
+ * CORE Selection fragment used across all user data shapes.
  */
-export const userResponseSelect = {
+const CORE_SELECT = {
   id: true,
   firstName: true,
   lastName: true,
-  idNumber: true,
   email: true,
-  phoneNumber: true,
-  avatarUrl: true,
-  address: true,
   role: true,
-  employmentStatus: true,
-  isActive: true,
-  isBlocked: true,
+} as const;
+
+/**
+ * CLIENT Selection fragment for role-based assignments.
+ */
+const CLIENT_SELECT = {
   clientId: true,
   client: {
     select: {
@@ -31,33 +29,46 @@ export const userResponseSelect = {
       name: true,
     },
   },
+} as const;
+
+/**
+ * PROFILE Selection fragment for self-service management.
+ */
+export const profileResponseSelect = {
+  ...CORE_SELECT,
+  phoneNumber: true,
+  avatarUrl: true,
+  employmentStatus: true,
+} as const satisfies Prisma.UserSelect;
+
+/**
+ * TECHNICIAN Selection fragment for dropdowns/assignments.
+ */
+export const technicianResponseSelect = {
+  ...CORE_SELECT,
+  ...CLIENT_SELECT,
+} as const satisfies Prisma.UserSelect;
+
+/**
+ * FULL Selection for standard user management.
+ * Matches fields required by TUserResponse (userResponseSchema).
+ */
+export const userResponseSelect = {
+  ...profileResponseSelect,
+  ...CLIENT_SELECT,
+  idNumber: true,
+  address: true,
+  isActive: true,
+  isBlocked: true,
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
 } as const satisfies Prisma.UserSelect;
 
 /**
- * Reusable Prisma select object for technician selection (e.g. dropdowns).
+ * Derived Zod schemas from primary userResponseSchema (SSOT).
  */
-export const technicianResponseSelect = {
-  id: true,
-  firstName: true,
-  lastName: true,
-  email: true,
-  role: true,
-  clientId: true,
-  client: {
-    select: {
-      id: true,
-      name: true,
-    },
-  },
-} as const satisfies Prisma.UserSelect;
-
-/**
- * Reusable Prisma select object for self-service profile management.
- */
-export const profileResponseSelect = {
+export const profileResponseSchema = userResponseSchema.pick({
   id: true,
   firstName: true,
   lastName: true,
@@ -66,38 +77,16 @@ export const profileResponseSelect = {
   avatarUrl: true,
   role: true,
   employmentStatus: true,
-} as const satisfies Prisma.UserSelect;
-
-/**
- * Zod schema for current user profile.
- */
-export const profileResponseSchema = z.object({
-  id: z.string().uuid(),
-  firstName: z.string(),
-  lastName: z.string().nullable(),
-  email: z.string().email(),
-  phoneNumber: z.string(),
-  avatarUrl: z.string().nullable(),
-  role: z.string(),
-  employmentStatus: z.string(),
 });
 
-/**
- * Zod schema for technician response.
- */
-export const technicianResponseSchema = z.object({
-  id: z.string().uuid(),
-  firstName: z.string(),
-  lastName: z.string().nullable(),
-  email: z.string().email(),
-  role: z.string(),
-  clientId: z.string().uuid().nullable(),
-  client: z
-    .object({
-      id: z.string().uuid(),
-      name: z.string(),
-    })
-    .nullable(),
+export const technicianResponseSchema = userResponseSchema.pick({
+  id: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  role: true,
+  clientId: true,
+  client: true,
 });
 
 /**
