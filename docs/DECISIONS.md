@@ -546,6 +546,38 @@ Complex data entry forms (Users, Projects, Parameters) were causing "scroll fati
 
 ---
 
+## ADR-014: Floating Mobile Dialog Strategy (v0.6.1)
+
+**Date:** 2026-03-09  
+**Status:** Accepted  
+**Scope:** UI/UX, Dialogs, Mobile Responsiveness
+
+### Context
+
+Standard full-screen mobile dialogs can feel jarring and break the mental model of a single-page application. The user requested a more "modern" approach that feels layered.
+
+### Decision
+
+Implement a **Floating Full Screen** dialog design for mobile viewports (widths < 640px).
+
+1.  **Margins:** Instead of `w-full h-full`, use `w-[calc(100%-1rem)]` and `max-h-[calc(100dvh-1rem)]`.
+2.  **Visuals:** Maintain standard rounded corners and borders even on mobile.
+3.  **Positioning:** Centered vertically and horizontally using fixed inset calculations.
+
+### Rationale
+
+- **Modern Aesthetic:** The "floating" look conveys hierarchy and depth, similar to high-end mobile OS interfaces (e.g., iOS sheets).
+- **Usability:** Keeps the context of the underlying page visible in the margins.
+- **Consistency:** Scales naturally from mobile to desktop centered modals.
+
+### Consequences
+
+- Slightly less horizontal space on very narrow devices (320px).
+- Requires careful handling of `max-h` to ensure the "Floating" gap remains visible even with tall forms.
+- Close buttons must be high-contrast to stay visible against themed headers.
+
+---
+
 ## How to Add New Decisions
 
 1. Use format: `ADR-XXX: Title`

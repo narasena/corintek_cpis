@@ -6,6 +6,18 @@
 
 ---
 
+## v0.6.2 — Machine Section Layout Polish (2026-03-09)
+
+**Branch:** `feat/ui-dialog-refinement`
+
+### Machine List UX
+
+- [x] **Responsive Header:** Refactored machine section sticky header to stack on mobile (`flex-col`).
+- [x] **Concise Button Labels:** Shortened labels to "CT Baru", etc., to prevent overflow.
+- [x] **Clipping Fixes:** Removed problematic negative margins.
+
+---
+
 ## v0.6.1 — Uniform Widths & Floating Mobile UI (2026-03-09)
 
 **Branch:** `feat/ui-dialog-refinement`
