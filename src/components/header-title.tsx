@@ -40,19 +40,20 @@ export function HeaderTitle() {
   const subtitle = SUBTITLES[pathname] || '';
 
   return (
-    <div className="flex flex-col">
-      <span className="text-sm md:text-base font-medium leading-tight">
+    <div className="flex flex-col justify-center">
+      <h2 className="text-base md:text-lg font-bold leading-tight tracking-tight">
         {title}
-      </span>
+      </h2>
       {subtitle && (
-        <>
-          <span className="text-xs md:text-sm text-muted-foreground/80 mt-0.5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 leading-none mt-1">
+          <span className="text-[10px] md:text-xs text-muted-foreground font-medium uppercase tracking-wide">
             {subtitle}
           </span>
-          <span className="text-xs text-muted-foreground/60 mt-0.5">
+          <span className="hidden sm:inline w-1 h-1 rounded-full bg-muted-foreground/30" />
+          <span className="text-[10px] md:text-xs text-muted-foreground/60 font-medium">
             {formatDate()}
           </span>
-        </>
+        </div>
       )}
     </div>
   );

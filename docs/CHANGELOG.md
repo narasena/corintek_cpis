@@ -6,6 +6,24 @@
 
 ---
 
+## v0.4.0 — UI/UX Aesthetic Overhaul (2026-03-09)
+
+**Branch:** `feat/ui/ux-overhaul`
+
+### Design Refinement
+
+- [x] **Sidebar Upgrade:** Pill-shaped navigation, better visual separation, and premium active states.
+- [x] **Sticky Header:** Added backdrop blur, refined padding/hierarchy, and responsive horizontal title/subtitle layout.
+- [x] **Dashboard Overhaul:**
+  - Admin/Director Dashboard: Replaced empty blocks with Welcome Banner + KPI Metric cards.
+  - Scoped Dashboard: Enhanced project cards with gradients, better role badges, and improved empty state.
+- [x] **Data Table UX:**
+  - Integrated Search + Filter toolbar with blurred background.
+  - Revamped pagination with "Showing X-Y of Z" info and rounded controls.
+  - Fixed Tailwind v4 lint warnings across modified components.
+
+---
+
 ## v0.2.0 — Client Portal & Notifications (2026-02-25)
 
 **Branch:** `feat/client-portal-cp01` (merged to `development_v2`)

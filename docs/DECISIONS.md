@@ -455,6 +455,39 @@ Accept current caching implementation as-is for Phase 5. Cache infrastructure wo
 
 ---
 
+---
+
+## ADR-011: UI/UX Aesthetic Overhaul (v0.4.0)
+
+**Date:** 2026-03-09  
+ **Status:** Accepted  
+ **Scope:** UI/UX, Component Refinement
+
+### Context
+
+The initial shadcn implementation was functional but felt "boring" and "empty" (per user feedback). It lacked clear visual hierarchy and didn't provide enough value in the dashboard for high-level users (Admin/Director).
+
+### Decision
+
+1.  **Sidebar:** Added visual separation (right border + muted background) and pill-shaped active navigation items.
+2.  **Header:** Implemented sticky blur header (`backdrop-blur-md`) with increased padding and a more professional horizontal title layout.
+3.  **Dashboard:** Replaced empty video-aspect blocks with KPI cards and a structured welcome banner. Scoped dashboard empty states now use premium cards instead of dashed outlines.
+4.  **Data Table:** Merged search and filters into a unified blurred toolbar container. Pagination now includes a "Showing X-Y of Z" indicator for better context.
+
+### Rationale
+
+- **Structural Soul:** Achieves a premium look through spacing, typography, and subtle borders rather than heavy animations or images, ensuring performance on low-end mobile devices.
+- **Value-First:** Replaces placeholders with real metrics/KPIs (even if static for now) to improve immediate utility.
+- **Consistency:** Standardizes toolbar patterns across all data tables.
+
+### Consequences
+
+- CSS complexity slightly increased in `data-table.tsx` and `layout.tsx`.
+- Build-time linting for Tailwind v4 utilities (e.g., `text-primary!`, `bg-linear-to-r`) must be strictly followed.
+- `DashboardScoped` must remain a Client Component (`'use client'`) for hook usage.
+
+---
+
 ## How to Add New Decisions
 
 1. Use format: `ADR-XXX: Title`

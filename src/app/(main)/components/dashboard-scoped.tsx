@@ -10,7 +10,12 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowRight, ClipboardList, FileText } from 'lucide-react';
+import {
+  ArrowRight,
+  ClipboardList,
+  FileText,
+  LayoutDashboard,
+} from 'lucide-react';
 
 import type { IProjectDashboardCard } from '@/features/projects/types';
 import type { ICurrentUserDetails } from '@/lib/auth-helpers';
@@ -40,11 +45,15 @@ function scopeLabel(role: string) {
 }
 
 function statusBadgeClass(status: string) {
-  if (status === 'ONGOING') return 'bg-emerald-500/10 text-emerald-700';
-  if (status === 'PAUSED') return 'bg-amber-500/10 text-amber-700';
-  if (status === 'COMPLETED') return 'bg-slate-500/10 text-slate-700';
-  if (status === 'CANCELLED') return 'bg-rose-500/10 text-rose-700';
-  return 'bg-muted text-muted-foreground';
+  if (status === 'ONGOING')
+    return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
+  if (status === 'PAUSED')
+    return 'bg-amber-500/10 text-amber-700 border-amber-500/20';
+  if (status === 'COMPLETED')
+    return 'bg-slate-500/10 text-slate-700 border-slate-500/20';
+  if (status === 'CANCELLED')
+    return 'bg-rose-500/10 text-rose-700 border-rose-500/20';
+  return 'bg-muted text-muted-foreground border-transparent';
 }
 
 export function DashboardScoped({
@@ -102,30 +111,30 @@ export function DashboardScoped({
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-6 w-full">
+    <div className="flex flex-1 flex-col gap-8 w-full">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
           Selamat Datang, {displayName}
         </h1>
-        <p className="text-muted-foreground">
-          Proyek aktif Anda otomatis ditampilkan berdasarkan penugasan.
+        <p className="text-muted-foreground text-sm md:text-base max-w-2xl leading-relaxed">
+          Proyek aktif Anda otomatis ditampilkan di bawah ini. Akses cepat untuk
+          membuat log sheet atau laporan harian.
         </p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {projects.length === 0 ? (
-          <Card className="col-span-full p-8 text-center flex flex-col items-center gap-3 border-dashed">
-            <div className="p-3 rounded-full bg-muted/50">
-              <ClipboardList className="h-6 w-6 text-muted-foreground/60" />
+          <Card className="col-span-full border-border/40 shadow-none bg-primary/5 p-12 flex flex-col items-center justify-center text-center rounded-2xl">
+            <div className="p-4 rounded-full bg-background mb-4 shadow-sm">
+              <LayoutDashboard className="h-8 w-8 text-primary/60" />
             </div>
-            <div className="space-y-1">
-              <CardTitle className="text-base">
-                Tidak ada proyek aktif
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Anda saat ini tidak ditugaskan ke proyek aktif mana pun.
-              </CardDescription>
-            </div>
+            <CardTitle className="text-lg font-bold">
+              Tidak ada proyek aktif
+            </CardTitle>
+            <CardDescription className="text-sm mt-2 max-w-sm">
+              Anda saat ini tidak ditugaskan ke proyek aktif mana pun. Hubungi
+              supervisor jika ini adalah kesalahan.
+            </CardDescription>
           </Card>
         ) : (
           projects.map(project => {
@@ -137,35 +146,36 @@ export function DashboardScoped({
             return (
               <Card
                 key={project.id}
-                className="flex flex-col border transition-all hover:border-primary/40 hover:shadow-md group"
+                className="flex flex-col border border-border/50 shadow-sm transition-all duration-300 hover:border-primary/30 hover:shadow-md hover:-translate-y-1 group bg-background/60 backdrop-blur-sm rounded-xl overflow-hidden"
               >
-                <CardHeader className="p-3.5 pb-2 space-y-1.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-base font-bold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                <div className="h-1.5 w-full bg-linear-to-r from-primary/40 to-primary/10" />
+                <CardHeader className="p-4 pb-3 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <CardTitle className="text-base font-bold leading-snug line-clamp-2 group-hover:text-primary transition-colors">
                       {project.name}
                     </CardTitle>
                     <div
-                      className={`shrink-0 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-tight border ${statusBadgeClass(
+                      className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusBadgeClass(
                         project.status
                       )}`}
                     >
-                      {project.status}
+                      {project.status.replace('_', ' ')}
                     </div>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs font-semibold text-foreground/70 line-clamp-1">
-                      {project.client?.name || 'No Client'}
+                  <div className="flex flex-col gap-1.5 pt-1">
+                    <span className="text-sm font-medium text-foreground/80 line-clamp-1">
+                      {project.client?.name || 'Klien Internal'}
                     </span>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1.5 mt-1">
                       {project.quoteNumber && (
-                        <span className="text-[9px] bg-muted/50 text-muted-foreground px-1 py-0.5 rounded font-medium border border-transparent group-hover:border-muted-foreground/10">
+                        <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md font-medium">
                           {project.quoteNumber}
                         </span>
                       )}
                       {project.myAssignmentRoles.map(r => (
                         <span
                           key={r}
-                          className="text-[9px] bg-primary/5 text-primary/80 px-1 py-0.5 rounded font-semibold border border-primary/10"
+                          className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold"
                         >
                           {scopeLabel(r)}
                         </span>
@@ -174,8 +184,8 @@ export function DashboardScoped({
                   </div>
                 </CardHeader>
 
-                <CardContent className="p-3.5 pt-1.5 flex-1 flex flex-col">
-                  <div className="flex flex-col gap-1.5 mt-auto">
+                <CardContent className="p-4 pt-2 flex-1 flex flex-col">
+                  <div className="flex flex-col gap-2 mt-auto">
                     {canAccess(
                       user.role,
                       RbacResource.LOG_SHEETS,
@@ -183,12 +193,12 @@ export function DashboardScoped({
                     ) && (
                       <Button
                         size="sm"
-                        className="w-full justify-start gap-2 h-8 text-xs font-medium shadow-none"
+                        className="w-full justify-start gap-2 h-9 text-xs font-semibold shadow-none rounded-lg bg-primary/95 hover:bg-primary"
                         onClick={() => handleQuickCreateLogSheet(project.id)}
                         disabled={isPending}
                       >
-                        <FileText className="h-3.5 w-3.5" />
-                        Buat Log Sheet
+                        <FileText className="h-4 w-4" />
+                        Buat Log Sheet Baru
                       </Button>
                     )}
 
@@ -200,68 +210,78 @@ export function DashboardScoped({
                       <Button
                         asChild
                         size="sm"
-                        className="w-full justify-start gap-2 h-8 text-xs font-medium border-muted-foreground/20 hover:bg-muted/50"
+                        className="w-full justify-start gap-2 h-9 text-xs font-medium border-border/60 hover:bg-muted rounded-lg"
                         variant="outline"
                       >
                         <Link href={`/work-reports/${project.id}?create=1`}>
-                          <ClipboardList className="h-3.5 w-3.5" />
-                          Buat Laporan
+                          <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                          Buat Laporan Baru
                         </Link>
                       </Button>
                     )}
 
-                    {canAccess(user.role, RbacResource.LOG_SHEETS, 'read') &&
-                      isPic && (
-                        <Button
-                          asChild
-                          size="sm"
-                          className="w-full justify-start gap-2 h-8 text-xs font-medium border-muted-foreground/20"
-                          variant={logSheetPending > 0 ? 'default' : 'outline'}
-                        >
-                          <Link href={`/log-sheets/${project.id}`}>
-                            <FileText className="h-3.5 w-3.5" />
-                            Persetujuan Log Sheet
-                            {logSheetPending > 0 ? (
-                              <span className="ml-auto bg-primary-foreground text-primary rounded-full px-1.5 py-0.5 text-[10px] font-bold">
-                                {logSheetPending}
-                              </span>
-                            ) : null}
-                          </Link>
-                        </Button>
-                      )}
+                    <div className="flex gap-2">
+                      {canAccess(user.role, RbacResource.LOG_SHEETS, 'read') &&
+                        isPic && (
+                          <Button
+                            asChild
+                            size="sm"
+                            className="flex-1 justify-start gap-2 h-9 text-xs font-medium border-border/60 rounded-lg"
+                            variant={
+                              logSheetPending > 0 ? 'secondary' : 'outline'
+                            }
+                          >
+                            <Link href={`/log-sheets/${project.id}`}>
+                              <FileText className="h-4 w-4" />
+                              {logSheetPending > 0 ? (
+                                <span className="ml-auto bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm">
+                                  {logSheetPending}
+                                </span>
+                              ) : (
+                                'Review Log'
+                              )}
+                            </Link>
+                          </Button>
+                        )}
 
-                    {canAccess(user.role, RbacResource.WORK_REPORTS, 'read') &&
-                      isPic && (
-                        <Button
-                          asChild
-                          size="sm"
-                          className="w-full justify-start gap-2 h-8 text-xs font-medium border-muted-foreground/20"
-                          variant={
-                            workReportPending > 0 ? 'default' : 'outline'
-                          }
-                        >
-                          <Link href={`/work-reports/${project.id}`}>
-                            <ClipboardList className="h-3.5 w-3.5" />
-                            Persetujuan Laporan
-                            {workReportPending > 0 ? (
-                              <span className="ml-auto bg-primary-foreground text-primary rounded-full px-1.5 py-0.5 text-[10px] font-bold">
-                                {workReportPending}
-                              </span>
-                            ) : null}
-                          </Link>
-                        </Button>
-                      )}
+                      {canAccess(
+                        user.role,
+                        RbacResource.WORK_REPORTS,
+                        'read'
+                      ) &&
+                        isPic && (
+                          <Button
+                            asChild
+                            size="sm"
+                            className="flex-1 justify-start gap-2 h-9 text-xs font-medium border-border/60 rounded-lg"
+                            variant={
+                              workReportPending > 0 ? 'secondary' : 'outline'
+                            }
+                          >
+                            <Link href={`/work-reports/${project.id}`}>
+                              <ClipboardList className="h-4 w-4" />
+                              {workReportPending > 0 ? (
+                                <span className="ml-auto bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm">
+                                  {workReportPending}
+                                </span>
+                              ) : (
+                                'Review Lap'
+                              )}
+                            </Link>
+                          </Button>
+                        )}
+                    </div>
                   </div>
 
-                  <div className="pt-2.5 mt-2.5 border-t border-muted/60">
+                  <div className="pt-4 mt-4 border-t border-border/40">
                     <Button
                       asChild
                       variant="ghost"
                       size="sm"
-                      className="w-full gap-2 text-[11px] h-7 text-muted-foreground hover:text-primary hover:bg-primary/5 font-semibold uppercase tracking-wider transition-all"
+                      className="w-full gap-2 text-xs h-8 text-muted-foreground hover:text-primary hover:bg-primary/5 font-bold uppercase tracking-widest transition-all rounded-lg"
                     >
                       <Link href={`/my-projects/${project.id}`}>
-                        Buka Proyek <ArrowRight className="h-3 w-3" />
+                        Masuk Proyek <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </Button>
                   </div>

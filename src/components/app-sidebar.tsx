@@ -98,8 +98,12 @@ export function AppSidebar({
   const items = filterNavItems(user.role, navMain);
 
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
+    <Sidebar
+      collapsible="offcanvas"
+      className="border-r border-border/40 bg-muted/20"
+      {...props}
+    >
+      <SidebarHeader className="py-4">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -111,7 +115,7 @@ export function AppSidebar({
                 <Image
                   src="/logo.png"
                   alt="Logo"
-                  width={130}
+                  width={140}
                   height={15}
                   className="object-contain"
                   priority
@@ -121,10 +125,10 @@ export function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="px-2 pt-2 gap-0">
         <NavMain items={items} />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="p-4 pt-2">
         <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>

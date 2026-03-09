@@ -12,11 +12,9 @@ import {
   SortingState,
   HeaderGroup,
   Row,
-  Cell,
   Header,
   OnChangeFn,
   Table as TableType,
-  ColumnFiltersState,
 } from '@tanstack/react-table';
 
 import {
@@ -41,7 +39,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDataTableSearch } from '@/hooks/use-data-table-search';
 import { useSearchParam } from '@/hooks/use-search-param';
 import { useColumnFilters } from '@/hooks/use-column-filters';
-import { HighlightText } from './highlight-text';
 import { FilterToolbar } from './filter-toolbar';
 import { filterFns } from '@/lib/filter-utils';
 
@@ -96,6 +93,7 @@ export interface IServerPaginationConfig {
  * Column filter configuration
  * @responsibility Define filter UI and behavior per column
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface IColumnFilterConfig<TData = unknown> {
   /** Column identifier (must match accessorKey or id) */
   columnId: string;
@@ -147,6 +145,7 @@ export function DataTable<TData, TValue>({
   onTabChange,
   searchConfig,
   disableSearch = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   highlightMatches = false,
   serverPagination,
   columnFilters: enableColumnFilters = false,
@@ -236,20 +235,20 @@ export function DataTable<TData, TValue>({
     ) : null;
 
   const searchInput = !disableSearch && (
-    <div className="relative w-full sm:w-72">
-      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="relative w-full sm:w-80">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
       <Input
-        placeholder={searchConfig?.placeholder ?? 'Cari...'}
+        placeholder={searchConfig?.placeholder ?? 'Cari data...'}
         value={query}
         onChange={e => setQuery(e.target.value)}
-        className="pl-8 pr-8"
+        className="pl-9 pr-9 h-10 w-full rounded-full bg-muted/30 border-muted-foreground/20 focus-visible:ring-primary/30 transition-all shadow-sm"
       />
       {query && (
         <button
           onClick={clearQuery}
-          className="absolute right-2 top-1/2 -translate-y-1/2"
+          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 hover:bg-muted/50 transition-colors"
         >
-          <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+          <X className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
       )}
     </div>
@@ -298,9 +297,13 @@ export function DataTable<TData, TValue>({
 
   // Combined toolbar: filters left, search right, stacked on mobile
   const toolbar = (filterToolbar || searchInput) && (
-    <div className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center">
-      <div className="flex-1 sm:flex-none">{filterToolbar}</div>
-      {searchInput && <div className="flex justify-end">{searchInput}</div>}
+    <div className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center bg-card/50 p-3 rounded-2xl border border-border/50 backdrop-blur-sm shadow-sm">
+      <div className="flex-1 sm:flex-none w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+        {filterToolbar}
+      </div>
+      {searchInput && (
+        <div className="flex justify-end w-full sm:w-auto">{searchInput}</div>
+      )}
     </div>
   );
 
@@ -580,51 +583,37 @@ function ClientPaginationControls<TData>({
   const pageSize = pagination.pageSize;
   const totalRows = table.getFilteredRowModel().rows.length;
 
-  if (totalRows === 0) {
-    return (
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Sebelumnya
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Selanjutnya
-        </Button>
-      </div>
-    );
-  }
+  if (totalRows === 0) return null;
 
   const start = (pageIndex - 1) * pageSize + 1;
   const end = Math.min(pageIndex * pageSize, totalRows);
 
   return (
-    <div className="flex items-center justify-between space-x-4 py-4">
-      <span className="text-sm text-muted-foreground">
-        Menampilkan {start}-{end} dari {totalRows}
-      </span>
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2">
+      <div className="text-sm text-muted-foreground font-medium bg-muted/40 px-3 py-1.5 rounded-full border border-border/20">
+        Menampilkan{' '}
+        <span className="text-foreground">
+          {start}-{end}
+        </span>{' '}
+        dari <span className="text-foreground">{totalRows}</span>
+      </div>
       <div className="flex items-center space-x-2">
         <Button
           variant="outline"
           size="sm"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
+          className="rounded-full shadow-sm"
         >
-          Sebelumnya
+          Seb
         </Button>
+        <div className="text-sm font-medium px-2">Hal {pageIndex}</div>
         <Button
           variant="outline"
           size="sm"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
+          className="rounded-full shadow-sm"
         >
           Selanjutnya
         </Button>
@@ -659,27 +648,33 @@ function ServerPaginationControls({
   const end = Math.min(page * limit, total);
 
   return (
-    <div className="flex items-center justify-between space-x-4 py-4">
-      <span className="text-sm text-muted-foreground">
-        Menampilkan {start}-{end} dari {total}
-      </span>
-      <div className="flex items-center space-x-2">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2">
+      <div className="text-sm text-muted-foreground font-medium bg-muted/40 px-3 py-1.5 rounded-full border border-border/20">
+        Menampilkan{' '}
+        <span className="text-foreground">
+          {start}-{end}
+        </span>{' '}
+        dari <span className="text-foreground">{total}</span>
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-2">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(page - 1)}
           disabled={!hasPrevPage || isLoading}
+          className="rounded-full shadow-sm"
         >
-          Sebelumnya
+          Seb
         </Button>
-        <span className="text-sm">
-          Halaman {page} dari {totalPages}
+        <span className="text-sm font-medium px-2">
+          Hal {page} / {totalPages}
         </span>
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(page + 1)}
           disabled={!hasNextPage || isLoading}
+          className="rounded-full shadow-sm"
         >
           Selanjutnya
         </Button>
@@ -687,7 +682,7 @@ function ServerPaginationControls({
           value={limit}
           onChange={e => onLimitChange(Number(e.target.value))}
           disabled={isLoading}
-          className="h-9 rounded-md border border-input px-2 text-sm"
+          className="h-9 rounded-full border border-input bg-background/50 px-3 text-sm font-medium shadow-sm outline-none focus:ring-1 focus:ring-primary ml-2"
         >
           {pageSizeOptions.map(opt => (
             <option key={opt} value={opt}>
