@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/data-table';
+import { DataTableEmpty } from '@/components/ui/data-table-empty';
 import { getParameterColumns } from './components/columns';
 import { ParameterDialog } from '@/features/parameters/components/parameter-dialog';
 
@@ -152,7 +153,12 @@ export default function ParametersPage() {
             <DataTable
               columns={columns}
               data={parameters}
-              emptyMessage="Belum ada data parameter."
+              emptyMessage={
+                <DataTableEmpty
+                  title="Belum Ada Parameter"
+                  description="Tambahkan parameter baru dari menu di atas."
+                />
+              }
             />
           )}
 

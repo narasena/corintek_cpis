@@ -2,30 +2,32 @@
 
 ## Current State
 
-- **UI/UX Overhaul (v0.4.1) Complete:** Focused on Sidebar, Header, and Dashboard.
-- **Dashboard Stats Wired:** Real-time KPI counts (Projects, Log Sheets, Clients) active via `getAdminDashboardStats`.
-- **Premium Header:** Gradient blue theme with 80px height and refined typography proportions.
-- **Alignment:** All major headers/layouts now follow common `px-4 md:px-6 lg:px-8` padding for vertical alignment.
+- **UI/UX Form Refinement (v0.5.0) Complete:** Focused on Dialogs, Forms, and Data Tables.
+- **Sticky Form Actions:** `CrudDialog` now features a sticky footer for accessibility.
+- **Premium Inputs:** Switched to standard `shadcn` components for Switch, DatePicker, and Combobox.
+- **Improved Empty States:** `DataTableEmpty` integrated across major features.
+- **Indonesian Localization:** Form placeholders and labels purged of lingering English examples.
 
 ## Completed Tasks
 
-- [x] Dashbord KPI cards connected to real database metrics.
-- [x] Sidebar greeting repositioned and user profile styled.
-- [x] HeaderTitle logic simplified; removes redundant subtitles.
-- [x] Navigation bell updated with styling support.
-- [x] Build and Lint errors cleared (including duplicate logic in dashboard service).
+- [x] Refactored `UserForm` and `ClientForm` into card-based sections with grid layouts.
+- [x] Restructured `ParameterForm` with vertical tabs to prevent scroll fatigue.
+- [x] Upgraded `CrudDialog` with sticky footers and polished layout.
+- [x] Implemented `DataTableEmpty` in Projects, Users, and Clients.
+- [x] Standardized Indonesian language across all forms.
+- [x] Build verified clean (`npm run build`).
 
 ## Next Steps (Cold Start Actions)
 
-1. **Audit Data Tables:** The and Data Table merge of search/filter is done, but could use pagination "Showing X to Y" testing on real large datasets to verify scrolling.
-2. **Mobile Check:** Verify header gradient and 80px height on mobile small screens (<=360px).
-3. **Activity Feed Polling:** Implement optimistic updates or light polling for the dashboard activity feed (ADR-010 technical debt).
+1. **Parameter Management:** Verify "Overload" (Override) dialog usage on mobile, as it has complex nested grids.
+2. **Accessibility Audit:** Check if `Combobox` search is fully keyboard navigable in production.
+3. **Empty States:** Add "Import Data" CTA to empty states where relevant (e.g. Chemicals).
 
 ## Architectural Notes
 
-- **DRY Dashboard Service:** Standardized the metrics fetching. Ensure any new KPI cards use the centralized `getAdminDashboardStats` action.
-- **Header Proportions:** Title is `font-semibold` and `text-[27px]` (on mobile) / `text-2xl` (on desktop) for a specific intentional look as requested by the user.
+- **Sticky Action Pattern:** Established in `crud-dialog.tsx`. Use this pattern for all data-entry modals to ensure primary actions are always visible.
+- **Vertical Tabs for Dense Data:** Used in `parameter-form.tsx` for limit profiles. This is the preferred pattern for any domain with >10 related inputs.
 
 ## Active Branch
 
-`feat/ui-ux-refinement-v2` (to be created and committed)
+`feat/ui-ux-refinement-v2` (Committed and ready for push/PR)

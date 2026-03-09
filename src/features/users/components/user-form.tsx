@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 
 interface IUserFormProps {
   mode: 'create' | 'edit';
@@ -46,6 +47,8 @@ const CLIENT_ROLES: TUserRole[] = [
   'CLIENT_TECHNICIAN',
   'CLIENT_SUPERVISOR',
 ];
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function UserForm({
   mode,
@@ -145,7 +148,6 @@ export function UserForm({
             description: result.error || 'Terjadi kesalahan',
           }
         );
-        // Set form error
         form.setError('root', {
           type: 'manual',
           message: result.error || 'An error occurred',
@@ -156,122 +158,117 @@ export function UserForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* First Name */}
-        <FormField
-          control={form.control}
-          name="firstName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>First Name</FormLabel>
-              <FormControl>
-                <Input placeholder="John" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Card className="shadow-none">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base font-semibold">
+              Data Personal
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nama Depan</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Budi" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nama Belakang</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Santoso"
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-        {/* Last Name */}
-        <FormField
-          control={form.control}
-          name="lastName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Last Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Doe" {...field} value={field.value || ''} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nomor Telepon</FormLabel>
+                    <FormControl>
+                      <Input placeholder="+62812xxxxxx" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="idNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>No. Identitas (Opsional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="123456789"
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-        {/* ID Number */}
-        <FormField
-          control={form.control}
-          name="idNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>ID Number (Optional)</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="123456789"
-                  {...field}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Email */}
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input
-                  type="email"
-                  placeholder="john.doe@example.com"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Phone Number */}
-        <FormField
-          control={form.control}
-          name="phoneNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <Input placeholder="+1234567890" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Address */}
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address (Optional)</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="123 Main St, City"
-                  {...field}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Password (only for create mode) */}
-        {mode === 'create' && (
-          <>
             <FormField
               control={form.control}
-              name="password"
+              name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Alamat (Opsional)</FormLabel>
                   <FormControl>
                     <Input
-                      type="password"
-                      placeholder="Min 8 characters"
+                      placeholder="Jl. Sudirman No 1..."
+                      {...field}
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-none">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base font-semibold">
+              Akun & Akses
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="budi.santoso@contoh.com"
                       {...field}
                     />
                   </FormControl>
@@ -280,126 +277,138 @@ export function UserForm({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="Confirm" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        )}
+            {mode === 'create' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Kata Sandi</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Min 8 karakter"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-        {/* Role */}
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {Object.values(UserRole).map(role => (
-                    <SelectItem key={role} value={role}>
-                      {role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Employment Status */}
-        <FormField
-          control={form.control}
-          name="employmentStatus"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Employment Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select employment status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {Object.values(EmploymentStatus).map(status => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Client Selection (only for CLIENT* roles) */}
-        {isClientRole && (
-          <FormField
-            control={form.control}
-            name="clientId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Client (Perusahaan)</FormLabel>
-                <Select
-                  onValueChange={value =>
-                    field.onChange(value === 'none' ? null : value)
-                  }
-                  value={field.value || 'none'}
-                  disabled={isLoadingClients}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          isLoadingClients
-                            ? 'Memuat data klien...'
-                            : 'Pilih klien'
-                        }
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">- Tidak Ada -</SelectItem>
-                    {clients.map(client => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Konfirmasi Kata Sandi</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Konfirmasi"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
-          />
-        )}
 
-        {/* Form Actions */}
-        <div className="flex gap-2 pt-4">
-          <Button type="submit" disabled={isPending} className="flex-1">
-            {isPending
-              ? mode === 'create'
-                ? 'Creating...'
-                : 'Updating...'
-              : mode === 'create'
-                ? 'Create User'
-                : 'Update User'}
-          </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Peran (Role)</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih peran pengguna" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(UserRole).map(role => (
+                          <SelectItem key={role} value={role}>
+                            {role}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="employmentStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status Kepegawaian</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(EmploymentStatus).map(status => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {isClientRole && (
+              <FormField
+                control={form.control}
+                name="clientId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Client (Perusahaan)</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        options={[
+                          { label: '- Tidak Ada -', value: 'none' },
+                          ...clients.map(c => ({ label: c.name, value: c.id })),
+                        ]}
+                        value={field.value || 'none'}
+                        onChange={value =>
+                          field.onChange(value === 'none' ? null : value)
+                        }
+                        placeholder={
+                          isLoadingClients ? 'Memuat data...' : 'Cari klien...'
+                        }
+                        searchPlaceholder="Ketik nama klien..."
+                        emptyMessage="Klien tidak ditemukan."
+                        disabled={isLoadingClients}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="sticky bottom-[-24px] -mx-6 -mb-6 mt-8 p-4 px-6 border-t bg-background/95 backdrop-blur-sm flex justify-end gap-2">
           {onCancel && (
             <Button
               type="button"
@@ -407,9 +416,18 @@ export function UserForm({
               onClick={onCancel}
               disabled={isPending}
             >
-              Cancel
+              Batal
             </Button>
           )}
+          <Button type="submit" disabled={isPending}>
+            {isPending
+              ? mode === 'create'
+                ? 'Menyimpan...'
+                : 'Memperbarui...'
+              : mode === 'create'
+                ? 'Tambah Pengguna'
+                : 'Simpan Perubahan'}
+          </Button>
         </div>
       </form>
     </Form>

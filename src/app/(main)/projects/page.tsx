@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
+import { DataTableEmpty } from '@/components/ui/data-table-empty';
 import {
   getProjectColumns,
   PROJECT_STATUS_OPTIONS,
@@ -137,7 +138,26 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-4 md:space-y-8">
-      {/* ... existing header ... */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Manajemen Proyek
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Kelola data proyek, status, dan penugasan.
+          </p>
+        </div>
+        <ProjectDialog
+          mode="create"
+          clients={clients}
+          onSuccess={handleSuccess}
+          trigger={
+            <Button>
+              <Plus className="mr-2 h-4 w-4" /> Tambah Proyek
+            </Button>
+          }
+        />
+      </div>
 
       {loading && projects.length === 0 ? (
         <div className="flex items-center justify-center p-8 border rounded-lg h-64 bg-muted/20">
@@ -150,14 +170,28 @@ export default function ProjectsPage() {
         <DataTable
           columns={columns}
           data={projects}
-          emptyMessage="Belum ada data proyek."
+          emptyMessage={
+            <DataTableEmpty
+              title="Belum Ada Proyek"
+              description="Mulai dengan menambahkan proyek baru."
+              actionLabel="Tambah Proyek"
+              onAction={() => setShowEditDialog(true)}
+            />
+          }
           columnFilters={true}
           filterConfigs={filterConfigs}
           persistFiltersInUrl={true}
         />
       )}
 
-      {/* ... Edit Dialog ... */}
+      <ProjectDialog
+        mode="edit"
+        project={selectedProject}
+        clients={clients}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSuccess={handleSuccess}
+      />
     </div>
   );
 }

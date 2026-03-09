@@ -76,15 +76,19 @@ cpis/
 
 ## Key Abstractions
 
-| Abstraction            | Purpose                                                  | Location                              |
-| ---------------------- | -------------------------------------------------------- | ------------------------------------- |
-| `requireActor()`       | Auth guard — throws if no session                        | `src/lib/auth-helpers.ts`             |
-| `getActorOrNull()`     | Auth check — returns null if no session                  | `src/lib/auth-helpers.ts`             |
-| `TActionResponse<T>`   | Standard action return type `{success, message?, data?}` | `src/lib/action-helpers.ts`           |
-| `DataTable`            | Generic table with pagination/sorting                    | `src/components/data-table.tsx`       |
-| `CrudDialog`           | Generic dialog for create/edit forms                     | `src/components/crud-dialog.tsx`      |
-| `ActionCell`           | Dropdown menu with Ubah/Hapus                            | `src/components/action-cell.tsx`      |
-| `useNotificationStore` | Zustand store for notification bell                      | `src/features/notifications/hooks.ts` |
+| Abstraction            | Purpose                                                  | Location                                 |
+| ---------------------- | -------------------------------------------------------- | ---------------------------------------- |
+| `requireActor()`       | Auth guard — throws if no session                        | `src/lib/auth-helpers.ts`                |
+| `getActorOrNull()`     | Auth check — returns null if no session                  | `src/lib/auth-helpers.ts`                |
+| `TActionResponse<T>`   | Standard action return type `{success, message?, data?}` | `src/lib/action-helpers.ts`              |
+| `DataTable`            | Generic table with pagination/sorting                    | `src/components/data-table.tsx`          |
+| `DataTableEmpty`       | Premium empty state with action CTA                      | `src/components/ui/data-table-empty.tsx` |
+| `CrudDialog`           | Generic dialog for create/edit forms                     | `src/components/crud-dialog.tsx`         |
+| `Combobox`             | Searchable dropdown component                            | `src/components/ui/combobox.tsx`         |
+| `DatePicker`           | Standard date selection component                        | `src/components/ui/date-picker.tsx`      |
+| `Switch`               | Premium toggle switch (primitive)                        | `src/components/ui/switch.tsx`           |
+| `ActionCell`           | Dropdown menu with Ubah/Hapus                            | `src/components/action-cell.tsx`         |
+| `useNotificationStore` | Zustand store for notification bell                      | `src/features/notifications/hooks.ts`    |
 
 ## Integration Points
 

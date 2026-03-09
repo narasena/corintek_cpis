@@ -516,6 +516,36 @@ Feedback on v0.4.0 indicated the dashboard felt static and the header lacked dep
 
 ---
 
+## ADR-013: Form UX Standards & Sticky Action Protocol (v0.5.0)
+
+**Date:** 2026-03-09  
+**Status:** Accepted  
+**Scope:** UI/UX, Forms, Dialogs
+
+### Context
+
+Complex data entry forms (Users, Projects, Parameters) were causing "scroll fatigue" and making the primary "Save" action difficult to find. Forms lacked a consistent internal hierarchy, and raw HTML inputs felt sub-premium.
+
+### Decision
+
+1.  **Sticky Action Footer:** Established `CrudDialog` as the source of truth for all form containers, implementing a sticky bottom action bar (`-mx-6 -mb-6 mt-8 p-4 border-t bg-background/95 backdrop-blur-sm`).
+2.  **Card-Based Sectioning:** Large forms MUST be broken into focused `Card` components (e.g., "Personal Data", "Account Access") to reduce visual noise.
+3.  **Vertical Navigation for Dense Data:** High-density forms (Parameter Profiles) use `Tabs` with `orientation="vertical"` to keep fields accessible without endless scrolling.
+4.  **Premium primitives over raw inputs:** Switched strictly to `shadcn/ui` based Switch, DatePicker, and Combobox (Searchable Select).
+
+### Rationale
+
+- **Accessibility:** Users should never have to search for the "Simpan" button.
+- **Cognitive Load:** Breaking data into chunks prevents users from feeling overwhelmed.
+- **Visual Rhythm:** Grid-based layouts (`md:grid-cols-2`) provide a professional appearance.
+
+### Consequences
+
+- All new forms must follow the Sticky Footer pattern for consistency.
+- Forms with >2 sections require the "Section Card" pattern.
+
+---
+
 ## How to Add New Decisions
 
 1. Use format: `ADR-XXX: Title`

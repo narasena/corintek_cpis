@@ -8,6 +8,7 @@ import { getAllClientsAction } from '@/features/clients/actions';
 import { TClientResponse } from '@/@types/client.type';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
+import { DataTableEmpty } from '@/components/ui/data-table-empty';
 import { getClientColumns } from './components/client-columns';
 import { ClientDialog } from '@/features/clients/components/client-dialog';
 
@@ -82,7 +83,14 @@ export default function ClientsPage() {
         <DataTable
           columns={columns}
           data={clients}
-          emptyMessage="Belum ada data klien."
+          emptyMessage={
+            <DataTableEmpty
+              title="Belum Ada Klien"
+              description="Mulai dengan menambahkan klien baru."
+              actionLabel="Tambah Klien"
+              onAction={() => setShowEditDialog(true)}
+            />
+          }
         />
       )}
 

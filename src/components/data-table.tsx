@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -13,6 +13,7 @@ import {
   HeaderGroup,
   Row,
   Header,
+  Cell,
   OnChangeFn,
   Table as TableType,
 } from '@tanstack/react-table';
@@ -114,7 +115,7 @@ export interface IColumnFilterConfig<TData = unknown> {
 interface IDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  emptyMessage?: string;
+  emptyMessage?: React.ReactNode;
   tabs?: ITableTab<TData>[];
   tab?: string;
   onTabChange?: (value: string) => void;
@@ -345,7 +346,7 @@ interface ITabContentTableProps<TData> {
   filteredData: Record<string, unknown>[];
   isSearching: boolean;
   query: string;
-  emptyMessage?: string;
+  emptyMessage?: React.ReactNode;
   sorting: SortingState;
   onSortingChange: OnChangeFn<SortingState>;
 }
@@ -396,7 +397,7 @@ function DataTableInner<TData, TValue>({
 }: {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  emptyMessage?: string;
+  emptyMessage?: React.ReactNode;
   table: TableType<TData>;
 }) {
   return (

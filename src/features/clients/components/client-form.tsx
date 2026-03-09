@@ -46,6 +46,8 @@ function isValidWebsite(value: string): boolean {
   return domainPart.includes('.') && domainPart.length > 2;
 }
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 export function ClientForm({
   mode,
   defaultValues,
@@ -142,110 +144,115 @@ export function ClientForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* Name */}
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nama Klien</FormLabel>
-              <FormControl>
-                <Input placeholder="PT Example Indonesia" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Card className="shadow-none">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base font-semibold">
+              Informasi Perusahaan
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nama Klien</FormLabel>
+                  <FormControl>
+                    <Input placeholder="PT Contoh Indonesia" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        {/* Email */}
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email (Opsional)</FormLabel>
-              <FormControl>
-                <Input
-                  type="email"
-                  placeholder="contact@example.com"
-                  {...field}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="website"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Website (Opsional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="contoh.com"
+                      {...field}
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
-        {/* Phone Number */}
-        <FormField
-          control={form.control}
-          name="phoneNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nomor Telepon (Opsional)</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="+62 21 1234567"
-                  {...field}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <Card className="shadow-none">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base font-semibold">
+              Kontak & Lokasi
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email (Opsional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="kontak@contoh.com"
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        {/* Address */}
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Alamat (Opsional)</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Jl. Contoh No. 123, Jakarta"
-                  {...field}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nomor Telepon (Opsional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="+62 21 1234567"
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-        {/* Website */}
-        <FormField
-          control={form.control}
-          name="website"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Website (Opsional)</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="example.com"
-                  {...field}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Alamat (Opsional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Jl. Contoh No. 123, Jakarta"
+                      {...field}
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
-        {/* Form Actions */}
-        <div className="flex gap-2 pt-4">
-          <Button type="submit" disabled={isPending} className="flex-1">
-            {isPending
-              ? mode === 'create'
-                ? 'Membuat...'
-                : 'Memperbarui...'
-              : mode === 'create'
-                ? 'Buat Klien'
-                : 'Perbarui Klien'}
-          </Button>
+        <div className="sticky bottom-[-24px] -mx-6 -mb-6 mt-8 p-4 px-6 border-t bg-background/95 backdrop-blur-sm flex justify-end gap-2 z-10">
           {onCancel && (
             <Button
               type="button"
@@ -256,6 +263,15 @@ export function ClientForm({
               Batal
             </Button>
           )}
+          <Button type="submit" disabled={isPending}>
+            {isPending
+              ? mode === 'create'
+                ? 'Membuat...'
+                : 'Memperbarui...'
+              : mode === 'create'
+                ? 'Tambah Klien'
+                : 'Simpan Perubahan'}
+          </Button>
         </div>
       </form>
     </Form>

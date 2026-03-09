@@ -6,6 +6,21 @@
 
 ---
 
+## v0.5.0 — Form UX & Localization (2026-03-09)
+
+**Branch:** `feat/ui-ux-refinement-v2`
+
+### Form & Dialog Refinement
+
+- [x] **Sticky Dialog Actions:** Upgraded `CrudDialog` with a sticky bottom action bar and improved padding.
+- [x] **Parameter Profile Tabs:** Refactored overwhelming list of parameter inputs into a clean Vertical Tabs layout.
+- [x] **Input Modernization:** Replaced primitive checkboxes/selects with `Switch`, `Combobox`, and `DatePicker`.
+- [x] **Empty State UI:** Added `DataTableEmpty` with custom illustrations/actions for Projects, Users, and Clients.
+- [x] **Indonesian Localization:** Scanned and fixed all form placeholders/labels to use Indonesian language.
+- [x] **Layout Grouping:** Grouped User and Client form fields into logical `Card` sections.
+
+---
+
 ## v0.4.0 — UI/UX Aesthetic Overhaul (2026-03-09)
 
 **Branch:** `feat/ui/ux-overhaul`

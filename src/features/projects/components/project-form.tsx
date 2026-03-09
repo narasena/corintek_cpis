@@ -5,29 +5,11 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 
 import {
   createProjectAction,
-  getProjectAssignmentsAction,
-  setProjectAssignmentsAction,
   updateProjectAction,
 } from '@/features/projects/actions';
 import {
@@ -126,7 +108,7 @@ export function ProjectForm({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4">
+        <div className="sticky bottom-[-24px] -mx-6 -mb-6 mt-8 p-4 px-6 border-t bg-background/95 backdrop-blur-sm flex justify-end gap-2 z-10">
           <Button type="button" variant="outline" onClick={onCancel}>
             Batal
           </Button>

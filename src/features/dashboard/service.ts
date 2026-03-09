@@ -9,7 +9,7 @@ import type {
 import type { TRbacRole } from '@/lib/rbac';
 import type { IProjectAccessServices } from './utils';
 import type { IActivityRepository } from './di';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/generated/prisma/client';
 
 // ============================================================================
 // Legacy Exports (Preserved for backward compatibility)
