@@ -31,7 +31,7 @@ Output a Risk Table."
 | F3 | `src/features/users/actions.ts` | 159 | 🟡 | **ENTRY POINT**: Cross-layer dependency between UI and Service. |
 | F4 | `src/features/users/services/user-queries.ts` | 119 | 🟡 | **QUERIES**: Focused on data retrieval. |
 | F5 | `src/features/users/components/profile-form.tsx` | 231 | 🟡 | **COMPLEX UI**: Handles profile updates and avatar uploads. |
-| F6 | `src/features/users/utils.ts` | 68 | 🟡 | **SHARED INFRA**: Defines shared Prisma select objects. |
+| F6 | `src/features/users/utils.ts` | 142 | 🟢 | **DRY INFRA**: Derived selections and schemas. Low complexity leaf. |
 | F7 | `src/features/users/components/user-form.tsx` | 73 | 🟢 | **ORCHESTRATOR**: Simple container for sub-sections. |
 | F8 | `src/features/users/components/form-sections/*` | ~300 | 🟢 | **UI SECTIONS**: Focused, single-purpose UI components. |
 | F9 | `src/features/users/service.ts` | 9 | 🟢 | **FACADE**: Simple re-export file. |
@@ -45,5 +45,6 @@ Output a Risk Table."
 | Risk Level | Count | Files |
 | :--------: | :---: | ----- |
 |  🔴 HIGH   |   0   | **NONE** - All God Files resolved. |
-| 🟡 MEDIUM  |   6   | Mutations, Queries, Form Hook, Actions, Profile Form, Utils |
-|   🟢 LOW   |   5   | Orchestrator, UI Sections, Facade, Dialog, Clients Hook |
+| 🟡 MEDIUM  |   5   | Mutations, Form Hook, Actions, Queries, Profile Form |
+|   🟢 LOW   |   6   | Utils, Orchestrator, UI Sections, Facade, Dialog, Clients Hook |
+  

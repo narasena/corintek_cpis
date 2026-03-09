@@ -23,7 +23,7 @@ This proves the refactoring improved the codebase."
 
 | Metric                       | Before | After | Change |
 | ---------------------------- | -----: | ----: | -----: |
-| Total Lines of Code (ts/tsx) |   1296 |  1411 |   +115 |
+| Total Lines of Code (ts/tsx) |   1296 |  1485 |   +189 |
 | Code Files (.ts/.tsx)        |      7 |    12 |     +5 |
 | Largest File (LOC)           |    417 |   367 |    -50 |
 | Files >500 lines             |      0 |     0 |      — |
@@ -42,7 +42,7 @@ This proves the refactoring improved the codebase."
 | 2   | `src/features/users/hooks/use-user-clients.ts`|    28 | Extracted hook for client fetching         |
 | 3   | `src/features/users/components/user-dialog.tsx` |    46 | Simple wrapper dialog                      |
 | 4   | `src/features/users/components/form-sections/UserSecurityFields.tsx` | 60 | Extracted password fields |
-| 5   | `src/features/users/utils.ts`              |    68 | Prisma select and simple transformation    |
+| 5   | `src/features/users/utils.ts`              |   142 | DRY Infra: Composed selections & mappers   |
 | 6   | `src/features/users/components/user-form.tsx` |   73 | Refactored: Clean orchestrator             |
 | 7   | `src/features/users/components/form-sections/UserBasicFields.tsx` | 118 | Extracted basic info fields |
 | 8   | `src/features/users/services/user-queries.ts` |   119 | Decomposed: Focused on Read operations     |
