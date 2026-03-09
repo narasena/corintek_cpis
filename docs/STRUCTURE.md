@@ -2,33 +2,41 @@
 
 > CPIS — Corintek Project Information System
 
-**Last Verified:** 2026-03-02
+**Last Verified:** 2026-03-04
 
 ## System Overview
 
-CPIS is a Next.js-based Project Information System for facility management. It tracks HVAC chiller/cooling tower operations via Log Sheets, manages projects/clients/users, and provides role-based access for internal staff (<40 users) plus CLIENT portal users.
+CPIS is a Next.js-based Project Information System for facility management. It tracks HVAC chiller/cooling tower operations via Log Sheets, manages projects/clients/users, and provides role-based access for internal staff plus CLIENT portal users.
 
 ## Directory Map
 
 ```
 cpis/
 ├── prisma/                    # Database schema (single source of truth)
+│   ├── schema/                # Modular Prisma schemas
+│   └── seed.ts                # Database seeding logic
 ├── src/
 │   ├── app/                   # Next.js App Router
-│   │   ├── (auth)/            # Route group: login pages
 │   │   ├── (main)/            # Route group: protected app pages
 │   │   │   ├── dashboard/
 │   │   │   ├── clients/
 │   │   │   ├── projects/
 │   │   │   ├── log-sheets/
 │   │   │   ├── users/
+│   │   │   ├── attendance/
+│   │   │   ├── work-reports/
 │   │   │   └── ...            # Other domains
+│   │   ├── login/             # Public login pages
+│   │   ├── test/              # Test/Playground routes
 │   │   └── api/               # EXTERNAL WEBHOOKS ONLY (Stripe, cron, etc.)
 │   ├── components/            # Shared UI (shadcn-based)
 │   │   ├── ui/                # shadcn primitives
+│   │   ├── signature/         # Digital signature components
 │   │   ├── data-table.tsx     # Generic DataTable (Tanstack Table)
 │   │   ├── crud-dialog.tsx    # Generic create/edit dialog
-│   │   └── action-cell.tsx    # Generic edit/delete dropdown
+│   │   ├── action-cell.tsx    # Generic edit/delete dropdown
+│   │   ├── camera-input.tsx   # Photo capture with compression
+│   │   └── app-sidebar.tsx    # Main navigation sidebar
 │   ├── features/              # Domain logic (vertical slices)
 │   │   ├── auth/              # actions.ts, service.ts, components/, types.ts
 │   │   ├── clients/
@@ -40,13 +48,23 @@ cpis/
 │   │   ├── work-reports/
 │   │   ├── summary-reports/
 │   │   ├── notifications/
-│   │   └── parameter-limit-profiles/  # New: limit profile management
+│   │   └── parameter-limit-profiles/
+│   ├── hooks/                 # Custom React hooks
+│   │   ├── use-image-compression.ts
+│   │   └── use-mobile.ts
 │   ├── lib/                   # Shared utilities
-│   │   ├── prisma.ts          # Prisma singleton (prevents connection exhaustion)
-│   │   ├── auth-helpers.ts    # requireActor(), getActorOrNull(), AuthenticationError
-│   │   └── action-helpers.ts  # TActionResponse, unauthorized()
-│   └── types/                 # Shared TypeScript types
+│   │   ├── prisma.ts          # Prisma singleton
+│   │   ├── auth-helpers.ts    # requireActor(), getActorOrNull()
+│   │   ├── action-helpers.ts  # TActionResponse standard
+│   │   ├── rbac.ts            # Role-Based Access Control logic
+│   │   ├── jwt.ts             # JWT handling
+│   │   └── r2-upload.ts       # Cloudflare R2 upload helpers
+│   ├── @types/                # Domain-specific TypeScript types
+│   └── types/                 # Shared/Global TypeScript types
 ├── worker/                    # Cloudflare Worker (R2 uploads)
+│   ├── src/index.ts           # Worker entry point
+│   └── wrangler.jsonc         # Worker configuration
+├── scripts/                   # Maintenance & automation scripts
 └── public/                    # Static assets
 ```
 
@@ -84,6 +102,8 @@ cpis/
 | `DataTable`            | Generic table with pagination/sorting                    | `src/components/data-table.tsx`       |
 | `CrudDialog`           | Generic dialog for create/edit forms                     | `src/components/crud-dialog.tsx`      |
 | `ActionCell`           | Dropdown menu with Ubah/Hapus                            | `src/components/action-cell.tsx`      |
+| `rbac`                 | Role-based permission checking                           | `src/lib/rbac.ts`                     |
+| `toUserResponse()`     | Standard user data mapper (strips sensitive fields)      | `src/features/users/utils.ts`         |
 | `useNotificationStore` | Zustand store for notification bell                      | `src/features/notifications/hooks.ts` |
 
 ## Integration Points

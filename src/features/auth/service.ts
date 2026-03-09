@@ -1,67 +1,83 @@
 import { prisma } from '@/lib/prisma';
-import { comparePassword } from '@/lib/auth-helpers';
 import { TUserResponse } from '@/@types/user.type';
+import { TAuthLoginInput } from '@/@types/auth.type';
+import {
+  isUserAuthValid,
+  toUserResponse,
+  userResponseSelect,
+} from '../users/utils';
+import { ERROR_MESSAGES } from './constants';
+import { secureCompare } from './crypto';
+import { logger } from '@/lib/logger';
 
 /**
  * Authenticate user with email and password
- * @param email - User email
- * @param password - Plain text password
+ * @param input - Login credentials
  * @returns User data (without password) if authentication successful
- * @throws Error if authentication fails
+ * @throws Error if authentication fails (generic error message for security)
  */
 export async function authenticateUser(
-  email: string,
-  password: string
+  input: TAuthLoginInput
 ): Promise<TUserResponse> {
-  // Find user by email
+  const { email, password } = input;
+
+  // 1. Find user by email (include password for verification and necessary relations for response)
   const user = await prisma.user.findUnique({
     where: { email },
+    select: {
+      ...userResponseSelect,
+      password: true,
+    },
   });
 
-  // Check if user exists
-  if (!user) {
-    throw new Error('Email atau kata sandi tidak valid');
+  // 2. Securely verify password (timing-attack safe mechanism encapsulated in secureCompare)
+  const isAuthValid = await secureCompare(password, user?.password);
+
+  // 3. Final validation (all failures return the same generic message to prevent account enumeration)
+  // Check both the password/existence check and the account lifecycle status.
+  if (!isAuthValid) {
+    logger.error('Auth', 'authenticateUser', 'Invalid credentials (password mismatch or user not found)', { email });
+    throw new Error(ERROR_MESSAGES.AUTHENTICATION_FAILED);
   }
 
-  // Check if user is blocked
-  if (user.isBlocked) {
-    throw new Error('Akun diblokir. Silakan hubungi administrator.');
+  // user is guaranteed to be non-null if isAuthValid is true (per secureCompare implementation)
+  if (!isUserAuthValid(user!)) {
+    logger.error('Auth', 'authenticateUser', 'User status invalid (blocked/inactive/deleted)', { email, userId: user!.id });
+    throw new Error(ERROR_MESSAGES.AUTHENTICATION_FAILED);
   }
 
-  // Check if user is active
-  if (!user.isActive) {
-    throw new Error('Akun tidak aktif. Silakan hubungi administrator.');
-  }
+  // 4. Audit Log Success (for security monitoring and audit trail)
+  logger.auth('Auth', 'authenticateUser', 'Login successful', { email, userId: user!.id, role: user!.role });
 
-  // Verify password
-  const isPasswordValid = await comparePassword(password, user.password);
-  if (!isPasswordValid) {
-    throw new Error('Email atau kata sandi tidak valid');
-  }
-
-  // Return user data without password
-  const { password: storedPassword, ...userWithoutPassword } = user;
-  void storedPassword;
-  return userWithoutPassword as TUserResponse;
+  // 5. Return validated user data (schema strips the password)
+  return toUserResponse(user!);
 }
 
 /**
- * Get user by ID (for token refresh or user info retrieval)
- * @param userId - User ID
- * @returns User data without password
+ * Validates a user for an active session by ID.
+ * Used for token refresh and session verification.
+ * 
+ * @param userId - User ID from JWT sub
+ * @returns Validated user data or null if user is not found or fails status checks
  */
-export async function getUserById(
+export async function validateSessionUser(
   userId: string
 ): Promise<TUserResponse | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
+    select: userResponseSelect,
   });
 
+  // Return null if user doesn't exist or fails authentication lifecycle validation
   if (!user) {
+    logger.error('Auth', 'validateSessionUser', 'Active session user not found', { userId });
     return null;
   }
 
-  const { password: storedPassword, ...userWithoutPassword } = user;
-  void storedPassword;
-  return userWithoutPassword as TUserResponse;
+  if (!isUserAuthValid(user)) {
+    logger.error('Auth', 'validateSessionUser', 'Session user status invalid (blocked/inactive/deleted)', { userId });
+    return null;
+  }
+
+  return toUserResponse(user);
 }

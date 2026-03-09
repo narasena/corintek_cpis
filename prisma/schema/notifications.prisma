@@ -23,6 +23,8 @@ model Notification {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  // [M-01 Standardization] Uncomment for final refactoring
+  // deletedAt DateTime?
 
   @@index([userId, isRead])
   @@map("notifications")

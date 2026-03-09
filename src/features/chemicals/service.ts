@@ -13,7 +13,7 @@ export async function createChemical(
   actor: IJwtPayload,
   data: TChemicalCreateInput
 ) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'create');
+  ensureAccess(actor.role, RbacResource.CHEMICALS, 'create');
 
   // Check for existing chemical with same name
   const existingChemical = await prisma.chemical.findFirst({
@@ -50,7 +50,7 @@ export async function updateChemical(
   actor: IJwtPayload,
   data: TChemicalUpdateInput
 ) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
+  ensureAccess(actor.role, RbacResource.CHEMICALS, 'update');
 
   const existingChemical = await prisma.chemical.findUnique({
     where: {
@@ -95,7 +95,7 @@ export async function updateChemical(
  * Delete a chemical (soft delete)
  */
 export async function deleteChemical(actor: IJwtPayload, id: string) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'delete');
+  ensureAccess(actor.role, RbacResource.CHEMICALS, 'delete');
 
   const chemical = await prisma.chemical.findUnique({
     where: { id },
@@ -119,7 +119,7 @@ export async function deleteChemical(actor: IJwtPayload, id: string) {
  * Get all non-deleted chemicals
  */
 export async function getAllChemicals(actor: IJwtPayload) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+  ensureAccess(actor.role, RbacResource.CHEMICALS, 'read');
 
   const chemicals = await prisma.chemical.findMany({
     where: {
@@ -157,7 +157,7 @@ export async function getChemicalsForLogSheet(actor: IJwtPayload) {
  * Get a single chemical by ID
  */
 export async function getChemicalById(actor: IJwtPayload, id: string) {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+  ensureAccess(actor.role, RbacResource.CHEMICALS, 'read');
 
   const chemical = await prisma.chemical.findUnique({
     where: {

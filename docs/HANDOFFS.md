@@ -1,79 +1,31 @@
-# Handover / Session RAM
+# Session Handoff — 2026-03-08
 
-## Current State
+## Current Status: M-03 Characterization & Planning Complete
 
-**Phase 6 — UI/UX Overhaul Complete** (2026-03-09)
+We have completed the discovery and planning phases for **M-03: Shared Components & Infrastructure**. The module is now ready for surgical refactoring.
 
-✅ **UI/UX Overhaul Implemented**
+### 1. What was just completed
+- **Phase 1 (Baseline):** Module inventory taken (12,688 LOC, 124 files).
+- **Phase 2 (Characterize):** 
+    - Created `src/__tests__/m03-characterization.test.tsx` covering the top 5 riskiest functions (RBAC, Search, DataTable, Error Handling, Image Pipeline).
+    - Fixed test environment issues by mocking `ResizeObserver` and `PointerEvent` in `src/__tests__/setup.ts`.
+    - Increased coverage for `MultiSelect` (90%+) and `VirtualList` (100%).
+    - Documented surprising behaviors (Double DOM rendering, Greedy RBAC matching, Memory leaks).
+- **Phase 3 (Map):** Identified structural inversion where foundational DI factories depend on feature domains.
+- **Phase 4 (Plan):** Created a 3-phase refactoring plan prioritizing resource hygiene and architectural realignment.
 
-- Refined Sidebar with pill-shaped navigation and visual separation.
-- Sticky blurred header with professional title alignment and better padding.
-- Dashboard overhaul (KPI cards for Admin, premium cards for Scoped).
-- Data Table unified toolbar (Search + Filter) and revamped pagination.
-- Addressed Tailwind v4 lint warnings and build errors ('use client').
+### 2. Known Issues / Gotchas
+- **Memory Leaks:** `CameraInput` misses `revokeObjectURL` and `SearchFilterService` cache is never cleared in hooks.
+- **Test Ambiguity:** `DataTable` renders Mobile and Desktop views simultaneously; use `getByRole` or `getAllByText` in tests.
+- **DI Inversion:** `src/lib/di/factories.ts` is currently coupled to `@/features/*`.
 
-⚠️ **Next Steps**
-
-- The user has requested to commit these changes before providing "other recommendation of improvements".
-- Awaiting next UI/UX refinement requests.
+### 3. Next Steps (Cold Start)
+1. **Execute Phase 1 of Refactoring Plan:**
+    - Fix `CameraInput` object URL leak (`useEffect` cleanup).
+    - Implement `SearchFilterService` cache invalidation in `useDataTableSearch`.
+    - Extract `ErrorHandlerService` strings to constants.
+2. Run `npm run test src/components src/lib` to verify no regressions.
 
 ---
-
-**Phase 5 — Caching Complete** (2026-03-08)
-
-**Phase 4 — Production Rollout** (COMPLETE)
-
-✅ **All Pre-Deployment Checks Passed**
-
-- Build verified (32 pages)
-- Integration tests 22/22 passing
-- All mutation actions have `revalidateTag` calls (fixed gaps)
-- Cache configuration (`next.config.ts`) correct
-- Suspense boundaries in place
-
-✅ **Documentation Complete**
-
-- `docs/PHASE_4_DEPLOYMENT.md` — Full deployment runbook
-- `docs/caching/PHASE_5_CACHING_REPORT.md` — Caching testing results
-- Staging & production rollout steps defined
-- Rollback plan documented
-- Metrics collection guide
-
-✅ **Code Ready**
-
-- Caching layer fully implemented (Phases 1-5)
-- Invalidation rules verified across 8 domains
-- Metrics telemetry optional via `NEXT_PUBLIC_CACHE_METRICS`
-- No blocking issues
-
-**Modified files (Caching):**
-
-- `src/features/cache/` - Cache infrastructure
-- `src/features/*/Cached*Service.ts` - Cached services
-- `src/features/*/actions.ts` - Actions using cached services
-- `scripts/load/k6.js` - Load test script
-- `docs/caching/` - Caching documentation
-
-## Deployment Status
-
-**Ready to deploy to QA/staging.**  
-**Next:** Follow `docs/PHASE_4_DEPLOYMENT.md` checklist.
-
-## Rollback Plan
-
-Set `cacheComponents: false` in `next.config.ts` and redeploy — instant fallback to direct service calls.
-
-## Commits
-
-- `feat: implement Next.js cache components (CG-05)` (9c6d978)
-- `docs: update caching documentation and cleanup unused docs` (3efb585)
-- `feat(cache): complete Phase 1-2 caching implementation` (a3e3f3f)
-- `feat(test): add cache integration test suite and telemetry` (a852e53)
-
-## Related Docs
-
-- `docs/CACHING.md` — Original implementation plan
-- `docs/caching/PHASE_5_CACHING_REPORT.md` — Testing results
-- `docs/caching/PHASE_4_DEPLOYMENT.md` — Deployment runbook
-- `docs/DECISIONS.md` — ADR-009, ADR-010 (caching architecture)
-- `docs/CHANGELOG.md` — v0.3.0 entry
+**Current Branch:** `refactor/global`
+**Next Action:** `refactor(m03): implement phase 1 hygiene fixes`

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 import type { IProjectDashboardCard } from '@/features/projects/types';
-import type { ICurrentUserDetails } from '@/lib/auth-helpers';
+import type { ICurrentUserDetails } from '@/features/auth/lib/user-context';
 import { canAccess, RbacResource } from '@/lib/rbac';
 import { Button } from '@/components/ui/button';
 import {

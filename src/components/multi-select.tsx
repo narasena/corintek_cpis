@@ -20,17 +20,62 @@ import {
 } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 
-export type Option = {
+export type TOption = {
   label: string;
   value: string;
 };
 
-interface MultiSelectProps {
-  options: Option[];
+interface IMultiSelectProps {
+  options: TOption[];
   selected: string[];
   onChange: (value: string[]) => void;
   className?: string;
   placeholder?: string;
+}
+
+/**
+ * Internal sub-component for rendering selected items as badges
+ */
+function MultiSelectBadge({
+  label,
+  onUnselect,
+}: {
+  label: string;
+  onUnselect: () => void;
+}) {
+  return (
+    <Badge
+      variant="secondary"
+      className="mr-1 mb-1"
+      onClick={e => {
+        e.stopPropagation();
+        onUnselect();
+      }}
+    >
+      {label}
+      <div
+        className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            onUnselect();
+          }
+        }}
+        onMouseDown={e => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onClick={e => {
+          e.preventDefault();
+          e.stopPropagation();
+          onUnselect();
+        }}
+      >
+        <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+      </div>
+    </Badge>
+  );
 }
 
 export function MultiSelect({
@@ -38,8 +83,8 @@ export function MultiSelect({
   selected,
   onChange,
   className,
-  placeholder = 'Select options...',
-}: MultiSelectProps) {
+  placeholder = 'Pilih opsi...',
+}: IMultiSelectProps) {
   const [open, setOpen] = React.useState(false);
 
   const handleUnselect = (item: string) => {
@@ -68,38 +113,11 @@ export function MultiSelect({
             {selected.map(item => {
               const option = options.find(o => o.value === item);
               return (
-                <Badge
+                <MultiSelectBadge
                   key={item}
-                  variant="secondary"
-                  className="mr-1 mb-1"
-                  onClick={e => {
-                    e.stopPropagation();
-                    handleUnselect(item);
-                  }}
-                >
-                  {option?.label ?? item}
-                  <div
-                    className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        handleUnselect(item);
-                      }
-                    }}
-                    onMouseDown={e => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onClick={e => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleUnselect(item);
-                    }}
-                  >
-                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                  </div>
-                </Badge>
+                  label={option?.label ?? item}
+                  onUnselect={() => handleUnselect(item)}
+                />
               );
             })}
           </div>
@@ -108,9 +126,9 @@ export function MultiSelect({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
         <Command>
-          <CommandInput placeholder="Search..." />
+          <CommandInput placeholder="Cari..." />
           <CommandList>
-            <CommandEmpty>No item found.</CommandEmpty>
+            <CommandEmpty>Tidak ada data ditemukan.</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
               {options.map(option => (
                 <CommandItem

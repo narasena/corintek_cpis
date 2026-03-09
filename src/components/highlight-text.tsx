@@ -1,13 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-
-/**
- * Highlight text part
- */
-interface IHighlightPart {
-  text: string;
-  isMatch: boolean;
-}
+import { highlightMatches, IHighlightPart } from '@/lib/utils/string-algorithms';
 
 /**
  * Highlight text component props
@@ -49,30 +42,7 @@ export function HighlightText(props: IHighlightTextProps): React.JSX.Element {
     return <span className={className}>{text}</span>;
   }
 
-  const normalizedText = caseInsensitive ? text.toLowerCase() : text;
-  const normalizedQuery = caseInsensitive ? query.toLowerCase() : query;
-  const parts: IHighlightPart[] = [];
-  let lastIndex = 0;
-  let index = normalizedText.indexOf(normalizedQuery, lastIndex);
-
-  while (index !== -1) {
-    if (index > lastIndex) {
-      parts.push({
-        text: text.slice(lastIndex, index),
-        isMatch: false,
-      });
-    }
-    parts.push({
-      text: text.slice(index, index + query.length),
-      isMatch: true,
-    });
-    lastIndex = index + query.length;
-    index = normalizedText.indexOf(normalizedQuery, lastIndex);
-  }
-
-  if (lastIndex < text.length) {
-    parts.push({ text: text.slice(lastIndex), isMatch: false });
-  }
+  const parts = highlightMatches(text, query, caseInsensitive);
 
   if (parts.length === 0) {
     return <span className={className}>{text}</span>;

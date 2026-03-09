@@ -29,9 +29,25 @@ vi.mock('@/features/projects/service', () => ({
   getAccessibleProjectIds: vi.fn(),
 }));
 
-vi.mock('@/lib/auth-helpers', () => ({
+vi.mock('@/features/auth/lib/user-context', () => ({
   getCurrentUserDetails: vi.fn(),
+  requireActor: vi.fn(),
 }));
+
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    user: { findUnique: vi.fn() },
+    logSheet: { findUnique: vi.fn(), delete: vi.fn() },
+    // Add other models if needed
+  },
+}));
+
+vi.mock('@/lib/auth-helpers', async (importOriginal) => {
+  const actual = await importOriginal() as any;
+  return {
+    ...actual,
+  };
+});
 
 vi.mock('@/lib/rbac', () => ({
   ensureAccess: vi.fn(),
@@ -67,6 +83,7 @@ import { revalidatePath } from 'next/cache';
 import * as logSheetService from '@/features/log-sheets/service';
 import * as projectService from '@/features/projects/service';
 import * as authHelpers from '@/lib/auth-helpers';
+import * as userContext from '@/features/auth/lib/user-context';
 
 import {
   getLogSheetsByProjectAction,
@@ -93,6 +110,7 @@ const mockRevalidatePath = revalidatePath as any;
 const mockLogSheetService = logSheetService as any;
 const mockProjectService = projectService as any;
 const mockAuthHelpers = authHelpers as any;
+const mockUserContext = userContext as any;
 
 const validUUID = '123e4567-e89b-12d3-a456-426614174000';
 const anotherUUID = '223e4567-e89b-12d3-a456-426614174001';
@@ -106,13 +124,30 @@ function createMockActor(overrides?: Partial<IJwtPayload>): IJwtPayload {
   };
 }
 
+import { AuthenticationError } from '@/lib/auth-helpers';
+import {
+  getCurrentUserDetails,
+  requireActor,
+} from '@/features/auth/lib/user-context';
+
 function mockUser(role: string = 'TECHNICIAN') {
-  mockAuthHelpers.getCurrentUserDetails.mockResolvedValue({
+  const payload = {
     id: validUUID,
     email: 'test@example.com',
     role,
-  });
+  };
+  mockUserContext.getCurrentUserDetails.mockResolvedValue(payload);
+  mockUserContext.requireActor.mockResolvedValue(payload);
 }
+
+function mockGuest() {
+  mockUserContext.getCurrentUserDetails.mockResolvedValue(null);
+  mockUserContext.requireActor.mockRejectedValue(new AuthenticationError());
+}
+
+beforeAll(() => {
+  vi.stubEnv('DATABASE_URL', 'postgresql://user:password@localhost:5432/db');
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -147,7 +182,7 @@ describe('getLogSheetsByProjectAction (characterization)', () => {
   });
 
   it('returns error when user not authenticated', async () => {
-    mockAuthHelpers.getCurrentUserDetails.mockResolvedValue(null);
+    mockGuest();
 
     const result = await getLogSheetsByProjectAction(anotherUUID);
 
@@ -290,6 +325,11 @@ describe('updateLogSheetStatusAction (characterization)', () => {
     mockUser('TECHNICIAN');
     const mockLogSheet = { id: validUUID, projectId: anotherUUID };
     mockLogSheetService.updateLogSheetStatus.mockResolvedValue(mockLogSheet);
+    mockLogSheetService.getLogSheetDetail.mockResolvedValue({
+      id: validUUID,
+      entries: [],
+      project: { assignments: [] },
+    });
     mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
     mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
     vi.mocked(ensureAccess).mockImplementation(() => {});
@@ -305,6 +345,11 @@ describe('updateLogSheetStatusAction (characterization)', () => {
     mockUser('ADMIN');
     const mockLogSheet = { id: validUUID, projectId: anotherUUID };
     mockLogSheetService.updateLogSheetStatus.mockResolvedValue(mockLogSheet);
+    mockLogSheetService.getLogSheetDetail.mockResolvedValue({
+      id: validUUID,
+      entries: [],
+      project: { assignments: [] },
+    });
     mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
     mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
     vi.mocked(ensureAccess).mockImplementation(() => {});
@@ -322,6 +367,11 @@ describe('submitLogSheetAction (characterization)', () => {
     mockUser('TECHNICIAN');
     const mockLogSheet = { id: validUUID, projectId: anotherUUID };
     mockLogSheetService.updateLogSheetStatus.mockResolvedValue(mockLogSheet);
+    mockLogSheetService.getLogSheetDetail.mockResolvedValue({
+      id: validUUID,
+      entries: [],
+      project: { assignments: [] },
+    });
     mockLogSheetService.validateLogSheetForSubmission.mockResolvedValue(
       undefined
     );
@@ -344,6 +394,11 @@ describe('approveLogSheetAction (characterization)', () => {
     mockUser('ADMIN');
     const mockLogSheet = { id: validUUID, projectId: anotherUUID };
     mockLogSheetService.updateLogSheetStatus.mockResolvedValue(mockLogSheet);
+    mockLogSheetService.getLogSheetDetail.mockResolvedValue({
+      id: validUUID,
+      entries: [],
+      project: { assignments: [] },
+    });
     mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
     mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
     vi.mocked(ensureAccess).mockImplementation(() => {});
@@ -819,7 +874,7 @@ describe('R2 Upload Failure Tests (P1 Critical)', () => {
       });
 
       expect(result.success).toBe(true);
-      expect((result as any).url).toContain('r2-worker.example.com');
+      expect((result as any).data.url).toContain('r2-worker.example.com');
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('r2-worker.example.com'),
         expect.objectContaining({
@@ -936,7 +991,7 @@ describe('R2 Upload Failure Tests (P1 Critical)', () => {
       const result = await uploadLogSheetImageAction(formData);
 
       expect(result.success).toBe(true);
-      expect((result as any).url).toContain('r2-worker.example.com');
+      expect((result as any).data.url).toContain('r2-worker.example.com');
     });
 
     it('sanitizes filename to prevent path traversal', async () => {

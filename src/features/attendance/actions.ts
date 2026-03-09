@@ -1,22 +1,12 @@
 'use server';
 
-import { revalidatePath, revalidateTag } from 'next/cache';
-import { getCurrentUser } from '@/lib/auth-helpers';
+import { revalidatePath } from 'next/cache';
 import { attendanceListFiltersSchema } from './types';
 import * as service from './service';
-import { ECacheTag } from '../cache/tags';
-
-type TActionResponse<T = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string };
-
-function toUserError(error: unknown, fallback: string) {
-  if (error instanceof Error) {
-    if (error.message.includes('Cannot read properties')) return fallback;
-    return error.message;
-  }
-  return fallback;
-}
+import { actionFactory } from '@/features/auth/di';
+import { RbacResource } from '@/lib/rbac';
+import { z } from 'zod/v4';
+import { uploadToR2 } from '@/lib/r2-upload';
 
 function getJakartaDateLocal(date: Date) {
   return new Intl.DateTimeFormat('en-CA', {
@@ -27,185 +17,130 @@ function getJakartaDateLocal(date: Date) {
   }).format(date);
 }
 
-async function uploadAttendancePhoto(
-  file: File,
-  userId: string,
-  dateLocal: string,
-  kind: 'clock-in' | 'clock-out'
-) {
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const workerUrl = process.env.R2_WORKER_URL;
-  const authSecret = process.env.R2_AUTH_SECRET;
-
-  if (!workerUrl || !authSecret) {
-    throw new Error('Server configuration error: Missing R2 credentials');
-  }
-
-  const sanitizedName = (file.name || 'photo').replace(/[^a-zA-Z0-9.-]/g, '_');
-  const key = `attendance/${userId}/${dateLocal}/${kind}_${Date.now()}_${sanitizedName}`;
-
-  const response = await fetch(`${workerUrl}/${key}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${authSecret}`,
-      'Content-Type': file.type,
-    },
-    body: buffer,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[CPIS-ERROR] Attendance.Upload:', {
-      status: response.status,
-      statusText: response.statusText,
-      body: errorText,
-    });
-    throw new Error(`Upload failed: ${response.statusText}`);
-  }
-
-  return `${workerUrl}/${key}`;
-}
-
-export async function getTodayAttendanceAction(): Promise<TActionResponse> {
-  const user = await getCurrentUser();
-  if (!user) return { success: false, error: 'Unauthorized' };
-
-  try {
+/**
+ * Server Action: Get today's attendance status
+ */
+export const getTodayAttendanceAction = actionFactory.protected(
+  async ({ actor }) => {
     const dateLocal = getJakartaDateLocal(new Date());
-    const data = await service.getTodayAttendance(user.id, dateLocal);
-    return { success: true, data };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Attendance.GetToday:', error);
-    return {
-      success: false,
-      error: toUserError(
-        error,
-        'Terjadi kesalahan server. Coba muat ulang halaman.'
-      ),
-    };
+    return service.getTodayAttendance(actor.id, dateLocal);
+  },
+  {
+    metadata: {
+      rbac: { resource: RbacResource.ATTENDANCE, capability: 'read' },
+    },
   }
-}
+);
 
-export async function clockInAction(
-  formData: FormData
-): Promise<TActionResponse> {
-  const user = await getCurrentUser();
-  if (!user) return { success: false, error: 'Unauthorized' };
-
-  try {
-    const photo = formData.get('photo') as File | null;
+/**
+ * Server Action: Clock in with photo
+ */
+export const clockInAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const photo = input.get('photo') as File | null;
     if (!photo || !photo.size) throw new Error('Foto wajib diisi');
 
     const now = new Date();
     const dateLocal = getJakartaDateLocal(now);
-    const photoUrl = await uploadAttendancePhoto(
-      photo,
-      user.id,
-      dateLocal,
-      'clock-in'
-    );
+    
+    const buffer = Buffer.from(await photo.arrayBuffer());
+    const sanitizedName = (photo.name || 'photo').replace(/[^a-zA-Z0-9.-]/g, '_');
+    const key = `attendance/${actor.id}/${dateLocal}/clock-in_${Date.now()}_${sanitizedName}`;
+
+    const photoUrl = await uploadToR2({
+      key,
+      body: buffer,
+      contentType: photo.type,
+    });
 
     const data = await service.createClockIn({
-      userId: user.id,
+      userId: actor.id,
       dateLocal,
       clockInAt: now,
       clockInPhotoUrl: photoUrl,
     });
 
-    // CG-05: Cache invalidation
-    revalidateTag(ECacheTag.ATTENDANCE, 'max');
     revalidatePath('/attendance');
     revalidatePath('/attendance/admin');
+    revalidatePath('/');
 
-    return { success: true, data };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Attendance.ClockIn:', error);
-    return {
-      success: false,
-      error: toUserError(error, 'Gagal absen masuk'),
-    };
+    return data;
+  },
+  {
+    metadata: {
+      rbac: { resource: RbacResource.ATTENDANCE, capability: 'create' },
+    },
   }
-}
+);
 
-export async function clockOutAction(
-  formData: FormData
-): Promise<TActionResponse> {
-  const user = await getCurrentUser();
-  if (!user) return { success: false, error: 'Unauthorized' };
-
-  try {
-    const photo = formData.get('photo') as File | null;
+/**
+ * Server Action: Clock out with photo
+ */
+export const clockOutAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const photo = input.get('photo') as File | null;
     if (!photo || !photo.size) throw new Error('Foto wajib diisi');
 
     const now = new Date();
     const dateLocal = getJakartaDateLocal(now);
-    const photoUrl = await uploadAttendancePhoto(
-      photo,
-      user.id,
-      dateLocal,
-      'clock-out'
-    );
+    
+    const buffer = Buffer.from(await photo.arrayBuffer());
+    const sanitizedName = (photo.name || 'photo').replace(/[^a-zA-Z0-9.-]/g, '_');
+    const key = `attendance/${actor.id}/${dateLocal}/clock-out_${Date.now()}_${sanitizedName}`;
+
+    const photoUrl = await uploadToR2({
+      key,
+      body: buffer,
+      contentType: photo.type,
+    });
 
     const data = await service.createClockOut({
-      userId: user.id,
+      userId: actor.id,
       dateLocal,
       clockOutAt: now,
       clockOutPhotoUrl: photoUrl,
     });
 
-    // CG-05: Cache invalidation
-    revalidateTag(ECacheTag.ATTENDANCE, 'max');
     revalidatePath('/attendance');
     revalidatePath('/attendance/admin');
+    revalidatePath('/');
 
-    return { success: true, data };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Attendance.ClockOut:', error);
-    return {
-      success: false,
-      error: toUserError(error, 'Gagal absen pulang'),
-    };
+    return data;
+  },
+  {
+    metadata: {
+      rbac: { resource: RbacResource.ATTENDANCE, capability: 'update' },
+    },
   }
-}
+);
 
-export async function getAttendanceListAction(
-  filters: unknown
-): Promise<TActionResponse> {
-  const user = await getCurrentUser();
-  if (!user) return { success: false, error: 'Unauthorized' };
-
-  const parsed = attendanceListFiltersSchema.safeParse(filters);
-  if (!parsed.success) return { success: false, error: 'Filter tidak valid' };
-
-  try {
-    const data = await service.listAttendance(user, parsed.data);
-    return { success: true, data };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Attendance.List:', error);
-    return {
-      success: false,
-      error: toUserError(error, 'Gagal mengambil daftar absensi'),
-    };
+/**
+ * Server Action: List attendance with filters
+ */
+export const getAttendanceListAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    return service.listAttendance(actor, input);
+  },
+  {
+    schema: attendanceListFiltersSchema,
+    metadata: {
+      rbac: { resource: RbacResource.ATTENDANCE, capability: 'read' },
+    },
   }
-}
+);
 
-export async function exportAttendanceCsvAction(
-  filters: unknown
-): Promise<TActionResponse<{ csv: string }>> {
-  const user = await getCurrentUser();
-  if (!user) return { success: false, error: 'Unauthorized' };
-
-  const parsed = attendanceListFiltersSchema.safeParse(filters);
-  if (!parsed.success) return { success: false, error: 'Filter tidak valid' };
-
-  try {
-    const csv = await service.exportAttendanceCsv(user, parsed.data);
-    return { success: true, data: { csv } };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Attendance.ExportCsv:', error);
-    return {
-      success: false,
-      error: toUserError(error, 'Gagal export CSV'),
-    };
+/**
+ * Server Action: Export attendance to CSV
+ */
+export const exportAttendanceCsvAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const csv = await service.exportAttendanceCsv(actor, input);
+    return { csv };
+  },
+  {
+    schema: attendanceListFiltersSchema,
+    metadata: {
+      rbac: { resource: RbacResource.ATTENDANCE, capability: 'read' },
+    },
   }
-}
+);

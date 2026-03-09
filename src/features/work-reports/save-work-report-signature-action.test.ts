@@ -1,140 +1,102 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
 import { saveWorkReportSignatureAction } from './actions';
-import {
-  createWorkReportSignatureModule,
-  type TWorkReportSignatureRole,
-} from './signature';
+import * as service from './service';
 
+// Mock dependencies
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
-vi.mock('@/lib/auth-helpers', () => ({
-  getCurrentUserDetails: vi.fn(),
+vi.mock('@/features/auth/lib/user-context', () => ({
+  requireActor: vi.fn(),
 }));
 
-vi.mock('@/lib/rbac', () => ({
-  ensureAccess: vi.fn(),
-  RbacResource: { WORK_REPORTS: 'WORK_REPORTS' },
+vi.mock('./service', () => ({
+  saveWorkReportSignature: vi.fn(),
 }));
 
-type TSignatureModule = typeof import('./signature');
-
-vi.mock('./signature', async () => {
-  const actual = await vi.importActual<TSignatureModule>('./signature');
-  return {
-    ...actual,
-    createWorkReportSignatureModule: vi.fn(),
-  };
-});
-
-const getCurrentUserDetailsMock = vi.mocked(
-  await import('@/lib/auth-helpers').then(m => m.getCurrentUserDetails)
-);
-
-const ensureAccessMock = vi.mocked(
-  await import('@/lib/rbac').then(m => m.ensureAccess)
-);
-
-const createModuleMock = vi.mocked(
-  await import('./signature').then(m => m.createWorkReportSignatureModule)
-);
-
-function createSignatureModuleStub(projectId = 'project-1') {
-  return {
-    signatureService: {
-      signWorkReport: vi.fn().mockResolvedValue({
-        report: { id: 'wr-1', projectId },
-      }),
-    },
-  } as unknown as ReturnType<typeof createWorkReportSignatureModule>;
-}
+import { requireActor } from '@/features/auth/lib/user-context';
 
 describe('saveWorkReportSignatureAction', () => {
+  const mockActor = { id: 'user-1', email: 'user@example.com', role: 'TECHNICIAN' };
+  const validPayload = {
+    workReportId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    dataUrl: 'data:image/png;base64,fake-data',
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('returns Unauthorized when actor is missing', async () => {
-    getCurrentUserDetailsMock.mockResolvedValue(null);
+    // Define AuthenticationError class matching the one in auth-helpers
+    class AuthenticationError extends Error {
+      constructor(message = 'Unauthorized') {
+        super(message);
+        this.name = 'AuthenticationError';
+      }
+    }
+    
+    vi.mocked(requireActor).mockRejectedValueOnce(new AuthenticationError());
 
-    const result = await saveWorkReportSignatureAction({
-      workReportId: 'wr-1',
-      signatureRole: 'TECHNICIAN' as TWorkReportSignatureRole,
-      dataUrl: 'data:image/png;base64,AAA',
-    });
+    const result = await saveWorkReportSignatureAction(validPayload);
 
-    expect(result).toEqual({ success: false, message: 'Unauthorized' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBe('Unauthorized');
+    }
   });
 
   it('calls domain service and revalidates paths on success', async () => {
-    getCurrentUserDetailsMock.mockResolvedValue({
-      id: 'user-1',
-      email: 'user@example.com',
-      role: 'TECHNICIAN',
-    });
-
-    const moduleStub = createSignatureModuleStub('project-123');
-    createModuleMock.mockReturnValue(moduleStub);
-
-    const result = await saveWorkReportSignatureAction({
-      workReportId: '00000000-0000-0000-0000-000000000000',
-      signatureRole: 'TECHNICIAN' as TWorkReportSignatureRole,
-      dataUrl: 'data:image/png;base64,AAA',
-    });
-
-    expect(ensureAccessMock).toHaveBeenCalledWith(
-      'TECHNICIAN',
-      'WORK_REPORTS',
-      'update'
+    vi.mocked(requireActor).mockResolvedValueOnce(mockActor as any);
+    const mockResult = {
+      id: 'sig-1',
+      workReportId: validPayload.workReportId,
+      projectId: 'proj-1',
+    };
+    vi.mocked(service.saveWorkReportSignature).mockResolvedValueOnce(
+      mockResult as any
     );
 
-    expect(moduleStub.signatureService.signWorkReport).toHaveBeenCalledWith({
-      actor: {
-        userId: 'user-1',
-        role: 'TECHNICIAN',
-        email: 'user@example.com',
-      },
-      workReportId: '00000000-0000-0000-0000-000000000000',
-      role: 'TECHNICIAN',
-      dataUrl: 'data:image/png;base64,AAA',
-    });
+    const { revalidatePath } = await import('next/cache');
 
-    expect(result).toEqual({ success: true });
+    const result = await saveWorkReportSignatureAction(validPayload);
+
+    expect(result.success).toBe(true);
+    expect(service.saveWorkReportSignature).toHaveBeenCalledWith(
+      mockActor,
+      validPayload
+    );
+    expect(revalidatePath).toHaveBeenCalledWith('/projects/proj-1');
   });
 
   it('returns validation error message when input is invalid', async () => {
-    getCurrentUserDetailsMock.mockResolvedValue({
-      id: 'user-1',
-      email: 'user@example.com',
-      role: 'TECHNICIAN',
-    });
-
-    const result = await saveWorkReportSignatureAction({
+    vi.mocked(requireActor).mockResolvedValueOnce(mockActor as any);
+    const invalidPayload = {
       workReportId: 'not-a-uuid',
-      signatureRole: 'TECHNICIAN' as TWorkReportSignatureRole,
-      dataUrl: 'invalid-data-url',
-    });
+      dataUrl: 'not-a-data-url',
+    };
+
+    const result = await saveWorkReportSignatureAction(invalidPayload as any);
 
     expect(result.success).toBe(false);
-    expect(typeof result.message).toBe('string');
+    if (!result.success) {
+      expect(result.error).toBeDefined();
+    }
   });
 
   it('returns validation error details when payload is invalid', async () => {
-    getCurrentUserDetailsMock.mockResolvedValue({
-      id: 'user-1',
-      email: 'user@example.com',
-      role: 'TECHNICIAN',
-    });
+    vi.mocked(requireActor).mockResolvedValueOnce(mockActor as any);
+    const invalidPayload = {
+      workReportId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      // dataUrl missing
+    };
 
-    const result = await saveWorkReportSignatureAction({
-      workReportId: 'not-a-uuid',
-      signatureRole: 'TECHNICIAN' as TWorkReportSignatureRole,
-      dataUrl: 'invalid-data-url',
-    });
+    const result = await saveWorkReportSignatureAction(invalidPayload as any);
 
     expect(result.success).toBe(false);
-    expect(result.message).toContain('Work report ID tidak valid');
+    if (!result.success) {
+      expect(result.error).toContain('expected string');
+    }
   });
 });

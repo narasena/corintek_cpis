@@ -11,7 +11,7 @@ import { ensureAccess, RbacResource } from '@/lib/rbac';
  * Create a new machine for a project
  */
 export async function createMachine(actor: IJwtPayload, data: TCreateMachine) {
-  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'update');
+  ensureAccess(actor.role, RbacResource.MACHINES, 'update');
   return await prisma.machine.create({
     data: {
       projectId: data.projectId,
@@ -43,7 +43,7 @@ export async function updateMachine(
   id: string,
   data: TUpdateMachine
 ) {
-  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'update');
+  ensureAccess(actor.role, RbacResource.MACHINES, 'update');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id: _id, ...updateData } = data;
 
@@ -81,7 +81,7 @@ export async function updateMachine(
  * Soft delete a machine (set deletedAt timestamp)
  */
 export async function deleteMachine(actor: IJwtPayload, id: string) {
-  ensureAccess(actor.role, RbacResource.PROJECTS_ADMIN, 'delete');
+  ensureAccess(actor.role, RbacResource.MACHINES, 'delete');
   return await prisma.machine.update({
     where: { id },
     data: {

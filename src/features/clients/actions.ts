@@ -7,182 +7,88 @@ import {
   TClientUpdateInput,
   TClientResponse,
 } from '@/@types/client.type';
-import { getCacheContainer } from '@/features/cache/di';
-import { revalidatePath, revalidateTag } from 'next/cache';
-import { getCurrentUser } from '@/lib/auth-helpers';
-import { withMetrics } from '../cache/metrics';
-import { ECacheTag } from '../cache/tags';
-
-type TActionResponse<T = unknown> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-};
+import {
+  createClient,
+  getAllClients,
+  getClientById,
+  updateClient,
+  deleteClient,
+} from './service';
+import { revalidatePath } from 'next/cache';
+import { actionFactory } from '@/features/auth/di';
+import { z } from 'zod/v4';
+import { RbacResource } from '@/lib/rbac';
 
 /**
  * Server Action: Create a new client
  */
-export async function createClientAction(
-  input: TClientCreateInput
-): Promise<TActionResponse<TClientResponse>> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    // Validate input
-    const validatedData = clientCreateSchema.parse(input);
-
-    // Call service
-    const { clients } = getCacheContainer();
-    const client = await clients.createClient(actor, validatedData);
-
-    // CG-05: Cache invalidation - tag-based
-    revalidateTag(ECacheTag.CLIENTS, 'max');
-    // revalidatePath('/clients'); // fallback
-
-    return {
-      success: true,
-      data: client,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Clients.Create:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Gagal membuat klien',
-    };
+export const createClientAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const client = await createClient(actor, input);
+    revalidatePath('/clients');
+    return client;
+  },
+  {
+    schema: clientCreateSchema,
+    metadata: { rbac: { resource: RbacResource.CLIENTS, capability: 'create' } },
   }
-}
+);
 
 /**
  * Server Action: Get all clients
  */
-export async function getAllClientsAction(): Promise<
-  TActionResponse<TClientResponse[]>
-> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    const { clients: clientsService } = getCacheContainer();
-    const clients = await withMetrics(ECacheTag.CLIENTS, async () =>
-      clientsService.getAllClients(actor)
-    );
-
-    return {
-      success: true,
-      data: clients,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Clients.List:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal mengambil data klien',
-    };
+export const getAllClientsAction = actionFactory.protected(
+  async ({ actor }) => {
+    return getAllClients(actor);
+  },
+  {
+    metadata: { rbac: { resource: RbacResource.CLIENTS, capability: 'read' } },
   }
-}
+);
 
 /**
  * Server Action: Get client by ID
  */
-export async function getClientByIdAction(
-  id: string
-): Promise<TActionResponse<TClientResponse>> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    if (!id || typeof id !== 'string') {
-      throw new Error('ID klien tidak valid');
-    }
-
-    const { clients } = getCacheContainer();
-    const client = await withMetrics(ECacheTag.CLIENTS, async () =>
-      clients.getClientById(actor, id)
-    );
-
-    return {
-      success: true,
-      data: client,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Clients.GetById:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Gagal mengambil data klien',
-    };
+export const getClientByIdAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    return getClientById(actor, input);
+  },
+  {
+    schema: z.string().min(1, 'ID klien tidak valid'),
+    metadata: { rbac: { resource: RbacResource.CLIENTS, capability: 'read' } },
   }
-}
+);
 
 /**
  * Server Action: Update client
  */
-export async function updateClientAction(
-  id: string,
-  input: TClientUpdateInput
-): Promise<TActionResponse<TClientResponse>> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    if (!id || typeof id !== 'string') {
-      throw new Error('ID klien tidak valid');
-    }
-
-    // Validate input
-    const validatedData = clientUpdateSchema.parse(input);
-
-    // Call service
-    const { clients } = getCacheContainer();
-    const client = await clients.updateClient(actor, id, validatedData);
-
-    // CG-05: Cache invalidation - tag-based
-    revalidateTag(ECacheTag.CLIENTS, 'max');
-    // revalidatePath('/clients'); // fallback
-    // revalidatePath(`/clients/${id}`); // fallback for detail page
-
-    return {
-      success: true,
-      data: client,
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Clients.Update:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Gagal memperbarui klien',
-    };
+export const updateClientAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const client = await updateClient(actor, input.id, input.data);
+    revalidatePath('/clients');
+    revalidatePath(`/clients/${input.id}`);
+    return client;
+  },
+  {
+    schema: z.object({
+      id: z.string().min(1, 'ID klien tidak valid'),
+      data: clientUpdateSchema,
+    }),
+    metadata: { rbac: { resource: RbacResource.CLIENTS, capability: 'update' } },
   }
-}
+);
 
 /**
  * Server Action: Delete client (soft delete)
  */
-export async function deleteClientAction(id: string): Promise<TActionResponse> {
-  const actor = await getCurrentUser();
-  if (!actor) return { success: false, error: 'Unauthorized' };
-
-  try {
-    if (!id || typeof id !== 'string') {
-      throw new Error('ID klien tidak valid');
-    }
-
-    const { clients } = getCacheContainer();
-    await clients.deleteClient(actor, id);
-
-    // CG-05: Cache invalidation - tag-based
-    revalidateTag(ECacheTag.CLIENTS, 'max');
-    // revalidatePath('/clients'); // fallback
-
-    return {
-      success: true,
-      data: { id },
-    };
-  } catch (error) {
-    console.error('[CPIS-ERROR] Clients.Delete:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Gagal menghapus klien',
-    };
+export const deleteClientAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    await deleteClient(actor, input);
+    revalidatePath('/clients');
+    return { id: input };
+  },
+  {
+    schema: z.string().min(1, 'ID klien tidak valid'),
+    metadata: { rbac: { resource: RbacResource.CLIENTS, capability: 'delete' } },
   }
-}
+);

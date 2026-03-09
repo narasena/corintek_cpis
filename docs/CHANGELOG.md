@@ -24,6 +24,57 @@
 
 ---
 
+## v0.3.0 — Caching Layer (2026-03-08)
+
+**Branch:** `feat/caching/nextjs-cache-components` (merged)
+
+### Next.js 16 Cache Components (CG-05)
+
+- [x] Enable `cacheComponents` in Next.js config
+- [x] Create cache infrastructure: `ECacheTag` enum, TTL profiles
+- [x] Implement cached service wrappers for 5 domains:
+  - [x] Parameters (`CachedParameterService`)
+  - [x] Clients (`CachedClientService`)
+  - [x] Projects (`CachedProjectService`)
+  - [x] Users (`CachedUserService`)
+  - [x] Dashboard (`CachedDashboardService`)
+- [x] Refactor all actions to use cached services
+- [x] Add tag-based invalidation (`revalidateTag()`) on all mutations
+- [x] Implement helper function pattern (Next.js 16 requires `'use cache'` outside class methods)
+- [x] Add Suspense boundaries to layout and pages to handle uncached async calls
+- [x] **Testing:** Integration test suite (22 tests) + metrics telemetry
+- [x] **Invalidation fixes:** Completed coverage across all mutation actions:
+  - Projects: `upsertProjectParameterOverrideAction` now invalidates `PROJECTS` and `PROJECTS_DASHBOARD`
+  - Parameters: `deleteParameterAction` now invalidates `PARAMETERS_LIMITS`
+  - Work Reports: photo/signature actions now invalidate `WORK_REPORTS` and `DASHBOARD_ACTIVITIES`
+- [x] Build passes: `npm run build` succeeds (32 pages, TypeScript clean)
+- [x] **Deployment:** Ready for QA/staging (see `docs/PHASE_4_DEPLOYMENT.md`)
+
+**Technical Details:**
+
+- Cache strategy: tag-based invalidation with graduated TTL profiles
+- Build-time cache Components enabled (`cacheComponents: true` in next.config)
+- All read-heavy service methods cached; writes bypass cache
+- Metrics collection available via `NEXT_PUBLIC_CACHE_METRICS=true`
+- Rollback available via config flag (`cacheComponents: false`)
+
+---
+
+## v0.3.0 — Shared Components & Infrastructure Baseline (2026-03-08)
+
+**Branch:** `refactor/global`
+
+### M-03: Foundation Characterization & Planning
+
+- [x] **Baseline Analysis:** Inventoried 12,688 LOC across 124 files in M-03.
+- [x] **Characterization Suite:** Implemented comprehensive logic lock for RBAC, Search, DataTable, and Image Pipelines.
+- [x] **Test Infrastructure:** Standardized `ResizeObserver` and `PointerEvent` mocks in global setup.
+- [x] **Coverage Improvements:** Increased coverage for `MultiSelect` (90%+) and `VirtualList` (100%).
+- [x] **Planning:** Identified structural inversion in DI and memory leaks in ObjectURL handling.
+- [x] **Artifacts:** Generated Baseline, Findings, Map, Risk, and Refactoring Plan documents.
+
+---
+
 ## v0.2.0 — Client Portal & Notifications (2026-02-25)
 
 **Branch:** `feat/client-portal-cp01` (merged to `development_v2`)
@@ -66,42 +117,6 @@
 - [x] Limit Evaluation Adapter for Log Sheets
 - [x] Notifications integrated into Log Sheet submission flow
 - [x] UI: Header Bell/Dropdown for notifications
-
----
-
-## v0.3.0 — Caching Layer (2026-03-08)
-
-**Branch:** `feat/caching/nextjs-cache-components` (merged)
-
-### Next.js 16 Cache Components (CG-05)
-
-- [x] Enable `cacheComponents` in Next.js config
-- [x] Create cache infrastructure: `ECacheTag` enum, TTL profiles
-- [x] Implement cached service wrappers for 5 domains:
-  - [x] Parameters (`CachedParameterService`)
-  - [x] Clients (`CachedClientService`)
-  - [x] Projects (`CachedProjectService`)
-  - [x] Users (`CachedUserService`)
-  - [x] Dashboard (`CachedDashboardService`)
-- [x] Refactor all actions to use cached services
-- [x] Add tag-based invalidation (`revalidateTag()`) on all mutations
-- [x] Implement helper function pattern (Next.js 16 requires `'use cache'` outside class methods)
-- [x] Add Suspense boundaries to layout and pages to handle uncached async calls
-- [x] **Testing:** Integration test suite (22 tests) + metrics telemetry
-- [x] **Invalidation fixes:** Completed coverage across all mutation actions:
-  - Projects: `upsertProjectParameterOverrideAction` now invalidates `PROJECTS` and `PROJECTS_DASHBOARD`
-  - Parameters: `deleteParameterAction` now invalidates `PARAMETERS_LIMITS`
-  - Work Reports: photo/signature actions now invalidate `WORK_REPORTS` and `DASHBOARD_ACTIVITIES`
-- [x] Build passes: `npm run build` succeeds (32 pages, TypeScript clean)
-- [x] **Deployment:** Ready for QA/staging (see `docs/PHASE_4_DEPLOYMENT.md`)
-
-**Technical Details:**
-
-- Cache strategy: tag-based invalidation with graduated TTL profiles
-- Build-time cache Components enabled (`cacheComponents: true` in next.config)
-- All read-heavy service methods cached; writes bypass cache
-- Metrics collection available via `NEXT_PUBLIC_CACHE_METRICS=true`
-- Rollback available via config flag (`cacheComponents: false`)
 
 ---
 

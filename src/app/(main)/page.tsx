@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { getCurrentUserDetails } from '@/lib/auth-helpers';
+import { getCurrentUserDetails } from '@/features/auth/lib/user-context';
 import { getDashboardProjects } from '@/features/projects/service';
 import { DashboardScoped } from './components/dashboard-scoped';
 import { AnalyticsDashboard } from './_components/analytics-dashboard';

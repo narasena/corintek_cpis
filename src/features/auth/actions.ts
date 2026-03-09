@@ -1,13 +1,14 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { authenticateUser } from './service';
-import { generateToken } from '@/lib/jwt';
-import { getAuthCookieName } from '@/lib/auth-helpers';
+import { setAuthSession, deleteAuthSession } from '@/lib/auth-helpers';
 import { authLoginSchema, TAuthLoginResponse } from '@/@types/auth.type';
 import { TUserRole } from '@/@types/user.type';
+import { AUTH_ROUTES, ERROR_MESSAGES, SUCCESS_MESSAGES } from './constants';
+import { isZodError, formatZodError } from '@/lib/utils/validation';
 
 /**
  * Server action for user login
@@ -27,36 +28,22 @@ export async function loginAction(
     const validatedData = authLoginSchema.parse({ email, password });
 
     // Authenticate user
-    const user = await authenticateUser(
-      validatedData.email,
-      validatedData.password
-    );
+    const user = await authenticateUser(validatedData);
 
-    // Generate JWT token
-    const token = await generateToken({
+    // Create session (encapsulates JWT generation and cookie management)
+    await setAuthSession({
       id: user.id,
       email: user.email,
       role: user.role as TUserRole,
     });
 
-    // Set httpOnly cookie
-    const cookieStore = await cookies();
-    cookieStore.set(getAuthCookieName(), token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    });
-
     // Revalidate paths
-    revalidatePath('/');
-    revalidatePath('/users');
+    revalidatePath(AUTH_ROUTES.HOME);
 
     // Return success - client will handle redirect
     return {
       success: true,
-      message: 'Login berhasil',
+      message: SUCCESS_MESSAGES.LOGIN_SUCCESS,
       user: {
         id: user.id,
         email: user.email,
@@ -65,10 +52,20 @@ export async function loginAction(
         role: user.role,
       },
     };
-  } catch (error) {
+  } catch (error: any) {
+    let message = ERROR_MESSAGES.LOGIN_FAILED;
+
+    if (isZodError(error)) {
+      message = formatZodError(error, ERROR_MESSAGES.INPUT_INVALID);
+    } else if (error instanceof Error) {
+      message = error.message;
+    }
+
+    console.error('[CPIS-ERROR] Auth.loginAction', error);
+
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Login gagal',
+      message,
     };
   }
 }
@@ -77,8 +74,7 @@ export async function loginAction(
  * Server action for user logout
  */
 export async function logoutAction(): Promise<void> {
-  const cookieStore = await cookies();
-  cookieStore.delete(getAuthCookieName());
-  revalidatePath('/');
-  redirect('/login');
+  await deleteAuthSession();
+  revalidatePath(AUTH_ROUTES.HOME);
+  redirect(AUTH_ROUTES.LOGIN);
 }

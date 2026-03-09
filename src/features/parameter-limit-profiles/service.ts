@@ -47,7 +47,7 @@ class ParameterLimitProfileService implements IParameterLimitProfileService {
     actor: IJwtPayload,
     _filters?: TGetParameterLimitProfilesFilter
   ): Promise<IParameterLimitProfile[]> {
-    this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+    this.rbac.ensureAccess(actor.role, RbacResource.PARAMETERS, 'read');
     return this.repository.findAll();
   }
 
@@ -55,7 +55,7 @@ class ParameterLimitProfileService implements IParameterLimitProfileService {
     actor: IJwtPayload,
     id: string
   ): Promise<IProfileWithLimits> {
-    this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+    this.rbac.ensureAccess(actor.role, RbacResource.PARAMETERS, 'read');
     const profile = await this.repository.findByIdWithLimits(id);
     if (!profile) {
       throw new Error('Profil tidak ditemukan');
@@ -67,7 +67,7 @@ class ParameterLimitProfileService implements IParameterLimitProfileService {
     actor: IJwtPayload,
     data: TCreateParameterLimitProfile
   ): Promise<ICreateProfileResult> {
-    this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'create');
+    this.rbac.ensureAccess(actor.role, RbacResource.PARAMETERS, 'create');
     await this.validateNameUnique(data.name);
 
     if (data.isDefault) {
@@ -82,7 +82,7 @@ class ParameterLimitProfileService implements IParameterLimitProfileService {
     actor: IJwtPayload,
     data: TUpdateParameterLimitProfile
   ): Promise<IParameterLimitProfile> {
-    this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
+    this.rbac.ensureAccess(actor.role, RbacResource.PARAMETERS, 'update');
     await this.validateExists(data.id);
 
     if (data.name) {
@@ -108,7 +108,7 @@ class ParameterLimitProfileService implements IParameterLimitProfileService {
     actor: IJwtPayload,
     id: string
   ): Promise<IDeleteProfileResult> {
-    this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'delete');
+    this.rbac.ensureAccess(actor.role, RbacResource.PARAMETERS, 'delete');
     await this.validateCanDelete(id);
 
     const defaultProfile = await this.repository.findDefaultProfile();
@@ -131,7 +131,7 @@ class ParameterLimitProfileService implements IParameterLimitProfileService {
     actor: IJwtPayload,
     data: TUpsertParameterLimitsBatch
   ): Promise<IUpsertLimitsResult> {
-    this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
+    this.rbac.ensureAccess(actor.role, RbacResource.PARAMETERS, 'update');
     await this.validateExists(data.profileId);
 
     for (const limit of data.limits) {
@@ -154,7 +154,7 @@ class ParameterLimitProfileService implements IParameterLimitProfileService {
     actor: IJwtPayload,
     data: TCopyFromMasterDefaults
   ): Promise<{ copied: number }> {
-    this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
+    this.rbac.ensureAccess(actor.role, RbacResource.PARAMETERS, 'update');
     await this.validateExists(data.profileId);
 
     // Get default profile with its limits (the "master" values)
@@ -237,7 +237,7 @@ class ParameterLimitProfileService implements IParameterLimitProfileService {
     actor: IJwtPayload,
     id: string
   ): Promise<IProfileStats> {
-    this.rbac.ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+    this.rbac.ensureAccess(actor.role, RbacResource.PARAMETERS, 'read');
     const profile = await this.validateExists(id);
 
     const paramsCount = await this.repository.countLimitsInProfile(id);

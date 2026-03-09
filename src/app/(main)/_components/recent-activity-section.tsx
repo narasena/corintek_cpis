@@ -6,7 +6,7 @@
 import { Suspense } from 'react';
 import { RecentActivityClient } from './recent-activity-client';
 import { getRecentActivitiesAction } from '@/features/dashboard/actions';
-import { getCurrentUserDetails } from '@/lib/auth-helpers';
+import { getCurrentUserDetails } from '@/features/auth/lib/user-context';
 import { getDashboardConfig } from '@/features/dashboard/config';
 import {
   Card,

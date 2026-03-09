@@ -72,7 +72,9 @@ describe('DIContainer', () => {
 
 describe('Service Factories', () => {
   it('should create AttendanceService with prisma dependency', async () => {
-    const { createAttendanceService } = await import('./factories');
+    const { createAttendanceService } = await import(
+      '@/features/attendance/di'
+    );
     const service = createAttendanceService();
 
     expect(service).toBeDefined();
@@ -81,7 +83,9 @@ describe('Service Factories', () => {
   });
 
   it('should create LogSheetService with prisma dependency', async () => {
-    const { createLogSheetService } = await import('./factories');
+    const { createLogSheetService } = await import(
+      '@/features/log-sheets/di'
+    );
     const service = createLogSheetService();
 
     expect(service).toBeDefined();
@@ -90,7 +94,9 @@ describe('Service Factories', () => {
   });
 
   it('should create WorkReportService with prisma dependency', async () => {
-    const { createWorkReportService } = await import('./factories');
+    const { createWorkReportService } = await import(
+      '@/features/work-reports/di'
+    );
     const service = createWorkReportService();
 
     expect(service).toBeDefined();

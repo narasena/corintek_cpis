@@ -13,7 +13,7 @@ import { ensureAccess, RbacResource } from '@/lib/rbac';
 export async function getAllParameters(
   actor: IJwtPayload
 ): Promise<IParameter[]> {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+  ensureAccess(actor.role, RbacResource.PARAMETERS, 'read');
 
   const parameters = await prisma.parameter.findMany({
     where: {
@@ -32,7 +32,7 @@ export async function getParameterById(
   actor: IJwtPayload,
   id: string
 ): Promise<IParameter | null> {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'read');
+  ensureAccess(actor.role, RbacResource.PARAMETERS, 'read');
 
   const parameter = await prisma.parameter.findUnique({
     where: {
@@ -53,7 +53,7 @@ export async function createParameter(
   actor: IJwtPayload,
   data: TCreateParameter
 ): Promise<IParameter> {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'create');
+  ensureAccess(actor.role, RbacResource.PARAMETERS, 'create');
 
   const parameter = await prisma.parameter.create({
     data: {
@@ -78,7 +78,7 @@ export async function updateParameter(
   actor: IJwtPayload,
   data: TUpdateParameter
 ): Promise<IParameter> {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'update');
+  ensureAccess(actor.role, RbacResource.PARAMETERS, 'update');
 
   const { id, ...updateData } = data;
 
@@ -97,7 +97,7 @@ export async function deleteParameter(
   actor: IJwtPayload,
   id: string
 ): Promise<IParameter> {
-  ensureAccess(actor.role, RbacResource.MASTER_DATA, 'delete');
+  ensureAccess(actor.role, RbacResource.PARAMETERS, 'delete');
 
   const parameter = await prisma.parameter.update({
     where: { id },

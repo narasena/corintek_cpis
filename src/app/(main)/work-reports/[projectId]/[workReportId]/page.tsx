@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getCurrentUserDetails } from '@/lib/auth-helpers';
+import { getCurrentUserDetails } from '@/features/auth/lib/user-context';
 
 interface PageProps {
   params: Promise<{ projectId: string; workReportId: string }>;

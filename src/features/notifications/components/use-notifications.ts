@@ -17,12 +17,17 @@ export function useNotifications() {
 
   const fetch = useCallback(async () => {
     try {
-      const [notifs, count] = await Promise.all([
-        getNotificationsAction(1, 10),
-        getUnreadCountAction(),
+      const [notifsResult, countResult] = await Promise.all([
+        getNotificationsAction({ page: 1, pageSize: 10 }),
+        getUnreadCountAction({}),
       ]);
-      setNotifications(notifs.items);
-      setUnreadCount(count);
+
+      if (notifsResult.success && notifsResult.data) {
+        setNotifications(notifsResult.data.items);
+      }
+      if (countResult.success && typeof countResult.data === 'number') {
+        setUnreadCount(countResult.data);
+      }
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
     }
@@ -71,7 +76,7 @@ export function useNotifications() {
     setUnreadCount(0);
 
     try {
-      await markAllNotificationsReadAction();
+      await markAllNotificationsReadAction({});
       await fetch();
       toast.success('Semua notifikasi ditandai sudah dibaca');
     } catch {

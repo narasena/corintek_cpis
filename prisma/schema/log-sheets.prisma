@@ -70,6 +70,8 @@ model LogSheetEntry {
   machineId String?
   machine   Machine? @relation(fields: [machineId], references: [id])
 
+  // Contract: if role is VALUE/RAW_WATER, it usually requires a machineId if the parameter is machine-specific.
+  // Implicitly, machineId should exist in the parent LogSheet's activeMachines.
   role LogSheetEntryRole @default(VALUE)
 
   valueType    ValueType

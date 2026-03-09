@@ -38,7 +38,9 @@ UI Component → Server Action (actions.ts) → Service (service.ts) → Prisma 
 5. **PDF** = browser-native print only (CSS `@media print` / Tailwind `print:` modifiers)
 6. **Log sheets** MUST fit on a single A4 page in print mode
 7. **Auth scope:** <40 internal users + CLIENT role (read-only portal)
-8. **Error prefix:** `[CPIS-ERROR] <Feature>.<Action>:` in all catch blocks
+8. **Logging:** Use structured `logger` from `@/lib/logger` instead of manual `console` calls.
+   - Standardizes prefixes: `[CPIS-ERROR]`, `[CPIS-AUTH]`, `[CPIS-SYSTEM]`, `[CPIS-WARN]`.
+   - Supports structured metadata for machine-readable logs.
 9. Pre-code checklist: check `src/types` + `prisma/schema.prisma` before coding
 10. If stuck after 2 attempts → STOP and document blocker
 

@@ -34,11 +34,12 @@ import { useMobileUnitViewModel } from './use-mobile-unit-view-model';
 describe('useMobileUnitViewModel', () => {
   it('returns null when detail is null', () => {
     const entryState: Record<string, TEntryState> = {};
+    const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockClear();
 
     const result = useMobileUnitViewModel(null, entryState);
 
     expect(result).toBeNull();
-    const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
     expect(buildMock).not.toHaveBeenCalled();
   });
 
@@ -130,6 +131,7 @@ describe('useMobileUnitViewModel', () => {
     };
 
     const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockClear();
     buildMock.mockReturnValue(fakeViewModel);
 
     const result = useMobileUnitViewModel(detail, entryState);
@@ -245,6 +247,7 @@ describe('useMobileUnitViewModel', () => {
     };
 
     const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockClear();
     buildMock.mockReturnValue(fakeViewModel);
 
     useMobileUnitViewModel(detail, entryState, {
@@ -319,6 +322,7 @@ describe('useMobileUnitViewModel', () => {
     };
 
     const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockClear();
     buildMock.mockReturnValue(fakeViewModel);
 
     useMobileUnitViewModel(detail, entryState);
@@ -387,6 +391,7 @@ describe('useMobileUnitViewModel', () => {
     };
 
     const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockClear();
     buildMock.mockReturnValue(fakeViewModel);
 
     useMobileUnitViewModel(detail, entryState, {
@@ -453,6 +458,7 @@ describe('useMobileUnitViewModel', () => {
     };
 
     const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockClear();
     buildMock.mockReturnValue(fakeViewModel);
 
     useMobileUnitViewModel(detail, entryState, undefined, {
@@ -528,6 +534,7 @@ describe('useMobileUnitViewModel', () => {
     };
 
     const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockClear();
     buildMock.mockReturnValue(fakeViewModel);
 
     useMobileUnitViewModel(detail, entryState, {
@@ -594,6 +601,7 @@ describe('useMobileUnitViewModel', () => {
     };
 
     const buildMock = vi.mocked(buildMobileUnitViewModelForLogSheet);
+    buildMock.mockClear();
     buildMock.mockReturnValue(fakeViewModel);
 
     useMobileUnitViewModel(detail, entryState);

@@ -3,16 +3,17 @@
 import { type LucideIcon } from 'lucide-react';
 import {
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
 
 export function NavMain({
   items,
+  label,
 }: {
   items: {
     title: string;
@@ -20,42 +21,35 @@ export function NavMain({
     icon: LucideIcon;
     isActive?: boolean;
   }[];
+  label?: string;
 }) {
   const pathname = usePathname();
 
-  return (
-    <SidebarGroup className="p-0">
-      <SidebarMenu className="gap-1.5">
-        {items.map(item => {
-          const isActive =
-            item.url === '/' ? pathname === '/' : pathname.startsWith(item.url);
+  if (items.length === 0) return null;
 
-          return (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive}
-                tooltip={item.title}
-                className={cn(
-                  'py-5 md:py-2.5 rounded-full transition-all duration-200',
-                  isActive
-                    ? 'bg-primary/10 text-primary font-bold shadow-sm'
-                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground font-medium'
-                )}
-              >
-                <Link href={item.url}>
-                  <item.icon
-                    className={cn(
-                      'transition-transform',
-                      isActive ? 'scale-110 text-primary!' : ''
-                    )}
-                  />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          );
-        })}
+  return (
+    <SidebarGroup>
+      {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+      <SidebarMenu>
+        {items.map(item => (
+          <SidebarMenuItem key={item.title}>
+            <SidebarMenuButton
+              asChild
+              isActive={
+                item.url === '/'
+                  ? pathname === '/'
+                  : pathname.startsWith(item.url)
+              }
+              tooltip={item.title}
+              className="py-5 md:py-2" // Increased touch target for mobile
+            >
+              <Link href={item.url}>
+                <item.icon />
+                <span>{item.title}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
       </SidebarMenu>
     </SidebarGroup>
   );

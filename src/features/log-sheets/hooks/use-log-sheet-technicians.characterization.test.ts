@@ -5,10 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TUserResponse } from '@/@types/user.type';
 import { useLogSheetTechnicians } from './use-log-sheet-technicians';
 
-const mockGetAllUsersAction = vi.fn();
+const mockGetTechniciansListAction = vi.fn();
 
 vi.mock('@/features/users/actions', () => ({
-  getAllUsersAction: (...args: unknown[]) => mockGetAllUsersAction(...args),
+  getTechniciansListAction: (...args: unknown[]) => mockGetTechniciansListAction(...args),
 }));
 
 vi.mock('sonner', () => ({
@@ -42,7 +42,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
 
   describe('initial state', () => {
     it('starts with empty technicians array (main path)', () => {
-      mockGetAllUsersAction.mockImplementation(() => new Promise(() => {}));
+      mockGetTechniciansListAction.mockImplementation(() => new Promise(() => {}));
 
       const { result } = renderHook(() => useLogSheetTechnicians());
 
@@ -51,8 +51,8 @@ describe('useLogSheetTechnicians (characterization)', () => {
   });
 
   describe('data fetching', () => {
-    it('calls getAllUsersAction on mount (main path)', async () => {
-      mockGetAllUsersAction.mockResolvedValueOnce({
+    it('calls getTechniciansListAction on mount (main path)', async () => {
+      mockGetTechniciansListAction.mockResolvedValueOnce({
         success: true,
         data: [],
       });
@@ -63,7 +63,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
         await vi.runAllTimersAsync();
       });
 
-      expect(mockGetAllUsersAction).toHaveBeenCalledTimes(1);
+      expect(mockGetTechniciansListAction).toHaveBeenCalledTimes(1);
     });
 
     it('sets technicians when fetch succeeds (main path)', async () => {
@@ -71,7 +71,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
         createMockUser({ id: 'user-1', firstName: 'John' }),
         createMockUser({ id: 'user-2', firstName: 'Jane' }),
       ];
-      mockGetAllUsersAction.mockResolvedValueOnce({
+      mockGetTechniciansListAction.mockResolvedValueOnce({
         success: true,
         data: mockUsers,
       });
@@ -86,7 +86,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
     });
 
     it('sets technicians to empty array when data is null (edge case)', async () => {
-      mockGetAllUsersAction.mockResolvedValueOnce({
+      mockGetTechniciansListAction.mockResolvedValueOnce({
         success: true,
         data: null,
       });
@@ -101,7 +101,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
     });
 
     it('sets technicians to empty array when data is undefined (edge case)', async () => {
-      mockGetAllUsersAction.mockResolvedValueOnce({
+      mockGetTechniciansListAction.mockResolvedValueOnce({
         success: true,
         data: undefined,
       });
@@ -119,7 +119,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
   describe('error handling', () => {
     it('shows error toast when action returns success: false (error condition)', async () => {
       const { toast } = await import('sonner');
-      mockGetAllUsersAction.mockResolvedValueOnce({
+      mockGetTechniciansListAction.mockResolvedValueOnce({
         success: false,
         error: 'Failed to fetch',
       });
@@ -134,7 +134,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
     });
 
     it('keeps technicians as empty array on error (error condition)', async () => {
-      mockGetAllUsersAction.mockResolvedValueOnce({
+      mockGetTechniciansListAction.mockResolvedValueOnce({
         success: false,
         error: 'Failed to fetch',
       });
@@ -150,7 +150,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
 
     it('shows error toast when action throws (error condition)', async () => {
       const { toast } = await import('sonner');
-      mockGetAllUsersAction.mockRejectedValueOnce(new Error('Network error'));
+      mockGetTechniciansListAction.mockRejectedValueOnce(new Error('Network error'));
 
       renderHook(() => useLogSheetTechnicians());
 
@@ -164,7 +164,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
     });
 
     it('keeps technicians as empty array on throw (error condition)', async () => {
-      mockGetAllUsersAction.mockRejectedValueOnce(new Error('Network error'));
+      mockGetTechniciansListAction.mockRejectedValueOnce(new Error('Network error'));
 
       const { result } = renderHook(() => useLogSheetTechnicians());
 
@@ -178,8 +178,8 @@ describe('useLogSheetTechnicians (characterization)', () => {
 
   describe('cleanup', () => {
     it('does not set state if unmounted during fetch (main path)', async () => {
-      let resolvePromise: (value: any) => void;
-      mockGetAllUsersAction.mockImplementation(
+      let resolvePromise: ((value: any) => void) | undefined;
+      mockGetTechniciansListAction.mockImplementation(
         () =>
           new Promise(resolve => {
             resolvePromise = resolve;
@@ -193,15 +193,19 @@ describe('useLogSheetTechnicians (characterization)', () => {
       unmount();
 
       await act(async () => {
-        resolvePromise!({ success: true, data: [createMockUser()] });
+        if (resolvePromise) {
+          resolvePromise({ success: true, data: [createMockUser()] });
+        }
         await vi.runAllTimersAsync();
       });
+
+      expect(result.current.technicians).toEqual([]);
     });
   });
 
   describe('return value structure', () => {
     it('returns technicians array', async () => {
-      mockGetAllUsersAction.mockResolvedValueOnce({
+      mockGetTechniciansListAction.mockResolvedValueOnce({
         success: true,
         data: [],
       });
@@ -235,7 +239,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
           role: 'ADMIN',
         }),
       ];
-      mockGetAllUsersAction.mockResolvedValueOnce({
+      mockGetTechniciansListAction.mockResolvedValueOnce({
         success: true,
         data: mockUsers,
       });
@@ -268,7 +272,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
           lastName: null as any,
         }),
       ];
-      mockGetAllUsersAction.mockResolvedValueOnce({
+      mockGetTechniciansListAction.mockResolvedValueOnce({
         success: true,
         data: mockUsers,
       });
@@ -283,7 +287,7 @@ describe('useLogSheetTechnicians (characterization)', () => {
     });
 
     it('handles empty users array (edge case)', async () => {
-      mockGetAllUsersAction.mockResolvedValueOnce({
+      mockGetTechniciansListAction.mockResolvedValueOnce({
         success: true,
         data: [],
       });
