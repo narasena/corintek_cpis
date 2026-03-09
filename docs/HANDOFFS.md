@@ -1,33 +1,31 @@
-# Handoff Session — 2026-03-09
+# Handoff Session — 2026-03-10 (v0.6.1)
 
 ## Current State
 
-- **UI/UX Form Refinement (v0.5.0) Complete:** Focused on Dialogs, Forms, and Data Tables.
-- **Sticky Form Actions:** `CrudDialog` now features a sticky footer for accessibility.
-- **Premium Inputs:** Switched to standard `shadcn` components for Switch, DatePicker, and Combobox.
-- **Improved Empty States:** `DataTableEmpty` integrated across major features.
-- **Indonesian Localization:** Form placeholders and labels purged of lingering English examples.
+- **Project Form & Dialog Refinement (v0.6.1) Complete:** Focus on visual uniformity and modern mobile behavior.
+- **Uniform Widths:** All `Select` components now use `w-full` (Standardized `SelectTrigger`).
+- **Modern Mobile UI:** All dialogs (via `CrudDialog`) now use the **Floating Full Screen** design with margins.
+- **Dual-Scroll Architecture:** Project Form successfully split into metadata (5/12) and machines (7/12) independently scrollable areas.
+- **Themed Headers:** Dialogs now follow the primary brand gradient.
 
 ## Completed Tasks
 
-- [x] Refactored `UserForm` and `ClientForm` into card-based sections with grid layouts.
-- [x] Restructured `ParameterForm` with vertical tabs to prevent scroll fatigue.
-- [x] Upgraded `CrudDialog` with sticky footers and polished layout.
-- [x] Implemented `DataTableEmpty` in Projects, Users, and Clients.
-- [x] Standardized Indonesian language across all forms.
-- [x] Build verified clean (`npm run build`).
+- [x] Upgraded `CrudDialog` + `DialogContent` with size options, themed headers, and custom close buttons.
+- [x] Refactored `ProjectForm` for independent dual-column scrolling.
+- [x] Standardized `SelectTrigger` to prevent jagged input widths.
+- [x] Cleaned up `any` type casting in `ProjectForm`.
+- [x] Verified build success (`npm run build`).
 
 ## Next Steps (Cold Start Actions)
 
-1. **Parameter Management:** Verify "Overload" (Override) dialog usage on mobile, as it has complex nested grids.
-2. **Accessibility Audit:** Check if `Combobox` search is fully keyboard navigable in production.
-3. **Empty States:** Add "Import Data" CTA to empty states where relevant (e.g. Chemicals).
+1. **Global Styles Review:** Verify if `SelectTrigger` `w-full` change affects any specific small-form layouts (e.g. inline filters).
+2. **Mobile Keyboard:** Verify that the "Floating" dialog doesn't cause layout shifting when the mobile keyboard is visible (iOS/Android).
 
 ## Architectural Notes
 
-- **Sticky Action Pattern:** Established in `crud-dialog.tsx`. Use this pattern for all data-entry modals to ensure primary actions are always visible.
-- **Vertical Tabs for Dense Data:** Used in `parameter-form.tsx` for limit profiles. This is the preferred pattern for any domain with >10 related inputs.
+- **Size Protocols:** `ProjectDialog` is now the anchor for the `2xl` size protocol.
+- **Mobile Design:** Floating margins are now the standard for all `CrudDialog` instances on small screens.
 
 ## Active Branch
 
-`feat/ui-ux-refinement-v2` (Committed and ready for push/PR)
+`feat/ui-dialog-refinement` (Verified & Documented)

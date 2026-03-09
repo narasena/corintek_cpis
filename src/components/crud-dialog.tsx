@@ -18,8 +18,11 @@ interface ICrudDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSuccess?: () => void;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   isLoading?: boolean;
+  headerClassName?: string;
+  contentWrapperClassName?: string;
+  closeButtonClassName?: string;
   children:
     | React.ReactNode
     | ((props: {
@@ -33,6 +36,7 @@ const sizeClasses = {
   md: 'sm:max-w-2xl',
   lg: 'sm:max-w-4xl',
   xl: 'sm:max-w-5xl',
+  '2xl': 'sm:max-w-7xl',
 };
 
 export function CrudDialog({
@@ -44,6 +48,9 @@ export function CrudDialog({
   onSuccess,
   size = 'md',
   isLoading = false,
+  headerClassName,
+  contentWrapperClassName,
+  closeButtonClassName,
   children,
 }: ICrudDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
@@ -70,15 +77,26 @@ export function CrudDialog({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
         className={cn(
-          'flex flex-col gap-0 p-0 overflow-hidden max-h-[90dvh]',
+          'flex flex-col gap-0 p-0 overflow-hidden max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh]',
           sizeClasses[size]
         )}
+        closeButtonClassName={closeButtonClassName}
       >
-        <DialogHeader className="px-6 py-4 border-b shrink-0 flex flex-row items-center justify-between">
+        <DialogHeader
+          className={cn(
+            'px-6 py-4 border-b shrink-0 flex flex-row items-center justify-between',
+            headerClassName
+          )}
+        >
           <DialogTitle>{title || defaultTitle}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto w-full relative p-6">
+        <div
+          className={cn(
+            'flex-1 overflow-y-auto w-full relative p-6',
+            contentWrapperClassName
+          )}
+        >
           {isLoading && (
             <div className="absolute inset-0 z-50 bg-background/50 backdrop-blur-sm flex flex-col items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />

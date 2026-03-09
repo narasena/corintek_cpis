@@ -86,10 +86,13 @@ export function ProjectForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-col h-[calc(90vh-140px)] min-h-[500px] max-h-[900px]"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 overflow-hidden">
           {/* Left Column: Project Information */}
-          <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-0 lg:h-fit">
+          <div className="lg:col-span-5 h-full overflow-y-auto p-6 space-y-4 bg-muted/5">
             <h3 className="font-semibold text-lg border-b pb-2">
               Informasi Proyek
             </h3>
@@ -103,12 +106,12 @@ export function ProjectForm({
           </div>
 
           {/* Right Column: Machine List */}
-          <div className="lg:col-span-8 lg:border-l lg:pl-6 space-y-4">
-            <MachineFormSection control={form.control as any} />
+          <div className="lg:col-span-7 h-full overflow-y-auto p-6 lg:border-l space-y-4">
+            <MachineFormSection control={form.control} />
           </div>
         </div>
 
-        <div className="sticky bottom-[-24px] -mx-6 -mb-6 mt-8 p-4 px-6 border-t bg-background/95 backdrop-blur-sm flex justify-end gap-2 z-10">
+        <div className="shrink-0 p-4 px-6 border-t bg-background flex justify-end gap-2 z-10">
           <Button type="button" variant="outline" onClick={onCancel}>
             Batal
           </Button>

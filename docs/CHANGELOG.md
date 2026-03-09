@@ -6,7 +6,31 @@
 
 ---
 
-## v0.5.0 — Form UX & Localization (2026-03-09)
+## v0.6.1 — Uniform Widths & Floating Mobile UI (2026-03-09)
+
+**Branch:** `feat/ui-dialog-refinement`
+
+### UX Polish & Dialog Refinement
+
+- [x] **Uniform Input Widths:** Standardized `SelectTrigger` to `w-full`, ensuring all dropdowns (Status, Profile, Client) align perfectly with text inputs in the project form.
+- [x] **Floating Mobile Dialogs:** Implemented a modern "Floating Full Screen" design with a subtle border margin on small screens to create a layered aesthetic.
+- [x] **Dual-Scroll Extension:** Refined the independent scrolling areas for metadata (5/12) and machines (7/12) with improved layout spacing.
+- [x] **Code Quality:** Removed unnecessary `any` type casting in `ProjectForm`.
+
+---
+
+## v0.6.0 — Project Form Dual-Scroll & Themed Headers (2026-03-09)
+
+**Branch:** `feat/ui-dialog-refinement`
+
+### Project Form UX
+
+- [x] **Dual-Scrollable Layout:** Implemented independent scroll areas for Project Metadata and Machine Units.
+- [x] **Responsive Column Widths:** Adjusted Project Info column to `lg:col-span-5` (v0.5.1 was ~col-span-4) to prevent label overlap.
+- [x] **Themed Dialog Headers:** Upgraded `CrudDialog` to support primary gradient backgrounds and high-contrast close buttons.
+- [x] **Dialog Sizing:** Introduced `size="2xl"` for complex data-entry scenarios like the Project Form.
+
+---
 
 **Branch:** `feat/ui-ux-refinement-v2`
 

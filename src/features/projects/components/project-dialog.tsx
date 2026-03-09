@@ -34,6 +34,10 @@ export function ProjectDialog({
       open={open}
       onOpenChange={onOpenChange}
       onSuccess={onSuccess}
+      size="2xl"
+      headerClassName="bg-gradient-to-r from-primary via-primary to-primary/95 text-primary-foreground border-none shadow-lg"
+      contentWrapperClassName="p-0 overflow-hidden"
+      closeButtonClassName="text-primary-foreground hover:bg-white/10 opacity-100"
     >
       {({ onSuccess: handleSuccess, onCancel }) => (
         <ProjectForm
