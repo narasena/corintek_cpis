@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronsUpDown, LogOut, User } from 'lucide-react';
+import { ChevronsUpDown, LogOut, Settings, User } from 'lucide-react';
 import * as React from 'react';
 import Link from 'next/link';
 
@@ -29,6 +29,29 @@ interface User {
   role: string;
 }
 
+function getFirstName(name: string | null): string {
+  if (!name || name.trim() === '') return 'Pengguna';
+  return name.split(' ')[0];
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Selamat pagi';
+  if (hour < 15) return 'Selamat siang';
+  if (hour < 18) return 'Selamat sore';
+  return 'Selamat malam';
+}
+
+function getInitials(name: string | null): string {
+  if (!name) return '?';
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+}
+
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
   const [isPending, startTransition] = React.useTransition();
@@ -37,6 +60,11 @@ export function NavUser({ user }: { user: User }) {
 
   return (
     <SidebarMenu>
+      <SidebarMenuItem>
+        <div className="px-3 py-1.5 text-xs text-muted-foreground">
+          {getGreeting()}, {getFirstName(user.name)}
+        </div>
+      </SidebarMenuItem>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -47,12 +75,7 @@ export function NavUser({ user }: { user: User }) {
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
                 <AvatarFallback className="rounded-lg">
-                  {user.name
-                    .split(' ')
-                    .map(n => n[0])
-                    .join('')
-                    .substring(0, 2)
-                    .toUpperCase()}
+                  {getInitials(user.name)}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -73,12 +96,7 @@ export function NavUser({ user }: { user: User }) {
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
                   <AvatarFallback className="rounded-lg">
-                    {user.name
-                      .split(' ')
-                      .map(n => n[0])
-                      .join('')
-                      .substring(0, 2)
-                      .toUpperCase()}
+                    {getInitials(user.name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -94,9 +112,16 @@ export function NavUser({ user }: { user: User }) {
             <DropdownMenuItem asChild>
               <Link href="/my-profile">
                 <User />
-                Profil
+                Lihat Profil
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings">
+                <Settings />
+                Pengaturan
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               disabled={isPending}
               onSelect={event => {

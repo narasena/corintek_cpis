@@ -53,11 +53,21 @@ export function MobileNav({ role }: { role: string }) {
           key={link.href}
           href={link.href}
           className={cn(
-            'flex flex-col items-center justify-center space-y-1 text-[10px] font-medium transition-colors hover:text-primary',
+            'group flex flex-col items-center justify-center space-y-1 text-[10px] font-medium transition-all hover:text-primary',
             link.active ? 'text-primary' : 'text-muted-foreground'
           )}
         >
-          <link.icon className={cn('h-5 w-5', link.active && 'fill-current')} />
+          <div className="relative">
+            {link.active && (
+              <span className="absolute -top-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary" />
+            )}
+            <link.icon
+              className={cn(
+                'h-5 w-5 transition-transform',
+                link.active && 'scale-110 fill-current'
+              )}
+            />
+          </div>
           <span>{link.label}</span>
         </Link>
       ))}

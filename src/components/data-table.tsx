@@ -36,7 +36,7 @@ import {
   CardTitle,
   CardAction,
 } from '@/components/ui/card';
-import { ArrowUpDown, Search, X } from 'lucide-react';
+import { ArrowUpDown, Search, X, Inbox } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDataTableSearch } from '@/hooks/use-data-table-search';
 import { useSearchParam } from '@/hooks/use-search-param';
@@ -267,10 +267,12 @@ export function DataTable<TData, TValue>({
               </TabsTrigger>
             ))}
           </TabsList>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            {filterToolbar}
-            {searchInput}
-            {activeTab?.addNewRow}
+          <div className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center">
+            <div className="flex-1 sm:flex-none">{filterToolbar}</div>
+            <div className="flex gap-2 justify-end">
+              {searchInput}
+              {activeTab?.addNewRow}
+            </div>
           </div>
         </div>
 
@@ -294,11 +296,18 @@ export function DataTable<TData, TValue>({
     );
   }
 
+  // Combined toolbar: filters left, search right, stacked on mobile
+  const toolbar = (filterToolbar || searchInput) && (
+    <div className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center">
+      <div className="flex-1 sm:flex-none">{filterToolbar}</div>
+      {searchInput && <div className="flex justify-end">{searchInput}</div>}
+    </div>
+  );
+
   // No tabs - render simple table with search
   return (
     <div className="space-y-4">
-      {filterToolbar}
-      {searchInput && <div className="flex justify-end">{searchInput}</div>}
+      {toolbar}
       <DataTableInner
         columns={columns}
         data={tableData}
@@ -321,24 +330,7 @@ export function DataTable<TData, TValue>({
           isLoading={serverPagination.isLoading}
         />
       ) : (
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Sebelumnya
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Selanjutnya
-          </Button>
-        </div>
+        <ClientPaginationControls table={table} />
       )}
     </div>
   );
@@ -450,6 +442,7 @@ function DataTableInner<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
+                  className="hover:bg-muted/50 transition-colors"
                 >
                   {row.getVisibleCells().map((cell: Cell<TData, unknown>) => (
                     <TableCell key={cell.id}>
@@ -463,11 +456,11 @@ function DataTableInner<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  {emptyMessage}
+                <TableCell colSpan={columns.length} className="h-24">
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <Inbox className="h-10 w-10 mb-2 opacity-50" />
+                    <span>{emptyMessage}</span>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -551,9 +544,12 @@ function DataTableInner<TData, TValue>({
             );
           })
         ) : (
-          <div className="text-center p-8 border rounded-md text-muted-foreground bg-muted/20">
-            {emptyMessage}
-          </div>
+          <Card className="bg-muted/20 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <Inbox className="h-10 w-10 mb-2 opacity-50" />
+              <span>{emptyMessage}</span>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
@@ -564,6 +560,79 @@ function DataTableInner<TData, TValue>({
  * Server-side pagination controls component
  * @responsibility Render pagination UI for server-managed data
  */
+interface IServerPaginationControlsProps {
+  total: number;
+  page: number;
+  limit: number;
+  pageSizeOptions?: readonly number[];
+  onPageChange: (page: number) => void;
+  onLimitChange: (limit: number) => void;
+  isLoading?: boolean;
+}
+
+function ClientPaginationControls<TData>({
+  table,
+}: {
+  table: TableType<TData>;
+}) {
+  const pagination = table.getState().pagination;
+  const pageIndex = pagination.pageIndex + 1;
+  const pageSize = pagination.pageSize;
+  const totalRows = table.getFilteredRowModel().rows.length;
+
+  if (totalRows === 0) {
+    return (
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Sebelumnya
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Selanjutnya
+        </Button>
+      </div>
+    );
+  }
+
+  const start = (pageIndex - 1) * pageSize + 1;
+  const end = Math.min(pageIndex * pageSize, totalRows);
+
+  return (
+    <div className="flex items-center justify-between space-x-4 py-4">
+      <span className="text-sm text-muted-foreground">
+        Menampilkan {start}-{end} dari {totalRows}
+      </span>
+      <div className="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Sebelumnya
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Selanjutnya
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 interface IServerPaginationControlsProps {
   total: number;
   page: number;
