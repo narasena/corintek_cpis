@@ -53,7 +53,7 @@ export async function loginAction(
       },
     };
   } catch (error: any) {
-    let message = ERROR_MESSAGES.LOGIN_FAILED;
+    let message: string = ERROR_MESSAGES.LOGIN_FAILED;
 
     if (isZodError(error)) {
       message = formatZodError(error, ERROR_MESSAGES.INPUT_INVALID);

@@ -81,7 +81,7 @@ export const getWorkReportColumns = ({
             const formData = new FormData();
             formData.append('id', id);
             formData.append('projectId', projectId);
-            return await deleteWorkReportAction(formData);
+            return await deleteWorkReportAction(id);
           }}
         >
           {row.original.status === 'DRAFT' && (

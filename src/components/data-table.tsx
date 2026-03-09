@@ -24,6 +24,8 @@ import { FilterToolbar } from './filter-toolbar';
 import { filterFns } from '@/lib/filter-utils';
 
 export type { ITableTab } from './data-table/types';
+export type { IColumnFilterConfig } from './data-table/types';
+export type { IServerPaginationConfig } from './data-table/types';
 
 /**
  * Custom hook to orchestrate DataTable state, search, and filtering

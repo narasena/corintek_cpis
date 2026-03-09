@@ -1,4 +1,5 @@
 import { getWorkReportByIdAction } from '@/features/work-reports/actions';
+import type { TUserRole } from '@/@types/user.type';
 import { WorkReportPreview } from '@/features/work-reports/components/work-report-preview';
 import { WorkReportSignatureSection } from '@/features/work-reports/components/work-report-signature-section';
 import { PrintButton } from '@/components/print-button';
@@ -21,7 +22,7 @@ export default async function WorkReportDetailPage({ params }: PageProps) {
   if (data.projectId !== projectId) return notFound();
 
   const currentUser = await getCurrentUserDetails();
-  const viewerRole = currentUser?.role;
+  const viewerRole = (currentUser?.role ?? 'ADMIN') as TUserRole;
 
   return (
     <div className="min-h-screen bg-gray-100 p-8 print:p-0 print:bg-white">

@@ -2,6 +2,7 @@
  * Recent Activity Section (Server Component)
  * @module app/(main)/_components/recent-activity-section
  */
+import type { TRbacRole } from '@/lib/rbac';
 
 import { Suspense } from 'react';
 import { RecentActivityClient } from './recent-activity-client';
@@ -40,7 +41,7 @@ export async function RecentActivitySection({
     );
   }
 
-  const config = getDashboardConfig(user.role);
+  const config = getDashboardConfig(user.role as TRbacRole);
   const initialResult = await getRecentActivitiesAction({
     projectId,
     timeRange: config.defaultTimeRange,

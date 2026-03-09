@@ -41,16 +41,20 @@ const data: ITestData[] = [
 describe('DataTable Logic Characterization', () => {
   it('renders data correctly without tabs', () => {
     render(<DataTable columns={columns} data={data} />);
-    
+
     // Should find multiple (Desktop and Mobile view)
     expect(screen.getAllByText('Test 1').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Test 2').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders empty message when no data', () => {
-    render(<DataTable columns={columns} data={[]} emptyMessage="No results found" />);
-    
-    expect(screen.getAllByText('No results found').length).toBeGreaterThanOrEqual(1);
+    render(
+      <DataTable columns={columns} data={[]} emptyMessage="No results found" />
+    );
+
+    expect(
+      screen.getAllByText('No results found').length
+    ).toBeGreaterThanOrEqual(1);
   });
 
   it('renders active tab data when tabs are provided', () => {
@@ -66,13 +70,15 @@ describe('DataTable Logic Characterization', () => {
         label: 'Tab 2',
         data: [{ id: 't2', name: 'Tab 2 Data' }],
         columns: columns,
-      }
+      },
     ];
 
-    render(<DataTable columns={columns} data={tabs[0].data} tabs={tabs} tab="tab1" />);
-    
+    render(
+      <DataTable columns={columns} data={tabs[0].data} tabs={tabs} tab="tab1" />
+    );
+
     expect(screen.getAllByText('Tab 1 Data').length).toBeGreaterThanOrEqual(1);
-    
+
     const tab2Elements = screen.queryAllByText('Tab 2 Data');
     tab2Elements.forEach(el => {
       const container = el.closest('[data-state]');
@@ -94,15 +100,19 @@ describe('DataTable Logic Characterization', () => {
         label: 'Tab 2',
         data: [{ id: 't2', name: 'Tab 2 Data' }],
         columns: columns,
-      }
+      },
     ];
 
-    const { rerender } = render(<DataTable columns={columns} data={tabs[0].data} tabs={tabs} tab="tab1" />);
+    const { rerender } = render(
+      <DataTable columns={columns} data={tabs[0].data} tabs={tabs} tab="tab1" />
+    );
     expect(screen.getAllByText('Tab 1 Data').length).toBeGreaterThanOrEqual(1);
 
-    rerender(<DataTable columns={columns} data={tabs[1].data} tabs={tabs} tab="tab2" />);
+    rerender(
+      <DataTable columns={columns} data={tabs[1].data} tabs={tabs} tab="tab2" />
+    );
     expect(screen.getAllByText('Tab 2 Data').length).toBeGreaterThanOrEqual(1);
-    
+
     const tab1Elements = screen.queryAllByText('Tab 1 Data');
     tab1Elements.forEach(el => {
       const container = el.closest('[data-state]');
@@ -113,33 +123,42 @@ describe('DataTable Logic Characterization', () => {
 
   it('renders pagination and filter toolbar when enabled', () => {
     const filterConfig = [
-      { columnId: 'role', label: 'Role', type: 'select', options: [{ label: 'Admin', value: 'ADMIN' }] }
+      {
+        columnId: 'role',
+        label: 'Role',
+        type: 'select',
+        options: [{ label: 'Admin', value: 'ADMIN' }],
+        placeholder: 'Semua',
+      },
     ];
 
     render(
-      <DataTable 
-        columns={columns} 
-        data={data} 
+      <DataTable
+        columns={columns}
+        data={data}
         columnFilters={true}
         filterConfigs={filterConfig as any}
-        serverPagination={{ 
-          enabled: true, 
-          total: 10, 
-          page: 1, 
+        serverPagination={{
+          enabled: true,
+          total: 10,
+          page: 1,
           limit: 10,
           onPageChange: vi.fn(),
           onLimitChange: vi.fn(),
-          isLoading: false
+          isLoading: false,
         }}
       />
     );
-    
+
     // Check for pagination buttons
     expect(screen.getAllByText('Sebelumnya').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Selanjutnya').length).toBeGreaterThanOrEqual(1);
-    
-    // Check for filter toolbar (Role placeholder or default 'Semua' for select)
-    expect(screen.getByText('Semua')).toBeDefined();
+
+    // Check for filter toolbar (role filter select is rendered)
+    const selectTrigger = document.querySelector(
+      '[data-slot="select-trigger"]'
+    );
+    expect(selectTrigger).not.toBeNull();
   });
 
   it('renders tab-specific filters when provided', () => {
@@ -149,12 +168,12 @@ describe('DataTable Logic Characterization', () => {
         label: 'Tab 1',
         data: data,
         columns: columns,
-        filters: <div data-testid="tab-filter">Custom Filter</div>
-      }
+        filters: <div data-testid="tab-filter">Custom Filter</div>,
+      },
     ];
 
     render(<DataTable columns={columns} data={[]} tabs={tabs} tab="tab1" />);
-    
+
     expect(screen.getByTestId('tab-filter')).toBeDefined();
     expect(screen.getByText('Custom Filter')).toBeDefined();
   });

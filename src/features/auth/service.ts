@@ -31,7 +31,7 @@ export async function authenticateUser(
   });
 
   // 2. Securely verify password (timing-attack safe mechanism encapsulated in secureCompare)
-  const isAuthValid = await secureCompare(password, user?.password);
+  const isAuthValid = await secureCompare(password, (user as any)?.password);
 
   // 3. Final validation (all failures return the same generic message to prevent account enumeration)
   // Check both the password/existence check and the account lifecycle status.
@@ -41,7 +41,7 @@ export async function authenticateUser(
   }
 
   // user is guaranteed to be non-null if isAuthValid is true (per secureCompare implementation)
-  if (!isUserAuthValid(user!)) {
+  if (!isUserAuthValid(user! as any)) {
     logger.error('Auth', 'authenticateUser', 'User status invalid (blocked/inactive/deleted)', { email, userId: user!.id });
     throw new Error(ERROR_MESSAGES.AUTHENTICATION_FAILED);
   }
@@ -50,7 +50,7 @@ export async function authenticateUser(
   logger.auth('Auth', 'authenticateUser', 'Login successful', { email, userId: user!.id, role: user!.role });
 
   // 5. Return validated user data (schema strips the password)
-  return toUserResponse(user!);
+  return toUserResponse(user! as any);
 }
 
 /**
@@ -74,10 +74,10 @@ export async function validateSessionUser(
     return null;
   }
 
-  if (!isUserAuthValid(user)) {
+  if (!isUserAuthValid(user as any)) {
     logger.error('Auth', 'validateSessionUser', 'Session user status invalid (blocked/inactive/deleted)', { userId });
     return null;
   }
 
-  return toUserResponse(user);
+  return toUserResponse(user as any);
 }

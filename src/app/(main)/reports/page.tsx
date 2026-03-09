@@ -20,7 +20,7 @@ export default function ReportsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getAllLogSheetsAction();
+      const result = await getAllLogSheetsAction({});
       if (result.success && result.data) {
         setData(result.data);
       } else {

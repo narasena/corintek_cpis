@@ -41,7 +41,7 @@ export default function ParametersPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getParametersAction();
+      const result = await getParametersAction({});
       if (result.success && result.data) {
         setParameters(result.data as IParameter[]);
       } else {
@@ -66,7 +66,7 @@ export default function ParametersPage() {
     if (parameter.valueType === 'NUMBER') {
       const result = await checkParameterHasLimitsAction(parameter.id);
       if (result.success) {
-        setHasExistingLimits(result.hasLimits || false);
+        setHasExistingLimits(result.data || false);
       }
     } else {
       setHasExistingLimits(false);
@@ -79,7 +79,7 @@ export default function ParametersPage() {
       toast.success('Parameter berhasil dihapus');
       fetchData();
     } else {
-      toast.error(result.error);
+      toast.error((result as any).error);
     }
     return result;
   };

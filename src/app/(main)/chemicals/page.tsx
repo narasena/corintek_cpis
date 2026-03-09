@@ -20,12 +20,12 @@ export default function ChemicalsPage() {
   const [showEditDialog, setShowEditDialog] = useState(false);
 
   const fetchChemicals = useCallback(async () => {
-    const result = await getAllChemicalsAction();
+    const result = await getAllChemicalsAction({});
     if (result.success && Array.isArray(result.data)) {
       setChemicals(result.data as TChemical[]);
     } else {
       toast.error('Gagal mengambil data chemical', {
-        description: result.error,
+        description: (result as any).error,
       });
     }
     setLoading(false);

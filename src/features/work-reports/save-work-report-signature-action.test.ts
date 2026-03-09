@@ -18,7 +18,11 @@ vi.mock('./service', () => ({
 import { requireActor } from '@/features/auth/lib/user-context';
 
 describe('saveWorkReportSignatureAction', () => {
-  const mockActor = { id: 'user-1', email: 'user@example.com', role: 'TECHNICIAN' };
+  const mockActor = {
+    id: 'user-1',
+    email: 'user@example.com',
+    role: 'TECHNICIAN',
+  };
   const validPayload = {
     workReportId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
     dataUrl: 'data:image/png;base64,fake-data',
@@ -36,7 +40,7 @@ describe('saveWorkReportSignatureAction', () => {
         this.name = 'AuthenticationError';
       }
     }
-    
+
     vi.mocked(requireActor).mockRejectedValueOnce(new AuthenticationError());
 
     const result = await saveWorkReportSignatureAction(validPayload);
@@ -64,8 +68,8 @@ describe('saveWorkReportSignatureAction', () => {
 
     expect(result.success).toBe(true);
     expect(service.saveWorkReportSignature).toHaveBeenCalledWith(
-      mockActor,
-      validPayload
+      validPayload.workReportId,
+      { signatureDataUrl: validPayload.dataUrl, signedByUserId: mockActor.id }
     );
     expect(revalidatePath).toHaveBeenCalledWith('/projects/proj-1');
   });

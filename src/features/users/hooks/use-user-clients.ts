@@ -11,7 +11,7 @@ export function useUserClients(isEnabled: boolean) {
   useEffect(() => {
     if (isEnabled) {
       setIsLoading(true);
-      getAllClientsAction()
+      getAllClientsAction({})
         .then(result => {
           if (result.success && result.data) {
             setClients(result.data);

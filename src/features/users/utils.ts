@@ -4,7 +4,7 @@ import {
   TUserInternal,
   ICurrentUserProfile,
 } from '@/@types/user.type';
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@/generated/prisma/client';
 import { z } from 'zod';
 
 /**

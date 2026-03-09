@@ -2,7 +2,7 @@
 
 import { z } from 'zod/v4';
 import { actionFactory } from '@/features/auth/di';
-import { RbacResource } from '@/lib/rbac';
+import { RbacResource, type TRbacRole } from '@/lib/rbac';
 import * as dashboardService from './service';
 import * as projectService from '@/features/projects/service';
 import { resolveTargetProjectIds } from './utils';
@@ -81,7 +81,7 @@ export const getRecentActivitiesAction = actionFactory.protected(
       projectIds: targetIds ?? undefined,
       timeRange: input.timeRange,
       limit: input.limit,
-      types: getVisibleActivityTypes(actor.role),
+      types: getVisibleActivityTypes(actor.role as TRbacRole),
     });
 
     return {

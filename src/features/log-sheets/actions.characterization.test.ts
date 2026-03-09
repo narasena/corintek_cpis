@@ -42,8 +42,8 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
-vi.mock('@/lib/auth-helpers', async (importOriginal) => {
-  const actual = await importOriginal() as any;
+vi.mock('@/lib/auth-helpers', async importOriginal => {
+  const actual = (await importOriginal()) as any;
   return {
     ...actual,
   };
@@ -187,7 +187,9 @@ describe('getLogSheetsByProjectAction (characterization)', () => {
     const result = await getLogSheetsByProjectAction(anotherUUID);
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Unauthorized');
+    expect(result.error).toBe(
+      'Sesi kedaluwarsa atau tidak valid. Silakan login kembali.'
+    );
   });
 });
 

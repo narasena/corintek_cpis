@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod/v4';
-import { getCurrentUserDetails } from '@/lib/auth-helpers';
+import { getCurrentUserDetails } from '@/features/auth/lib/user-context';
 import { initializeContainer, getAttendanceService } from '@/lib/di';
 import { attendanceListFiltersSchema, paginationInputSchema } from './types';
 import type { TAttendanceListFilters } from './types';

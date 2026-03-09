@@ -152,13 +152,12 @@ function SignatureDialog({
       setIsSaving(true);
       const res = await saveWorkReportSignatureAction({
         workReportId,
-        signatureRole: role,
         dataUrl,
       });
 
       if (!res.success) {
         toast.error('Gagal menyimpan tanda tangan', {
-          description: res.message,
+          description: res.error,
         });
         return;
       }

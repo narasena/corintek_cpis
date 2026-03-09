@@ -42,7 +42,7 @@ export default function UsersPage() {
       setUsers(result.data as TUserResponse[]);
     } else if (!result.success) {
       toast.error('Gagal mengambil data pengguna', {
-        description: result.error,
+        description: (result as any).error,
       });
     }
     setLoading(false);

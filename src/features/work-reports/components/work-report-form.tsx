@@ -202,7 +202,7 @@ export function WorkReportForm({
 
         if (!result.success) {
           toast.error('Gagal menyimpan laporan', {
-            description: result.message || 'Terjadi kesalahan',
+            description: result.error || 'Terjadi kesalahan',
           });
           return;
         }
@@ -295,7 +295,7 @@ export function WorkReportForm({
 
         // 4. Final Revalidation
         setSubmitStatus('Memuat ulang data...');
-        await revalidateWorkReportPathAction(projectId, reportId || undefined);
+        await revalidateWorkReportPathAction(projectId);
 
         if (!uploadErrors) {
           toast.success(

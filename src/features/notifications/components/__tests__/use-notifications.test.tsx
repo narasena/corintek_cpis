@@ -46,13 +46,19 @@ describe('useNotifications', () => {
 
   it('fetches notifications and unread count on mount', async () => {
     vi.mocked(actions.getNotificationsAction).mockResolvedValue({
-      items: mockNotifications,
-      total: 1,
-      page: 1,
-      pageSize: 10,
-      totalPages: 1,
+      success: true,
+      data: {
+        items: mockNotifications,
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        totalPages: 1,
+      },
     });
-    vi.mocked(actions.getUnreadCountAction).mockResolvedValue(5);
+    vi.mocked(actions.getUnreadCountAction).mockResolvedValue({
+      success: true,
+      data: 5,
+    });
 
     const { result } = renderHook(() => useNotifications());
 

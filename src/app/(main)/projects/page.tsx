@@ -32,7 +32,7 @@ function applyProjectsResponse(
   if (result.success && result.data) {
     setProjects(result.data as IProject[]);
   } else {
-    toast.error(result.error || 'Gagal mengambil data proyek');
+    toast.error((result as any).error || 'Gagal mengambil data proyek');
   }
 }
 
@@ -43,7 +43,7 @@ function applyClientsResponse(
   if (result.success && result.data) {
     setClients(result.data as TClientResponse[]);
   } else {
-    toast.error(result.error || 'Gagal mengambil data klien');
+    toast.error((result as any).error || 'Gagal mengambil data klien');
   }
 }
 
@@ -60,8 +60,8 @@ export default function ProjectsPage() {
     setLoading(true);
     try {
       const [projectsRes, clientsRes] = await Promise.all([
-        getProjectsAction(),
-        getAllClientsAction(),
+        getProjectsAction({}),
+        getAllClientsAction({}),
       ]);
 
       applyProjectsResponse(projectsRes, setProjects);
@@ -74,7 +74,7 @@ export default function ProjectsPage() {
   }, []);
 
   const refreshProjects = useCallback(async () => {
-    const result = await getProjectsAction();
+    const result = await getProjectsAction({});
     if (result.success && result.data) {
       setProjects(result.data as IProject[]);
     }

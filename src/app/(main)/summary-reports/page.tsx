@@ -59,7 +59,7 @@ export default function SummaryReportsPage() {
   const fetchProjects = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getProjectsAction();
+      const result = await getProjectsAction({});
       if (result.success && result.data) {
         setProjects(result.data as IProject[]);
       } else {

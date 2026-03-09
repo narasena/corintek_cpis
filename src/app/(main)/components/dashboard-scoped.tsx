@@ -74,7 +74,7 @@ export function DashboardScoped({
 
   const refresh = useCallback(() => {
     startTransition(async () => {
-      const res = await getDashboardProjectsAction();
+      const res = await getDashboardProjectsAction({});
       if (res.success && res.data) {
         setProjects(res.data as IProjectDashboardCard[]);
       }

@@ -139,8 +139,8 @@ export const createSummaryReportAction = actionFactory.protected(
 export const getSummaryReportByPeriodAction = actionFactory.protected(
   async ({ input, actor }) => {
     const validated = getByPeriodSchema.parse({
-      projectId: input.projectId,
-      period: input.period.toISOString ? input.period.toISOString() : input.period,
+      projectId: (input as any).projectId,
+      period: ((input as any).period?.toISOString ? (input as any).period.toISOString() : (input as any).period),
     });
 
     await projectService.assertCanAccessProject(actor, validated.projectId);

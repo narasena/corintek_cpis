@@ -28,7 +28,7 @@ export default function ProjectLogSheetsPage() {
 
   const refresh = useCallback(async () => {
     const [projectsRes, logSheetsRes] = await Promise.all([
-      getProjectsAction(),
+      getProjectsAction({}),
       getLogSheetsByProjectAction(projectId),
     ]);
 

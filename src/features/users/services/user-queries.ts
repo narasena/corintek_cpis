@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@/generated/prisma/client';
 import { ICurrentUserProfile } from '@/@types/user.type';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { canAccess, RbacResource } from '@/lib/rbac';
@@ -29,7 +30,7 @@ async function findActiveUserOrThrow<T extends Prisma.UserSelect>(
     select: {
       ...select,
       deletedAt: true,
-    },
+    } as any,
   });
 
   if (!user || (user as any).deletedAt) {
@@ -80,7 +81,7 @@ export async function getAllUsers(actor: IJwtPayload) {
     },
   });
 
-  return users.map(toUserResponse);
+  return users.map((u: any) => toUserResponse(u));
 }
 
 /**
@@ -91,7 +92,7 @@ export async function getUserById(actor: IJwtPayload, id: string) {
 
   const user = await findActiveUserOrThrow(id, userResponseSelect);
 
-  return toUserResponse(user);
+  return toUserResponse(user as any);
 }
 
 /**

@@ -143,3 +143,29 @@ export async function deleteWorkReportPhoto(id: string) {
     },
   });
 }
+
+export async function saveWorkReportSignature(
+  workReportId: string,
+  data: { signatureDataUrl: string; signedByUserId: string }
+) {
+  const workReport = await prisma.workReport.findUnique({
+    where: { id: workReportId },
+    select: { projectId: true },
+  });
+
+  if (!workReport) {
+    throw new Error('Work report tidak ditemukan');
+  }
+
+  // Update work report with signature - URL will be stored in photos
+  const signaturePhoto = await prisma.workReportPhoto.create({
+    data: {
+      workReportId,
+      url: data.signatureDataUrl,
+      type: 'GENERAL',
+      caption: `Ditandatangani oleh ${data.signedByUserId}`,
+    },
+  });
+
+  return { projectId: workReport.projectId, photoId: signaturePhoto.id };
+}

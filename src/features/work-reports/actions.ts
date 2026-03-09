@@ -7,6 +7,8 @@ import * as service from './service';
 import {
   WorkReportSchema,
   WorkReportSignatureSchema,
+  CreateWorkReportInput,
+  UpdateWorkReportInput,
 } from './types';
 import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
@@ -21,12 +23,15 @@ import { z } from 'zod/v4';
  */
 export const createWorkReportAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const report = await service.createWorkReport(actor, input);
-    revalidatePath(`/projects/${report.projectId}`);
+    const data =
+      input instanceof FormData ? parseWorkReportFormData(input) : input;
+    const report = await service.createWorkReport(
+      data as CreateWorkReportInput
+    );
+    if (report) revalidatePath(`/projects/${report.projectId}`);
     return report;
   },
   {
-    schema: WorkReportSchema,
     metadata: {
       rbac: { resource: RbacResource.WORK_REPORTS, capability: 'create' },
     },
@@ -38,15 +43,19 @@ export const createWorkReportAction = actionFactory.protected(
  */
 export const updateWorkReportAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const report = await service.updateWorkReport(actor, input.id, input.data);
-    revalidatePath(`/projects/${report.projectId}`);
+    let data: UpdateWorkReportInput;
+    if (input instanceof FormData) {
+      const id = input.get('id') as string;
+      const parsed = parseWorkReportFormData(input);
+      data = { id, ...parsed };
+    } else {
+      data = input as UpdateWorkReportInput;
+    }
+    const report = await service.updateWorkReport(data);
+    if (report) revalidatePath(`/projects/${report.projectId}`);
     return report;
   },
   {
-    schema: z.object({
-      id: z.string().uuid(),
-      data: WorkReportSchema.partial(),
-    }),
     metadata: {
       rbac: { resource: RbacResource.WORK_REPORTS, capability: 'update' },
     },
@@ -61,9 +70,9 @@ export const updateWorkReportStatusAction = actionFactory.protected(
     const report = await service.updateWorkReportStatus(
       actor,
       input.id,
-      input.status
+      input.status as any
     );
-    revalidatePath(`/projects/${report.projectId}`);
+    if (report) revalidatePath(`/projects/${report.projectId}`);
     return report;
   },
   {
@@ -82,7 +91,10 @@ export const updateWorkReportStatusAction = actionFactory.protected(
  */
 export const saveWorkReportSignatureAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const result = await service.saveWorkReportSignature(actor, input);
+    const result = await service.saveWorkReportSignature(input.workReportId, {
+      signatureDataUrl: input.dataUrl,
+      signedByUserId: actor.id,
+    });
     if (result?.projectId) {
       revalidatePath(`/projects/${result.projectId}`);
     }
@@ -101,15 +113,18 @@ export const saveWorkReportSignatureAction = actionFactory.protected(
  */
 export const deleteWorkReportPhotoAction = actionFactory.protected(
   async ({ input, actor }) => {
-    await service.deleteWorkReportPhoto(actor, input.photoId);
-    revalidatePath(`/projects/${input.projectId}`);
+    const data =
+      input instanceof FormData
+        ? {
+            photoId: input.get('photoId') as string,
+            projectId: input.get('projectId') as string,
+          }
+        : (input as { photoId: string; projectId: string });
+    await service.deleteWorkReportPhoto(data.photoId);
+    revalidatePath(`/projects/${data.projectId}`);
     return { success: true };
   },
   {
-    schema: z.object({
-      photoId: z.string().uuid(),
-      projectId: z.string().uuid(),
-    }),
     metadata: {
       rbac: { resource: RbacResource.WORK_REPORTS, capability: 'delete' },
     },
@@ -121,11 +136,11 @@ export const deleteWorkReportPhotoAction = actionFactory.protected(
  */
 export const deleteWorkReportAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const report = await service.getWorkReportById(actor, input);
+    const report = await service.getWorkReportById(input);
     if (!report) throw new Error('Work report tidak ditemukan');
 
-    await service.deleteWorkReport(actor, input);
-    revalidatePath(`/projects/${report.projectId}`);
+    await service.deleteWorkReport(input);
+    if (report) revalidatePath(`/projects/${report.projectId}`);
     return { success: true };
   },
   {
@@ -135,3 +150,114 @@ export const deleteWorkReportAction = actionFactory.protected(
     },
   }
 );
+
+import { uploadToR2 } from '@/lib/r2-upload';
+import * as projectService from '@/features/projects/service';
+import { TActionResult } from '@/lib/action-helpers';
+
+function parseWorkReportFormData(formData: FormData) {
+  const projectId = formData.get('projectId') as string;
+  const dateStr = formData.get('date') as string;
+  const timeStart = formData.get('timeStart') as string | undefined;
+  const timeEnd = formData.get('timeEnd') as string | undefined;
+  const zone = formData.get('zone') as string | undefined;
+  const situation = formData.get('situation') as string;
+  const workDone = formData.get('workDone') as string;
+  const workResult = formData.get('workResult') as string;
+  const status = (formData.get('status') as string) || 'DRAFT';
+
+  const machineIds = formData.getAll('machineIds') as string[];
+
+  return {
+    projectId,
+    date: new Date(dateStr),
+    timeStart: timeStart || undefined,
+    timeEnd: timeEnd || undefined,
+    zone: zone || undefined,
+    situation,
+    workDone,
+    workResult,
+    status: status as 'DRAFT' | 'SUBMITTED',
+    machineIds: machineIds.length > 0 ? machineIds : [],
+  };
+}
+
+/**
+ * Server Action: Upload a photo for a work report
+ */
+export const uploadWorkReportPhotoAction = actionFactory.protected(
+  async ({ input: formData, actor }) => {
+    const file = formData.get('file') as File;
+    const projectId = formData.get('projectId') as string;
+    const workReportId = formData.get('workReportId') as string;
+
+    if (!file) throw new Error('No file uploaded');
+
+    const validatedProjectId = z.string().uuid().parse(projectId);
+    const validatedWorkReportId = z.string().uuid().parse(workReportId);
+
+    await projectService.assertCanAccessProject(actor, validatedProjectId);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+    const key = `projects/${projectId}/work-reports/${workReportId}/${Date.now()}_${sanitizedName}`;
+
+    const url = await uploadToR2({ key, body: buffer, contentType: file.type });
+
+    return { url };
+  },
+  {
+    metadata: {
+      rbac: { resource: RbacResource.WORK_REPORTS, capability: 'update' },
+    },
+  }
+) as (formData: FormData) => Promise<TActionResult<{ url: string }>>;
+
+// Aliases for convenience
+export const submitWorkReportAction = async (id: string) => {
+  return updateWorkReportStatusAction({ id, status: 'SUBMITTED' });
+};
+
+export const approveWorkReportAction = async (id: string) => {
+  return updateWorkReportStatusAction({ id, status: 'APPROVED' });
+};
+
+export const rejectWorkReportAction = async (id: string) => {
+  return updateWorkReportStatusAction({ id, status: 'REJECTED' });
+};
+
+/**
+ * Server Action: Get work reports by project
+ */
+export const getWorkReportsByProjectAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    return service.getWorkReportsByProject(input);
+  },
+  {
+    schema: z.string().uuid(),
+    metadata: {
+      rbac: { resource: RbacResource.WORK_REPORTS, capability: 'read' },
+    },
+  }
+);
+
+/**
+ * Server Action: Get work report by ID
+ */
+export const getWorkReportByIdAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    return service.getWorkReportById(input);
+  },
+  {
+    schema: z.string().uuid(),
+    metadata: {
+      rbac: { resource: RbacResource.WORK_REPORTS, capability: 'read' },
+    },
+  }
+);
+
+export const revalidateWorkReportPathAction = async (projectId: string) => {
+  revalidatePath(`/work-reports/${projectId}`);
+  return { success: true };
+};

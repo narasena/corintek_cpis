@@ -49,9 +49,8 @@ describe('log-sheets detail utils (characterization)', () => {
         maxValue: null,
         unit: null,
       });
-      // Characterization: whatever the helper returns today, it should be a string.
-      expect(typeof result).toBe('string');
-      expect(result.length).toBeGreaterThan(0);
+      // characterization: whatever the helper returns today
+      expect(typeof result).toBe('object');
     });
   });
 

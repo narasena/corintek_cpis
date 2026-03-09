@@ -6,9 +6,9 @@ import type { TUserResponse } from '@/@types/user.type';
 
 async function loadTechnicians(onSuccess: (users: TUserResponse[]) => void) {
   try {
-    const res = await getTechniciansListAction();
+    const res = await getTechniciansListAction({});
     if (res.success && res.data) {
-      onSuccess(res.data);
+      onSuccess(res.data as any);
     } else {
       toast.error('Gagal memuat daftar teknisi');
     }

@@ -7,11 +7,7 @@ import { isZodError, formatZodError } from './utils/validation';
 export class JWTError extends Error {
   constructor(
     message: string,
-    public code:
-      | 'EXPIRED'
-      | 'INVALID'
-      | 'SECRET_MISSING'
-      | 'VALIDATION_FAILED'
+    public code: 'EXPIRED' | 'INVALID' | 'SECRET_MISSING' | 'VALIDATION_FAILED'
   ) {
     super(message);
     this.name = 'JWTError';
@@ -73,7 +69,7 @@ function mapJwtErrorToActionResult(
   error: unknown,
   context: string
 ): TActionResult<never> {
-  let message = AUTH_INFRA_ERROR.TOKEN_INVALID;
+  let message: string = AUTH_INFRA_ERROR.TOKEN_INVALID;
 
   if (error instanceof errors.JWTExpired) {
     message = AUTH_INFRA_ERROR.TOKEN_EXPIRED;

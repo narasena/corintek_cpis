@@ -34,7 +34,7 @@ export function ProfileSelector({
   useEffect(() => {
     async function fetchProfiles() {
       try {
-        const result = await getProfilesForSelectAction();
+        const result = await getProfilesForSelectAction({});
         if (result.success) {
           setProfiles(result.data);
         }

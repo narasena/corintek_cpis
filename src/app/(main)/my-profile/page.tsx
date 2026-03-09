@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function MyProfilePage() {
-  const result = await getCurrentUserProfileAction();
+  const result = await getCurrentUserProfileAction({});
 
   if (!result.success || !result.data) {
     redirect('/login');

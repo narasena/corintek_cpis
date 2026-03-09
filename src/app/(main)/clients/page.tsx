@@ -20,12 +20,12 @@ export default function ClientsPage() {
   const [showEditDialog, setShowEditDialog] = useState(false);
 
   const fetchClients = useCallback(async () => {
-    const result = await getAllClientsAction();
+    const result = await getAllClientsAction({});
     if (result.success && Array.isArray(result.data)) {
       setClients(result.data as TClientResponse[]);
     } else {
       toast.error('Gagal mengambil data klien', {
-        description: result.error,
+        description: (result as any).error,
       });
     }
     setLoading(false);

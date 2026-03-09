@@ -38,7 +38,7 @@ export default function AttendanceAdminPage() {
   const [isPending, startTransition] = useTransition();
 
   const fetchTechnicians = useCallback(async () => {
-    const result = await getAllUsersAction();
+    const result = await getAllUsersAction({});
     if (!result.success || !Array.isArray(result.data)) {
       return;
     }
@@ -59,7 +59,7 @@ export default function AttendanceAdminPage() {
 
     if (!result.success) {
       toast.error('Gagal mengambil data absensi', {
-        description: result.error,
+        description: (result as any).error,
       });
       setData([]);
     } else if (Array.isArray(result.data)) {

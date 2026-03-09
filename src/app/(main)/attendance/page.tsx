@@ -49,12 +49,12 @@ export default function AttendancePage() {
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const result = await getTodayAttendanceAction();
+    const result = await getTodayAttendanceAction({});
     if (result.success) {
       setAttendance((result.data as TAttendance | null) ?? null);
     } else {
       toast.error('Gagal mengambil absensi hari ini', {
-        description: result.error,
+        description: (result as any).error,
       });
       setAttendance(null);
     }

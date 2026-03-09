@@ -85,7 +85,7 @@ export async function createUser(
     select: userResponseSelect,
   });
 
-  return toUserResponse(user);
+  return toUserResponse(user as any);
 }
 
 /**
@@ -136,7 +136,7 @@ export async function updateUser(
     select: userResponseSelect,
   });
 
-  return toUserResponse(user);
+  return toUserResponse(user as any);
 }
 
 /**
@@ -230,7 +230,7 @@ export async function restoreUser(id: string) {
     select: userResponseSelect,
   });
 
-  return toUserResponse(restoredUser);
+  return toUserResponse(restoredUser as any);
 }
 
 /**

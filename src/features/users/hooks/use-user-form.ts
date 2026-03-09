@@ -105,10 +105,10 @@ export function useUserForm({
           });
           return;
         }
-        result = await updateUserAction(
-          defaultValues.id,
-          data as TUserUpdateInput
-        );
+        result = await updateUserAction({
+          id: defaultValues.id,
+          ...data
+        } as any);
       }
 
       if (result.success) {

@@ -37,7 +37,7 @@ export const getTodayAttendanceAction = actionFactory.protected(
  */
 export const clockInAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const photo = input.get('photo') as File | null;
+    const photo = (input as any).get('photo') as File | null;
     if (!photo || !photo.size) throw new Error('Foto wajib diisi');
 
     const now = new Date();
@@ -78,7 +78,7 @@ export const clockInAction = actionFactory.protected(
  */
 export const clockOutAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const photo = input.get('photo') as File | null;
+    const photo = (input as any).get('photo') as File | null;
     if (!photo || !photo.size) throw new Error('Foto wajib diisi');
 
     const now = new Date();

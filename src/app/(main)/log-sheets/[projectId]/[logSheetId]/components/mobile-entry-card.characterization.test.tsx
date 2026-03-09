@@ -100,7 +100,7 @@ describe('MobileEntryCard - characterization', () => {
         param: createMockParam({ minValue: 10, maxValue: 50 }),
       });
 
-      expect(screen.queryByText(/10.*50/)).not.toBeNull();
+      expect(screen.queryAllByText(/10.*50/).length).toBeGreaterThan(0);
     });
 
     it('renders machine label for multiple machines (main path)', async () => {
@@ -147,7 +147,12 @@ describe('MobileEntryCard - characterization', () => {
         param: createMockParam({ valueType: 'NUMBER', id: 'param-1' }),
         machines: [createMockMachine({ id: 'm-1' })],
         entryState: {
-          'param-1:m-1:VALUE': { valueType: 'NUMBER', numericValue: 42, boolValue: null, textValue: null },
+          'param-1:m-1:VALUE': {
+            valueType: 'NUMBER',
+            numericValue: 42,
+            boolValue: null,
+            textValue: null,
+          },
         },
       });
 
@@ -160,7 +165,12 @@ describe('MobileEntryCard - characterization', () => {
         param: createMockParam({ valueType: 'NUMBER', id: 'param-1' }),
         machines: [createMockMachine({ id: 'm-1' })],
         entryState: {
-          'param-1:m-1:VALUE': { valueType: 'NUMBER', numericValue: null, boolValue: null, textValue: null },
+          'param-1:m-1:VALUE': {
+            valueType: 'NUMBER',
+            numericValue: null,
+            boolValue: null,
+            textValue: null,
+          },
         },
       });
 
@@ -179,13 +189,18 @@ describe('MobileEntryCard - characterization', () => {
         }),
         machines: [createMockMachine({ id: 'm-1' })],
         entryState: {
-          'param-1:m-1:VALUE': { valueType: 'NUMBER', numericValue: 5, boolValue: null, textValue: null },
+          'param-1:m-1:VALUE': {
+            valueType: 'NUMBER',
+            numericValue: 5,
+            boolValue: null,
+            textValue: null,
+          },
         },
       });
 
       const input = screen.getByPlaceholderText('Nilai...');
       // Component uses native color styling for error or custom classes
-      expect(input.className).toContain('border-red-500'); 
+      expect(input.className).toContain('border-red-500');
     });
 
     it('applies red styling when value is above max (edge case)', async () => {
@@ -197,7 +212,12 @@ describe('MobileEntryCard - characterization', () => {
         }),
         machines: [createMockMachine({ id: 'm-1' })],
         entryState: {
-          'param-1:m-1:VALUE': { valueType: 'NUMBER', numericValue: 60, boolValue: null, textValue: null },
+          'param-1:m-1:VALUE': {
+            valueType: 'NUMBER',
+            numericValue: 60,
+            boolValue: null,
+            textValue: null,
+          },
         },
       });
 
@@ -218,7 +238,12 @@ describe('MobileEntryCard - characterization', () => {
         param: createMockParam({ valueType: 'BOOLEAN', id: 'param-1' }),
         machines: [createMockMachine({ id: 'm-1' })],
         entryState: {
-          'param-1:m-1:VALUE': { valueType: 'BOOLEAN', boolValue: true, numericValue: null, textValue: null },
+          'param-1:m-1:VALUE': {
+            valueType: 'BOOLEAN',
+            boolValue: true,
+            numericValue: null,
+            textValue: null,
+          },
         },
       });
 
@@ -230,7 +255,12 @@ describe('MobileEntryCard - characterization', () => {
         param: createMockParam({ valueType: 'BOOLEAN', id: 'param-1' }),
         machines: [createMockMachine({ id: 'm-1' })],
         entryState: {
-          'param-1:m-1:VALUE': { valueType: 'BOOLEAN', boolValue: false, numericValue: null, textValue: null },
+          'param-1:m-1:VALUE': {
+            valueType: 'BOOLEAN',
+            boolValue: false,
+            numericValue: null,
+            textValue: null,
+          },
         },
       });
 
@@ -238,12 +268,17 @@ describe('MobileEntryCard - characterization', () => {
     });
 
     it('renders "Hapus" button when has value (main path)', async () => {
-      await renderCard({ 
+      await renderCard({
         param: createMockParam({ valueType: 'BOOLEAN', id: 'param-1' }),
         machines: [createMockMachine({ id: 'm-1' })],
         entryState: {
-          'param-1:m-1:VALUE': { valueType: 'BOOLEAN', boolValue: true, numericValue: null, textValue: null },
-        }
+          'param-1:m-1:VALUE': {
+            valueType: 'BOOLEAN',
+            boolValue: true,
+            numericValue: null,
+            textValue: null,
+          },
+        },
       });
 
       expect(screen.queryByText('Hapus')).not.toBeNull();
@@ -254,7 +289,12 @@ describe('MobileEntryCard - characterization', () => {
         param: createMockParam({ valueType: 'BOOLEAN', id: 'param-1' }),
         machines: [createMockMachine({ id: 'm-1' })],
         entryState: {
-          'param-1:m-1:VALUE': { valueType: 'BOOLEAN', boolValue: true, numericValue: null, textValue: null },
+          'param-1:m-1:VALUE': {
+            valueType: 'BOOLEAN',
+            boolValue: true,
+            numericValue: null,
+            textValue: null,
+          },
         },
       });
 
@@ -276,7 +316,12 @@ describe('MobileEntryCard - characterization', () => {
         param: createMockParam({ valueType: 'TEXT', id: 'param-1' }),
         machines: [createMockMachine({ id: 'm-1' })],
         entryState: {
-          'param-1:m-1:VALUE': { valueType: 'TEXT', textValue: 'Test note', numericValue: null, boolValue: null },
+          'param-1:m-1:VALUE': {
+            valueType: 'TEXT',
+            textValue: 'Test note',
+            numericValue: null,
+            boolValue: null,
+          },
         },
       });
 
