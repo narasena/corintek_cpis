@@ -9,6 +9,7 @@ import type {
 import type { TRbacRole } from '@/lib/rbac';
 import type { IProjectAccessServices } from './utils';
 import type { IActivityRepository } from './di';
+import { Prisma } from '@prisma/client';
 
 // ============================================================================
 // Legacy Exports (Preserved for backward compatibility)
@@ -26,7 +27,10 @@ export async function getDashboardMetrics(
   projectIds?: string[],
   range?: { start: Date; end: Date }
 ): Promise<IDashboardMetric[]> {
-  const whereLogSheet: any = { deletedAt: null, status: { not: 'DRAFT' } };
+  const whereLogSheet: Prisma.LogSheetWhereInput = {
+    deletedAt: null,
+    status: { not: 'DRAFT' },
+  };
   if (projectIds && projectIds.length > 0) {
     whereLogSheet.projectId = { in: projectIds };
   }
@@ -49,7 +53,16 @@ export async function getDashboardMetrics(
     orderBy: { date: 'asc' },
   });
 
-  const grouped = new Map<string, any>();
+  const grouped = new Map<
+    string,
+    {
+      date: string;
+      condenserApproach: number[];
+      evaporatorApproach: number[];
+      condenserAmpere: number[];
+      evaporatorAmpere: number[];
+    }
+  >();
 
   for (const ls of logSheets) {
     const dateStr = ls.date.toISOString().split('T')[0];
@@ -63,7 +76,7 @@ export async function getDashboardMetrics(
       });
     }
 
-    const group = grouped.get(dateStr);
+    const group = grouped.get(dateStr)!;
     for (const entry of ls.entries) {
       if (entry.numericValue === null) continue;
       const vName = entry.parameter.variableName;
@@ -94,7 +107,7 @@ export async function getRecentLogSheetPhotos(
   projectIds?: string[],
   limit: number = 50
 ) {
-  const whereClause: any = { deletedAt: null };
+  const whereClause: Prisma.LogSheetPhotoWhereInput = { deletedAt: null };
   if (projectIds && projectIds.length > 0) {
     whereClause.logSheet = { projectId: { in: projectIds } };
   }
@@ -107,6 +120,28 @@ export async function getRecentLogSheetPhotos(
     orderBy: { createdAt: 'desc' },
     take: limit,
   });
+}
+
+/**
+ * Get summary statistics for Admin/Director dashboard
+ */
+export async function getAdminDashboardStats() {
+  const [activeProjects, totalProjects, pendingLogSheets, totalClients] =
+    await Promise.all([
+      prisma.project.count({ where: { status: 'ONGOING', deletedAt: null } }),
+      prisma.project.count({ where: { deletedAt: null } }),
+      prisma.logSheet.count({
+        where: { status: 'SUBMITTED', deletedAt: null },
+      }),
+      prisma.client.count({ where: { deletedAt: null } }),
+    ]);
+
+  return {
+    activeProjects,
+    totalProjects,
+    pendingLogSheets,
+    totalClients,
+  };
 }
 
 // ============================================================================
@@ -135,19 +170,17 @@ export class ActivityService {
       this.repository.queryWorkReportActivities(input.projectIds, since, limit),
     ]);
 
-    const activities = this.mapToActivities(
-      [...logSheets, ...workReports],
-      allowedTypes
-    )
+    const activitiesRaw = [...logSheets, ...workReports];
+    const activitiesMapped = this.mapToActivities(activitiesRaw, allowedTypes)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, limit);
 
     return {
-      activities,
-      hasMore: logSheets.length + workReports.length > limit,
-      nextCursor: activities[activities.length - 1]?.id ?? null,
+      activities: activitiesMapped,
+      hasMore: activitiesRaw.length > limit,
+      nextCursor: activitiesMapped[activitiesMapped.length - 1]?.id ?? null,
       appliedRange: input.timeRange ?? '7d',
-      totalEstimate: activities.length,
+      totalEstimate: activitiesMapped.length,
     };
   }
 
@@ -168,33 +201,12 @@ export class ActivityService {
    * @param limit - Max records
    * @returns Raw log sheet activity data
    */
-  private async queryLogSheetActivities(
+  async queryLogSheetActivities(
     projectIds: string[] | undefined,
     since: Date,
     limit: number
-  ): Promise<
-    Array<{
-      id: string;
-      date: Date;
-      status: string;
-      submittedAt: Date | null;
-      submittedBy: {
-        id: string;
-        firstName: string;
-        lastName: string | null;
-        avatarUrl: string | null;
-      } | null;
-      approvedAt: Date | null;
-      approvedBy: {
-        id: string;
-        firstName: string;
-        lastName: string | null;
-        avatarUrl: string | null;
-      } | null;
-      project: { id: string; name: string };
-    }>
-  > {
-    const where: any = {
+  ) {
+    const where: Prisma.LogSheetWhereInput = {
       deletedAt: null,
       OR: [{ submittedAt: { gte: since } }, { approvedAt: { gte: since } }],
     };
@@ -214,6 +226,7 @@ export class ActivityService {
             firstName: true,
             lastName: true,
             avatarUrl: true,
+            deletedAt: true,
           },
         },
         approvedBy: {
@@ -222,9 +235,10 @@ export class ActivityService {
             firstName: true,
             lastName: true,
             avatarUrl: true,
+            deletedAt: true,
           },
         },
-        project: { select: { id: true, name: true } },
+        project: { select: { id: true, name: true, deletedAt: true } },
       },
       orderBy: { updatedAt: 'desc' },
       take: limit,
@@ -238,19 +252,12 @@ export class ActivityService {
    * @param limit - Max records
    * @returns Raw work report activity data
    */
-  private async queryWorkReportActivities(
+  async queryWorkReportActivities(
     projectIds: string[] | undefined,
     since: Date,
     limit: number
-  ): Promise<
-    Array<{
-      id: string;
-      createdAt: Date;
-      zone: string | null;
-      project: { id: string; name: string };
-    }>
-  > {
-    const where: any = {
+  ) {
+    const where: Prisma.WorkReportWhereInput = {
       deletedAt: null,
       status: 'SUBMITTED',
       createdAt: { gte: since },
@@ -263,7 +270,7 @@ export class ActivityService {
         id: true,
         createdAt: true,
         zone: true,
-        project: { select: { id: true, name: true } },
+        project: { select: { id: true, name: true, deletedAt: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: limit,
@@ -271,7 +278,7 @@ export class ActivityService {
   }
 
   private mapToActivities(
-    rows: unknown[],
+    rows: any[],
     allowedTypes?: TActivityType[]
   ): IActivity[] {
     return rows.flatMap(row =>
@@ -283,7 +290,6 @@ export class ActivityService {
     row: any,
     allowedTypes?: TActivityType[]
   ): IActivity[] {
-    const activities: IActivity[] = [];
     const base = this.buildBaseActivity(row);
 
     const candidates = [
@@ -319,10 +325,10 @@ export class ActivityService {
       type: 'LOG_SHEET_SUBMITTED',
       severity: 'INFO',
       title: 'Log Sheet Disubmit',
-      message: `${user.name} mensubmit log sheet`,
+      message: `${user.userName} mensubmit log sheet`,
       ...base,
       userId: row.submittedBy.id,
-      userName: user.name,
+      userName: user.userName,
       userAvatarUrl: user.avatarUrl,
       createdAt: row.submittedAt,
       link: `/log-sheets/${row.id}`,
@@ -339,10 +345,10 @@ export class ActivityService {
       type: 'LOG_SHEET_APPROVED',
       severity: 'SUCCESS',
       title: 'Log Sheet Disetujui',
-      message: `${user.name} menyetujui log sheet`,
+      message: `${user.userName} menyetujui log sheet`,
       ...base,
       userId: row.approvedBy.id,
-      userName: user.name,
+      userName: user.userName,
       userAvatarUrl: user.avatarUrl,
       createdAt: row.approvedAt,
       link: `/log-sheets/${row.id}`,
@@ -370,10 +376,13 @@ export class ActivityService {
     };
   }
 
-  private formatUser(user: any): { name: string; avatarUrl: string | null } {
+  private formatUser(user: any): {
+    userName: string;
+    avatarUrl: string | null;
+  } {
     const isDeleted = user.deletedAt != null;
     return {
-      name: isDeleted
+      userName: isDeleted
         ? 'Pengguna Terhapus'
         : `${user.firstName} ${user.lastName ?? ''}`.trim(),
       avatarUrl: isDeleted ? null : user.avatarUrl,

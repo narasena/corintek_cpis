@@ -11,7 +11,6 @@ import {
   FlaskConical,
   LayoutDashboard,
   Microscope,
-  Settings2,
   SlidersHorizontal,
   Users,
 } from 'lucide-react';
@@ -124,6 +123,14 @@ export function AppSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <div className="px-5 mt-2">
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+            Selamat datang kembali,
+          </p>
+          <p className="text-sm font-bold truncate">
+            {user.name.split(' ')[0]}
+          </p>
+        </div>
       </SidebarHeader>
       <SidebarContent className="px-2 pt-2 gap-0">
         <NavMain items={items} />

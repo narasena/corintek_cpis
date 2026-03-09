@@ -64,16 +64,18 @@ async function MainLayoutInner({ children }: { children: React.ReactNode }) {
         <AppSidebar user={sidebarUser} />
       </div>
       <SidebarInset className="print:m-0 bg-background/50">
-        <header className="flex sticky top-0 z-40 w-full h-16 md:h-20 shrink-0 items-center gap-4 border-b border-border/40 bg-background/80 backdrop-blur-md px-6 md:px-8 lg:px-10 print:hidden transition-all duration-300">
-          <SidebarTrigger className="-ml-2 hidden md:flex text-muted-foreground hover:text-foreground transition-colors scale-110" />
-          <Separator
-            orientation="vertical"
-            className="mr-2 h-6 hidden md:block bg-border/60"
-          />
-          <div className="flex-1 py-1">
-            <HeaderTitle />
+        <header className="flex sticky top-0 z-40 w-full h-20 shrink-0 items-center justify-between border-b border-primary/20 bg-gradient-to-r from-primary via-primary to-primary/95 shadow-lg transition-all duration-300 px-4 md:px-6 lg:px-8 print:hidden">
+          <div className="flex items-center gap-4">
+            <SidebarTrigger className="-ml-2 hidden md:flex text-primary-foreground hover:bg-white/10 transition-colors scale-110" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 h-6 hidden md:block bg-white/20"
+            />
+            <div className="py-1 text-primary-foreground">
+              <HeaderTitle />
+            </div>
           </div>
-          <NotificationBell />
+          <NotificationBell className="text-primary-foreground" />
         </header>
         <div className="print:mt-0! flex flex-1 flex-col gap-6 p-4 md:p-6 lg:p-8 print:p-0 pb-20 md:pb-6 mx-auto w-full max-w-[1600px] print:w!">
           {children}

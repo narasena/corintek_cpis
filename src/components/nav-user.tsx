@@ -29,19 +29,6 @@ interface User {
   role: string;
 }
 
-function getFirstName(name: string | null): string {
-  if (!name || name.trim() === '') return 'Pengguna';
-  return name.split(' ')[0];
-}
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Selamat pagi';
-  if (hour < 15) return 'Selamat siang';
-  if (hour < 18) return 'Selamat sore';
-  return 'Selamat malam';
-}
-
 function getInitials(name: string | null): string {
   if (!name) return '?';
   return name
@@ -61,20 +48,15 @@ export function NavUser({ user }: { user: User }) {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <div className="px-3 py-1.5 text-xs text-muted-foreground">
-          {getGreeting()}, {getFirstName(user.name)}
-        </div>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground border border-primary/10 bg-primary/5 shadow-sm"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
+              <Avatar className="h-8 w-8 rounded-lg border border-primary/20">
                 <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
-                <AvatarFallback className="rounded-lg">
+                <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
                   {getInitials(user.name)}
                 </AvatarFallback>
               </Avatar>

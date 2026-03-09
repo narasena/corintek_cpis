@@ -455,13 +455,11 @@ Accept current caching implementation as-is for Phase 5. Cache infrastructure wo
 
 ---
 
----
-
 ## ADR-011: UI/UX Aesthetic Overhaul (v0.4.0)
 
 **Date:** 2026-03-09  
- **Status:** Accepted  
- **Scope:** UI/UX, Component Refinement
+**Status:** Accepted  
+**Scope:** UI/UX, Component Refinement
 
 ### Context
 
@@ -476,28 +474,49 @@ The initial shadcn implementation was functional but felt "boring" and "empty" (
 
 ### Rationale
 
-- **Structural Soul:** Achieves a premium look through spacing, typography, and subtle borders rather than heavy animations or images, ensuring performance on low-end mobile devices.
-- **Value-First:** Replaces placeholders with real metrics/KPIs (even if static for now) to improve immediate utility.
-- **Consistency:** Standardizes toolbar patterns across all data tables.
+- **Structural Soul:** Achieves a premium look through spacing, typography, and subtle borders.
+- **Value-First:** Replaces placeholders with real metrics/KPIs.
+- **Consistency:** Standardizes patterns across components.
 
 ### Consequences
 
-- CSS complexity slightly increased in `data-table.tsx` and `layout.tsx`.
-- Build-time linting for Tailwind v4 utilities (e.g., `text-primary!`, `bg-linear-to-r`) must be strictly followed.
-- `DashboardScoped` must remain a Client Component (`'use client'`) for hook usage.
+- CSS complexity slightly increased.
+- `DashboardScoped` remains a Client Component.
+
+---
+
+## ADR-012: Real-time Dashboard Stats & Premium Header Refinement (v0.4.1)
+
+**Date:** 2026-03-09  
+**Status:** Accepted  
+**Scope:** UI/UX, Data Integration, Dashboard
+
+### Context
+
+Feedback on v0.4.0 indicated the dashboard felt static and the header lacked depth and alignment.
+
+### Decision
+
+1.  **Dashboard Stats Integration:** Connected KPI cards to live database counts via `getAdminDashboardStats` server action.
+2.  **Premium Header:** Upgraded to blue gradient theme (`bg-gradient-to-r from-primary via-primary to-primary/95`) with 80px height.
+3.  **Typography & Proportions:** Established "Hero Title vs Small Date" hierarchy, removing redundant subtitles.
+4.  **Layout Spacing:** Aligned header padding (`px-4 md:px-6 lg:px-8`) with content margins.
+5.  **Sidebar Greeting:** Repositioned user greeting to top for immediate context.
+
+### Rationale
+
+- **Utility:** Real metrics provide immediate value.
+- **Aesthetics:** Gradient and tightened proportions establish professional branding.
+- **Hierarchy:** Alignment and simplified text improve scannability.
+
+### Consequences
+
+- `NotificationBell` now supports external `className`.
+- `HeaderTitle` simplified (logic centered on proportions).
 
 ---
 
 ## How to Add New Decisions
-
-1. Use format: `ADR-XXX: Title`
-2. Include Date, Status (Proposed/Accepted/Deprecated), Scope
-3. Document Context → Decision → Rationale → Consequences
-4. Update this file via PR — never commit directly to main
-
----
-
-> **Related:** See `ROADMAP.md` for upcoming features, `CONTEXT.md` for active sprint state.
 
 1. Use format: `ADR-XXX: Title`
 2. Include Date, Status (Proposed/Accepted/Deprecated), Scope

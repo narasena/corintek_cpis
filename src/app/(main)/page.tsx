@@ -44,6 +44,10 @@ export default async function Page() {
   }
 
   // Default Dashboard for ADMIN, DIRECTOR, REPORTING
+  const stats = await import('@/features/dashboard/service').then(m =>
+    m.getAdminDashboardStats()
+  );
+
   return (
     <div className="flex flex-1 flex-col gap-6">
       {/* Welcome Banner */}
@@ -96,8 +100,12 @@ export default async function Page() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12 / 48</div>
-            <p className="text-xs text-muted-foreground mt-1">+2 bulan ini</p>
+            <div className="text-2xl font-bold">
+              {stats.activeProjects} / {stats.totalProjects}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Status: ONGOING
+            </p>
           </CardContent>
         </Card>
 
@@ -111,9 +119,9 @@ export default async function Page() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">34</div>
+            <div className="text-2xl font-bold">{stats.pendingLogSheets}</div>
             <p className="text-xs text-emerald-600 mt-1 font-medium">
-              12 menunggu review
+              Menunggu review
             </p>
           </CardContent>
         </Card>
@@ -128,7 +136,7 @@ export default async function Page() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
+            <div className="text-2xl font-bold">{stats.totalClients}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Aktif berlangganan
             </p>

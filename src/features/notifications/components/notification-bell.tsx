@@ -14,7 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useNotifications } from './use-notifications';
 import { NotificationItem } from './notification-item';
 
-export function NotificationBell() {
+export function NotificationBell({ className }: { className?: string }) {
   const {
     notifications,
     unreadCount,
@@ -27,7 +27,7 @@ export function NotificationBell() {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className={`relative ${className}`}>
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge
