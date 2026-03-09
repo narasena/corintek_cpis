@@ -29,7 +29,8 @@
     "test:e2e": "dotenv -e .env.e2e.local -- playwright test",
     "test:e2e:ui": "dotenv -e .env.e2e.local -- playwright test --ui",
     "test:e2e:debug": "dotenv -e .env.e2e.local -- playwright test --debug",
-    "test:e2e:headed": "dotenv -e .env.e2e.local -- playwright test --headed"
+    "test:e2e:headed": "dotenv -e .env.e2e.local -- playwright test --headed",
+    "record:videos": "npx tsx scripts/record-videos.ts"
   },
   "prisma": {
     "schema": "prisma/schema",

@@ -86,7 +86,7 @@ Kebutuhan bisnis ini harus dipenuhi untuk memastikan bahwa Sistem Informasi Proy
      - Parameter Limit **[IMPLEMENTED]**
      - Batasan Minimal dan Maksimal **[IMPLEMENTED]**
    - Mengunggah lampiran berupa foto sebelum dan sesudah **[IMPLEMENTED]**.
-   - Mengunggah lampiran video sebelum dan sesudah (opsional) **[NOT IMPLEMENTED]**.
+   - Mengunggah lampiran video sebelum dan sesudah (opsional) **[IMPLEMENTED - Automated Demo Suite]**.
      Pada menu Logsheet juga disediakan fitur untuk laporan teknisi yang tidak bisa masuk dan dapat digantikan **[IMPLEMENTED]**
 
 4. Daftar Laporan (Reports) **[IMPLEMENTED]**

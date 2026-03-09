@@ -55,12 +55,12 @@ export function NotificationBell({ className }: { className?: string }) {
         </div>
         <DropdownMenuSeparator />
         <ScrollArea className="h-[300px]">
-          {notifications.length === 0 ? (
+          {!notifications || notifications.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               No notifications
             </div>
           ) : (
-            notifications.map(n => (
+            (notifications || []).map(n => (
               <NotificationItem key={n.id} notification={n} onRead={markRead} />
             ))
           )}

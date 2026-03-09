@@ -57,7 +57,35 @@
 
 ---
 
-## v0.4.0 — UI/UX Aesthetic Overhaul (2026-03-09)
+## v0.5.0 — Form UX Standards & Sticky Action Protocol (2026-03-09)
+
+**Branch:** `feat/ui-dialog-refinement`
+
+### Form & Dialog Refinement
+
+- [x] **Sticky Action Footer:** Established `CrudDialog` as the source of truth for all form containers, implementing a sticky bottom action bar.
+- [x] **Card-Based Sectioning:** Large forms broken into focused `Card` components (e.g., "Personal Data", "Account Access").
+- [x] **Vertical Navigation for Dense Data:** High-density forms use `Tabs` with `orientation="vertical"`.
+- [x] **Premium primitives:** Switched strictly to `shadcn/ui` based Switch, DatePicker, and Combobox.
+
+---
+
+## v0.4.1 — Real-time Dashboard Stats & Premium Header (2026-03-09)
+
+**Branch:** `feat/ui-dialog-refinement`
+
+### Dashboard Integration
+
+- [x] **Dashboard Stats Integration:** Connected KPI cards to live database counts via `getAdminDashboardStats` server action.
+- [x] **Premium Header:** Upgraded to blue gradient theme (`bg-gradient-to-r from-primary via-primary to-primary/95`) with 80px height.
+- [x] **Typography & Proportions:** Established "Hero Title vs Small Date" hierarchy.
+- [x] **Layout Spacing:** Aligned header padding with content margins.
+
+---
+
+## v0.4.0 — UI/UX Aesthetic Overhaul & Automated Video Generation (2026-03-09)
+
+### Part A: UI/UX Aesthetic Overhaul
 
 **Branch:** `feat/ui/ux-overhaul`
 
@@ -72,6 +100,17 @@
   - Integrated Search + Filter toolbar with blurred background.
   - Revamped pagination with "Showing X-Y of Z" info and rounded controls.
   - Fixed Tailwind v4 lint warnings across modified components.
+
+### Part B: Automated Video Suite
+
+**Branch:** `feat/client-video-generator` (merged)
+
+- [x] Created `playwright.video.config.ts` for automated recording
+- [x] High-Resolution output: Forced 1920x1080 (Desktop) and native Pixel 5 (Mobile)
+- [x] Implemented `scripts/record-videos.ts` to orchestrate 20 demo scenarios
+- [x] Authored 10 comprehensive test scenarios covering all user roles (Admin, Technician, Client)
+- [x] **Bug Fix:** Patched `NotificationBell` crash (`undefined.length` error)
+- [x] **Docs:** Comprehensive step-by-step walkthrough in `docs/video-workflows.md`
 
 ---
 
@@ -203,3 +242,5 @@
 - [x] Server Actions architecture (no REST API for internal)
 - [x] Cloudflare Worker (R2) for file uploads
 - [x] Sonner toast protocol for all user feedback
+
+(End of file - total 220 lines)

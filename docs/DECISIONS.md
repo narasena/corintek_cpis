@@ -578,6 +578,39 @@ Implement a **Floating Full Screen** dialog design for mobile viewports (widths 
 
 ---
 
+## ADR-015: Automated Video Generation Suite
+
+**Date:** 2026-03-09  
+**Status:** Accepted  
+**Scope:** QA, Documentation, Marketing
+
+### Context
+
+Handover and client training required high-quality video demonstrations. Manual recording was inconsistent, slow, and hard to update as the UI evolved.
+
+### Decision
+
+Implement an automated video generation suite using Playwright.
+
+1. **Configuration:** Dedicated `playwright.video.config.ts` with 1920x1080 resolution.
+2. **Scenarios:** Scripted paths for Admin, Technician, and Client roles.
+3. **Post-Processing:** Custom Node script (`scripts/record-videos.ts`) to extract and rename `.webm` files into a root `/videos/` folder.
+4. **Resolution Isolation:** Split video sizes per project (1080p for Desktop, Portrait for Mobile) to avoid letterboxing.
+
+### Rationale
+
+- **Consistency:** Every video uses the same timing, data, and resolution.
+- **Maintainability:** Scripts can be re-run instantly if the UI changes.
+- **Readability:** Forced high-res ensuring text is legible in professional presentations.
+
+### Consequences
+
+- Automated suite takes ~10-15 minutes to generate all 20 videos.
+- Test scenarios use `isVisible` guards to handle slight data variations during long runs.
+- Root `/videos/` folder remains git-ignored but can be generated on-demand.
+
+---
+
 ## How to Add New Decisions
 
 1. Use format: `ADR-XXX: Title`

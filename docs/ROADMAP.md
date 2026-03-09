@@ -50,7 +50,7 @@
 | #   | Feature                                        | Scope ID                       | Priority | Effort |
 | :-- | :--------------------------------------------- | :----------------------------- | :------- | :----- |
 | 1   | Browser UI Tests (MP-01, CP-01)                | `QA`                           | 🟢 P1    | Low    |
-| 2   | Log Sheet Adjustments (video, A4, warnings)    | `LS-ADJ`                       | 🟡 P2    | Medium |
+| 2   | Log Sheet Adjustments (A4, warnings)           | `LS-ADJ`                       | 🟡 P2    | Low    |
 | 3   | Dashboard Parameter Panel                      | `DB-04`                        | 🟡 P2    | Low    |
 | 4   | Client/User Fields (website, company, address) | `CLIENT-FIELDS`, `USER-FIELDS` | 🟢 P3    | Low    |
 | 5   | Work Types Multi-select                        | `PRJ-FIELDS-02`                | 🟢 P3    | Low    |
