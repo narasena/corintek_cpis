@@ -109,6 +109,11 @@ export default defineConfig({
       dependencies: ['setup:admin', 'setup:technician'],
     },
     {
+      name: 'users',
+      testMatch: /users\/.*\.spec\.ts/,
+      dependencies: ['setup:admin', 'setup:technician'],
+    },
+    {
       name: 'client-portal',
       testMatch: /client-portal\/.*\.spec\.ts/,
       dependencies: ['setup:client'],
