@@ -32,10 +32,10 @@ UI Component → Server Action (actions.ts) → Service (service.ts) → Prisma 
 ## Project-Specific Rules
 
 1. **Mobile-first:** Technicians use low-budget Android phones in field conditions
-2. **Toast feedback** (sonner) MANDATORY on ALL user-facing actions (create/update/delete/login)
+2. **Toast feedback** (sonner) MANDATORY on ALL user-facing actions (create/update/delete/login). `<Toaster />` is mounted in root layout — **do NOT add it again** in child components.
 3. **CRUD pages** MUST use standard components: `DataTable`, `CrudDialog`, `ActionCell`
 4. **Indonesian text:** "Ubah" = Edit, "Hapus" = Delete, "Tambah" = Add
-5. **PDF** = browser-native print only (CSS `@media print` / Tailwind `print:` modifiers)
+5. **PDF** = browser-native print only (CSS `@media print` / Tailwind `print:` modifiers). Nav, action buttons, and dialogs MUST use `print:hidden` — they must NOT appear in printed output.
 6. **Log sheets** MUST fit on a single A4 page in print mode
 7. **Auth scope:** <40 internal users + CLIENT role (read-only portal)
 8. **Logging:** Use structured `logger` from `@/lib/logger` instead of manual `console` calls.
@@ -43,6 +43,7 @@ UI Component → Server Action (actions.ts) → Service (service.ts) → Prisma 
    - Supports structured metadata for machine-readable logs.
 9. Pre-code checklist: check `src/types` + `prisma/schema.prisma` before coding
 10. If stuck after 2 attempts → STOP and document blocker
+11. **shadcn Blocks first:** For any page-level layout (dashboard, sidebar, login, tables, forms), use a [shadcn/ui Block](https://ui.shadcn.com/blocks) as the base. Build custom only if no block fits AND the gap is documented.
 
 ## Constraints
 
