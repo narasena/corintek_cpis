@@ -5,6 +5,7 @@ import {
 import { ApproachChart } from './approach-chart';
 import { AmpereChart } from './ampere-chart';
 import { RecentPhotosGallery } from './recent-photos-gallery';
+import { TimeRangeSelector } from './time-range-selector';
 import {
   Card,
   CardContent,
@@ -14,13 +15,18 @@ import {
 } from '@/components/ui/card';
 import { subDays } from 'date-fns';
 
-export async function AnalyticsDashboard() {
+export async function AnalyticsDashboard({
+  timeRange = '30d',
+}: {
+  timeRange?: '7d' | '30d' | '90d';
+}) {
   // We can default to the last 30 days for metrics
+  const days = timeRange === '90d' ? 90 : timeRange === '30d' ? 30 : 7;
   const to = new Date();
-  const from = subDays(to, 30);
+  const from = subDays(to, days);
 
   const [metricsRes, photosRes] = await Promise.all([
-    getDashboardMetricsAction({ range: { start: from, end: to } }),
+    getDashboardMetricsAction({ timeRange }),
     getRecentPhotosAction({ limit: 12 }),
   ]);
 
@@ -29,13 +35,26 @@ export async function AnalyticsDashboard() {
   const photos =
     photosRes.success && photosRes.data ? (photosRes.data as any) : [];
 
+  const rangeLabel =
+    timeRange === '7d' ? '7 Hari' : timeRange === '30d' ? '30 Hari' : '90 Hari';
+
   return (
-    <div className="flex flex-col gap-6 mt-8">
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg font-semibold tracking-tight">Analitik</h2>
+          <p className="text-sm text-muted-foreground">
+            Pantau metrik performa unit pendingin
+          </p>
+        </div>
+        <TimeRangeSelector defaultValue={timeRange} />
+      </div>
+
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="flex flex-col border transition-all hover:border-primary/40 hover:shadow-md">
           <CardHeader className="p-4 pb-2">
             <CardTitle className="text-base font-bold">
-              Trend Approach (30 Hari)
+              Trend Approach ({rangeLabel})
             </CardTitle>
             <CardDescription className="text-xs">
               Histori rata-rata Condenser dan Evaporator Approach
@@ -49,7 +68,7 @@ export async function AnalyticsDashboard() {
         <Card className="flex flex-col border transition-all hover:border-primary/40 hover:shadow-md">
           <CardHeader className="p-4 pb-2">
             <CardTitle className="text-base font-bold">
-              Trend Ampere (30 Hari)
+              Trend Ampere ({rangeLabel})
             </CardTitle>
             <CardDescription className="text-xs">
               Histori rata-rata Condenser dan Evaporator Ampere

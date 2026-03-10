@@ -8,7 +8,11 @@ import { RecentActivitySection } from './_components/recent-activity-section';
 import { Activity, Briefcase, FileText, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default async function Page() {
+export default async function Page(props: {
+  searchParams: Promise<{ timeRange?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  const timeRange = (searchParams.timeRange as any) || '30d';
   const user = await getCurrentUserDetails();
 
   if (!user) {
@@ -33,7 +37,7 @@ export default async function Page() {
       <DashboardScoped user={user} projects={projects}>
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2">
-            <AnalyticsDashboard />
+            <AnalyticsDashboard timeRange={timeRange} />
           </div>
           <div className="md:col-span-1">
             <RecentActivitySection />
@@ -162,9 +166,9 @@ export default async function Page() {
       </div>
 
       {/* Admin/Director global analytics view */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3 mt-8">
         <div className="md:col-span-2">
-          <AnalyticsDashboard />
+          <AnalyticsDashboard timeRange={timeRange} />
         </div>
         <div className="md:col-span-1">
           <RecentActivitySection />
