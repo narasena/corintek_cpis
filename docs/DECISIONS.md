@@ -831,4 +831,38 @@ Implement an automated video generation suite using Playwright.
 
 ---
 
+## ADR-016: Multi-Time Range Analytics Support
+
+**Date:** 2026-03-10
+**Status:** Accepted
+**Scope:** Dashboard, Analytics, UX
+
+### Context
+
+The dashboard analytics (Approach and Ampere charts) were previously limited to a fixed 30-day window. This didn't allow users to see short-term trends (7 days) or longer-term historical data (90 days). Additionally, some older data (e.g., February 12th) was "hidden" because it fell outside the 30-day window.
+
+### Decision
+
+Implement dynamic time range selection (7d, 30d, 90d) using URL search parameters and a reusable `TimeRangeSelector` component.
+
+### Implementation
+
+1.  **URL State**: Used Next.js `useSearchParams` and `useRouter` to manage `timeRange` in the URL.
+2.  **Server Actions**: Updated `getDashboardMetricsAction` to calculate the start date based on the selected range.
+3.  **UI Components**: Created `TimeRangeSelector` using Radix UI Tabs for a premium feel.
+4.  **Data Wiring**: Updated `AnalyticsDashboard` to pass the selected range to all sub-charts and aggregate data accordingly.
+
+### Rationale
+
+- **Flexibility**: Users can now toggle between different views without page reloads (using Next.js transitions).
+- **Data Visibility**: The 90-day range ensures that older but relevant data is accessible.
+- **Consistency**: Standardizes the "7/30/90" pattern across all dashboard analytics.
+
+### Consequences
+
+- Increased query range for 90-day view (mitigated by existing database indices on `date`).
+- Requires coordination between client-side URL state and server-side data fetching.
+
+---
+
 > **Related:** See `ROADMAP.md` for upcoming features, `CONTEXT.md` for active sprint state.

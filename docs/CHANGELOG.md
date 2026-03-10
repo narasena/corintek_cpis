@@ -6,6 +6,21 @@
 
 ---
 
+## v0.7.0 — Dashboard Analytics Refinement (2026-03-10)
+
+**Branch:** `feat/dashboard/analytics-refinement`
+
+### Dashboard & Analytics
+
+- [x] **Multi-Time Range Support:** Added 7d, 30d, and 90d toggle for analytics charts.
+- [x] **Data Wiring Fix:** Correctly wired `ampere_evap` parameter to the Ampere Chart.
+- [x] **Missing Data Visibility:** Investigated and resolved issues with data outside the default 30-day window via the new 90-day range.
+- [x] **Draft Exclusion:** Confirmed analytics strictly exclude draft logsheets for data integrity.
+- [x] **Layout Polish:** Standardized height and alignment for activity feed and analytics sections.
+- [x] **Seed Data Update:** Added missing `ampere_evap` to master parameter seed.
+
+---
+
 ## v0.6.2 — Machine Section Layout Polish (2026-03-09)
 
 **Branch:** `feat/ui-dialog-refinement`
