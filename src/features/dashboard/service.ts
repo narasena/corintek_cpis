@@ -5,6 +5,7 @@ import type {
   IActivity,
   IDashboardConfig,
   TActivityType,
+  TActivityTimeRange,
 } from './types';
 import type { TRbacRole } from '@/lib/rbac';
 import type { IProjectAccessServices } from './utils';
@@ -184,8 +185,8 @@ export class ActivityService {
     };
   }
 
-  private getSinceDate(range: '7d' | '30d'): Date {
-    const days = range === '30d' ? 30 : 7;
+  private getSinceDate(range: TActivityTimeRange): Date {
+    const days = range === '90d' ? 90 : range === '30d' ? 30 : 7;
     return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   }
 

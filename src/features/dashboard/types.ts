@@ -21,7 +21,7 @@ export type TActivityType =
 
 export type TActivitySeverity = 'INFO' | 'SUCCESS' | 'WARNING';
 
-export type TActivityTimeRange = '7d' | '30d';
+export type TActivityTimeRange = '7d' | '30d' | '90d';
 
 export type TActivityVisibility = 'GLOBAL' | 'PROJECT' | 'PERSONAL' | 'CLIENT';
 
