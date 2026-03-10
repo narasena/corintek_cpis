@@ -9,7 +9,10 @@ import {
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import { getCurrentUserDetails } from '@/features/auth/lib/user-context';
+import { AUTH_ROUTES } from '@/features/auth/constants';
 import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
+import type { TRbacRole } from '@/lib/rbac/types';
 
 function MainLayoutFallback() {
   return (
@@ -45,7 +48,25 @@ export default function MainLayout({
 }
 
 async function MainLayoutInner({ children }: { children: React.ReactNode }) {
-  const currentUser = await getCurrentUserDetails();
+  // Thin Proxy pattern: JWT verification and RBAC happen here in Server Component
+  // This replaces the heavy logic that was in middleware/proxy
+  let currentUser = null;
+  let userRole: TRbacRole = 'CLIENT';
+
+  try {
+    currentUser = await getCurrentUserDetails();
+    if (currentUser) {
+      userRole = currentUser.role as TRbacRole;
+    }
+  } catch {
+    // Session invalid - redirect to login
+    redirect(AUTH_ROUTES.LOGIN);
+  }
+
+  // If no user, redirect to login
+  if (!currentUser) {
+    redirect(AUTH_ROUTES.LOGIN);
+  }
 
   const name = currentUser
     ? `${currentUser.firstName} ${currentUser.lastName ?? ''}`.trim()
@@ -55,12 +76,12 @@ async function MainLayoutInner({ children }: { children: React.ReactNode }) {
     name,
     email: currentUser?.email ?? '',
     avatar: currentUser?.avatarUrl ?? '',
-    role: currentUser?.role ?? 'DIRECTOR',
+    role: userRole,
   };
 
   return (
     <SidebarProvider>
-      <div className="print:hidden">
+      <div className="Print:hidden">
         <AppSidebar user={sidebarUser} />
       </div>
       <SidebarInset className="print:m-0 bg-background/50">

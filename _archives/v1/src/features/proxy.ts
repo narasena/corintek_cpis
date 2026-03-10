@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   // This middleware will run for all API routes
   console.log(`Middleware triggered for API route: ${req.nextUrl.pathname}`);
 
