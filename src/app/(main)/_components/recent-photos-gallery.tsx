@@ -23,7 +23,7 @@ interface IProps {
 export function RecentPhotosGallery({ photos }: IProps) {
   if (!photos || photos.length === 0) {
     return (
-      <div className="flex h-[200px] items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
+      <div className="flex flex-col items-center justify-center min-h-[200px] rounded-lg border border-dashed border-border/60 bg-muted/5 p-8 text-center">
         Belum ada foto terbaru hari ini.
       </div>
     );

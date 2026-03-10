@@ -54,7 +54,7 @@ export async function RecentActivitySection({
       : [];
 
   return (
-    <Card className="flex flex-col border transition-all hover:border-primary/40 hover:shadow-md">
+    <Card className="flex flex-col h-full border transition-all hover:border-primary/40 hover:shadow-md">
       <CardHeader className="p-4 pb-2">
         <CardTitle className="text-base font-bold">Aktivitas Terbaru</CardTitle>
         <CardDescription className="text-xs">
