@@ -9,9 +9,16 @@
 
 ## 🚨 ACTIVE BUGS (Stabilization Phase)
 
-| Bug ID  | Title          | Priority | Status | Description                    |
-| :------ | :------------- | :------- | :----- | :----------------------------- |
-| BUG-001 | [Describe bug] | P?       | Open   | [Reproduction steps or impact] |
+> **Bug registry has been moved to a dedicated file.**  
+> See [`docs/bugs.md`](./bugs.md) for all 48 bugs — organized by priority, module, and root cause.  
+> All items from this section have been migrated, reworded, and supplemented with source-scan findings.
+
+**Quick summary:**
+
+- 🔴 **P0 Blocker (3):** Signature state loss · CLIENT_PIC RBAC mismatch · Work report photos not persisted
+- 🟠 **P1 High (14):** Missing loading states · No duplicate logsheet guard · PIC approval workflow · Photo upload security gap
+- 🟡 **P2 Medium (17):** Scroll-increment inputs · Laggy notes · UI layout issues · Dialog styling
+- 🔵 **P3 Low (5):** Machine ownership default · Unused settings button · Client Technician role clarity
 
 ---
 

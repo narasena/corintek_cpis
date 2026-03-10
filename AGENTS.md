@@ -62,6 +62,12 @@ UI Component → Server Action (actions.ts) → Service (service.ts) → Prisma 
 - Use **Facade/Wrapper** pattern for new functionality over old components
 - Validate inputs from legacy code as "unsafe"
 
+## Bug Tracking Protocol
+
+- **Zero-Friction Logging:** If you (or the agent) discover a new bug during any task (feat, fix, refactor), you MUST immediately log it to `docs/bugs.md` before continuing.
+- **Format:** Assign the next available `BUG-XXX` ID, classify priority (P0-P3), and provide a concise root cause.
+- **No Silos:** Never fix an out-of-scope bug silently. Log it first. If it's a P0/P1 blocker for your current task, fix it and update the status to `Fixed`. Otherwise, leave it `Open`.
+
 ## File Placement
 
 | Component Type           | Location                         | Example                      |

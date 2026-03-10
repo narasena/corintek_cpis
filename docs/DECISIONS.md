@@ -865,4 +865,66 @@ Implement dynamic time range selection (7d, 30d, 90d) using URL search parameter
 
 ---
 
+## ADR-017: Backlog Purge & History Protocol
+
+**Date:** 2026-03-10  
+**Status:** Accepted  
+**Scope:** Documentation, Maintenance, Context Management
+
+### Context
+
+As the project reached "Feature Complete" status, `BACKLOG.md` had grown to over 300 lines, with ~70% of entries being completed tasks (`[x]`). This caused significant "token bloat" for AI agents and obscured the remaining critical stabilization tasks.
+
+### Decision
+
+Implement a strict "Purge & History" protocol for `BACKLOG.md`:
+
+1.  **Purge Frequency:** Completed tasks must be removed from `BACKLOG.md` immediately after being committed.
+2.  **Historical Record:** `CHANGELOG.md` serves as the permanent source of truth for completed work. No task is deleted from the project history, only moved from the "active" view.
+3.  **Active Bug Tracking:** A dedicated `## ACTIVE BUGS` section is maintained at the top of the backlog for immediate stabilization items.
+
+### Rationale
+
+- **Token Efficiency:** Smaller active documentation files improve AI agent focus and reduce context window waste.
+- **Cognitive Clarity:** Developers and agents see only what remains to be done.
+- **Auditability:** `CHANGELOG.md` maintains the legacy without cluttering day-to-day operations.
+
+### Consequences
+
+- Developers must manually verify that completed tasks are summarized in `CHANGELOG.md` before purging them from `BACKLOG.md`.
+- `BACKLOG.md` will naturally shrink and grow based on current sprint activity instead of accumulating indefinite history.
+
+---
+
 > **Related:** See `ROADMAP.md` for upcoming features, `CONTEXT.md` for active sprint state.
+
+---
+
+## ADR-016: Bug Tracking Protocol & Centralized Bug Registry
+
+**Date:** 2026-03-10  
+**Status:** Accepted  
+**Scope:** Maintenance, Project Management, documentation
+
+### Context
+
+The stabilization phase revealed 48 unique bugs across multiple modules. Manual tracking in a table within `BACKLOG.md` became unreadable and discouraged proactive logging by agents during implementation tasks.
+
+### Decision
+
+1.  **Centralized Registry:** Move all bugs to a dedicated `docs/bugs.md` file.
+2.  **Sequential IDs:** Use `BUG-XXX` IDs to allow clear referencing in commits.
+3.  **Agent Protocol:** Updated `AGENTS.md` to mandate that agents MUST log any discovered bug to `docs/bugs.md` immediately.
+4.  **No Silent Fixes:** Out-of-scope bugs found during a task must be logged first. Only P0/P1 blockers for the current task may be fixed immediately.
+
+### Rationale
+
+- **Clarity:** Separate "Features" (Backlog) from "Faults" (Bugs).
+- **Automation:** Simplifies agent discovery and reporting of technical debt.
+- **Auditability:** Sequential IDs allow tracking a bug from discovery to resolution in history.
+
+### Consequences
+
+- `BACKLOG.md` is now significantly smaller and more focused on scope.
+- `AGENTS.md` governs bug documentation behavior.
+- Manual UAT preparation is faster by simply reviewing `docs/bugs.md`.
