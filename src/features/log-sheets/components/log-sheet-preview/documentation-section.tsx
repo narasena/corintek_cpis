@@ -176,25 +176,38 @@ export function DocumentationSection({
                   </div>
                 </div>
               ))}
-              {pagePhotos
-                .filter(p => p.type === 'water')
-                .map(p => (
-                  <div
-                    key={`water-${p.paramName}-${p.url}`}
-                    className="space-y-2 col-span-2"
-                  >
-                    <div className="font-bold text-center underline">
-                      WATER METER - {p.paramName}
-                    </div>
-                    <div className="aspect-square w-full relative border border-black">
-                      <img
-                        src={p.url}
-                        alt={p.paramName}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+              {pagePhotos.filter(p => p.type === 'water').length > 0 && (
+                <div className="mt-8">
+                  {/* Water Meter Header - merged across columns */}
+                  <div className="font-bold text-center text-lg underline mb-6">
+                    WATER METER
                   </div>
-                ))}
+                  {/* Water Meter Photos - side by side */}
+                  <div className="grid grid-cols-2 gap-8 break-inside-avoid">
+                    {pagePhotos
+                      .filter(p => p.type === 'water')
+                      .map((p, idx) => (
+                        <div
+                          key={`water-${p.paramName}-${p.url}`}
+                          className="flex flex-col gap-2"
+                        >
+                          <div className="border border-black p-2 break-inside-avoid bg-white">
+                            <div className="relative aspect-[4/3] w-full mb-2">
+                              <img
+                                src={p.url}
+                                alt={p.paramName}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <p className="text-center text-xs font-semibold">
+                              {p.paramName}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -23,7 +23,7 @@
 | BUG-002d | Work Report | CLIENT_PIC Cannot Sign Work Reports                                             | Fixed  |
 | BUG-002e | Work Report | Work Report Actions Column Should Be Hidden for CLIENT                          | Fixed  |
 | BUG-003e | Work Report | Work Report Photo Delete Not Persisted                                          | Open   |
-| BUG-003f | Logsheet    | Logsheet Photo Print Preview Should Show Side-by-Side Like Work Reports         | Open   |
+| BUG-003f | Logsheet    | Logsheet Photo Print Preview Should Show Side-by-Side Like Work Reports         | Fixed  |
 
 ### BUG-001 — Logsheet Signature Causes Full Re-render (State Loss)
 
@@ -137,7 +137,8 @@
 ### BUG-003e — Photo Delete Not Persisted
 
 **Symptom:** Photos deleted in edit mode show as removed, save shows success, but on re-open the deleted photos reappear.  
-**Root Cause:** Component not fetching fresh data after edit - uses stale initialData.  
+**Root Cause:** The `existingPhotos` state is initialized from `effectiveData?.photos` only on initial render, but when the form is opened for a different work report date, the state isn't properly refreshed.  
+**Clarification:** Cannot be fixed by simply syncing photos on data fetch - this causes another bug where opening a work report shows wrong date and empty data. Needs deeper investigation of the form's data flow architecture.  
 **Status:** Open
 
 ---
@@ -145,8 +146,9 @@
 ### BUG-003f — Logsheet Photo Print Layout Not Side-by-Side
 
 **Symptom:** Logsheet water meter photo print preview shows one per row, not side-by-side before/after.  
-**Root Cause:** CSS print styles not implementing side-by-side layout.  
-**Status:** Open
+**Root Cause:** Water meter photos in DocumentationSection are displayed as separate vertical items instead of side-by-side in a 2-column grid.  
+**Fix:** Changed water meter photo rendering to use side-by-side grid layout with a merged "WATER METER" header spanning both columns, matching Work Report print preview pattern.  
+**Status:** Fixed (improved with merged header)
 
 ## 🟠 P1 — High Priority
 
@@ -315,7 +317,7 @@ console.log('[DEBUG] Checking for limit breaches...');
 
 | Category                            |  Count |
 | :---------------------------------- | -----: |
-| P0 Blocker                          |      2 |
+| P0 Blocker                          |      1 |
 | P1 High                             |     14 |
 | P2 Medium                           |     17 |
 | P3 Low / Needs Clarity              |      5 |
