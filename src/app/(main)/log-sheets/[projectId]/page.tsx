@@ -16,11 +16,25 @@ import {
 } from '@/features/log-sheets/actions';
 import { getLogSheetColumns, type TLogSheetRow } from './components/columns';
 import { LogSheetDialog } from '@/features/log-sheets/components/log-sheet-dialog';
+import { useSession } from '@/hooks/use-session';
+import { canAccess, RbacResource } from '@/lib/rbac';
 
 export default function ProjectLogSheetsPage() {
   const params = useParams<{ projectId: string }>();
   const router = useRouter();
   const projectId = params.projectId;
+  const { user: actor } = useSession();
+
+  const canEdit =
+    actor?.role !== 'CLIENT' &&
+    actor?.role !== 'CLIENT_SUPERVISOR' &&
+    canAccess(actor?.role ?? '', RbacResource.LOG_SHEETS, 'update');
+
+  const canDelete = canAccess(
+    actor?.role ?? '',
+    RbacResource.LOG_SHEETS,
+    'delete'
+  );
 
   const [project, setProject] = useState<IProject | null>(null);
   const [logSheets, setLogSheets] = useState<TLogSheetRow[]>([]);
@@ -68,11 +82,13 @@ export default function ProjectLogSheetsPage() {
   const columns = useMemo(
     () =>
       getLogSheetColumns({
-        onOpen: logSheetId =>
-          router.push(`/log-sheets/${projectId}/${logSheetId}`),
+        onOpen: (logSheetId, mode) =>
+          router.push(`/log-sheets/${projectId}/${logSheetId}?mode=${mode}`),
         onDelete: handleDelete,
+        canEdit,
+        canDelete,
       }),
-    [projectId, router] // eslint-disable-line react-hooks/exhaustive-deps
+    [projectId, router, canEdit, canDelete] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return (

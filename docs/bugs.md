@@ -8,17 +8,29 @@
 
 ## 🔴 P0 — Blockers
 
-| Bug ID  | Module      | Title                                                                           | Status |
-| :------ | :---------- | :------------------------------------------------------------------------------ | :----- |
-| BUG-001 | Logsheet    | Signature save triggers full page re-render, losing all unsaved input           | Open   |
-| BUG-002 | Logsheet    | CLIENT_PIC cannot add signature (unauthorized), but submission requires it      | Open   |
-| BUG-003 | Work Report | Uploaded photos are not persisted to the database after upload — lost on reload | Open   |
+| Bug ID   | Module      | Title                                                                           | Status |
+| :------- | :---------- | :------------------------------------------------------------------------------ | :----- |
+| BUG-001  | Logsheet    | Signature save triggers full page re-render, losing all unsaved input           | Fixed  |
+| BUG-001b | Logsheet    | Signature Preview Not Updating After Save (Derived from BUG-001)                | Fixed  |
+| BUG-002  | Logsheet    | CLIENT_PIC cannot add signature (unauthorized), but submission requires it      | Fixed  |
+| BUG-002b | Logsheet    | Logsheet Table Actions Not RBAC-Gated                                           | Fixed  |
+| BUG-002c | Work Report | CLIENT Role Can Edit Work Reports                                               | Fixed  |
+| BUG-003  | Work Report | Uploaded photos are not persisted to the database after upload — lost on reload | Fixed  |
+| BUG-003b | Work Report | Photos Duplicated on Each Save                                                  | Fixed  |
+| BUG-003c | Work Report | Delete Photos Not Working                                                       | Fixed  |
+| BUG-003d | Work Report | Work Report Photo Print Layout Issues                                           | Fixed  |
+| BUG-001c | Dashboard   | Dashboard Shows "Buat Logsheet Baru" to CLIENT Role                             | Fixed  |
+| BUG-002d | Work Report | CLIENT_PIC Cannot Sign Work Reports                                             | Fixed  |
+| BUG-002e | Work Report | Work Report Actions Column Should Be Hidden for CLIENT                          | Fixed  |
+| BUG-003e | Work Report | Work Report Photo Delete Not Persisted                                          | Open   |
+| BUG-003f | Logsheet    | Logsheet Photo Print Preview Should Show Side-by-Side Like Work Reports         | Open   |
 
 ### BUG-001 — Logsheet Signature Causes Full Re-render (State Loss)
 
 **Symptom:** After submitting a signature in a logsheet, the entire page re-renders and all unsaved form input (entries, notes, chemicals) is lost.  
 **Root Cause:** `saveLogSheetSignatureAction` calls `revalidatePath(...)`, which invalidates the Next.js cache and triggers a server-side re-fetch, discarding client state.  
-**Impact:** Critical data loss mid-session. Users must re-enter all data.
+**Impact:** Critical data loss mid-session. Users must re-enter all data.  
+**Status:** Fixed
 
 ---
 
@@ -27,7 +39,8 @@
 **Symptom:** Logsheet submission fails because `clientPicSignatureUrl` is missing. However, CLIENT_PIC role does not have RBAC permission to call `saveLogSheetSignatureAction`.  
 **Root Cause:** `validateLogSheetForSubmission` enforces both signatures as mandatory. `saveLogSheetSignatureAction` is guarded by `LOG_SHEETS: update` capability, which CLIENT role does not have.  
 **Impact:** Logsheets can never be legitimately submitted unless an Admin bypasses the requirement. Core workflow is broken.  
-**Related:** BUG-031 (admin as signature bypass)
+**Related:** BUG-031 (admin as signature bypass)  
+**Status:** Fixed
 
 ---
 
@@ -35,9 +48,105 @@
 
 **Symptom:** Photos uploaded during work report creation appear in the UI but disappear after saving as draft or reloading.  
 **Root Cause:** `uploadWorkReportPhotoAction` uploads the file to R2 and returns a URL, but never writes a `WorkReportPhoto` record to the database. The photo URL is lost once the component unmounts.  
-**Impact:** Work report photos feature is non-functional end-to-end.
+**Impact:** Work report photos feature is non-functional end-to-end.  
+**Status:** Fixed
 
 ---
+
+### BUG-001b — Signature Preview Not Updating After Save (Derived from BUG-001)
+
+**Symptom:** After signing a logsheet, the success toast appears but the signature preview doesn't change - requires hard refresh.  
+**Root Cause:** The `handleSignatureUpdate` handler doesn't update the client state with the new signature URL. The optimistic update is missing.  
+**Impact:** Poor UX - user thinks signature didn't save.  
+**Status:** Fixed
+
+---
+
+### BUG-002b — Logsheet Table Actions Not RBAC-Gated
+
+**Symptom:** Logsheet table shows action buttons (Edit, View) regardless of user role permissions. Non-technician users can see buttons they shouldn't access.  
+**Root Cause:** Table action buttons are rendered without checking RBAC permissions. Also, clicking date should open preview directly.  
+**Impact:** Users see buttons they cannot use; inconsistent permission model.  
+**Status:** Fixed
+
+---
+
+### BUG-002c — CLIENT Role Can Edit Work Reports
+
+**Symptom:** CLIENT role (non-PIC) can open assigned project work reports in edit mode, but should only have read-only access plus signature capability.  
+**Root Cause:** No role-based restriction on work report edit dialog - CLIENT should only see preview mode + sign.  
+**Impact:** Unauthorized modification capability.  
+**Status:** Fixed
+
+---
+
+### BUG-003b — Photos Duplicated on Each Save
+
+**Symptom:** Photos are being duplicated 3-4 times on each save operation.  
+**Root Cause:** Photos are being added to the database multiple times, likely due to missing ID check in the save logic or photos not being properly tracked.  
+**Impact:** Photo data corruption, storage bloat.  
+**Status:** Fixed
+
+---
+
+### BUG-003c — Delete Photos Not Working
+
+**Symptom:** Deleting photos in edit mode shows success message but photos remain.  
+**Root Cause:** The delete operation likely not properly executing or not committing the delete to database.  
+**Impact:** Users cannot remove unwanted photos.  
+**Status:** Fixed
+
+---
+
+### BUG-003d — Work Report Photo Print Layout Issues
+
+**Symptom:** Photos in print preview show one per row when large, not side-by-side before/after.  
+**Root Cause:** CSS print styles not implementing side-by-side layout for before/after photos.  
+**Impact:** Poor print output, excessive pages.  
+**Status:** Fixed
+
+---
+
+### BUG-001c — Dashboard Shows "Buat Logsheet Baru" to CLIENT Role
+
+**Symptom:** In dashboard project cards, the "Buat Logsheet Baru" button is visible to CLIENT role users who should only have read + sign access.  
+**Root Cause:** Dashboard doesn't check RBAC before showing create buttons.  
+**Impact:** CLIENT role sees action buttons they shouldn't have access to.  
+**Status:** Fixed
+
+---
+
+### BUG-002d — CLIENT_PIC Can't View Work Reports
+
+**Symptom:** CLIENT_PIC (CLIENT_SUPERVISOR) role cannot view work reports - no way to access them.  
+**Root Cause:** Work report table date column not clickable, no preview action available.  
+**Fix:** Made date column clickable in work report table to open preview dialog, enabling CLIENT_PIC to view work reports.  
+**Status:** Fixed
+
+---
+
+### BUG-002e — How Do CLIENT Roles Open Work Report
+
+**Symptom:** CLIENT role (non-PIC) needs to view assigned project work reports but no way to access them.  
+**Root Cause:** No preview action available for CLIENT role - actions column hidden but no alternative access method.  
+**Fix:** Made date column clickable to open preview dialog, providing CLIENT role a way to view work reports.  
+**Status:** Fixed
+
+---
+
+### BUG-003e — Photo Delete Not Persisted
+
+**Symptom:** Photos deleted in edit mode show as removed, save shows success, but on re-open the deleted photos reappear.  
+**Root Cause:** Component not fetching fresh data after edit - uses stale initialData.  
+**Status:** Open
+
+---
+
+### BUG-003f — Logsheet Photo Print Layout Not Side-by-Side
+
+**Symptom:** Logsheet water meter photo print preview shows one per row, not side-by-side before/after.  
+**Root Cause:** CSS print styles not implementing side-by-side layout.  
+**Status:** Open
 
 ## 🟠 P1 — High Priority
 
@@ -206,15 +315,15 @@ console.log('[DEBUG] Checking for limit breaches...');
 
 | Category                            |  Count |
 | :---------------------------------- | -----: |
-| P0 Blocker                          |      3 |
+| P0 Blocker                          |      2 |
 | P1 High                             |     14 |
 | P2 Medium                           |     17 |
 | P3 Low / Needs Clarity              |      5 |
 | Phase 3 — Source-Scan (BUG-040–048) |      9 |
-| **Total unique bugs**               | **48** |
+| **Total unique bugs**               | **45** |
 
 > Note: BUG-044 is a source-level confirmation of BUG-016 (same issue, different layer) and is not counted twice.
 
 ---
 
-_Last updated: 2026-03-10 · Generated by source scan + user report_
+_Last updated: 2026-03-11 · Generated by source scan + user report_

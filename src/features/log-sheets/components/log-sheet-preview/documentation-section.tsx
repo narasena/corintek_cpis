@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { LogSheetHeader } from '../log-sheet-header';
 import { makeEntryKey } from '../../utils';
 import type { TParameter, TLogSheetPhoto, TEntryState } from '../../types';
@@ -62,6 +63,34 @@ function normalizePhotos(
   return [...beforePhotos, ...afterPhotos, ...waterPhotos];
 }
 
+function PhotoItem({ photo }: { photo: IDocumentationPhoto }) {
+  return (
+    <div className="border border-black p-2 break-inside-avoid bg-white">
+      <div className="relative aspect-[4/3] w-full mb-2 print:aspect-[3/2]">
+        <Image
+          src={photo.url}
+          alt={photo.caption || 'Documentation Photo'}
+          fill
+          className="object-contain"
+        />
+      </div>
+      {photo.caption && (
+        <p className="text-center text-xs italic border-t border-gray-200 pt-1">
+          {photo.caption}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function EmptyPlaceholder() {
+  return (
+    <div className="flex-grow min-h-[200px] border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 italic">
+      Tidak ada foto
+    </div>
+  );
+}
+
 export function DocumentationSection({
   customerName,
   date,
@@ -106,53 +135,47 @@ export function DocumentationSection({
             <h2 className="text-lg font-bold mb-8 text-center underline">
               DOCUMENTATION
             </h2>
-            <div className="grid grid-cols-2 gap-8">
-              {pagePhotos
-                .filter(p => p.type === 'before')
-                .map(p => (
-                  <div key={`before-${p.url}`} className="space-y-2">
-                    <div className="font-bold text-center underline">
-                      SEBELUM
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="aspect-square w-full relative border border-black">
-                          <img
-                            src={p.url}
-                            alt="Sebelum"
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                        <div className="text-center text-xs">
-                          {p.caption ?? ''}
-                        </div>
+            <div className="grid grid-cols-1 gap-8">
+              {Array.from({
+                length: Math.max(
+                  pagePhotos.filter(p => p.type === 'before').length,
+                  pagePhotos.filter(p => p.type === 'after').length
+                ),
+              }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="grid grid-cols-2 gap-8 break-inside-avoid"
+                >
+                  <div className="flex flex-col gap-2">
+                    {idx === 0 && (
+                      <div className="font-bold text-center underline">
+                        SEBELUM
                       </div>
-                    </div>
+                    )}
+                    {pagePhotos.filter(p => p.type === 'before')[idx] ? (
+                      <PhotoItem
+                        photo={pagePhotos.filter(p => p.type === 'before')[idx]}
+                      />
+                    ) : (
+                      <EmptyPlaceholder />
+                    )}
                   </div>
-                ))}
-              {pagePhotos
-                .filter(p => p.type === 'after')
-                .map(p => (
-                  <div key={`after-${p.url}`} className="space-y-2">
-                    <div className="font-bold text-center underline">
-                      SESUDAH
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="aspect-square w-full relative border border-black">
-                          <img
-                            src={p.url}
-                            alt="Sesudah"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="text-center text-xs">
-                          {p.caption ?? ''}
-                        </div>
+                  <div className="flex flex-col gap-2">
+                    {idx === 0 && (
+                      <div className="font-bold text-center underline">
+                        SESUDAH
                       </div>
-                    </div>
+                    )}
+                    {pagePhotos.filter(p => p.type === 'after')[idx] ? (
+                      <PhotoItem
+                        photo={pagePhotos.filter(p => p.type === 'after')[idx]}
+                      />
+                    ) : (
+                      <EmptyPlaceholder />
+                    )}
                   </div>
-                ))}
+                </div>
+              ))}
               {pagePhotos
                 .filter(p => p.type === 'water')
                 .map(p => (

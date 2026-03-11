@@ -10,19 +10,36 @@ import { WorkReportForm } from '@/features/work-reports/components/work-report-f
 interface WorkReportListProps {
   projectId: string;
   data: WorkReportRow[];
+  canEdit: boolean;
+  canDelete: boolean;
+  onView: (workReportId: string) => void;
 }
 
-export function WorkReportList({ projectId, data }: WorkReportListProps) {
+export function WorkReportList({
+  projectId,
+  data,
+  canEdit,
+  canDelete,
+  onView,
+}: WorkReportListProps) {
   const [editingRow, setEditingRow] = useState<WorkReportRow | null>(null);
 
   const columns = getWorkReportColumns({
     projectId,
     onEdit: row => setEditingRow(row),
+    onView,
+    canEdit,
+    canDelete,
   });
+
+  const columnsToRender =
+    !canEdit && !canDelete
+      ? columns.filter(col => col.id !== 'actions')
+      : columns;
 
   return (
     <>
-      <DataTable columns={columns} data={data} />
+      <DataTable columns={columnsToRender} data={data} />
 
       <CrudDialog
         mode="edit"
@@ -33,7 +50,7 @@ export function WorkReportList({ projectId, data }: WorkReportListProps) {
         {({ onSuccess, onCancel }) => (
           <WorkReportForm
             projectId={projectId}
-            initialData={editingRow || undefined}
+            workReportId={editingRow?.id}
             onSuccess={onSuccess}
             onCancel={onCancel}
           />

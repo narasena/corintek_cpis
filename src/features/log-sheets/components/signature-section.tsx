@@ -28,6 +28,7 @@ type TSignatureSectionProps = {
   signedByName: string | null;
   isLocked: boolean;
   onSigned: () => Promise<void>;
+  onSuccess?: (url: string) => void;
 };
 
 export function SignatureSection({
@@ -39,6 +40,7 @@ export function SignatureSection({
   signedByName,
   isLocked,
   onSigned,
+  onSuccess,
 }: TSignatureSectionProps) {
   const [open, setOpen] = useState(false);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
@@ -64,6 +66,7 @@ export function SignatureSection({
       }
 
       toast.success('Tanda tangan berhasil disimpan');
+      onSuccess?.(res.data.url);
       await onSigned();
       setOpen(false);
       setDataUrl(null);

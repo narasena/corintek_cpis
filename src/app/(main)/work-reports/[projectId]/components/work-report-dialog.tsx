@@ -2,13 +2,12 @@
 
 import { CrudDialog } from '@/components/crud-dialog';
 import { WorkReportForm } from '@/features/work-reports/components/work-report-form';
-import { WorkReportRow } from '@/features/work-reports/types';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
 interface IWorkReportDialogProps {
   projectId: string;
-  initialData?: WorkReportRow;
+  workReportId?: string;
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -16,12 +15,12 @@ interface IWorkReportDialogProps {
 
 export function WorkReportDialog({
   projectId,
-  initialData,
+  workReportId,
   trigger,
   open,
   onOpenChange,
 }: IWorkReportDialogProps) {
-  const mode = initialData ? 'edit' : 'create';
+  const mode = workReportId ? 'edit' : 'create';
 
   return (
     <CrudDialog
@@ -41,7 +40,7 @@ export function WorkReportDialog({
       {({ onSuccess, onCancel }) => (
         <WorkReportForm
           projectId={projectId}
-          initialData={initialData}
+          workReportId={workReportId}
           onSuccess={onSuccess}
           onCancel={onCancel}
         />

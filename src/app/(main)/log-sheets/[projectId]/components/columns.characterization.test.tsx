@@ -4,20 +4,23 @@ import { describe, expect, it, vi } from 'vitest';
 import { getLogSheetColumns, type TLogSheetRow } from './columns';
 
 describe('getLogSheetColumns (characterization)', () => {
+  const defaultProps = {
+    onOpen: vi.fn(),
+    onDelete: vi.fn().mockResolvedValue({ success: true }),
+    canEdit: true,
+    canDelete: true,
+  };
+
   describe('column definitions', () => {
     it('returns array of ColumnDef (main path)', () => {
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       expect(Array.isArray(columns)).toBe(true);
       expect(columns.length).toBeGreaterThan(0);
     });
 
     it('includes date column with accessorKey "date" (main path)', () => {
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       const dateColumn = columns.find(
         c => 'accessorKey' in c && c.accessorKey === 'date'
@@ -26,9 +29,7 @@ describe('getLogSheetColumns (characterization)', () => {
     });
 
     it('includes status column with accessorKey "status" (main path)', () => {
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       const statusColumn = columns.find(
         c => 'accessorKey' in c && c.accessorKey === 'status'
@@ -37,9 +38,7 @@ describe('getLogSheetColumns (characterization)', () => {
     });
 
     it('includes notes column with accessorKey "notes" (main path)', () => {
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       const notesColumn = columns.find(
         c => 'accessorKey' in c && c.accessorKey === 'notes'
@@ -48,9 +47,7 @@ describe('getLogSheetColumns (characterization)', () => {
     });
 
     it('includes actions column with id "actions" (main path)', () => {
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       const actionsColumn = columns.find(c => 'id' in c && c.id === 'actions');
       expect(actionsColumn).toBeDefined();
@@ -59,9 +56,7 @@ describe('getLogSheetColumns (characterization)', () => {
 
   describe('date column cell', () => {
     it('formats date using formatDate (main path)', () => {
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       const dateColumn = columns.find(
         c => 'accessorKey' in c && c.accessorKey === 'date'
@@ -73,9 +68,7 @@ describe('getLogSheetColumns (characterization)', () => {
 
   describe('status column cell', () => {
     it('renders Badge with status text (main path)', () => {
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       const statusColumn = columns.find(
         c => 'accessorKey' in c && c.accessorKey === 'status'
@@ -87,9 +80,7 @@ describe('getLogSheetColumns (characterization)', () => {
 
   describe('notes column cell', () => {
     it('renders dash when notes is null (edge case)', () => {
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       const notesColumn = columns.find(
         c => 'accessorKey' in c && c.accessorKey === 'notes'
@@ -101,9 +92,7 @@ describe('getLogSheetColumns (characterization)', () => {
 
   describe('actions column', () => {
     it('passes onOpen and onDelete to ActionCell (main path)', () => {
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       const actionsColumn = columns.find(c => 'id' in c && c.id === 'actions');
       expect(actionsColumn).toBeDefined();
@@ -122,9 +111,7 @@ describe('getLogSheetColumns (characterization)', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       const statusColumn = columns.find(
         c => 'accessorKey' in c && c.accessorKey === 'status'
@@ -142,9 +129,7 @@ describe('getLogSheetColumns (characterization)', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       const statusColumn = columns.find(
         c => 'accessorKey' in c && c.accessorKey === 'status'
@@ -162,9 +147,7 @@ describe('getLogSheetColumns (characterization)', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      const onOpen = vi.fn();
-      const onDelete = vi.fn().mockResolvedValue({ success: true });
-      const columns = getLogSheetColumns({ onOpen, onDelete });
+      const columns = getLogSheetColumns(defaultProps);
 
       const statusColumn = columns.find(
         c => 'accessorKey' in c && c.accessorKey === 'status'

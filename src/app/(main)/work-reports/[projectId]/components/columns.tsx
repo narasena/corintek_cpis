@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { ActionCell } from '@/components/action-cell';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { WorkReportRow } from '@/features/work-reports/types';
 import {
   approveWorkReportAction,
@@ -19,18 +20,32 @@ import { toast } from 'sonner';
 interface GetColumnsProps {
   projectId: string;
   onEdit: (row: WorkReportRow) => void;
+  onView: (workReportId: string) => void;
+  canEdit: boolean;
+  canDelete: boolean;
 }
 
 export const getWorkReportColumns = ({
   projectId,
   onEdit,
+  onView,
+  canEdit,
+  canDelete,
 }: GetColumnsProps): ColumnDef<WorkReportRow>[] => [
   {
     accessorKey: 'date',
     header: 'Tanggal',
     cell: ({ row }) => {
       const date = new Date(row.getValue('date'));
-      return format(date, 'dd MMMM yyyy', { locale: id });
+      return (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 text-primary hover:text-primary/80 font-medium"
+          onClick={() => onView(row.original.id)}
+        >
+          {format(date, 'dd MMMM yyyy', { locale: id })}
+        </Button>
+      );
     },
   },
   {
@@ -83,6 +98,8 @@ export const getWorkReportColumns = ({
             formData.append('projectId', projectId);
             return await deleteWorkReportAction(id);
           }}
+          canEdit={canEdit}
+          canDelete={canDelete}
         >
           {row.original.status === 'DRAFT' && (
             <DropdownMenuItem

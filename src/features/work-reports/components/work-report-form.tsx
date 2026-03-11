@@ -28,6 +28,7 @@ import {
   uploadWorkReportPhotoAction,
   deleteWorkReportPhotoAction,
   revalidateWorkReportPathAction,
+  getWorkReportByIdAction,
 } from '@/features/work-reports/actions';
 import { getMachinesByProjectAction } from '@/features/machines/actions';
 import {
@@ -39,24 +40,29 @@ import type { WorkReportRow } from '@/features/work-reports/types';
 
 interface IWorkReportFormProps {
   projectId: string;
-  initialData?: WorkReportRow;
+  workReportId?: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
 export function WorkReportForm({
   projectId,
-  initialData,
+  workReportId,
   onSuccess,
   onCancel,
 }: IWorkReportFormProps) {
   const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchedData, setFetchedData] = useState<WorkReportRow | null>(null);
+
+  const isEditMode = !!workReportId;
+  const effectiveData = fetchedData || undefined;
   const [submitStatus, setSubmitStatus] = useState<string>('');
   const [statusIntent, setStatusIntent] = useState<'DRAFT' | 'SUBMITTED'>(
-    initialData?.status === 'SUBMITTED' ? 'SUBMITTED' : 'DRAFT'
+    effectiveData?.status === 'SUBMITTED' ? 'SUBMITTED' : 'DRAFT'
   );
   const statusIntentRef = useRef<'DRAFT' | 'SUBMITTED'>(
-    initialData?.status === 'SUBMITTED' ? 'SUBMITTED' : 'DRAFT'
+    effectiveData?.status === 'SUBMITTED' ? 'SUBMITTED' : 'DRAFT'
   );
   const [machineOptions, setMachineOptions] = useState<
     { label: string; value: string }[]
@@ -70,7 +76,7 @@ export function WorkReportForm({
       caption: string | null;
       type: 'BEFORE' | 'AFTER' | 'GENERAL';
     }[]
-  >((initialData?.photos as any) || []);
+  >((effectiveData?.photos as any) || []);
 
   const [pendingPhotos, setPendingPhotos] = useState<
     {
@@ -82,6 +88,33 @@ export function WorkReportForm({
   >([]);
 
   const [deletedPhotoIds, setDeletedPhotoIds] = useState<string[]>([]);
+
+  // Fetch work report data when in edit mode
+  useEffect(() => {
+    if (workReportId) {
+      setIsLoading(true);
+      getWorkReportByIdAction(workReportId).then(res => {
+        if (res.success && res.data) {
+          setFetchedData(res.data as WorkReportRow);
+        } else {
+          const errorMsg =
+            (res as { message?: string }).message || 'Terjadi kesalahan';
+          toast.error('Gagal memuat data laporan', {
+            description: errorMsg,
+          });
+        }
+        setIsLoading(false);
+      });
+    }
+  }, [workReportId]);
+
+  // Clear pending photos when form loads with effectiveData (edit mode)
+  useEffect(() => {
+    if (effectiveData) {
+      setPendingPhotos([]);
+      setDeletedPhotoIds([]);
+    }
+  }, [effectiveData?.id]);
 
   // Combine for display
   const allPhotos = [
@@ -111,17 +144,17 @@ export function WorkReportForm({
 
   const form = useForm<CreateWorkReportInput>({
     resolver: zodResolver(WorkReportSchema),
-    defaultValues: initialData
+    defaultValues: effectiveData
       ? {
           projectId,
-          date: new Date(initialData.date),
-          timeStart: initialData.timeStart ?? undefined,
-          timeEnd: initialData.timeEnd ?? undefined,
-          zone: initialData.zone ?? undefined,
-          situation: initialData.situation,
-          workDone: initialData.workDone,
-          workResult: initialData.workResult,
-          machineIds: initialData.machines.map(m => m.id),
+          date: new Date(effectiveData.date),
+          timeStart: effectiveData.timeStart ?? undefined,
+          timeEnd: effectiveData.timeEnd ?? undefined,
+          zone: effectiveData.zone ?? undefined,
+          situation: effectiveData.situation,
+          workDone: effectiveData.workDone,
+          workResult: effectiveData.workResult,
+          machineIds: effectiveData.machines.map(m => m.id),
         }
       : {
           projectId,
@@ -179,7 +212,7 @@ export function WorkReportForm({
         }
 
         let result;
-        let reportId = initialData?.id;
+        let reportId = effectiveData?.id;
 
         if (reportId) {
           formData.append('id', reportId);
@@ -224,7 +257,7 @@ export function WorkReportForm({
         // 2. Upload Pending Photos (ONLY for Update mode)
         // For Create, photos are already handled transactionally in the action above.
         let uploadErrors = false;
-        if (initialData?.id && pendingPhotos.length > 0) {
+        if (effectiveData?.id && pendingPhotos.length > 0) {
           setSubmitStatus(`Mengupload ${pendingPhotos.length} foto...`);
           const uploadPromises = pendingPhotos.map(photo => {
             const fd = new FormData();
@@ -256,9 +289,15 @@ export function WorkReportForm({
             }
           });
 
-          // Move successful uploads to existingPhotos
+          // Move successful uploads to existingPhotos (with duplicate check)
           if (successfulUploads.length > 0) {
-            setExistingPhotos(prev => [...prev, ...successfulUploads]);
+            setExistingPhotos(prev => {
+              const newPhotos = successfulUploads.filter(
+                newPhoto =>
+                  !prev.some(existing => existing.url === newPhoto.url)
+              );
+              return [...prev, ...newPhotos];
+            });
             setPendingPhotos(prev =>
               prev.filter(p => failedPendingIds.includes(p.id))
             );
@@ -291,17 +330,23 @@ export function WorkReportForm({
             return deleteWorkReportPhotoAction(fd);
           });
           await Promise.all(deletePromises);
+
+          // Remove deleted photos from existingPhotos state immediately
+          setExistingPhotos(prev =>
+            prev.filter(p => !deletedPhotoIds.includes(p.id))
+          );
+          setDeletedPhotoIds([]);
         }
 
         // 4. Final Revalidation
         setSubmitStatus('Memuat ulang data...');
-        await revalidateWorkReportPathAction(projectId);
+        await revalidateWorkReportPathAction(projectId, reportId);
 
         if (!uploadErrors) {
           toast.success(
             intent === 'SUBMITTED'
               ? 'Laporan berhasil dikirim'
-              : initialData
+              : effectiveData
                 ? 'Laporan diperbarui'
                 : 'Laporan dibuat',
             {
@@ -325,6 +370,15 @@ export function WorkReportForm({
       }
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-muted-foreground">Memuat data...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -523,7 +577,7 @@ export function WorkReportForm({
               type="submit"
               disabled={
                 isPending ||
-                (initialData ? initialData.status !== 'DRAFT' : false)
+                (effectiveData ? effectiveData.status !== 'DRAFT' : false)
               }
               onClick={() => {
                 statusIntentRef.current = 'SUBMITTED';

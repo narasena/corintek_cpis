@@ -3,6 +3,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ActionCell } from '@/components/action-cell';
 import type { TLogSheetStatus } from '@/features/log-sheets/types';
 import { formatDate } from '../[logSheetId]/utils';
@@ -18,8 +19,10 @@ export type TLogSheetRow = {
 };
 
 interface IColumnsProps {
-  onOpen: (logSheetId: string) => void;
+  onOpen: (logSheetId: string, mode: 'input' | 'preview') => void;
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>;
+  canEdit: boolean;
+  canDelete: boolean;
 }
 
 const statusVariant = (status: TLogSheetStatus) => {
@@ -31,11 +34,21 @@ const statusVariant = (status: TLogSheetStatus) => {
 export const getLogSheetColumns = ({
   onOpen,
   onDelete,
+  canEdit,
+  canDelete,
 }: IColumnsProps): ColumnDef<TLogSheetRow>[] => [
   {
     accessorKey: 'date',
     header: 'Tanggal',
-    cell: ({ row }) => formatDate(row.original.date),
+    cell: ({ row }) => (
+      <Button
+        variant="ghost"
+        className="h-auto p-0 text-primary hover:text-primary/80 font-medium"
+        onClick={() => onOpen(row.original.id, 'preview')}
+      >
+        {formatDate(row.original.date)}
+      </Button>
+    ),
   },
   {
     accessorKey: 'status',
@@ -59,8 +72,10 @@ export const getLogSheetColumns = ({
         entityName="Log Sheet"
         getDisplayName={d => formatDate(d.date)}
         getEntityId={d => d.id}
-        onEdit={() => onOpen(row.original.id)}
+        onEdit={() => onOpen(row.original.id, 'input')}
         onDelete={onDelete}
+        canEdit={canEdit}
+        canDelete={canDelete}
       />
     ),
   },

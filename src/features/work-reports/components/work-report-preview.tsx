@@ -112,36 +112,54 @@ export function WorkReportPreview({ data }: WorkReportPreviewProps) {
           DOKUMENTASI PEKERJAAN
         </h3>
 
-        <div className="grid grid-cols-2 gap-8">
-          {/* Left Column: Before */}
-          <div className="flex flex-col gap-4">
-            <h4 className="font-bold text-center border-b-2 border-black pb-2 mb-2">
-              SEBELUM (BEFORE)
-            </h4>
-            {beforePhotos.map((photo, idx) => (
-              <PhotoItem key={idx} photo={photo} />
-            ))}
-            {beforePhotos.length === 0 && (
-              <div className="text-center text-gray-400 italic py-10 border border-dashed border-gray-300 rounded">
-                Tidak ada foto
+        <div className="grid grid-cols-1 gap-8">
+          {/* Side-by-side before/after pairs */}
+          {Array.from({
+            length: Math.max(beforePhotos.length, afterPhotos.length),
+          }).map((_, idx) => (
+            <div
+              key={idx}
+              className="grid grid-cols-2 gap-8 break-inside-avoid"
+            >
+              {/* Before Photo */}
+              <div className="flex flex-col gap-2">
+                {idx === 0 && (
+                  <h4 className="font-bold text-center border-b-2 border-black pb-2">
+                    SEBELUM (BEFORE)
+                  </h4>
+                )}
+                {beforePhotos[idx] ? (
+                  <PhotoItem photo={beforePhotos[idx]} />
+                ) : (
+                  <div className="flex-grow min-h-[200px] border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 italic">
+                    Tidak ada foto
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Right Column: After */}
-          <div className="flex flex-col gap-4">
-            <h4 className="font-bold text-center border-b-2 border-black pb-2 mb-2">
-              SESUDAH (AFTER)
-            </h4>
-            {afterPhotos.map((photo, idx) => (
-              <PhotoItem key={idx} photo={photo} />
-            ))}
-            {afterPhotos.length === 0 && (
-              <div className="text-center text-gray-400 italic py-10 border border-dashed border-gray-300 rounded">
-                Tidak ada foto
+              {/* After Photo */}
+              <div className="flex flex-col gap-2">
+                {idx === 0 && (
+                  <h4 className="font-bold text-center border-b-2 border-black pb-2">
+                    SESUDAH (AFTER)
+                  </h4>
+                )}
+                {afterPhotos[idx] ? (
+                  <PhotoItem photo={afterPhotos[idx]} />
+                ) : (
+                  <div className="flex-grow min-h-[200px] border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 italic">
+                    Tidak ada foto
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          ))}
+
+          {beforePhotos.length === 0 && afterPhotos.length === 0 && (
+            <div className="text-center text-gray-400 italic py-10 border border-dashed border-gray-300 rounded">
+              Tidak ada foto
+            </div>
+          )}
         </div>
 
         {/* General Photos if any */}
@@ -181,7 +199,7 @@ function PhotoItem({
 }) {
   return (
     <div className="border border-black p-2 break-inside-avoid bg-white">
-      <div className="relative aspect-[4/3] w-full mb-2">
+      <div className="relative aspect-[4/3] w-full mb-2 print:aspect-[3/2]">
         <Image
           src={photo.url}
           alt={photo.caption || 'Work Photo'}

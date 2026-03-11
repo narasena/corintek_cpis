@@ -24,6 +24,11 @@ export const CLIENT_POLICIES: Partial<Record<TRbacRole, IRbacRoleConfig>> = {
   CLIENT_SUPERVISOR: {
     label: 'PIC Klien',
     ...BASE_CLIENT_POLICY,
+    permissions: {
+      ...BASE_CLIENT_POLICY.permissions,
+      LOG_SHEETS: 'CRU',
+      WORK_REPORTS: 'CRU',
+    },
   },
   CLIENT_TECHNICIAN: {
     label: 'Teknisi (Klien)',

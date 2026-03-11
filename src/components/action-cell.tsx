@@ -32,6 +32,8 @@ interface IActionCellProps<TData> {
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>;
   getEntityId: (data: TData) => string;
   children?: React.ReactNode;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export function ActionCell<TData>({
@@ -42,6 +44,8 @@ export function ActionCell<TData>({
   onDelete,
   getEntityId,
   children,
+  canEdit = true,
+  canDelete = true,
 }: IActionCellProps<TData>) {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -75,16 +79,22 @@ export function ActionCell<TData>({
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
           {children}
-          <DropdownMenuItem onClick={onEdit}>
-            <Pencil className="mr-2 h-4 w-4" /> Ubah
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => setShowDeleteAlert(true)}
-            className="text-red-600 focus:text-red-600"
-          >
-            <Trash className="mr-2 h-4 w-4" /> Hapus
-          </DropdownMenuItem>
+          {canEdit && (
+            <DropdownMenuItem onClick={onEdit}>
+              <Pencil className="mr-2 h-4 w-4" /> Ubah
+            </DropdownMenuItem>
+          )}
+          {canDelete && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setShowDeleteAlert(true)}
+                className="text-red-600 focus:text-red-600"
+              >
+                <Trash className="mr-2 h-4 w-4" /> Hapus
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

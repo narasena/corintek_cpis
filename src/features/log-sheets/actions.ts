@@ -116,7 +116,9 @@ export const getLogSheetsByProjectAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid(),
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'read' },
+    },
   }
 );
 
@@ -141,7 +143,9 @@ export const createLogSheetAction = actionFactory.protected(
   },
   {
     schema: CreateLogSheetSchema,
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'create' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'create' },
+    },
   }
 );
 
@@ -158,7 +162,9 @@ export const updateLogSheetAction = actionFactory.protected(
   },
   {
     schema: UpdateLogSheetSchema,
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
+    },
   }
 );
 
@@ -178,7 +184,9 @@ export const updateLogSheetAdminOverrideAction = actionFactory.protected(
   },
   {
     schema: UpdateLogSheetSchema,
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
+    },
   }
 );
 
@@ -196,7 +204,9 @@ export const updateLogSheetStatusAction = actionFactory.protected(
       id: z.string().uuid(),
       status: LogSheetStatusEnum,
     }),
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
+    },
   }
 );
 
@@ -218,7 +228,9 @@ export const deleteLogSheetAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid(),
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'delete' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'delete' },
+    },
   }
 );
 
@@ -230,7 +242,9 @@ export const getLogSheetDetailAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid(),
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'read' },
+    },
   }
 );
 
@@ -274,7 +288,9 @@ export const saveLogSheetEntriesAction = actionFactory.protected(
       console.error('[CPIS-ERROR] LogSheet.SaveEntries.Notify:', error);
     }
 
-    const projectId = await logSheetService.getLogSheetProjectId(input.logSheetId);
+    const projectId = await logSheetService.getLogSheetProjectId(
+      input.logSheetId
+    );
     if (projectId) {
       revalidateLogSheetPaths(projectId, input.logSheetId);
     }
@@ -282,7 +298,9 @@ export const saveLogSheetEntriesAction = actionFactory.protected(
   },
   {
     schema: SaveLogSheetEntriesSchema,
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
+    },
   }
 );
 
@@ -299,7 +317,9 @@ export const saveLogSheetPhotosAction = actionFactory.protected(
       { allowAdminOverride }
     );
 
-    const projectId = await logSheetService.getLogSheetProjectId(input.logSheetId);
+    const projectId = await logSheetService.getLogSheetProjectId(
+      input.logSheetId
+    );
     if (projectId) {
       revalidateLogSheetPaths(projectId, input.logSheetId);
     }
@@ -307,7 +327,9 @@ export const saveLogSheetPhotosAction = actionFactory.protected(
   },
   {
     schema: SaveLogSheetPhotosSchema,
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
+    },
   }
 );
 
@@ -324,7 +346,9 @@ export const saveLogSheetChemicalsAction = actionFactory.protected(
       { allowAdminOverride }
     );
 
-    const projectId = await logSheetService.getLogSheetProjectId(input.logSheetId);
+    const projectId = await logSheetService.getLogSheetProjectId(
+      input.logSheetId
+    );
     if (projectId) {
       revalidateLogSheetPaths(projectId, input.logSheetId);
     }
@@ -332,7 +356,9 @@ export const saveLogSheetChemicalsAction = actionFactory.protected(
   },
   {
     schema: SaveLogSheetChemicalsSchema,
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
+    },
   }
 );
 
@@ -350,7 +376,9 @@ export const saveLogSheetMachinesAction = actionFactory.protected(
       { allowAdminOverride }
     );
 
-    const projectId = await logSheetService.getLogSheetProjectId(input.logSheetId);
+    const projectId = await logSheetService.getLogSheetProjectId(
+      input.logSheetId
+    );
     if (projectId) {
       revalidateLogSheetPaths(projectId, input.logSheetId);
     }
@@ -358,7 +386,9 @@ export const saveLogSheetMachinesAction = actionFactory.protected(
   },
   {
     schema: SaveLogSheetMachinesSchema,
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
+    },
   }
 );
 
@@ -393,13 +423,15 @@ export const saveLogSheetSignatureAction = actionFactory.protected(
       url
     );
 
-    revalidateLogSheetPaths(projectId, logSheetId);
+    // revalidateLogSheetPaths(projectId, logSheetId);
 
     return { url, data: updated };
   },
   {
     schema: SaveLogSheetSignatureSchema,
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
+    },
   }
 );
 
@@ -415,7 +447,8 @@ export const uploadLogSheetImageAction = actionFactory.protected(
     const validatedLogSheetId = z.string().uuid().parse(logSheetId);
 
     await projectService.assertCanAccessProject(actor, validatedProjectId);
-    const actualProjectId = await logSheetService.getLogSheetProjectId(validatedLogSheetId);
+    const actualProjectId =
+      await logSheetService.getLogSheetProjectId(validatedLogSheetId);
     if (!actualProjectId || actualProjectId !== validatedProjectId) {
       throw new Error('Unauthorized');
     }
@@ -434,6 +467,8 @@ export const uploadLogSheetImageAction = actionFactory.protected(
     return { url };
   },
   {
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
+    },
   }
 ) as (formData: FormData) => Promise<TActionResult<{ url: string }>>;

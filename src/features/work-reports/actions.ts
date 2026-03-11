@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { prisma } from '@/lib/prisma';
 import { WorkReportPhotoType } from '@/generated/prisma/client';
 
 import * as service from './service';
@@ -117,11 +118,34 @@ export const deleteWorkReportPhotoAction = actionFactory.protected(
       input instanceof FormData
         ? {
             photoId: input.get('photoId') as string,
+            workReportId: input.get('workReportId') as string,
             projectId: input.get('projectId') as string,
           }
-        : (input as { photoId: string; projectId: string });
+        : (input as {
+            photoId: string;
+            workReportId: string;
+            projectId: string;
+          });
+
+    const photo = await prisma.workReportPhoto.findUnique({
+      where: { id: data.photoId },
+      select: { workReportId: true },
+    });
+
+    if (!photo) {
+      return { success: false, error: 'Photo not found' };
+    }
+
+    if (photo.workReportId !== data.workReportId) {
+      return {
+        success: false,
+        error: 'Photo does not belong to this work report',
+      };
+    }
+
     await service.deleteWorkReportPhoto(data.photoId);
-    revalidatePath(`/projects/${data.projectId}`);
+    revalidatePath(`/work-reports/${data.projectId}/${data.workReportId}`);
+    revalidatePath(`/work-reports/${data.projectId}`);
     return { success: true };
   },
   {
@@ -205,7 +229,16 @@ export const uploadWorkReportPhotoAction = actionFactory.protected(
 
     const url = await uploadToR2({ key, body: buffer, contentType: file.type });
 
-    return { url };
+    const caption = formData.get('caption') as string | null;
+    const type = (formData.get('type') as string) || 'GENERAL';
+    const photo = await service.addWorkReportPhoto(
+      validatedWorkReportId,
+      url,
+      caption || undefined,
+      type as WorkReportPhotoType
+    );
+
+    return { url, id: photo.id };
   },
   {
     metadata: {
@@ -257,7 +290,13 @@ export const getWorkReportByIdAction = actionFactory.protected(
   }
 );
 
-export const revalidateWorkReportPathAction = async (projectId: string) => {
+export const revalidateWorkReportPathAction = async (
+  projectId: string,
+  workReportId?: string
+) => {
   revalidatePath(`/work-reports/${projectId}`);
+  if (workReportId) {
+    revalidatePath(`/work-reports/${projectId}/${workReportId}`);
+  }
   return { success: true };
 };

@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -26,7 +25,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-preview';
 import { SignatureSection } from '@/features/log-sheets/components/signature-section';
-import { ChemicalUsageSection } from '@/features/log-sheets/components/chemical-usage-section';
 
 import { submitLogSheetAction } from '@/features/log-sheets/actions';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -40,7 +38,6 @@ import { useLogSheetDerivedUsers } from './hooks/use-log-sheet-derived-users';
 import { useMobileUnitViewModel } from './hooks/use-mobile-unit-view-model';
 import { formatUserName } from '@/lib/utils/user';
 import { MobileLayoutWrapper } from '@/features/log-sheets/option-a/components/mobile-layout-wrapper';
-import { ConsumptionSection } from '@/features/log-sheets/option-a/components/consumption-section';
 
 import { LogSheetToolbar } from '@/features/log-sheets/components/log-sheet-toolbar';
 import { MachineSelectionPanel } from '@/features/log-sheets/components/machine-selection-panel';
@@ -70,6 +67,10 @@ export default function LogSheetDetailPage() {
   const [isPending, startTransition] = useTransition();
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
   const [adminOverride, setAdminOverride] = useState(false);
+  const [localSignatureUrls, setLocalSignatureUrls] = useState<{
+    TECHNICIAN: string | null;
+    CLIENT_PIC: string | null;
+  }>({ TECHNICIAN: null, CLIENT_PIC: null });
 
   const isMobileView = useIsMobile();
   const {
@@ -137,7 +138,8 @@ export default function LogSheetDetailPage() {
       allowAdminOverride: adminOverride,
     });
 
-  const isStatusLocked = detail?.logSheet.status !== 'DRAFT' || !!detail?.logSheet.locked;
+  const isStatusLocked =
+    detail?.logSheet.status !== 'DRAFT' || !!detail?.logSheet.locked;
   const isLocked = isStatusLocked && !adminOverride;
 
   const derivedUsers = useLogSheetDerivedUsers(detail);
@@ -145,6 +147,10 @@ export default function LogSheetDetailPage() {
     chillers: activeChillerIds,
     coolingTowers: activeCTIds,
   });
+
+  const viewerRole = detail?.viewerRole;
+  const isClientSupervisor = viewerRole === 'CLIENT_SUPERVISOR';
+  const effectiveMode = isClientSupervisor ? 'preview' : mode;
 
   const handleSave = () => {
     if (isLocked) {
@@ -200,6 +206,19 @@ export default function LogSheetDetailPage() {
     });
   };
 
+  const handleSignatureUpdate = () => {
+    toast.success('Tanda tangan berhasil disimpan');
+    return Promise.resolve();
+  };
+
+  const handleTechnicianSignatureSuccess = (url: string) => {
+    setLocalSignatureUrls(prev => ({ ...prev, TECHNICIAN: url }));
+  };
+
+  const handleClientPicSignatureSuccess = (url: string) => {
+    setLocalSignatureUrls(prev => ({ ...prev, CLIENT_PIC: url }));
+  };
+
   if (loading || !detail) {
     return <LoadingState />;
   }
@@ -217,21 +236,23 @@ export default function LogSheetDetailPage() {
 
   return (
     <div className="space-y-4 md:space-y-8 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
-      <LogSheetToolbar
-        projectId={projectId}
-        mode={mode}
-        onModeChange={setMode}
-        onPrint={handlePrint}
-        onSave={handleSave}
-        onSubmit={handleSubmitRequest}
-        status={detail.logSheet.status}
-        isPending={isPending}
-        isLocked={isLocked}
-        canAdminOverride={canAdminOverride}
-        adminOverride={adminOverride}
-        onAdminOverrideToggle={() => setAdminOverride(v => !v)}
-        onBack={() => router.push(`/log-sheets/${projectId}`)}
-      />
+      {!isClientSupervisor && (
+        <LogSheetToolbar
+          projectId={projectId}
+          mode={effectiveMode}
+          onModeChange={setMode}
+          onPrint={handlePrint}
+          onSave={handleSave}
+          onSubmit={handleSubmitRequest}
+          status={detail.logSheet.status}
+          isPending={isPending}
+          isLocked={isLocked}
+          canAdminOverride={canAdminOverride}
+          adminOverride={adminOverride}
+          onAdminOverrideToggle={() => setAdminOverride(v => !v)}
+          onBack={() => router.push(`/log-sheets/${projectId}`)}
+        />
+      )}
       <AlertDialog open={isSubmitOpen} onOpenChange={setIsSubmitOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -253,15 +274,24 @@ export default function LogSheetDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
       <div className="print:hidden">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Log Sheet: {detail.project.name}
-        </h1>
-        <p className="text-sm">
-          {formatDate(detail.logSheet.date)} • {detail.logSheet.status}
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Log Sheet: {detail.project.name}
+            </h1>
+            <p className="text-sm">
+              {formatDate(detail.logSheet.date)} • {detail.logSheet.status}
+            </p>
+          </div>
+          {isClientSupervisor && (
+            <Button variant="outline" onClick={handlePrint}>
+              Cetak / Preview
+            </Button>
+          )}
+        </div>
       </div>
 
-      {mode === 'input' && (
+      {effectiveMode === 'input' && (
         <fieldset
           disabled={isLocked || isPending}
           className="space-y-6 print:hidden"
@@ -381,28 +411,36 @@ export default function LogSheetDetailPage() {
                 logSheetId={logSheetId}
                 role="TECHNICIAN"
                 canSign={canSignTechnician}
-                existingUrl={detail.logSheet.technicianSignatureUrl}
+                existingUrl={
+                  localSignatureUrls.TECHNICIAN ??
+                  detail.logSheet.technicianSignatureUrl
+                }
                 signedAt={detail.logSheet.technicianSignedAt}
                 signedByName={technicianSignedByName}
                 isLocked={isLocked}
-                onSigned={fetchData}
+                onSigned={handleSignatureUpdate}
+                onSuccess={handleTechnicianSignatureSuccess}
               />
               <SignatureSection
                 logSheetId={logSheetId}
                 role="CLIENT_PIC"
                 canSign={canSignClientPic}
-                existingUrl={detail.logSheet.clientPicSignatureUrl}
+                existingUrl={
+                  localSignatureUrls.CLIENT_PIC ??
+                  detail.logSheet.clientPicSignatureUrl
+                }
                 signedAt={detail.logSheet.clientPicSignedAt}
                 signedByName={clientPicSignedByName}
                 isLocked={isLocked}
-                onSigned={fetchData}
+                onSigned={handleSignatureUpdate}
+                onSuccess={handleClientPicSignatureSuccess}
               />
             </div>
           </div>
         </fieldset>
       )}
 
-      {mode === 'preview' && (
+      {effectiveMode === 'preview' && (
         <LogSheetPreview
           customerName={detail.project.name}
           date={detail.logSheet.date}
@@ -423,8 +461,38 @@ export default function LogSheetDetailPage() {
         />
       )}
 
+      {/* CLIENT_SUPERVISOR: Show signature section in preview mode */}
+      {isClientSupervisor && effectiveMode === 'preview' && (
+        <div className="rounded-lg border bg-card p-4 space-y-4 print:hidden">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="font-semibold">Tanda Tangan</h3>
+              <p className="text-xs text-muted-foreground">
+                Tanda tangan PIC klien diperlukan untuk menyetujui log sheet.
+              </p>
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <SignatureSection
+              logSheetId={logSheetId}
+              role="CLIENT_PIC"
+              canSign={canSignClientPic}
+              existingUrl={
+                localSignatureUrls.CLIENT_PIC ??
+                detail.logSheet.clientPicSignatureUrl
+              }
+              signedAt={detail.logSheet.clientPicSignedAt}
+              signedByName={clientPicSignedByName}
+              isLocked={isLocked}
+              onSigned={handleSignatureUpdate}
+              onSuccess={handleClientPicSignatureSuccess}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Sticky Action Bar for Mobile */}
-      {mode === 'input' && detail.logSheet.status === 'DRAFT' && (
+      {effectiveMode === 'input' && detail.logSheet.status === 'DRAFT' && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t flex gap-2 md:hidden z-50">
           <Button
             className="flex-1"

@@ -44,6 +44,15 @@ function scopeLabel(role: string) {
   return role;
 }
 
+const INTERNAL_ROLES = [
+  'ADMIN',
+  'TECHNICIAN',
+  'SUPERVISOR',
+  'STAFF',
+  'REPORTING',
+  'DIRECTOR',
+];
+
 function statusBadgeClass(status: string) {
   if (status === 'ONGOING')
     return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
@@ -65,6 +74,8 @@ export function DashboardScoped({
   const [isPending, startTransition] = useTransition();
   const [projects, setProjects] =
     useState<IProjectDashboardCard[]>(initialProjects);
+
+  const isInternalUser = INTERNAL_ROLES.includes(user.role);
 
   const displayName = useMemo(() => {
     return user.lastName
@@ -186,39 +197,41 @@ export function DashboardScoped({
 
                 <CardContent className="p-4 pt-2 flex-1 flex flex-col">
                   <div className="flex flex-col gap-2 mt-auto">
-                    {canAccess(
-                      user.role,
-                      RbacResource.LOG_SHEETS,
-                      'create'
-                    ) && (
-                      <Button
-                        size="sm"
-                        className="w-full justify-start gap-2 h-9 text-xs font-semibold shadow-none rounded-lg bg-primary/95 hover:bg-primary"
-                        onClick={() => handleQuickCreateLogSheet(project.id)}
-                        disabled={isPending}
-                      >
-                        <FileText className="h-4 w-4" />
-                        Buat Log Sheet Baru
-                      </Button>
-                    )}
+                    {isInternalUser &&
+                      canAccess(
+                        user.role,
+                        RbacResource.LOG_SHEETS,
+                        'create'
+                      ) && (
+                        <Button
+                          size="sm"
+                          className="w-full justify-start gap-2 h-9 text-xs font-semibold shadow-none rounded-lg bg-primary/95 hover:bg-primary"
+                          onClick={() => handleQuickCreateLogSheet(project.id)}
+                          disabled={isPending}
+                        >
+                          <FileText className="h-4 w-4" />
+                          Buat Log Sheet Baru
+                        </Button>
+                      )}
 
-                    {canAccess(
-                      user.role,
-                      RbacResource.WORK_REPORTS,
-                      'create'
-                    ) && (
-                      <Button
-                        asChild
-                        size="sm"
-                        className="w-full justify-start gap-2 h-9 text-xs font-medium border-border/60 hover:bg-muted rounded-lg"
-                        variant="outline"
-                      >
-                        <Link href={`/work-reports/${project.id}?create=1`}>
-                          <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                          Buat Laporan Baru
-                        </Link>
-                      </Button>
-                    )}
+                    {isInternalUser &&
+                      canAccess(
+                        user.role,
+                        RbacResource.WORK_REPORTS,
+                        'create'
+                      ) && (
+                        <Button
+                          asChild
+                          size="sm"
+                          className="w-full justify-start gap-2 h-9 text-xs font-medium border-border/60 hover:bg-muted rounded-lg"
+                          variant="outline"
+                        >
+                          <Link href={`/work-reports/${project.id}?create=1`}>
+                            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                            Buat Laporan Baru
+                          </Link>
+                        </Button>
+                      )}
 
                     <div className="flex gap-2">
                       {canAccess(user.role, RbacResource.LOG_SHEETS, 'read') &&
