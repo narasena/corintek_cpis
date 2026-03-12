@@ -22,7 +22,8 @@
 | BUG-001c | Dashboard   | Dashboard Shows "Buat Logsheet Baru" to CLIENT Role                             | Fixed  |
 | BUG-002d | Work Report | CLIENT_PIC Cannot Sign Work Reports                                             | Fixed  |
 | BUG-002e | Work Report | Work Report Actions Column Should Be Hidden for CLIENT                          | Fixed  |
-| BUG-003e | Work Report | Work Report Photo Delete Not Persisted                                          | Open   |
+| BUG-003e | Work Report | Work Report Photo Delete Not Persisted                                          | Fixed  |
+| BUG-003g | Work Report | Edit Work Report Shows Empty Fields (Date, Time, Work Details)                  | Fixed  |
 | BUG-003f | Logsheet    | Logsheet Photo Print Preview Should Show Side-by-Side Like Work Reports         | Fixed  |
 
 ### BUG-001 — Logsheet Signature Causes Full Re-render (State Loss)
@@ -134,12 +135,26 @@
 
 ---
 
-### BUG-003e — Photo Delete Not Persisted
+### BUG-003g — Edit Work Report Shows Empty Fields + Photos Not Refreshing
 
-**Symptom:** Photos deleted in edit mode show as removed, save shows success, but on re-open the deleted photos reappear.  
-**Root Cause:** The `existingPhotos` state is initialized from `effectiveData?.photos` only on initial render, but when the form is opened for a different work report date, the state isn't properly refreshed.  
-**Clarification:** Cannot be fixed by simply syncing photos on data fetch - this causes another bug where opening a work report shows wrong date and empty data. Needs deeper investigation of the form's data flow architecture.  
-**Status:** Open
+**Symptom:** When clicking "Ubah" (Edit) on a work report, the form opens but shows today's date and empty fields (time, situation, work done, etc.) instead of the actual work report data. Also, deleted photos reappear after saving and reopening.
+
+**Root Cause:** FIVE issues found through systematic debugging:
+
+1. **Form fields not updating**: `useForm` `defaultValues` only applies on initial render, not when `effectiveData` is populated after async fetch.
+2. **Dialog doesn't unmount children**: CrudDialog uses shadcn/ui Dialog which keeps children MOUNTED (just hidden with CSS) when closed. This means when reopening the edit dialog, the useEffect doesn't re-run because the component never unmounted.
+3. **Stale closure in async onSubmit**: `deletedPhotoIds` state was used directly in the async `onSubmit` function. JavaScript closures capture values at function definition time, NOT execution time.
+4. **RBAC permission denied**: The delete action required `'delete'` capability, but TECHNICIAN role only has `'CRU'` (no 'D'). The action was rejected with "Unauthorized" before reaching the database.
+5. **Photos reappearing**: Due to #4, the delete action never executed.
+
+**Fix:**
+
+1. Added `useEffect` with `form.reset()` to update form fields when `effectiveData?.id` changes
+2. Added `key={editingRow?.id || 'new'}` to WorkReportForm - forces React to completely REMOUNT the component when opening edit dialog
+3. Added `deletedPhotoIdsRef` pattern to avoid stale closure
+4. Changed RBAC from `capability: 'delete'` to `capability: 'update'` for deleteWorkReportPhotoAction - deleting photos is part of updating the work report
+
+**Status:** Fixed
 
 ---
 
@@ -317,7 +332,7 @@ console.log('[DEBUG] Checking for limit breaches...');
 
 | Category                            |  Count |
 | :---------------------------------- | -----: |
-| P0 Blocker                          |      1 |
+| P0 Blocker                          |      0 |
 | P1 High                             |     14 |
 | P2 Medium                           |     17 |
 | P3 Low / Needs Clarity              |      5 |

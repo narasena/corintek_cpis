@@ -150,7 +150,7 @@ export const deleteWorkReportPhotoAction = actionFactory.protected(
   },
   {
     metadata: {
-      rbac: { resource: RbacResource.WORK_REPORTS, capability: 'delete' },
+      rbac: { resource: RbacResource.WORK_REPORTS, capability: 'update' },
     },
   }
 );

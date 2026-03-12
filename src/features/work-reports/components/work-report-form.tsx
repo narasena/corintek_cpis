@@ -88,10 +88,19 @@ export function WorkReportForm({
   >([]);
 
   const [deletedPhotoIds, setDeletedPhotoIds] = useState<string[]>([]);
+  const deletedPhotoIdsRef = useRef<string[]>([]);
+
+  // Keep ref in sync with state to avoid stale closure in async onSubmit
+  useEffect(() => {
+    deletedPhotoIdsRef.current = deletedPhotoIds;
+  }, [deletedPhotoIds]);
 
   // Fetch work report data when in edit mode
   useEffect(() => {
     if (workReportId) {
+      // Reset fetchedData to ensure we always get fresh data when dialog reopens
+      // This handles the case where same workReportId is opened after close
+      setFetchedData(null);
       setIsLoading(true);
       getWorkReportByIdAction(workReportId).then(res => {
         if (res.success && res.data) {
@@ -108,11 +117,13 @@ export function WorkReportForm({
     }
   }, [workReportId]);
 
-  // Clear pending photos when form loads with effectiveData (edit mode)
+  // Reset photo state when form loads with effectiveData (edit mode)
   useEffect(() => {
     if (effectiveData) {
       setPendingPhotos([]);
       setDeletedPhotoIds([]);
+      // Reset existingPhotos to match the current work report's photos
+      setExistingPhotos((effectiveData?.photos as any) || []);
     }
   }, [effectiveData?.id]);
 
@@ -168,6 +179,23 @@ export function WorkReportForm({
           machineIds: [],
         },
   });
+
+  // Reset form values when effectiveData changes (after fetch completes)
+  useEffect(() => {
+    if (effectiveData) {
+      form.reset({
+        projectId,
+        date: new Date(effectiveData.date),
+        timeStart: effectiveData.timeStart ?? undefined,
+        timeEnd: effectiveData.timeEnd ?? undefined,
+        zone: effectiveData.zone ?? undefined,
+        situation: effectiveData.situation,
+        workDone: effectiveData.workDone,
+        workResult: effectiveData.workResult,
+        machineIds: effectiveData.machines.map(m => m.id),
+      });
+    }
+  }, [effectiveData?.id, form, projectId]);
 
   const handlePhotoUpload =
     (type: 'BEFORE' | 'AFTER' | 'GENERAL') =>
@@ -319,10 +347,11 @@ export function WorkReportForm({
           }
         }
 
-        // 3. Delete Removed Photos
-        if (deletedPhotoIds.length > 0) {
+        // 3. Delete Removed Photos (use ref to avoid stale closure)
+        const photoIdsToDelete = deletedPhotoIdsRef.current;
+        if (photoIdsToDelete.length > 0) {
           setSubmitStatus('Menghapus foto lama...');
-          const deletePromises = deletedPhotoIds.map(id => {
+          const deletePromises = photoIdsToDelete.map(id => {
             const fd = new FormData();
             fd.append('photoId', id);
             fd.append('workReportId', reportId!);
@@ -333,9 +362,10 @@ export function WorkReportForm({
 
           // Remove deleted photos from existingPhotos state immediately
           setExistingPhotos(prev =>
-            prev.filter(p => !deletedPhotoIds.includes(p.id))
+            prev.filter(p => !photoIdsToDelete.includes(p.id))
           );
           setDeletedPhotoIds([]);
+          deletedPhotoIdsRef.current = [];
         }
 
         // 4. Final Revalidation

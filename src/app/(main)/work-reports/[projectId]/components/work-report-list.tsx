@@ -49,6 +49,7 @@ export function WorkReportList({
       >
         {({ onSuccess, onCancel }) => (
           <WorkReportForm
+            key={editingRow?.id || 'new'}
             projectId={projectId}
             workReportId={editingRow?.id}
             onSuccess={onSuccess}
