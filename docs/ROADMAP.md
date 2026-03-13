@@ -70,6 +70,14 @@
 | Master Settings - Daftar Mesin | 4.7.3       | `MASTER-MACHINE`  | ❌ No UI (managed via Projects only) |
 | Master Settings - Log Sheet    | 4.7.3       | `MASTER-LOGSHEET` | ❌ Not Implemented                   |
 
+### Cleanup Items
+
+| Feature                                                               | Category | Priority | Effort |
+| :-------------------------------------------------------------------- | :------- | :------- | :----- |
+| Remove: Log Sheet GENERAL_CONDITION & JOB_DESCRIPTION notes validation | Cleanup  | 🟡 P2    | Low    |
+
+> **Note:** These fields (Running Status notes, Algae/Lumut notes, Deposit notes, Cleaning notes) are not needed in the real workflow and cause validation bugs. They should be either: (1) removed from the parameter seed data, OR (2) marked as not required in validation.
+
 > These features are **preserved in FSD** for future reference but NOT in current implementation.
 
 ---
