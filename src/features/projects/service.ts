@@ -445,6 +445,15 @@ export async function createProject(
 
   await assertValidAddendumOnCreate(data);
 
+  // Validate at least one CLIENT_PIC is assigned (required for all new projects)
+  if (!data.assignments || data.assignments.length === 0) {
+    throw new Error('Proyek harus memiliki minimal satu CLIENT_PIC');
+  }
+  const hasClientPic = data.assignments.some(a => a.role === 'CLIENT_PIC');
+  if (!hasClientPic) {
+    throw new Error('Proyek harus memiliki minimal satu CLIENT_PIC');
+  }
+
   const { machines, ...projectData } = data;
 
   const project = await prisma.$transaction(async tx => {

@@ -188,7 +188,7 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
 
   return (
     <>
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <Button
           type="button"
           variant="outline"

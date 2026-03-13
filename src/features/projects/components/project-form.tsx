@@ -102,6 +102,7 @@ export function ProjectForm({
               mode={mode}
               projectId={defaultValues?.id}
               projectClientId={selectedClientId}
+              form={form}
             />
           </div>
 

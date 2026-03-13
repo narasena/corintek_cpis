@@ -30,7 +30,9 @@ export const upsertProjectParameterOverrideAction = actionFactory.protected(
   },
   {
     schema: ProjectParameterOverrideSchema,
-    metadata: { rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'update' },
+    },
   }
 );
 
@@ -45,7 +47,9 @@ export const createProjectAction = actionFactory.protected(
   },
   {
     schema: CreateProjectSchema,
-    metadata: { rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'create' } },
+    metadata: {
+      rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'create' },
+    },
   }
 );
 
@@ -60,7 +64,9 @@ export const updateProjectAction = actionFactory.protected(
   },
   {
     schema: UpdateProjectSchema,
-    metadata: { rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'update' },
+    },
   }
 );
 
@@ -75,7 +81,9 @@ export const deleteProjectAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid(),
-    metadata: { rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'delete' } },
+    metadata: {
+      rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'delete' },
+    },
   }
 );
 
@@ -87,7 +95,9 @@ export const getProjectsAction = actionFactory.protected(
     return projectService.getProjects(actor);
   },
   {
-    metadata: { rbac: { resource: RbacResource.PROJECTS_LIST, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.PROJECTS_LIST, capability: 'read' },
+    },
   }
 );
 
@@ -96,7 +106,9 @@ export const getDashboardProjectsAction = actionFactory.protected(
     return projectService.getDashboardProjects(actor);
   },
   {
-    metadata: { rbac: { resource: RbacResource.DASHBOARD, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.DASHBOARD, capability: 'read' },
+    },
   }
 );
 
@@ -111,7 +123,9 @@ export const getProjectAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid(),
-    metadata: { rbac: { resource: RbacResource.PROJECTS_LIST, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.PROJECTS_LIST, capability: 'read' },
+    },
   }
 );
 
@@ -121,7 +135,9 @@ export const getProjectAssignmentsAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid(),
-    metadata: { rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'read' },
+    },
   }
 );
 
@@ -137,6 +153,8 @@ export const setProjectAssignmentsAction = actionFactory.protected(
   },
   {
     schema: SetProjectAssignmentsSchema,
-    metadata: { rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.PROJECTS_ADMIN, capability: 'update' },
+    },
   }
 );

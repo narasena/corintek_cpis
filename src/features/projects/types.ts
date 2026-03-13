@@ -44,6 +44,12 @@ export const ProjectAssignmentRoleEnum = z.enum([
 
 export type TProjectAssignmentRole = z.infer<typeof ProjectAssignmentRoleEnum>;
 
+// Project Assignment Schema (defined before CreateProjectSchema which references it)
+export const ProjectAssignmentSchema = z.object({
+  userId: z.string().uuid('User ID tidak valid'),
+  role: ProjectAssignmentRoleEnum,
+});
+
 // =============================================================================
 // Project Validation Schemas
 // =============================================================================
@@ -79,6 +85,19 @@ export const CreateProjectSchema = z.object({
       })
     )
     .optional(),
+  // Assignments: at least one CLIENT_PIC required for project creation
+  assignments: z
+    .array(ProjectAssignmentSchema)
+    .optional()
+    .refine(
+      assignments => {
+        if (!assignments || assignments.length === 0) return false;
+        return assignments.some(a => a.role === 'CLIENT_PIC');
+      },
+      {
+        message: 'Proyek harus memiliki minimal satu PIC Klien (CLIENT_PIC)',
+      }
+    ),
 });
 
 export const ProjectTypeMetaSchema = CreateProjectSchema.pick({
@@ -88,9 +107,14 @@ export const ProjectTypeMetaSchema = CreateProjectSchema.pick({
 
 export type TProjectTypeMeta = z.infer<typeof ProjectTypeMetaSchema>;
 
-export const UpdateProjectSchema = CreateProjectSchema.partial().extend({
-  id: z.string().uuid(),
-});
+// Exclude assignments from update - they're managed via setProjectAssignments
+export const UpdateProjectSchema = CreateProjectSchema.omit({
+  assignments: true,
+})
+  .partial()
+  .extend({
+    id: z.string().uuid(),
+  });
 
 export type TCreateProject = z.infer<typeof CreateProjectSchema>;
 export type TUpdateProject = z.infer<typeof UpdateProjectSchema>;
@@ -191,11 +215,6 @@ export const ProjectParameterOverrideSchema = z.object({
 export type TProjectParameterOverride = z.infer<
   typeof ProjectParameterOverrideSchema
 >;
-
-export const ProjectAssignmentSchema = z.object({
-  userId: z.string().uuid('User ID tidak valid'),
-  role: ProjectAssignmentRoleEnum,
-});
 
 export const SetProjectAssignmentsSchema = z.object({
   projectId: z.string().uuid('Project ID tidak valid'),

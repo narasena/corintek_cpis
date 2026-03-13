@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { useFormContext } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import { FormLabel } from '@/components/ui/form';
@@ -19,18 +20,23 @@ import {
   setProjectAssignmentsAction,
 } from '@/features/projects/actions';
 import type { TUserResponse } from '@/@types/user.type';
-import type { TProjectAssignmentRole } from '@/features/projects/types';
+import type {
+  TProjectAssignmentRole,
+  TCreateProject,
+} from '@/features/projects/types';
 
 interface ProjectAssignmentsSectionProps {
   mode: 'create' | 'edit';
   projectId?: string;
   projectClientId?: string;
+  form?: import('react-hook-form').UseFormReturn<TCreateProject>;
 }
 
 export function ProjectAssignmentsSection({
   mode,
   projectId,
   projectClientId,
+  form,
 }: ProjectAssignmentsSectionProps) {
   const [isAssignmentPending, startAssignmentTransition] = useTransition();
   const [users, setUsers] = useState<TUserResponse[]>([]);
@@ -38,6 +44,29 @@ export function ProjectAssignmentsSection({
   const [clientPicUserId, setClientPicUserId] = useState<string>('none');
   const [technicianUserIds, setTechnicianUserIds] = useState<string[]>([]);
 
+  // Use form context in create mode
+  const formContext = useFormContext<TCreateProject>();
+
+  // Determine which form to use
+  const activeForm = form || formContext;
+
+  // Load users for create mode immediately
+  useEffect(() => {
+    if (mode === 'create') {
+      (async () => {
+        const usersRes = await getAllUsersAction({});
+        if (usersRes.success && usersRes.data) {
+          setUsers(usersRes.data);
+        } else {
+          toast.error(
+            (usersRes as any).error || 'Gagal mengambil data pengguna'
+          );
+        }
+      })();
+    }
+  }, [mode]);
+
+  // Load assignments for edit mode
   useEffect(() => {
     if (mode !== 'edit') return;
     if (!projectId) return;
@@ -70,7 +99,11 @@ export function ProjectAssignmentsSection({
           assignments.filter(a => a.role === 'TECHNICIAN').map(a => a.userId)
         );
       } else {
-        toast.error((assignmentsRes as any).error || (assignmentsRes as any).error || 'Gagal mengambil data penugasan');
+        toast.error(
+          (assignmentsRes as any).error ||
+            (assignmentsRes as any).error ||
+            'Gagal mengambil data penugasan'
+        );
       }
     })();
   }, [mode, projectId]);
@@ -155,7 +188,117 @@ export function ProjectAssignmentsSection({
     });
   };
 
-  if (mode !== 'edit' || !projectId) {
+  // Build assignments array for form submission in create mode
+  const assignmentsForForm = useMemo(() => {
+    const assignments: Array<{
+      userId: string;
+      role: TProjectAssignmentRole;
+    }> = [];
+
+    if (projectPicUserId !== 'none') {
+      assignments.push({ userId: projectPicUserId, role: 'PROJECT_PIC' });
+    }
+
+    for (const userId of technicianUserIds) {
+      assignments.push({ userId, role: 'TECHNICIAN' });
+    }
+
+    if (clientPicUserId !== 'none') {
+      assignments.push({ userId: clientPicUserId, role: 'CLIENT_PIC' });
+    }
+
+    return assignments;
+  }, [projectPicUserId, technicianUserIds, clientPicUserId]);
+
+  // Get validation error for assignments field
+  const assignmentsError = activeForm?.formState.errors.assignments?.message as
+    | string
+    | undefined;
+
+  // Update form when assignments change in create mode
+  useEffect(() => {
+    if (mode === 'create' && activeForm) {
+      activeForm.setValue('assignments', assignmentsForForm, {
+        shouldValidate: true,
+      });
+    }
+  }, [mode, activeForm, assignmentsForForm]);
+
+  // Only show assignments section in edit mode (separate save action)
+  if (mode === 'create') {
+    // In create mode, render assignment UI integrated with the form
+    return (
+      <div className="space-y-4 border-t pt-4">
+        <h3 className="font-semibold text-lg border-b pb-2">Penugasan</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Wajib: Pilih minimal satu PIC Klien (CLIENT_PIC)
+        </p>
+
+        <div className="space-y-2">
+          <FormLabel>PIC Project</FormLabel>
+          <Select value={projectPicUserId} onValueChange={setProjectPicUserId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih PIC Project" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">- Tidak Ada -</SelectItem>
+              {projectPicOptions.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <FormLabel>Teknisi</FormLabel>
+          <MultiSelect
+            options={technicianOptions}
+            selected={technicianUserIds}
+            onChange={setTechnicianUserIds}
+            placeholder="Pilih teknisi..."
+          />
+        </div>
+
+        <div className="space-y-2">
+          <FormLabel>
+            PIC Klien <span className="text-red-500">*</span>
+          </FormLabel>
+          {projectClientId && clientPicOptions.length === 0 ? (
+            <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
+              <p className="font-medium">Tidak ada PIC Klien tersedia</p>
+              <p className="mt-1">
+                Buat pengguna dengan role CLIENT_SUPERVISOR untuk klien ini di
+                menu Users.
+              </p>
+            </div>
+          ) : (
+            <Select value={clientPicUserId} onValueChange={setClientPicUserId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih PIC Klien" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">- Tidak Ada -</SelectItem>
+                {clientPicOptions.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {assignmentsError && (
+            <p className="text-sm text-red-500 font-medium">
+              {assignmentsError}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (!projectId) {
     return null;
   }
 
