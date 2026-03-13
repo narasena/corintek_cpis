@@ -29,7 +29,8 @@
 | EP-015 | Client Portal & Profile | Read-only CLIENT role, avatar upload, portal                     |          27.67 |      2,351,950 |
 | EP-016 | Infrastructure          | Shared components, schema, migrations, seed, DevOps, testing     |          97.72 |      8,306,200 |
 | EP-017 | Cloudflare Worker       | R2 upload API, CORS, bearer auth                                 |          14.73 |      1,252,050 |
-|        | **TOTAL**               |                                                                  |     **802.60** | **68,221,000** |
+| EP-CG05 | Caching Infrastructure   | Cache tags, DI container, cached services, revalidation        |          35.83 |      3,045,550 |
+|        | **TOTAL**               |                                                                  |     **838.43** | **71,266,550** |
 
 ---
 
@@ -38,7 +39,7 @@
 | Complexity         | Epics                                                                          | % of Total |
 | :----------------- | :----------------------------------------------------------------------------- | ---------: |
 | High (>40 hrs)     | EP-010 (Log Sheets), EP-016 (Infra), EP-004 (Projects), EP-009 (Params)        |      55.2% |
-| Medium (20-40 hrs) | EP-002, EP-001, EP-012, EP-014, EP-013, EP-008, EP-015, EP-007, EP-006, EP-011 |      38.2% |
+| Medium (20-40 hrs) | EP-002, EP-001, EP-012, EP-014, EP-013, EP-008, EP-015, EP-007, EP-006, EP-011, EP-CG05 |      40.1% |
 | Low (<20 hrs)      | EP-005, EP-003, EP-017                                                         |       6.6% |
 
 ---
@@ -48,18 +49,18 @@
 | Metric                           |           Value |
 | :------------------------------- | --------------: |
 | Contract Price                   |    Rp 5,000,000 |
-| Actual Project Value (Deep Scan) |   Rp 68,221,000 |
-| Difference                       | - Rp 63,221,000 |
-| Contract as % of Value           |            7.3% |
+| Actual Project Value (Deep Scan) |   Rp 71,266,550 |
+| Difference                       | - Rp 66,266,550 |
+| Contract as % of Value           |            7.0% |
 
 ### Deep Scan vs. Fast Scan Comparison
 
 | Metric      |     Fast Scan |     Deep Scan |          Delta |
 | :---------- | ------------: | ------------: | -------------: |
-| Total Hours |        496.92 |        802.60 |        +305.68 |
-| Total Cost  | Rp 42,238,200 | Rp 68,221,000 | +Rp 25,982,800 |
+| Total Hours |        496.92 |        838.43 |        +341.51 |
+| Total Cost  | Rp 42,238,200 | Rp 71,266,550 | +Rp 29,028,350 |
 | Tasks       |          ~170 |           259 |            +89 |
-| % Increase  |             — |             — |         +61.5% |
+| % Increase  |             — |             — |         +68.7% |
 
 ---
 

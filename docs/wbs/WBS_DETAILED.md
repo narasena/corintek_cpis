@@ -29,9 +29,9 @@
 
 | Status      | Count                                                 |
 | :---------- | :---------------------------------------------------- |
-| Complete    | ~95%                                                  |
+| Complete    | ~95% (+ Caching Infrastructure)                      |
 | In Progress | 0                                                     |
-| Pending     | Log Sheet Request Form, Excel Export, Master Settings |
+| Pending     | Log Sheet Request Form, Excel Export, Master Settings, Video Attachments |
 
 ---
 
@@ -345,6 +345,7 @@
 | TK-010-047     | **WP-010-013** | Task                | Main Log Sheets page: project selection list with role-based visibility                                            |     1 |     2 |     4 |  2.17 |
 | TK-010-048     | **WP-010-013** | Task                | Project History page: log sheet listing with status tracking and CRUD entry points                                 |   1.5 |     3 |     5 |  3.08 |
 | TK-010-049     | **WP-010-013** | Task                | Entry Workstation: complex page orchestration (Desktop/Mobile-A/Mobile-B modes)                                    |     4 |     7 |    12 |  7.33 |
+| TK-010-062     | **WP-010-013** | Task                | Global Reports page: cross-project log sheet list with search and date filter                                  |     1 |     2 |     3 |  2.00 |
 | **US-010-014** | EP-010         | **User Story**      | **As a technician, I want smart forms that validate my data in real-time**                                         | **—** | **—** | **—** | **Σ** |
 | AC-010-014     | US-010-014     | Acceptance Criteria | Real-time draft persistence and cross-category validation                                                          |     — |     — |     — |     Σ |
 | **WP-010-014** | AC-010-014     | **Work Package**    | **Frontend (State & Save Hooks)**                                                                                  | **—** | **—** | **—** | **Σ** |
@@ -554,3 +555,38 @@
 | **WP-017-003** | AC-017-001     | **Work Package**    | **Testing & QA**                                                                            | **—** | **—** | **—** | **Σ** |
 | TK-017-009     | **WP-017-003** | Task                | Vitest Suite: R2 mock environment and CRUD operation tests                                  |   1.5 |     3 |     5 |  3.08 |
 | TK-017-010     | **WP-017-003** | Task                | Security Tests: Unauthorized access and invalid method rejection                            |   0.5 |     1 |     2 |  1.08 |
+
+## EP-CG05: Caching Infrastructure
+
+| ID             | Parent         | Type                | Item                                                                                                           |     O |     L |     P |     E |
+| :------------- | :------------- | :------------------ | :------------------------------------------------------------------------------------------------------------- | ----: | ----: | ----: | ----: |
+| **EP-CG05**    | —              | **Epic**            | **Caching Infrastructure**                                                                                      | **—** | **—** | **—** | **Σ** |
+| **US-CG05-001**| EP-CG05        | **User Story**      | **As a developer, I want a caching infrastructure to improve response times**                                   | **—** | **—** | **—** | **Σ** |
+| AC-CG05-001    | US-CG05-001   | Acceptance Criteria | Next.js cache tags, life profiles, and tag-based revalidation                                                  |     — |     — |     — |     Σ |
+| **WP-CG05-001**| AC-CG05-001   | **Work Package**   | **Cache Infrastructure**                                                                                         | **—** | **—** | **—** | **Σ** |
+| TK-CG05-001    | **WP-CG05-001**| Task               | Cache Tags: ECacheTag and ECacheLifeProfile enums (src/features/cache/tags.ts)                                |   0.5 |     1 |     2 |  1.08 |
+| TK-CG05-002    | **WP-CG05-001**| Task               | Cache Config: ICacheConfig interface and factory (src/features/cache/config.ts)                               |   0.5 |     1 |     2 |  1.08 |
+| TK-CG05-003    | **WP-CG05-001**| Task               | Life Profiles: CACHE_LIFE constants (src/features/cache/life-profiles.ts)                                     |   0.5 |     1 |   1.5 |  0.92 |
+| TK-CG05-004    | **WP-CG05-001**| Task               | DI Container: initializeCacheContainer, getCacheContainer, resetCacheContainer (src/features/cache/di.ts)      |   1.5 |     3 |     5 |  3.08 |
+| TK-CG05-005    | **WP-CG05-001**| Task               | Cache Metrics: hit/miss event logging (src/features/cache/metrics.ts)                                         |   0.5 |     1 |     2 |  1.08 |
+| TK-CG05-006    | **WP-CG05-001**| Task               | Error Classes: CacheError, CacheInvariantError (src/features/cache/errors.ts)                                 |   0.5 |     1 |   1.5 |  0.92 |
+| **WP-CG05-002**| AC-CG05-001   | **Work Package**   | **Cached Service Wrappers**                                                                                    | **—** | **—** | **—** | **Σ** |
+| TK-CG05-007    | **WP-CG05-002**| Task               | CachedParameterService: getAllParameters, getParameterById                                                    |     1 |     2 |     3 |  2.00 |
+| TK-CG05-008    | **WP-CG05-002**| Task               | CachedClientService: getAllClients, getClientById                                                               |     1 |     2 |     3 |  2.00 |
+| TK-CG05-009    | **WP-CG05-002**| Task               | CachedProjectService: getProjects, getProjectById, getDashboardProjects                                       |   1.5 |     3 |     5 |  3.08 |
+| TK-CG05-010    | **WP-CG05-002**| Task               | CachedUserService: getAllUsers, getTechniciansList, getUserById, getCurrentUserProfile                        |   1.5 |     3 |     5 |  3.08 |
+| TK-CG05-011    | **WP-CG05-002**| Task               | CachedDashboardService: getDashboardMetrics, getRecentLogSheetPhotos, getRecentActivities                     |   1.5 |     3 |     5 |  3.08 |
+| **WP-CG05-003**| AC-CG05-001   | **Work Package**   | **Next.js Configuration**                                                                                      | **—** | **—** | **—** | **Σ** |
+| TK-CG05-012    | **WP-CG05-003**| Task               | next.config.ts: cacheComponents and cacheLife profiles setup                                                  |   0.5 |     1 |     2 |  1.08 |
+| **WP-CG05-004**| AC-CG05-001   | **Work Package**   | **Mutation Actions Integration**                                                                               | **—** | **—** | **—** | **Σ** |
+| TK-CG05-013    | **WP-CG05-004**| Task               | Parameters actions: revalidateTag on create/update/delete                                                      |   0.5 |     1 |     2 |  1.08 |
+| TK-CG05-014    | **WP-CG05-004**| Task               | Clients actions: revalidateTag on create/update/delete                                                          |   0.5 |     1 |     2 |  1.08 |
+| TK-CG05-015    | **WP-CG05-004**| Task               | Projects actions: revalidateTag on CRUD and assignments                                                        |   0.5 |     1 |     2 |  1.08 |
+| TK-CG05-016    | **WP-CG05-004**| Task               | Users actions: revalidateTag on CRUD and profile update                                                        |   0.5 |     1 |     2 |  1.08 |
+| TK-CG05-017    | **WP-CG05-004**| Task               | Log Sheets actions: revalidateTag on all mutations                                                             |     1 |     2 |     3 |  2.00 |
+| TK-CG05-018    | **WP-CG05-004**| Task               | Work Reports actions: revalidateTag on all mutations                                                            |   0.5 |     1 |     2 |  1.08 |
+| TK-CG05-019    | **WP-CG05-004**| Task               | Attendance actions: revalidateTag on clock in/out                                                               |   0.5 |     1 |   1.5 |  0.92 |
+| **WP-CG05-005**| AC-CG05-001   | **Work Package**   | **Testing & Validation**                                                                                       | **—** | **—** | **—** | **Σ** |
+| TK-CG05-020    | **WP-CG05-005**| Task               | DI Container tests (src/features/cache/di.test.ts)                                                             |     1 |     2 |     3 |  2.00 |
+| TK-CG05-021    | **WP-CG05-005**| Task               | Integration tests (src/features/cache/integration.test.ts)                                                    |   1.5 |     3 |     5 |  3.08 |
+| TK-CG05-022    | **WP-CG05-005**| Task               | Performance testing and validation                                                                             |     1 |     2 |     4 |  2.17 |
