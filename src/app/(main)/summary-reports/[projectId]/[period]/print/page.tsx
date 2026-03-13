@@ -94,10 +94,10 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
     <>
       <style>{`
         @media print {
-          .print\\:landscape-page {
+          .print\:landscape-page {
             page: landscape;
-            width: 297mm !important;
-            min-height: 210mm !important;
+            width: calc(297mm - 20mm) !important;
+            min-height: calc(210mm - 20mm) !important;
             padding: 10mm !important;
           }
           @page landscape {
@@ -108,16 +108,44 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
             font-size: 7pt;
             width: 100%;
             border-collapse: collapse;
+            page-break-inside: avoid;
           }
           .analytics-table th,
           .analytics-table td {
             padding: 1px 2px;
             text-align: center;
             border: 0.5px solid #ccc;
+            white-space: nowrap;
           }
           .water-quality-section,
           .condenser-approach-section {
             width: 100%;
+            overflow-x: visible;
+          }
+          .analytics-table-wrapper {
+            width: 100%;
+            overflow-x: visible;
+          }
+          /* Scale table to fit landscape A4 width */
+          .analytics-table-wrapper table {
+            width: 100%;
+            max-width: 277mm;
+          }
+          /* Force tables to stretch to full width */
+          .analytics-table-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          .analytics-table-wrapper table {
+            width: 100% !important;
+            min-width: 100% !important;
+          }
+          /* Ensure no overflow in print */
+          body {
+            overflow-x: visible !important;
+          }
+          .print\\:overflow-visible {
+            overflow-x: visible !important;
           }
         }
       `}</style>
@@ -138,7 +166,7 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
           <PrintButton />
         </div>
 
-        <div className="bg-white text-black text-sm leading-tight w-[210mm] mx-auto shadow-xl print:shadow-none print:w-full print:mx-0">
+        <div className="bg-white text-black text-sm leading-tight w-full mx-auto shadow-xl print:shadow-none print:w-full print:mx-0">
           <div className="min-h-[297mm] p-8 print:p-0 flex flex-col items-center justify-center text-center">
             <div className="space-y-3">
               <div className="text-xs uppercase tracking-[0.3em] text-gray-500">

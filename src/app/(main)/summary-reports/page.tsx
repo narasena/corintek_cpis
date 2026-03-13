@@ -28,11 +28,13 @@ import {
   createSummaryReportAction,
   uploadSummaryReportAttachmentsAction,
 } from '@/features/summary-reports/actions';
+import { Loader2 } from 'lucide-react';
 
 export default function SummaryReportsPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<IProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const [projectId, setProjectId] = useState<string>('');
   const [monthStr, setMonthStr] = useState<string>(''); // YYYY-MM
@@ -97,61 +99,68 @@ export default function SummaryReportsPage() {
       return;
     }
 
-    const [year, month] = monthStr.split('-').map(Number);
+    setIsGenerating(true);
 
-    const form = new FormData();
-    form.set('projectId', projectId);
-    form.set('period', monthStr); // Send YYYY-MM directly
-    if (notes) form.set('notes', notes);
-    if (sections.executive) form.set('includeExecutiveSummary', 'true');
-    if (sections.logs) form.set('includeLogSheets', 'true');
-    if (sections.lab) form.set('includeLabAnalysis', 'true');
-    if (sections.work) form.set('includeWorkReports', 'true');
-    if (sections.chemical) form.set('includeChemicalReports', 'true');
+    try {
+      const [year, month] = monthStr.split('-').map(Number);
 
-    const res = await createSummaryReportAction(form);
-    if ((res as any)?.error) {
-      toast.error('Gagal membuat laporan ringkas', {
-        description: (res as any).error,
-      });
-      return;
-    }
+      const form = new FormData();
+      form.set('projectId', projectId);
+      form.set('period', monthStr); // Send YYYY-MM directly
+      if (notes) form.set('notes', notes);
+      if (sections.executive) form.set('includeExecutiveSummary', 'true');
+      if (sections.logs) form.set('includeLogSheets', 'true');
+      if (sections.lab) form.set('includeLabAnalysis', 'true');
+      if (sections.work) form.set('includeWorkReports', 'true');
+      if (sections.chemical) form.set('includeChemicalReports', 'true');
 
-    // Use local date for display to ensure correct month name
-    const displayDate = new Date(year, month - 1, 1);
-
-    toast.success('Berhasil menyiapkan laporan ringkas', {
-      description: `Periode ${format(displayDate, 'MMMM yyyy', { locale: id })}`,
-    });
-
-    const periodLabel = `${year}-${String(month).padStart(2, '0')}`;
-
-    if (hasAttachments) {
-      const attachForm = new FormData();
-      attachForm.set('projectId', projectId);
-      attachForm.set('period', monthStr);
-      if (attachments.dataTemuan)
-        attachForm.set('dataTemuanFile', attachments.dataTemuan);
-      if (attachments.dataBlowdown)
-        attachForm.set('dataBlowdownFile', attachments.dataBlowdown);
-      if (attachments.dataSuhu)
-        attachForm.set('dataSuhuFile', attachments.dataSuhu);
-      if (attachments.dataSuratJalan)
-        attachForm.set('dataSuratJalanFile', attachments.dataSuratJalan);
-
-      const uploadRes = await uploadSummaryReportAttachmentsAction(attachForm);
-      if ((uploadRes as any)?.error) {
-        toast.error('Gagal mengupload lampiran', {
-          description: (uploadRes as any).error,
+      const res = await createSummaryReportAction(form);
+      if ((res as any)?.error) {
+        toast.error('Gagal membuat laporan ringkas', {
+          description: (res as any).error,
         });
-      } else {
-        toast.success('Lampiran tersimpan', {
-          description: 'Lampiran siap dicetak terpisah',
-        });
+        return;
       }
-    }
 
-    router.push(`/summary-reports/${projectId}/${periodLabel}/print`);
+      // Use local date for display to ensure correct month name
+      const displayDate = new Date(year, month - 1, 1);
+
+      toast.success('Berhasil menyiapkan laporan ringkas', {
+        description: `Periode ${format(displayDate, 'MMMM yyyy', { locale: id })}`,
+      });
+
+      const periodLabel = `${year}-${String(month).padStart(2, '0')}`;
+
+      if (hasAttachments) {
+        const attachForm = new FormData();
+        attachForm.set('projectId', projectId);
+        attachForm.set('period', monthStr);
+        if (attachments.dataTemuan)
+          attachForm.set('dataTemuanFile', attachments.dataTemuan);
+        if (attachments.dataBlowdown)
+          attachForm.set('dataBlowdownFile', attachments.dataBlowdown);
+        if (attachments.dataSuhu)
+          attachForm.set('dataSuhuFile', attachments.dataSuhu);
+        if (attachments.dataSuratJalan)
+          attachForm.set('dataSuratJalanFile', attachments.dataSuratJalan);
+
+        const uploadRes =
+          await uploadSummaryReportAttachmentsAction(attachForm);
+        if ((uploadRes as any)?.error) {
+          toast.error('Gagal mengupload lampiran', {
+            description: (uploadRes as any).error,
+          });
+        } else {
+          toast.success('Lampiran tersimpan', {
+            description: 'Lampiran siap dicetak terpisah',
+          });
+        }
+      }
+
+      router.push(`/summary-reports/${projectId}/${periodLabel}/print`);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleOpenAttachments = () => {
@@ -348,8 +357,15 @@ export default function SummaryReportsPage() {
         >
           Cetak Lampiran
         </Button>
-        <Button onClick={handleSubmit} disabled={!canSubmit}>
-          Buat & Cetak
+        <Button onClick={handleSubmit} disabled={!canSubmit || isGenerating}>
+          {isGenerating ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Membuat Laporan...
+            </>
+          ) : (
+            'Buat & Cetak'
+          )}
         </Button>
       </div>
     </div>

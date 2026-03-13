@@ -26,7 +26,11 @@ import {
 import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-preview';
 import { SignatureSection } from '@/features/log-sheets/components/signature-section';
 
-import { submitLogSheetAction } from '@/features/log-sheets/actions';
+import {
+  submitLogSheetAction,
+  rejectLogSheetAction,
+  approveLogSheetAction,
+} from '@/features/log-sheets/actions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLogSheetDetailData } from './hooks/use-log-sheet-detail-data';
 import { useLogSheetDerived } from './hooks/use-log-sheet-derived';
@@ -66,6 +70,9 @@ export default function LogSheetDetailPage() {
   const [mode, setMode] = useState<'input' | 'preview'>('input');
   const [isPending, startTransition] = useTransition();
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
+  const [isRejectOpen, setIsRejectOpen] = useState(false);
+  const [isApproveOpen, setIsApproveOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
   const [adminOverride, setAdminOverride] = useState(false);
   const [localSignatureUrls, setLocalSignatureUrls] = useState<{
     TECHNICIAN: string | null;
@@ -149,8 +156,9 @@ export default function LogSheetDetailPage() {
   });
 
   const viewerRole = detail?.viewerRole;
-  const isClientSupervisor = viewerRole === 'CLIENT_SUPERVISOR';
-  const effectiveMode = isClientSupervisor ? 'preview' : mode;
+  const isPicRole =
+    viewerRole === 'CLIENT_SUPERVISOR' || viewerRole === 'SUPERVISOR';
+  const effectiveMode = isPicRole ? 'preview' : mode;
 
   const handleSave = () => {
     if (isLocked) {
@@ -206,6 +214,36 @@ export default function LogSheetDetailPage() {
     });
   };
 
+  const handleConfirmReject = () => {
+    setIsRejectOpen(false);
+    startTransition(async () => {
+      const res = await rejectLogSheetAction({
+        id: logSheetId,
+        rejectionReason: rejectReason || undefined,
+      });
+      if (!res.success) {
+        toast.error('Gagal menolak log sheet', { description: res.error });
+        return;
+      }
+      toast.success('Log sheet dikembalikan ke teknisi untuk perbaikan');
+      setRejectReason('');
+      await fetchData();
+    });
+  };
+
+  const handleConfirmApprove = () => {
+    setIsApproveOpen(false);
+    startTransition(async () => {
+      const res = await approveLogSheetAction({ id: logSheetId });
+      if (!res.success) {
+        toast.error('Gagal menyetujui log sheet', { description: res.error });
+        return;
+      }
+      toast.success('Log sheet disetujui');
+      await fetchData();
+    });
+  };
+
   const handleSignatureUpdate = () => {
     toast.success('Tanda tangan berhasil disimpan');
     return Promise.resolve();
@@ -235,8 +273,8 @@ export default function LogSheetDetailPage() {
   } = derivedUsers;
 
   return (
-    <div className="space-y-4 md:space-y-8 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
-      {!isClientSupervisor && (
+    <div className="space-y-4 md:space-y-8 pb-28 md:pb-0 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
+      {!isPicRole && (
         <LogSheetToolbar
           projectId={projectId}
           mode={effectiveMode}
@@ -253,6 +291,39 @@ export default function LogSheetDetailPage() {
           onBack={() => router.push(`/log-sheets/${projectId}`)}
         />
       )}
+      {/* PIC: Show approval buttons at TOP when status is SUBMITTED */}
+      {isPicRole &&
+        effectiveMode === 'preview' &&
+        detail.logSheet.status === 'SUBMITTED' && (
+          <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 print:hidden">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-medium text-amber-800">
+                  Menunggu Persetujuan
+                </p>
+                <p className="text-sm text-amber-600">
+                  Log sheet ini telah dikirim oleh teknisi dan menunggu
+                  persetujuan Anda.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setIsApproveOpen(true)}
+                  disabled={isPending}
+                >
+                  Setuju
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => setIsRejectOpen(true)}
+                  disabled={isPending}
+                >
+                  Tolak
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       <AlertDialog open={isSubmitOpen} onOpenChange={setIsSubmitOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -273,6 +344,51 @@ export default function LogSheetDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <AlertDialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tolak Log Sheet</AlertDialogTitle>
+            <AlertDialogDescription>
+              Berikan alasan penolakan untuk membantu teknisi memperbaiki log
+              sheet ini. Log sheet akan dikembalikan ke status draft.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Textarea
+              placeholder="Contoh: Data tidak lengkap, nilai parameter melebihi batas normal, dll."
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmReject}
+              disabled={isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Tolak
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={isApproveOpen} onOpenChange={setIsApproveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Setuju Log Sheet?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Log sheet akan disetujui dan dikunci.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Batal</AlertDialogCancel>
+            <Button onClick={handleConfirmApprove} disabled={isPending}>
+              Setuju
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="print:hidden">
         <div className="flex items-center justify-between">
           <div>
@@ -283,7 +399,7 @@ export default function LogSheetDetailPage() {
               {formatDate(detail.logSheet.date)} • {detail.logSheet.status}
             </p>
           </div>
-          {isClientSupervisor && (
+          {isPicRole && (
             <Button variant="outline" onClick={handlePrint}>
               Cetak / Preview
             </Button>
@@ -462,8 +578,49 @@ export default function LogSheetDetailPage() {
       )}
 
       {/* CLIENT_SUPERVISOR: Show signature section in preview mode */}
-      {isClientSupervisor && effectiveMode === 'preview' && (
+      {isPicRole && effectiveMode === 'preview' && (
         <div className="rounded-lg border bg-card p-4 space-y-4 print:hidden">
+          {/* Status Banner */}
+          {detail.logSheet.status === 'SUBMITTED' && (
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium text-amber-800">
+                    Menunggu Persetujuan
+                  </p>
+                  <p className="text-sm text-amber-600">
+                    Log sheet ini telah dikirim oleh teknisi dan menunggu
+                    persetujuan Anda.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setIsApproveOpen(true)}
+                    disabled={isPending}
+                  >
+                    Setuju
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setIsRejectOpen(true)}
+                    disabled={isPending}
+                  >
+                    Tolak
+                  </Button>
+                </div>
+              </div>
+              {detail.logSheet.rejectionReason && (
+                <div className="mt-3 p-3 bg-red-50 rounded border border-red-200">
+                  <p className="text-sm font-medium text-red-800">
+                    Alasan Penolakan:
+                  </p>
+                  <p className="text-sm text-red-700">
+                    {detail.logSheet.rejectionReason}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="font-semibold">Tanda Tangan</h3>
@@ -493,7 +650,7 @@ export default function LogSheetDetailPage() {
 
       {/* Sticky Action Bar for Mobile */}
       {effectiveMode === 'input' && detail.logSheet.status === 'DRAFT' && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t flex gap-2 md:hidden z-50">
+        <div className="fixed bottom-16 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t flex gap-2 md:hidden z-50">
           <Button
             className="flex-1"
             variant="outline"

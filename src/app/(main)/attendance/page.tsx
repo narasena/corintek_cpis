@@ -9,13 +9,21 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 
+import { DataTable } from '@/components/data-table';
+import { Input } from '@/components/ui/input';
 import {
   clockInAction,
   clockOutAction,
+  getMyAttendanceHistoryAction,
   getTodayAttendanceAction,
+  getTechniciansForPicAction,
+  getTechniciansForSupervisorAction,
 } from '@/features/attendance/actions';
 import { CameraInput } from '@/components/camera-input';
 import { Button } from '@/components/ui/button';
+import { columns, type TAttendanceTechnicianRow } from './components/columns';
+import { useSession } from '@/hooks/use-session';
+import type { TTechnicianAttendanceStatus } from '@/features/attendance/types';
 
 type TAttendance = {
   id: string;
@@ -35,9 +43,287 @@ function formatTime(value: string | Date | null | undefined) {
   return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
 
+function getDefaultDateRange() {
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const dateLocal = (d: Date) => d.toISOString().split('T')[0];
+  return { dateFrom: dateLocal(firstDay), dateTo: dateLocal(now) };
+}
+
+function getStatusBadge(
+  status: TTechnicianAttendanceStatus['attendanceStatus']
+) {
+  const styles = {
+    BELUM_ABSEN: 'bg-gray-100 text-gray-800',
+    SUDAH_ABSEN: 'bg-green-100 text-green-800',
+    SUDAH_PULANG: 'bg-blue-100 text-blue-800',
+  };
+  const labels = {
+    BELUM_ABSEN: 'Belum Absen',
+    SUDAH_ABSEN: 'Sudah Absen',
+    SUDAH_PULANG: 'Sudah Pulang',
+  };
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}
+    >
+      {labels[status]}
+    </span>
+  );
+}
+
+function PicAttendanceView() {
+  const [technicians, setTechnicians] = useState<TTechnicianAttendanceStatus[]>(
+    []
+  );
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    const result = await getTechniciansForPicAction({});
+    if (result.success) {
+      setTechnicians(result.data as TTechnicianAttendanceStatus[]);
+    } else {
+      toast.error('Gagal mengambil daftar teknisi', {
+        description: (result as any).error,
+      });
+      setTechnicians([]);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
+        <div className="flex flex-col items-center gap-1 text-center">
+          <h3 className="text-2xl font-bold tracking-tight">Absensi</h3>
+          <p className="text-muted-foreground">Memuat...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 md:space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Absensi Teknisi</h1>
+        <p className="text-muted-foreground mt-2">
+          Daftar teknisi yang bertugas di proyek Anda hari ini
+        </p>
+      </div>
+
+      {technicians.length === 0 ? (
+        <div className="rounded-lg border p-8 text-center">
+          <p className="text-muted-foreground">
+            Tidak ada teknisi yang ditugaskan ke proyek Anda
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-lg border overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  Teknisi
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  Email
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  Jam Masuk
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  Jam Pulang
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {technicians.map(tech => (
+                <tr key={tech.id} className="hover:bg-muted/30">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      {tech.avatarUrl ? (
+                        <img
+                          src={tech.avatarUrl}
+                          alt={tech.firstName}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-xs font-medium">
+                            {tech.firstName.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                      <span className="font-medium">
+                        {[tech.firstName, tech.lastName]
+                          .filter(Boolean)
+                          .join(' ')}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {tech.email}
+                  </td>
+                  <td className="px-4 py-3">
+                    {getStatusBadge(tech.attendanceStatus)}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {formatTime(tech.clockInAt)}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {formatTime(tech.clockOutAt)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SupervisorAttendanceView() {
+  const [technicians, setTechnicians] = useState<TTechnicianAttendanceStatus[]>(
+    []
+  );
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    const result = await getTechniciansForSupervisorAction({});
+    if (result.success) {
+      setTechnicians(result.data as TTechnicianAttendanceStatus[]);
+    } else {
+      toast.error('Gagal mengambil daftar teknisi', {
+        description: (result as any).error,
+      });
+      setTechnicians([]);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
+        <div className="flex flex-col items-center gap-1 text-center">
+          <h3 className="text-2xl font-bold tracking-tight">Absensi</h3>
+          <p className="text-muted-foreground">Memuat...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 md:space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Absensi Teknisi</h1>
+        <p className="text-muted-foreground mt-2">
+          Daftar teknisi yang bertugas di proyek Anda hari ini
+        </p>
+      </div>
+
+      {technicians.length === 0 ? (
+        <div className="rounded-lg border p-8 text-center">
+          <p className="text-muted-foreground">
+            Tidak ada teknisi yang ditugaskan ke proyek Anda
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-lg border overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  Teknisi
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  Email
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  Jam Masuk
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  Jam Pulang
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {technicians.map(tech => (
+                <tr key={tech.id} className="hover:bg-muted/30">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      {tech.avatarUrl ? (
+                        <img
+                          src={tech.avatarUrl}
+                          alt={tech.firstName}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-xs font-medium">
+                            {tech.firstName.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                      <span className="font-medium">
+                        {[tech.firstName, tech.lastName]
+                          .filter(Boolean)
+                          .join(' ')}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {tech.email}
+                  </td>
+                  <td className="px-4 py-3">
+                    {getStatusBadge(tech.attendanceStatus)}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {formatTime(tech.clockInAt)}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {formatTime(tech.clockOutAt)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AttendancePage() {
+  const { user: actor } = useSession();
+
+  // BUG-013 FIX: Always call hooks first before any conditional returns
+  // This ensures hooks are called in the same order on every render
   const [attendance, setAttendance] = useState<TAttendance | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [historyData, setHistoryData] = useState<TAttendanceTechnicianRow[]>(
+    []
+  );
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [dateFrom, setDateFrom] = useState(getDefaultDateRange().dateFrom);
+  const [dateTo, setDateTo] = useState(getDefaultDateRange().dateTo);
 
   const [clockInPreview, setClockInPreview] = useState<string | null>(null);
   const [clockInFile, setClockInFile] = useState<File | null>(null);
@@ -61,9 +347,36 @@ export default function AttendancePage() {
     setLoading(false);
   }, []);
 
+  const fetchHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    const result = await getMyAttendanceHistoryAction({
+      dateFrom,
+      dateTo,
+    });
+    if (result.success && Array.isArray(result.data)) {
+      setHistoryData(result.data as TAttendanceTechnicianRow[]);
+    } else {
+      setHistoryData([]);
+    }
+    setHistoryLoading(false);
+  }, [dateFrom, dateTo]);
+
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
+  // BUG-013 FIX: Now do role-based conditional rendering AFTER hooks
+  if (actor?.role === 'CLIENT_SUPERVISOR') {
+    return <PicAttendanceView />;
+  }
+
+  if (actor?.role === 'SUPERVISOR') {
+    return <SupervisorAttendanceView />;
+  }
 
   const statusLabel = useMemo(() => {
     if (!attendance) return 'Belum Absen Masuk';
@@ -71,8 +384,11 @@ export default function AttendancePage() {
     return 'Sudah Absen Pulang';
   }, [attendance]);
 
-  const canClockIn = !attendance;
-  const canClockOut = !!attendance && attendance.status === 'OPEN';
+  // Only TECHNICIAN role can mark attendance
+  const canMarkAttendance = actor?.role === 'TECHNICIAN';
+  const canClockIn = canMarkAttendance && !attendance;
+  const canClockOut =
+    canMarkAttendance && !!attendance && attendance.status === 'OPEN';
 
   const handleClockIn = () => {
     if (!clockInFile) {
@@ -225,6 +541,44 @@ export default function AttendancePage() {
           </div>
         </div>
       ) : null}
+
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold tracking-tight">
+          Riwayat Absensi
+        </h2>
+        <div className="flex flex-col md:flex-row gap-4 items-end">
+          <div className="w-full md:w-auto">
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="w-full md:w-[180px]"
+            />
+          </div>
+          <div className="w-full md:w-auto">
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="w-full md:w-[180px]"
+            />
+          </div>
+        </div>
+        {historyLoading ? (
+          <div className="flex items-center justify-center p-8 border rounded-lg h-64 bg-muted/20">
+            <div className="flex flex-col items-center gap-2">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="text-muted-foreground">Memuat riwayat...</p>
+            </div>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={historyData}
+            emptyMessage="Belum ada riwayat absensi."
+          />
+        )}
+      </div>
     </div>
   );
 }
