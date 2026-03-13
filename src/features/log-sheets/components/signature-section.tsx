@@ -119,11 +119,8 @@ export function SignatureSection({
           className="w-[98vw] h-[90vh] sm:h-[85vh] sm:w-[90vw] sm:max-w-2xl flex flex-col p-0 !max-h-[95vh] !max-w-[98vw]"
           style={{ maxHeight: '95vh', maxWidth: '98vw' }}
         >
-          <DialogHeader
-            className="px-4 py-3 shrink-0 rounded-t-lg"
-            style={{ backgroundColor: 'hsl(var(--primary))' }}
-          >
-            <DialogTitle className="text-white text-base">
+          <DialogHeader className="!bg-primary px-4 py-3 shrink-0 rounded-t-lg">
+            <DialogTitle className="!text-white text-base">
               Tanda Tangan {label}
             </DialogTitle>
           </DialogHeader>
