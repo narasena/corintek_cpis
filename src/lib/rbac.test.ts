@@ -58,7 +58,12 @@ describe('matchPathToResource', () => {
 describe('canAccess characterization', () => {
   const allResources = Object.values(RbacResource);
   const allRoles = Object.values(RbacRole);
-  const capabilities: TRbacCapability[] = ['create', 'read', 'update', 'delete'];
+  const capabilities: TRbacCapability[] = [
+    'create',
+    'read',
+    'update',
+    'delete',
+  ];
 
   it('matches the established permission matrix for all roles/resources', () => {
     const matrix: Record<string, string[]> = {

@@ -9,13 +9,19 @@ describe('RBAC Path Matching Rigorous Verification', () => {
 
   it('correctly matches sub-paths', () => {
     expect(matchPathToResource('/users/123')).toBe(RbacResource.USERS_ADMIN);
-    expect(matchPathToResource('/users/edit/abc')).toBe(RbacResource.USERS_ADMIN);
-    expect(matchPathToResource('/log-sheets/new')).toBe(RbacResource.LOG_SHEETS);
+    expect(matchPathToResource('/users/edit/abc')).toBe(
+      RbacResource.USERS_ADMIN
+    );
+    expect(matchPathToResource('/log-sheets/new')).toBe(
+      RbacResource.LOG_SHEETS
+    );
   });
 
   it('handles query parameters and hashes', () => {
     expect(matchPathToResource('/users?id=1')).toBe(RbacResource.USERS_ADMIN);
-    expect(matchPathToResource('/log-sheets#section')).toBe(RbacResource.LOG_SHEETS);
+    expect(matchPathToResource('/log-sheets#section')).toBe(
+      RbacResource.LOG_SHEETS
+    );
   });
 
   it('prevents greedy matching of sibling paths (The Security Fix)', () => {
@@ -23,8 +29,12 @@ describe('RBAC Path Matching Rigorous Verification', () => {
     // CURRENT BEHAVIOR: They match because of /^\/users/
     // DESIRED BEHAVIOR: They should be UNKNOWN or match a different resource
     expect(matchPathToResource('/users-backup')).toBe(RbacResource.UNKNOWN);
-    expect(matchPathToResource('/log-sheets-archive')).toBe(RbacResource.UNKNOWN);
-    expect(matchPathToResource('/attendance-config')).toBe(RbacResource.UNKNOWN);
+    expect(matchPathToResource('/log-sheets-archive')).toBe(
+      RbacResource.UNKNOWN
+    );
+    expect(matchPathToResource('/attendance-config')).toBe(
+      RbacResource.UNKNOWN
+    );
   });
 
   it('matches root dashboard', () => {

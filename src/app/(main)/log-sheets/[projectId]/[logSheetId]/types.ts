@@ -30,6 +30,9 @@ export type TDetail = {
     submittedByUserId: string | null;
     approvedAt: string | Date | null;
     approvedByUserId: string | null;
+    rejectedAt: string | Date | null;
+    rejectedByUserId: string | null;
+    rejectionReason: string | null;
     replacedBy?: {
       id: string;
       firstName: string;
@@ -41,6 +44,11 @@ export type TDetail = {
       lastName: string | null;
     } | null;
     approvedBy?: {
+      id: string;
+      firstName: string;
+      lastName: string | null;
+    } | null;
+    rejectedBy?: {
       id: string;
       firstName: string;
       lastName: string | null;

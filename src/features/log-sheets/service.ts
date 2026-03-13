@@ -297,6 +297,30 @@ export async function assertCanCreateLogSheet(
 export async function createLogSheet(
   data: TCreateLogSheet
 ): Promise<ILogSheet> {
+  // Check for existing logsheet on the same date and project
+  const inputDate = new Date(data.date);
+  const startOfDay = new Date(inputDate);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(inputDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const existingLogSheet = await prisma.logSheet.findFirst({
+    where: {
+      projectId: data.projectId,
+      date: {
+        gte: startOfDay,
+        lt: endOfDay,
+      },
+      deletedAt: null,
+    },
+  });
+
+  if (existingLogSheet) {
+    throw new Error(
+      'Logsheet untuk proyek ini pada tanggal tersebut sudah ada. Gunakan logsheet yang sudah ada atau pilih tanggal lain.'
+    );
+  }
+
   const logSheet = await prisma.logSheet.create({
     data: {
       projectId: data.projectId,
@@ -454,6 +478,13 @@ async function fetchLogSheetRow(id: string): Promise<TLogSheetRowResult> {
         },
       },
       clientPicSignedBy: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+      rejectedBy: {
         select: {
           id: true,
           firstName: true,

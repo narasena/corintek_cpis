@@ -26,7 +26,9 @@ export const getProfilesAction = actionFactory.protected(
   },
   {
     schema: GetParameterLimitProfilesFilterSchema.optional(),
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'read' },
+    },
   }
 );
 
@@ -39,7 +41,9 @@ export const getProfileWithLimitsAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid('ID profil tidak valid'),
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'read' },
+    },
   }
 );
 
@@ -48,7 +52,10 @@ export const getProfileWithLimitsAction = actionFactory.protected(
  */
 export const createProfileAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const result = await parameterLimitProfileService.createProfile(actor, input);
+    const result = await parameterLimitProfileService.createProfile(
+      actor,
+      input
+    );
 
     revalidatePath('/parameters');
     if (input.isDefault) {
@@ -59,7 +66,9 @@ export const createProfileAction = actionFactory.protected(
   },
   {
     schema: CreateParameterLimitProfileSchema,
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'create' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'create' },
+    },
   }
 );
 
@@ -68,7 +77,10 @@ export const createProfileAction = actionFactory.protected(
  */
 export const updateProfileAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const profile = await parameterLimitProfileService.updateProfile(actor, input);
+    const profile = await parameterLimitProfileService.updateProfile(
+      actor,
+      input
+    );
 
     revalidatePath('/parameters');
     revalidatePath(`/parameters/profiles/${input.id}`);
@@ -80,7 +92,9 @@ export const updateProfileAction = actionFactory.protected(
   },
   {
     schema: UpdateParameterLimitProfileSchema,
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'update' },
+    },
   }
 );
 
@@ -89,7 +103,10 @@ export const updateProfileAction = actionFactory.protected(
  */
 export const deleteProfileAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const result = await parameterLimitProfileService.deleteProfile(actor, input);
+    const result = await parameterLimitProfileService.deleteProfile(
+      actor,
+      input
+    );
 
     revalidatePath('/parameters');
     revalidatePath('/projects');
@@ -98,7 +115,9 @@ export const deleteProfileAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid('ID profil tidak valid'),
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'delete' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'delete' },
+    },
   }
 );
 
@@ -118,7 +137,9 @@ export const upsertProfileLimitsAction = actionFactory.protected(
   },
   {
     schema: UpsertParameterLimitsBatchSchema,
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'update' },
+    },
   }
 );
 
@@ -138,7 +159,9 @@ export const copyFromDefaultProfileAction = actionFactory.protected(
   },
   {
     schema: CopyFromMasterDefaultsSchema,
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'update' },
+    },
   }
 );
 
@@ -151,7 +174,9 @@ export const getProfileStatsAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid('ID profil tidak valid'),
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'read' },
+    },
   }
 );
 
@@ -168,6 +193,8 @@ export const getProfilesForSelectAction = actionFactory.protected(
     }));
   },
   {
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'read' },
+    },
   }
 );

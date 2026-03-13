@@ -4,12 +4,12 @@ import { AUTH_CONFIG, AUTH_ROUTES } from './features/auth/constants';
 
 /**
  * Thin Proxy - Lightweight routing checks ONLY
- * 
+ *
  * Security: This follows the Thin Proxy pattern to avoid CVE-2025-29927
  * - NO JWT verification (moved to Server Components)
  * - NO RBAC checks (moved to Server Components)
  * - NO database calls
- * 
+ *
  * Only checks: Does auth cookie exist?
  */
 
@@ -22,7 +22,9 @@ const PUBLIC_ROUTES = [
 ];
 
 function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith('/api/'));
+  return PUBLIC_ROUTES.some(
+    route => pathname === route || pathname.startsWith('/api/')
+  );
 }
 
 export function proxy(request: NextRequest) {

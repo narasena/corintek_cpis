@@ -8,7 +8,8 @@ import { useLogSheetTechnicians } from './use-log-sheet-technicians';
 const mockGetTechniciansListAction = vi.fn();
 
 vi.mock('@/features/users/actions', () => ({
-  getTechniciansListAction: (...args: unknown[]) => mockGetTechniciansListAction(...args),
+  getTechniciansListAction: (...args: unknown[]) =>
+    mockGetTechniciansListAction(...args),
 }));
 
 vi.mock('sonner', () => ({
@@ -42,7 +43,9 @@ describe('useLogSheetTechnicians (characterization)', () => {
 
   describe('initial state', () => {
     it('starts with empty technicians array (main path)', () => {
-      mockGetTechniciansListAction.mockImplementation(() => new Promise(() => {}));
+      mockGetTechniciansListAction.mockImplementation(
+        () => new Promise(() => {})
+      );
 
       const { result } = renderHook(() => useLogSheetTechnicians());
 
@@ -150,7 +153,9 @@ describe('useLogSheetTechnicians (characterization)', () => {
 
     it('shows error toast when action throws (error condition)', async () => {
       const { toast } = await import('sonner');
-      mockGetTechniciansListAction.mockRejectedValueOnce(new Error('Network error'));
+      mockGetTechniciansListAction.mockRejectedValueOnce(
+        new Error('Network error')
+      );
 
       renderHook(() => useLogSheetTechnicians());
 
@@ -164,7 +169,9 @@ describe('useLogSheetTechnicians (characterization)', () => {
     });
 
     it('keeps technicians as empty array on throw (error condition)', async () => {
-      mockGetTechniciansListAction.mockRejectedValueOnce(new Error('Network error'));
+      mockGetTechniciansListAction.mockRejectedValueOnce(
+        new Error('Network error')
+      );
 
       const { result } = renderHook(() => useLogSheetTechnicians());
 

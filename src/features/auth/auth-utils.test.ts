@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { validateSessionUser } from './service';
 import { getCurrentUser } from '@/lib/auth-helpers';
-import { getCurrentUserDetails, requireActor, getActorOrNull } from './lib/user-context';
+import {
+  getCurrentUserDetails,
+  requireActor,
+  getActorOrNull,
+} from './lib/user-context';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import { cookies } from 'next/headers';
@@ -50,7 +54,9 @@ describe('Auth Utilities & Helpers', () => {
         deletedAt: null,
       } as any);
 
-      const result = await validateSessionUser('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11');
+      const result = await validateSessionUser(
+        'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+      );
       expect(result?.id).toBe('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11');
       expect((result as any).password).toBeUndefined();
     });
@@ -66,7 +72,7 @@ describe('Auth Utilities & Helpers', () => {
         id: '123',
         isActive: false, // Inactive
       } as any);
-      
+
       const result = await validateSessionUser('123');
       expect(result).toBeNull();
     });

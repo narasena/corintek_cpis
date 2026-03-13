@@ -21,17 +21,17 @@ vi.mock('./prisma', () => ({
 import { cookies } from 'next/headers';
 import { verifyToken } from './jwt';
 import { prisma } from './prisma';
-import { 
-  getCurrentUser, 
+import {
+  getCurrentUser,
   AuthenticationError,
   getAuthCookieName,
   setAuthSession,
-  deleteAuthSession
+  deleteAuthSession,
 } from './auth-helpers';
-import { 
-  getCurrentUserDetails, 
-  requireActor, 
-  getActorOrNull 
+import {
+  getCurrentUserDetails,
+  requireActor,
+  getActorOrNull,
 } from '@/features/auth/lib/user-context';
 import { ensureAccess, filterNavItems, matchPathToResource } from './rbac';
 
@@ -41,12 +41,29 @@ describe('auth-helpers (Actual Logic)', () => {
   });
 
   const validId = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-  const mockPayload = { id: validId, email: 'test@example.com', role: 'TECHNICIAN' as TUserRole };
-  const mockUser = { 
-    id: validId, 
-    firstName: 'J', lastName: 'D', idNumber: '1', email: 'test@example.com', phoneNumber: '1', avatarUrl: null, address: 'A',
-    role: 'TECHNICIAN', employmentStatus: 'PERMANENT', isActive: true, isBlocked: false, clientId: null, client: null,
-    createdAt: new Date(), updatedAt: new Date(), deletedAt: null 
+  const mockPayload = {
+    id: validId,
+    email: 'test@example.com',
+    role: 'TECHNICIAN' as TUserRole,
+  };
+  const mockUser = {
+    id: validId,
+    firstName: 'J',
+    lastName: 'D',
+    idNumber: '1',
+    email: 'test@example.com',
+    phoneNumber: '1',
+    avatarUrl: null,
+    address: 'A',
+    role: 'TECHNICIAN',
+    employmentStatus: 'PERMANENT',
+    isActive: true,
+    isBlocked: false,
+    clientId: null,
+    client: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
   };
 
   it('getCurrentUser: returns null if no cookie', async () => {
@@ -55,13 +72,17 @@ describe('auth-helpers (Actual Logic)', () => {
   });
 
   it('getCurrentUser: returns null if token invalid', async () => {
-    vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
+    vi.mocked(cookies).mockResolvedValue({
+      get: () => ({ value: 'v' }),
+    } as any);
     vi.mocked(verifyToken).mockResolvedValue({ success: false, error: 'fail' });
     expect(await getCurrentUser()).toBeNull();
   });
 
   it('getCurrentUser: returns payload on success', async () => {
-    vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
+    vi.mocked(cookies).mockResolvedValue({
+      get: () => ({ value: 'v' }),
+    } as any);
     vi.mocked(verifyToken).mockResolvedValue({
       success: true,
       data: mockPayload as any,
@@ -70,7 +91,9 @@ describe('auth-helpers (Actual Logic)', () => {
   });
 
   it('getCurrentUserDetails: returns null if user not found', async () => {
-    vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
+    vi.mocked(cookies).mockResolvedValue({
+      get: () => ({ value: 'v' }),
+    } as any);
     vi.mocked(verifyToken).mockResolvedValue({
       success: true,
       data: mockPayload as any,
@@ -80,7 +103,9 @@ describe('auth-helpers (Actual Logic)', () => {
   });
 
   it('getCurrentUserDetails: returns details on success', async () => {
-    vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
+    vi.mocked(cookies).mockResolvedValue({
+      get: () => ({ value: 'v' }),
+    } as any);
     vi.mocked(verifyToken).mockResolvedValue({
       success: true,
       data: mockPayload as any,
@@ -96,7 +121,9 @@ describe('auth-helpers (Actual Logic)', () => {
   });
 
   it('requireActor: throws if user blocked', async () => {
-    vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
+    vi.mocked(cookies).mockResolvedValue({
+      get: () => ({ value: 'v' }),
+    } as any);
     vi.mocked(verifyToken).mockResolvedValue({
       success: true,
       data: mockPayload as any,
@@ -109,7 +136,9 @@ describe('auth-helpers (Actual Logic)', () => {
   });
 
   it('getActorOrNull: returns null if inactive', async () => {
-    vi.mocked(cookies).mockResolvedValue({ get: () => ({ value: 'v' }) } as any);
+    vi.mocked(cookies).mockResolvedValue({
+      get: () => ({ value: 'v' }),
+    } as any);
     vi.mocked(verifyToken).mockResolvedValue({
       success: true,
       data: mockPayload as any,
@@ -128,7 +157,7 @@ describe('auth-helpers (Actual Logic)', () => {
   it('setAuthSession: calls cookie store correctly', async () => {
     const setMock = vi.fn();
     vi.mocked(cookies).mockResolvedValue({ set: setMock } as any);
-    
+
     await setAuthSession({ id: '1', email: 't@e.com', role: 'ADMIN' as any });
     expect(setMock).toHaveBeenCalled();
   });
@@ -136,7 +165,7 @@ describe('auth-helpers (Actual Logic)', () => {
   it('deleteAuthSession: calls cookie store delete', async () => {
     const deleteMock = vi.fn();
     vi.mocked(cookies).mockResolvedValue({ delete: deleteMock } as any);
-    
+
     await deleteAuthSession();
     expect(deleteMock).toHaveBeenCalled();
   });
@@ -144,13 +173,15 @@ describe('auth-helpers (Actual Logic)', () => {
 
 describe('rbac (Actual Logic Coverage)', () => {
   it('ensureAccess: throws if denied', () => {
-    expect(() => ensureAccess('CLIENT', 'USERS_ADMIN' as any, 'create')).toThrow('Unauthorized');
+    expect(() =>
+      ensureAccess('CLIENT', 'USERS_ADMIN' as any, 'create')
+    ).toThrow('Unauthorized');
   });
 
   it('filterNavItems: removes unauthorized links', () => {
     const items = [
       { url: '/', label: 'Home' },
-      { url: '/users', label: 'Admin' }
+      { url: '/users', label: 'Admin' },
     ];
     const filtered = filterNavItems('CLIENT', items);
     expect(filtered).toHaveLength(1);

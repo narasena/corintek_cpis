@@ -10,26 +10,39 @@ describe('CPIS Structured Logger', () => {
 
   it('formats error logs correctly', () => {
     logger.error('Auth', 'login', 'Failed');
-    expect(console.error).toHaveBeenCalledWith('[CPIS-ERROR] Auth.login: Failed');
+    expect(console.error).toHaveBeenCalledWith(
+      '[CPIS-ERROR] Auth.login: Failed'
+    );
   });
 
   it('formats error logs with context correctly', () => {
-    logger.error('Auth', 'login', 'Failed', { email: 'test@ex.com', code: 401 });
-    expect(console.error).toHaveBeenCalledWith('[CPIS-ERROR] Auth.login: Failed | email: test@ex.com | code: 401');
+    logger.error('Auth', 'login', 'Failed', {
+      email: 'test@ex.com',
+      code: 401,
+    });
+    expect(console.error).toHaveBeenCalledWith(
+      '[CPIS-ERROR] Auth.login: Failed | email: test@ex.com | code: 401'
+    );
   });
 
   it('formats auth logs correctly', () => {
     logger.auth('Auth', 'login', 'Success');
-    expect(console.info).toHaveBeenCalledWith('[CPIS-AUTH] Auth.login: Success');
+    expect(console.info).toHaveBeenCalledWith(
+      '[CPIS-AUTH] Auth.login: Success'
+    );
   });
 
   it('formats system info logs correctly', () => {
     logger.info('Sync', 'start', 'Job started');
-    expect(console.info).toHaveBeenCalledWith('[CPIS-SYSTEM] Sync.start: Job started');
+    expect(console.info).toHaveBeenCalledWith(
+      '[CPIS-SYSTEM] Sync.start: Job started'
+    );
   });
 
   it('formats warning logs correctly', () => {
     logger.warn('DB', 'connect', 'Slow connection');
-    expect(console.warn).toHaveBeenCalledWith('[CPIS-WARN] DB.connect: Slow connection');
+    expect(console.warn).toHaveBeenCalledWith(
+      '[CPIS-WARN] DB.connect: Slow connection'
+    );
   });
 });

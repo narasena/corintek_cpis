@@ -1,6 +1,9 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { highlightMatches, IHighlightPart } from '@/lib/utils/string-algorithms';
+import {
+  highlightMatches,
+  IHighlightPart,
+} from '@/lib/utils/string-algorithms';
 
 /**
  * Highlight text component props

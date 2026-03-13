@@ -113,9 +113,9 @@ export function ClientForm({
           });
           return;
         }
-        result = await updateClientAction({ 
+        result = await updateClientAction({
           id: defaultValues.id,
-          data: processedData as TClientUpdateInput 
+          data: processedData as TClientUpdateInput,
         });
       }
 

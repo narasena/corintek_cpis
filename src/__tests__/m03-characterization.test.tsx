@@ -4,7 +4,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { SearchFilterService } from '@/lib/search-filter-service';
 import { canAccess, matchPathToResource, RbacResource } from '@/lib/rbac';
-import { ErrorHandlerService, ConsoleLogger } from '@/lib/error-handler-service';
+import {
+  ErrorHandlerService,
+  ConsoleLogger,
+} from '@/lib/error-handler-service';
 import { processImagePipeline } from '@/lib/utils/image-compression';
 
 // --- MOCKING NEXT/NAVIGATION ---
@@ -55,7 +58,9 @@ describe('RBAC Characterization', () => {
 
   it('matchPathToResource: correctly maps paths to resources', () => {
     expect(matchPathToResource('/users')).toBe(RbacResource.USERS_ADMIN);
-    expect(matchPathToResource('/log-sheets/123')).toBe(RbacResource.LOG_SHEETS);
+    expect(matchPathToResource('/log-sheets/123')).toBe(
+      RbacResource.LOG_SHEETS
+    );
     expect(matchPathToResource('/unknown-path')).toBe(RbacResource.UNKNOWN);
   });
 });
@@ -71,7 +76,7 @@ describe('ErrorHandlerService Characterization', () => {
   it('processError: sanitizes error for production', () => {
     const error = new Error('Database connection failed');
     const processed = service.processError(error);
-    
+
     expect(processed.title).toBe('Terjadi kesalahan');
     expect(processed.details).toBeUndefined(); // Hidden in production
     expect(processed.recoverable).toBe(true);
@@ -80,10 +85,14 @@ describe('ErrorHandlerService Characterization', () => {
   it('getUserMessage: provides Indonesian translations for common errors', () => {
     const networkError = new Error('Failed');
     networkError.name = 'NetworkError';
-    expect(service.getUserMessage(networkError)).toBe('Gagal terhubung ke server. Periksa koneksi internet Anda.');
+    expect(service.getUserMessage(networkError)).toBe(
+      'Gagal terhubung ke server. Periksa koneksi internet Anda.'
+    );
 
     const unknownError = new Error('Something weird');
-    expect(service.getUserMessage(unknownError)).toBe('Maaf, terjadi kesalahan. Silakan coba lagi.');
+    expect(service.getUserMessage(unknownError)).toBe(
+      'Maaf, terjadi kesalahan. Silakan coba lagi.'
+    );
   });
 });
 
@@ -94,13 +103,13 @@ describe('Image Pipeline Characterization', () => {
   it('identifies the core pipeline steps (Structural check)', () => {
     expect(processImagePipeline).toBeDefined();
     // Since this requires a real <canvas> or <img> element, we'll verify it's exported
-    // and correctly typed. Unit tests in src/lib/utils/image-compression.test.ts 
+    // and correctly typed. Unit tests in src/lib/utils/image-compression.test.ts
     // cover the mocked canvas implementation.
   });
 });
 
 // --- 5. DataTable state orchestration (using a mocked router) ---
-// Note: This is more of a component test, but we're characterizing the logic 
+// Note: This is more of a component test, but we're characterizing the logic
 // that previously failed due to router issues.
 import { render, screen } from '@testing-library/react';
 import { DataTable } from '@/components/data-table';
@@ -112,9 +121,9 @@ describe('DataTable Logic Characterization', () => {
 
   it('renders without crashing even when next/navigation is used', () => {
     render(
-      <DataTable 
-        columns={columns} 
-        data={data} 
+      <DataTable
+        columns={columns}
+        data={data}
         searchConfig={{ enableUrlSync: true }}
       />
     );

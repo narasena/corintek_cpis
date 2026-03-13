@@ -38,9 +38,7 @@ const CATEGORY_LABELS: Record<TCategoryId, string> = {
   CONSUMPTION: 'Consumption',
 };
 
-export class LogSheetUnitViewModelBuilder
-  implements ILogSheetUnitViewModelBuilder
-{
+export class LogSheetUnitViewModelBuilder implements ILogSheetUnitViewModelBuilder {
   build(
     detail: ILogSheetDetailSnapshot,
     entryState: TReadonlyEntryStateMap,

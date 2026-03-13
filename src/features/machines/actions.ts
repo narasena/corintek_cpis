@@ -1,10 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import {
-  CreateMachineSchema,
-  UpdateMachineSchema,
-} from './types';
+import { CreateMachineSchema, UpdateMachineSchema } from './types';
 import {
   createMachine,
   updateMachine,
@@ -32,7 +29,9 @@ export const createMachineAction = actionFactory.protected(
   },
   {
     schema: CreateMachineSchema,
-    metadata: { rbac: { resource: RbacResource.MACHINES, capability: 'create' } },
+    metadata: {
+      rbac: { resource: RbacResource.MACHINES, capability: 'create' },
+    },
   }
 );
 
@@ -48,7 +47,9 @@ export const updateMachineAction = actionFactory.protected(
   },
   {
     schema: UpdateMachineSchema,
-    metadata: { rbac: { resource: RbacResource.MACHINES, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.MACHINES, capability: 'update' },
+    },
   }
 );
 
@@ -68,7 +69,9 @@ export const deleteMachineAction = actionFactory.protected(
   },
   {
     schema: z.string().min(1, 'ID mesin wajib diisi'),
-    metadata: { rbac: { resource: RbacResource.MACHINES, capability: 'delete' } },
+    metadata: {
+      rbac: { resource: RbacResource.MACHINES, capability: 'delete' },
+    },
   }
 );
 

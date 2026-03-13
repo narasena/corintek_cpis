@@ -35,7 +35,14 @@ export const CreateLogSheetEntrySchema = z
   .object({
     logSheetId: z.string().uuid('Log sheet ID tidak valid'),
     parameterId: z.string().uuid('Parameter ID tidak valid'),
-    machineId: z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, 'Machine ID tidak valid').nullable().optional(),
+    machineId: z
+      .string()
+      .regex(
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+        'Machine ID tidak valid'
+      )
+      .nullable()
+      .optional(),
     role: LogSheetEntryRoleEnum.default('VALUE'),
     valueType: ValueTypeEnum,
     numericValue: z.number().nullable().optional(),
@@ -108,6 +115,9 @@ export interface ILogSheet {
   submittedByUserId: string | null;
   approvedAt: Date | null;
   approvedByUserId: string | null;
+  rejectedAt: Date | null;
+  rejectedByUserId: string | null;
+  rejectionReason: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -123,6 +133,11 @@ export interface ILogSheet {
     lastName: string | null;
   } | null;
   approvedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  } | null;
+  rejectedBy?: {
     id: string;
     firstName: string;
     lastName: string | null;

@@ -14,7 +14,7 @@ export function isZodError(error: unknown): error is z.ZodError {
 /**
  * Formats a ZodError into a flat, human-readable string
  * Example: "email: Invalid format; age: Too young"
- * 
+ *
  * @param error - The Zod error object
  * @param fallback - Default message if no issues are present
  */

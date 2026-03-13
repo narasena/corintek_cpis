@@ -60,11 +60,7 @@ export async function setAuthSession(
   const token = await generateToken(payload);
   const cookieStore = await cookies();
 
-  cookieStore.set(
-    AUTH_INFRA_CONFIG.COOKIE_NAME,
-    token,
-    getAuthCookieOptions()
-  );
+  cookieStore.set(AUTH_INFRA_CONFIG.COOKIE_NAME, token, getAuthCookieOptions());
 }
 
 /**

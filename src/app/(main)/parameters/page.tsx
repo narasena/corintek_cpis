@@ -20,12 +20,26 @@ import {
 import { IParameter } from '@/features/parameters/types';
 import { ParameterLimitsContent } from '@/features/parameter-limit-profiles/components/parameter-limits-content';
 import { ProfilesContent } from '@/features/parameter-limit-profiles/components/profiles-content';
+import { useSession } from '@/hooks/use-session';
 
 export default function ParametersPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { user, isLoading } = useSession();
   const tab = searchParams.get('tab') || 'limits';
+
+  // RBAC: Only ADMIN can access this page
+  useEffect(() => {
+    if (!isLoading && user && user.role !== 'ADMIN') {
+      router.push('/');
+      toast.error('Akses ditolak. Halaman ini hanya untuk ADMIN.');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading || !user || user.role !== 'ADMIN') {
+    return null;
+  }
 
   const onTabChange = (value: string) => {
     router.push(`${pathname}?tab=${value}`);

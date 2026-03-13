@@ -20,9 +20,7 @@ export function MobileView<TData, TValue>({
         table.getRowModel().rows.map((row: Row<TData>) => {
           const actionCell = row
             .getVisibleCells()
-            .find(
-              (cell: Cell<TData, unknown>) => cell.column.id === 'actions'
-            );
+            .find((cell: Cell<TData, unknown>) => cell.column.id === 'actions');
           const contentCells = row
             .getVisibleCells()
             .filter(

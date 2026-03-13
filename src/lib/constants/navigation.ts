@@ -14,7 +14,7 @@ import {
 
 /**
  * Navigation Configuration Schema
- * 
+ *
  * Grouped for better logical separation in the UI and easier maintenance.
  */
 export const NAV_CONFIG = {

@@ -34,9 +34,7 @@ export function FilterSelect<TData>({
   onChange,
   onClear,
 }: IFilterSelectProps<TData>) {
-  const handleValueChange = (newValue: string) => {
-
-  };
+  const handleValueChange = (newValue: string) => {};
 
   return (
     <Select value={value ?? 'all'} onValueChange={handleValueChange}>
@@ -46,7 +44,6 @@ export function FilterSelect<TData>({
         />
       </SelectTrigger>
       <SelectContent>
-
         {config.options?.map(opt => (
           <SelectItem key={opt.value} value={opt.value}>
             {opt.label}

@@ -43,11 +43,15 @@ export function MachineFormSection({ control }: IMachineFormSectionProps) {
   });
 
   const addChiller = () => {
-    appendMachine(createDefaultMachine('CHILLER', (machineFields.length || 0) + 1));
+    appendMachine(
+      createDefaultMachine('CHILLER', (machineFields.length || 0) + 1)
+    );
   };
 
   const addCoolingTower = () => {
-    appendMachine(createDefaultMachine('COOLING_TOWER', (machineFields.length || 0) + 1));
+    appendMachine(
+      createDefaultMachine('COOLING_TOWER', (machineFields.length || 0) + 1)
+    );
   };
 
   // Group machines by type

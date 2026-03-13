@@ -229,12 +229,12 @@ describe('VirtualList', () => {
     );
 
     const listContainer = container.firstChild as HTMLElement;
-    
+
     // totalHeight = 100 * 50 = 5000
     // containerHeight = 200
     // scrollBottom = 4800 + 200 = 5000 (totalHeight)
     fireEvent.scroll(listContainer, { target: { scrollTop: 4800 } });
-    
+
     expect(onEndReached).toHaveBeenCalled();
   });
 });

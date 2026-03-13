@@ -32,3 +32,15 @@ export type TClockOutInput = {
   clockOutAt: Date;
   clockOutPhotoUrl: string;
 };
+
+export type TTechnicianAttendanceStatus = {
+  id: string;
+  firstName: string;
+  lastName: string | null;
+  email: string;
+  avatarUrl: string | null;
+  attendanceStatus: 'BELUM_ABSEN' | 'SUDAH_ABSEN' | 'SUDAH_PULANG';
+  clockInAt: Date | null;
+  clockOutAt: Date | null;
+  dateLocal: string;
+};

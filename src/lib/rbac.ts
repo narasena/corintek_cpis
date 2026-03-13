@@ -30,9 +30,9 @@ const ROLE_CONFIG: Record<TRbacRole, IRbacRoleConfig> = {
  * Declarative mapping of permission levels to granular capability sets
  */
 const PERMISSION_LEVEL_MAP: Record<TRbacLevel, TRbacPermissionSet> = {
-  'CRUD': { create: true, read: true, update: true, delete: true },
-  'CRU': { create: true, read: true, update: true, delete: false },
-  'R': { create: false, read: true, update: false, delete: false },
+  CRUD: { create: true, read: true, update: true, delete: true },
+  CRU: { create: true, read: true, update: true, delete: false },
+  R: { create: false, read: true, update: false, delete: false },
   '-': { create: false, read: false, update: false, delete: false },
 };
 
@@ -86,21 +86,51 @@ const PATH_RESOURCE_MAP: Array<{
   resource: TRbacResource;
 }> = [
   { pattern: /^\/?$/, resource: RbacResource.DASHBOARD },
-  { pattern: createPathPattern('/summary-reports'), resource: RbacResource.SUMMARY_REPORTS },
-  { pattern: createPathPattern('/log-sheets'), resource: RbacResource.LOG_SHEETS },
-  { pattern: createPathPattern('/work-reports'), resource: RbacResource.WORK_REPORTS },
+  {
+    pattern: createPathPattern('/summary-reports'),
+    resource: RbacResource.SUMMARY_REPORTS,
+  },
+  {
+    pattern: createPathPattern('/log-sheets'),
+    resource: RbacResource.LOG_SHEETS,
+  },
+  {
+    pattern: createPathPattern('/work-reports'),
+    resource: RbacResource.WORK_REPORTS,
+  },
   { pattern: createPathPattern('/reports'), resource: RbacResource.REPORTS },
-  { pattern: createPathPattern('/lab-analyses'), resource: RbacResource.LAB_ANALYSES },
-  { pattern: createPathPattern('/attendance'), resource: RbacResource.ATTENDANCE },
+  {
+    pattern: createPathPattern('/lab-analyses'),
+    resource: RbacResource.LAB_ANALYSES,
+  },
+  {
+    pattern: createPathPattern('/attendance'),
+    resource: RbacResource.ATTENDANCE,
+  },
   { pattern: createPathPattern('/absence'), resource: RbacResource.ATTENDANCE },
   { pattern: createPathPattern('/users'), resource: RbacResource.USERS_ADMIN },
-  { pattern: createPathPattern('/my-projects'), resource: RbacResource.PROJECTS_LIST },
-  { pattern: createPathPattern('/projects'), resource: RbacResource.PROJECTS_ADMIN },
+  {
+    pattern: createPathPattern('/my-projects'),
+    resource: RbacResource.PROJECTS_LIST,
+  },
+  {
+    pattern: createPathPattern('/projects'),
+    resource: RbacResource.PROJECTS_ADMIN,
+  },
   { pattern: createPathPattern('/clients'), resource: RbacResource.CLIENTS },
-  { pattern: createPathPattern('/chemicals'), resource: RbacResource.CHEMICALS },
-  { pattern: createPathPattern('/parameters'), resource: RbacResource.PARAMETERS },
+  {
+    pattern: createPathPattern('/chemicals'),
+    resource: RbacResource.CHEMICALS,
+  },
+  {
+    pattern: createPathPattern('/parameters'),
+    resource: RbacResource.PARAMETERS,
+  },
   { pattern: createPathPattern('/machines'), resource: RbacResource.MACHINES },
-  { pattern: createPathPattern('/notifications'), resource: RbacResource.NOTIFICATIONS },
+  {
+    pattern: createPathPattern('/notifications'),
+    resource: RbacResource.NOTIFICATIONS,
+  },
   { pattern: createPathPattern('/my-profile'), resource: RbacResource.PUBLIC },
 ];
 

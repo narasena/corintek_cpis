@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { authenticateUser } from '@/features/auth/service';
-import { createProject, updateProject, setProjectAssignments } from '@/features/projects/service';
+import {
+  createProject,
+  updateProject,
+  setProjectAssignments,
+} from '@/features/projects/service';
 import { updateLabAnalysis } from '@/features/lab-analyses/service';
 import { prisma } from '@/lib/prisma';
 import { AuthenticationError } from '@/lib/auth-helpers';
@@ -36,7 +40,7 @@ vi.mock('@/lib/prisma', () => ({
     labAnalysisEntry: {
       upsert: vi.fn(),
     },
-    $transaction: vi.fn((cb) => cb(prisma)),
+    $transaction: vi.fn(cb => cb(prisma)),
   },
 }));
 
@@ -68,7 +72,7 @@ describe('M-01: Risky Functions Characterization', () => {
       };
 
       vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
-      
+
       // We need to mock crypto.secureCompare or provide a valid bcrypt hash if it uses it
       // Let's assume it uses a helper we can mock or just mock the outcome
     });
@@ -83,7 +87,10 @@ describe('M-01: Risky Functions Characterization', () => {
       };
 
       vi.mocked(prisma.project.findFirst).mockResolvedValue(null);
-      vi.mocked(prisma.project.create).mockResolvedValue({ id: 'p-1', ...input } as any);
+      vi.mocked(prisma.project.create).mockResolvedValue({
+        id: 'p-1',
+        ...input,
+      } as any);
 
       const result = await createProject(mockActor as any, input as any);
       expect(result.id).toBe('p-1');
@@ -99,7 +106,10 @@ describe('M-01: Risky Functions Characterization', () => {
         status: 'ACTIVE' as const,
       };
 
-      vi.mocked(prisma.project.findUnique).mockResolvedValue({ id: 'p-1', status: 'PENDING' } as any);
+      vi.mocked(prisma.project.findUnique).mockResolvedValue({
+        id: 'p-1',
+        status: 'PENDING',
+      } as any);
       vi.mocked(prisma.project.update).mockResolvedValue({ ...input } as any);
 
       const result = await updateProject(mockActor as any, input as any);
@@ -110,12 +120,10 @@ describe('M-01: Risky Functions Characterization', () => {
   describe('4. Project: setProjectAssignments (Sync Logic)', () => {
     it('should characterize the assignment sync (upsert new, deactivate old)', async () => {
       const projectId = 'p-1';
-      const assignments = [
-        { userId: 'u-1', role: 'TECHNICIAN' as const },
-      ];
+      const assignments = [{ userId: 'u-1', role: 'TECHNICIAN' as const }];
 
       vi.mocked(prisma.projectAssignment.findMany).mockResolvedValue([
-        { id: 'old-1', userId: 'u-2', role: 'TECHNICIAN' }
+        { id: 'old-1', userId: 'u-2', role: 'TECHNICIAN' },
       ] as any);
 
       await setProjectAssignments(mockActor as any, projectId, assignments);
@@ -123,8 +131,12 @@ describe('M-01: Risky Functions Characterization', () => {
       expect(prisma.projectAssignment.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            projectId_userId_role: { projectId, userId: 'u-1', role: 'TECHNICIAN' }
-          }
+            projectId_userId_role: {
+              projectId,
+              userId: 'u-1',
+              role: 'TECHNICIAN',
+            },
+          },
         })
       );
       expect(prisma.projectAssignment.update).toHaveBeenCalledWith(
@@ -139,10 +151,12 @@ describe('M-01: Risky Functions Characterization', () => {
         id: 'la-1',
         date: new Date(),
         columns: [],
-        entries: []
+        entries: [],
       };
 
-      vi.mocked(prisma.labAnalysis.update).mockResolvedValue({ id: 'la-1' } as any);
+      vi.mocked(prisma.labAnalysis.update).mockResolvedValue({
+        id: 'la-1',
+      } as any);
       vi.mocked(prisma.labAnalysisColumn.findMany).mockResolvedValue([]);
 
       const result = await updateLabAnalysis(input as any);

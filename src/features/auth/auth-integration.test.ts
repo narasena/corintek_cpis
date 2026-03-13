@@ -48,7 +48,10 @@ describe('authenticateUser Service', () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValue(mockFullUser as any);
     vi.mocked(bcrypt.compare).mockResolvedValue(true as any);
 
-    const result = await authenticateUser({ email: 'test@example.com', password: 'password123' });
+    const result = await authenticateUser({
+      email: 'test@example.com',
+      password: 'password123',
+    });
 
     expect(result.id).toBe('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11');
     expect(result.email).toBe('test@example.com');
@@ -59,8 +62,9 @@ describe('authenticateUser Service', () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
     vi.mocked(bcrypt.compare).mockResolvedValue(false as any);
 
-    await expect(authenticateUser({ email: 'wrong@example.com', password: 'password' }))
-      .rejects.toThrow('Email atau kata sandi tidak valid');
+    await expect(
+      authenticateUser({ email: 'wrong@example.com', password: 'password' })
+    ).rejects.toThrow('Email atau kata sandi tidak valid');
   });
 
   it('throws error for blocked user', async () => {
@@ -70,8 +74,9 @@ describe('authenticateUser Service', () => {
     } as any);
     vi.mocked(bcrypt.compare).mockResolvedValue(true as any);
 
-    await expect(authenticateUser({ email: 'blocked@example.com', password: 'password' }))
-      .rejects.toThrow('Email atau kata sandi tidak valid');
+    await expect(
+      authenticateUser({ email: 'blocked@example.com', password: 'password' })
+    ).rejects.toThrow('Email atau kata sandi tidak valid');
   });
 
   it('throws error for inactive user', async () => {
@@ -81,16 +86,21 @@ describe('authenticateUser Service', () => {
     } as any);
     vi.mocked(bcrypt.compare).mockResolvedValue(true as any);
 
-    await expect(authenticateUser({ email: 'inactive@example.com', password: 'password' }))
-      .rejects.toThrow('Email atau kata sandi tidak valid');
+    await expect(
+      authenticateUser({ email: 'inactive@example.com', password: 'password' })
+    ).rejects.toThrow('Email atau kata sandi tidak valid');
   });
 
   it('throws error for invalid password', async () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValue(mockFullUser as any);
     vi.mocked(bcrypt.compare).mockResolvedValue(false as any);
 
-    await expect(authenticateUser({ email: 'test@example.com', password: 'wrong-password' }))
-      .rejects.toThrow('Email atau kata sandi tidak valid');
+    await expect(
+      authenticateUser({
+        email: 'test@example.com',
+        password: 'wrong-password',
+      })
+    ).rejects.toThrow('Email atau kata sandi tidak valid');
   });
 });
 
@@ -112,7 +122,10 @@ describe('validateSessionUser Service', () => {
   });
 
   it('returns null for blocked user', async () => {
-    vi.mocked(prisma.user.findUnique).mockResolvedValue({ ...mockFullUser, isBlocked: true } as any);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      ...mockFullUser,
+      isBlocked: true,
+    } as any);
     const result = await validateSessionUser(mockFullUser.id);
     expect(result).toBeNull();
   });

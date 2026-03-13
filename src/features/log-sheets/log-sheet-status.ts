@@ -43,6 +43,13 @@ export function decideLogSheetStatusTransition(
   }
 
   if (target === 'DRAFT') {
+    // Allow SUBMITTED → DRAFT transition (rejection by PIC)
+    if (current === 'SUBMITTED') {
+      if (!isInternalPic) {
+        return { ok: false, error: 'Unauthorized' };
+      }
+      return { ok: true, requiresApprovalValidation: false };
+    }
     return {
       ok: false,
       error: 'Tidak dapat mengubah status kembali ke DRAFT',

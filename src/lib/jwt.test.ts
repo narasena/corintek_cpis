@@ -10,7 +10,7 @@ import { generateToken, verifyToken, decodeToken, JWTError } from './jwt';
 import * as jose from 'jose';
 
 // We need to mock jose because we can't spy on ESM exports
-vi.mock('jose', async (importOriginal) => {
+vi.mock('jose', async importOriginal => {
   const actual = await importOriginal<typeof jose>();
   return {
     ...actual,
@@ -19,7 +19,11 @@ vi.mock('jose', async (importOriginal) => {
 });
 
 describe('JWT Utilities (Characterization)', () => {
-  const mockPayload = { id: '550e8400-e29b-41d4-a716-446655440000', email: 'test@test.com', role: 'ADMIN' as any };
+  const mockPayload = {
+    id: '550e8400-e29b-41d4-a716-446655440000',
+    email: 'test@test.com',
+    role: 'ADMIN' as any,
+  };
 
   beforeEach(async () => {
     // Reset mock to original behavior by default for every test

@@ -23,7 +23,12 @@ export const UpdateWorkReportSchema = WorkReportSchema.extend({
 
 export const WorkReportSignatureSchema = z.object({
   workReportId: z.string().uuid('Work report ID tidak valid'),
-  dataUrl: z.string().regex(/^data:image\/(png|jpeg|jpg|webp);base64,/, 'Format tanda tangan tidak valid'),
+  dataUrl: z
+    .string()
+    .regex(
+      /^data:image\/(png|jpeg|jpg|webp);base64,/,
+      'Format tanda tangan tidak valid'
+    ),
 });
 
 export type CreateWorkReportInput = z.infer<typeof WorkReportSchema>;

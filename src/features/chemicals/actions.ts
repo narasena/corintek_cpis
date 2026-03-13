@@ -43,7 +43,9 @@ export const getChemicalsAction = actionFactory.protected(
     return chemicals || [];
   },
   {
-    metadata: { rbac: { resource: RbacResource.LOG_SHEETS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'read' },
+    },
   }
 );
 
@@ -89,7 +91,9 @@ export const getAllChemicalsAction = actionFactory.protected(
     return getAllChemicals(actor);
   },
   {
-    metadata: { rbac: { resource: RbacResource.CHEMICALS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.CHEMICALS, capability: 'read' },
+    },
   }
 );
 
@@ -102,6 +106,8 @@ export const getChemicalByIdAction = actionFactory.protected(
   },
   {
     schema: z.string().min(1, 'ID chemical tidak valid'),
-    metadata: { rbac: { resource: RbacResource.CHEMICALS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.CHEMICALS, capability: 'read' },
+    },
   }
 );

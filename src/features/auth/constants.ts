@@ -1,4 +1,8 @@
-import { JWT_INFRA_CONFIG, AUTH_INFRA_CONFIG, AUTH_INFRA_ERROR } from '@/lib/constants/auth';
+import {
+  JWT_INFRA_CONFIG,
+  AUTH_INFRA_CONFIG,
+  AUTH_INFRA_ERROR,
+} from '@/lib/constants/auth';
 
 /**
  * Authentication and JWT related constants
@@ -26,10 +30,11 @@ export const SUCCESS_MESSAGES = {
 } as const;
 
 /**
- * A pre-computed bcrypt hash (10 rounds) for the word "password" 
+ * A pre-computed bcrypt hash (10 rounds) for the word "password"
  * used to prevent timing attacks during authentication for non-existent users.
  */
-export const FAKE_PASSWORD_HASH = '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6L6s57WyHYy6H.mK';
+export const FAKE_PASSWORD_HASH =
+  '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6L6s57WyHYy6H.mK';
 
 export const AUTH_ROUTES = {
   HOME: '/',

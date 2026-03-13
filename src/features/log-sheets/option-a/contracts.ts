@@ -177,8 +177,7 @@ export interface ILogSheetUnitViewBaseError {
   readonly message: string;
 }
 
-export interface ILogSheetUnitConfigurationError
-  extends ILogSheetUnitViewBaseError {
+export interface ILogSheetUnitConfigurationError extends ILogSheetUnitViewBaseError {
   readonly kind: 'CONFIGURATION_ERROR';
   readonly field?: string;
 }

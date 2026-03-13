@@ -86,9 +86,7 @@ function validate<T>(data: T, schema?: z.ZodType<T>): T {
   // Handle optional input for object schemas by providing empty object if data is missing
   const isObjectSchema = (schema as any)._def?.typeName === 'ZodObject';
   const inputToValidate =
-    (data === null || data === undefined) && isObjectSchema
-      ? ({} as T)
-      : data;
+    (data === null || data === undefined) && isObjectSchema ? ({} as T) : data;
 
   return schema.parse(inputToValidate);
 }

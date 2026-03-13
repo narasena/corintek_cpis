@@ -56,7 +56,9 @@ export async function selectActiveMachines(
 ) {
   const { chillers = [], coolingTowers = [] } = options;
 
-  await expect(page.getByText('Unit Mesin Aktif')).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText('Unit Mesin Aktif')).toBeVisible({
+    timeout: 10000,
+  });
 
   // Each machine group is a div containing: header text + "Semua"/"Kosong" buttons + machine buttons
   // Chillers and Cooling Towers are sibling divs
@@ -80,7 +82,9 @@ export async function selectActiveMachines(
 
   // Activate specific chillers
   for (const unit of chillers) {
-    const btn = page.getByRole('button', { name: new RegExp(`#${unit}`) }).first();
+    const btn = page
+      .getByRole('button', { name: new RegExp(`#${unit}`) })
+      .first();
     const text = await btn.innerText();
     if (!text.toLowerCase().includes('aktif')) {
       await btn.click();
@@ -90,7 +94,9 @@ export async function selectActiveMachines(
 
   // Activate specific cooling towers
   for (const unit of coolingTowers) {
-    const btn = page.getByRole('button', { name: new RegExp(`#${unit}`) }).first();
+    const btn = page
+      .getByRole('button', { name: new RegExp(`#${unit}`) })
+      .first();
     const text = await btn.innerText();
     if (!text.toLowerCase().includes('aktif')) {
       await btn.click();
@@ -106,14 +112,16 @@ export async function fillNumericEntry(
   machineId?: string
 ) {
   // Find the cell containing the parameter name
-  const paramCell = page.getByRole('cell', { name: new RegExp(`^${paramName}(\\s|\\(|$)`, 'i') }).first();
+  const paramCell = page
+    .getByRole('cell', { name: new RegExp(`^${paramName}(\\s|\\(|$)`, 'i') })
+    .first();
   await expect(paramCell).toBeVisible({ timeout: 15000 });
 
   const row = page.locator('tr').filter({ has: paramCell });
-  
+
   const inputs = row.getByRole('spinbutton');
   const textboxes = row.getByRole('textbox');
-  
+
   let targetInput;
   if ((await inputs.count()) > 0) {
     targetInput = inputs.first();
@@ -191,10 +199,15 @@ export async function addSignature(
 ) {
   if (role === 'TECHNICIAN') {
     // For technician: find the section with "Tanda Tangan Teknisi" text
-    const section = page.locator('div').filter({
-      has: page.locator('p', { hasText: 'Tanda Tangan Teknisi' }),
-    }).first();
-    const signButton = section.getByRole('button', { name: /tanda tangan/i }).first();
+    const section = page
+      .locator('div')
+      .filter({
+        has: page.locator('p', { hasText: 'Tanda Tangan Teknisi' }),
+      })
+      .first();
+    const signButton = section
+      .getByRole('button', { name: /tanda tangan/i })
+      .first();
     await expect(signButton).toBeVisible({ timeout: 10000 });
     await signButton.click();
   } else {
@@ -232,7 +245,10 @@ export async function saveLogSheet(page: Page) {
   const saveButton = page.getByRole('button', { name: /^simpan$/i });
   let clickedDirectButton = false;
 
-  if ((await saveButton.count()) > 0 && (await saveButton.first().isVisible())) {
+  if (
+    (await saveButton.count()) > 0 &&
+    (await saveButton.first().isVisible())
+  ) {
     await saveButton.first().click();
     clickedDirectButton = true;
   } else {
@@ -254,7 +270,7 @@ export async function saveLogSheet(page: Page) {
   const toast = page.locator('[data-sonner-toast]').last();
   await expect(toast).toBeVisible({ timeout: 10000 });
   const toastText = await toast.innerText();
-  
+
   if (toastText.toLowerCase().includes('gagal')) {
     throw new Error(`Save failed: ${toastText}`);
   }
@@ -266,14 +282,16 @@ export async function saveLogSheet(page: Page) {
 
 export async function completeLogSheet(page: Page) {
   // Wait for at least one spinbutton to appear (tables with data columns rendered)
-  await expect(page.getByRole('spinbutton').first()).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole('spinbutton').first()).toBeVisible({
+    timeout: 15000,
+  });
 
   const numberInputs = page.locator('table input[type="number"]');
   const numberCount = await numberInputs.count();
   for (let i = 0; i < numberCount; i++) {
     const input = numberInputs.nth(i);
     try {
-      if (await input.isVisible() && await input.isEnabled()) {
+      if ((await input.isVisible()) && (await input.isEnabled())) {
         await input.fill('1');
       }
     } catch {
@@ -287,7 +305,11 @@ export async function completeLogSheet(page: Page) {
     const input = textInputs.nth(i);
     try {
       const name = (await input.getAttribute('name')) || '';
-      if (await input.isVisible() && await input.isEnabled() && !name.includes('date')) {
+      if (
+        (await input.isVisible()) &&
+        (await input.isEnabled()) &&
+        !name.includes('date')
+      ) {
         await input.fill('Test Entry');
       }
     } catch {
@@ -301,7 +323,11 @@ export async function completeLogSheet(page: Page) {
     const checkbox = checkboxes.nth(i);
     try {
       const checked = await checkbox.getAttribute('aria-checked');
-      if (await checkbox.isVisible() && await checkbox.isEnabled() && checked !== 'true') {
+      if (
+        (await checkbox.isVisible()) &&
+        (await checkbox.isEnabled()) &&
+        checked !== 'true'
+      ) {
         await checkbox.click();
       }
     } catch {
@@ -316,7 +342,9 @@ export async function signAsTechnician(page: Page) {
     .filter({ has: page.getByText(/tanda tangan teknisi/i) })
     .first();
 
-  const signButton = section.getByRole('button', { name: /tanda tangan/i }).first();
+  const signButton = section
+    .getByRole('button', { name: /tanda tangan/i })
+    .first();
   await expect(signButton).toBeVisible({ timeout: 10000 });
   await signButton.click();
 
@@ -333,7 +361,9 @@ export async function signAsTechnician(page: Page) {
     await page.mouse.up();
   }
 
-  const saveButton = dialog.locator('button:visible', { hasText: /^Simpan$/i }).last();
+  const saveButton = dialog
+    .locator('button:visible', { hasText: /^Simpan$/i })
+    .last();
   await expect(saveButton).not.toBeDisabled({ timeout: 10000 });
   await saveButton.click();
 
@@ -343,7 +373,10 @@ export async function signAsTechnician(page: Page) {
 export async function submitLogSheet(page: Page) {
   const submitButton = page.getByRole('button', { name: /^kirim$/i });
 
-  if ((await submitButton.count()) > 0 && (await submitButton.first().isVisible())) {
+  if (
+    (await submitButton.count()) > 0 &&
+    (await submitButton.first().isVisible())
+  ) {
     await expect(submitButton.first()).toBeEnabled({ timeout: 15000 });
     await submitButton.first().click();
   } else {
@@ -364,8 +397,12 @@ export async function submitLogSheet(page: Page) {
   const confirmDialog = page.getByRole('alertdialog');
 
   const which = await Promise.race([
-    confirmDialog.waitFor({ state: 'visible', timeout: 10000 }).then(() => 'dialog' as const),
-    errorToast.waitFor({ state: 'visible', timeout: 10000 }).then(() => 'error' as const),
+    confirmDialog
+      .waitFor({ state: 'visible', timeout: 10000 })
+      .then(() => 'dialog' as const),
+    errorToast
+      .waitFor({ state: 'visible', timeout: 10000 })
+      .then(() => 'error' as const),
   ]);
 
   if (which === 'error') {
@@ -378,14 +415,20 @@ export async function submitLogSheet(page: Page) {
 
   // Wait for success, submitted status, or explicit error toast
   const successToast = page.getByText(/berhasil dikirim/i);
-  const submittedStatus = page.locator('span').getByText('SUBMITTED', { exact: true });
+  const submittedStatus = page
+    .locator('span')
+    .getByText('SUBMITTED', { exact: true });
   const submitErrorToast = page.locator(
     '[data-sonner-toast][data-type="error"]'
   );
 
   const outcome = await Promise.race([
-    successToast.waitFor({ state: 'visible', timeout: 15000 }).then(() => 'success' as const),
-    submittedStatus.waitFor({ state: 'visible', timeout: 15000 }).then(() => 'submitted' as const),
+    successToast
+      .waitFor({ state: 'visible', timeout: 15000 })
+      .then(() => 'success' as const),
+    submittedStatus
+      .waitFor({ state: 'visible', timeout: 15000 })
+      .then(() => 'submitted' as const),
     submitErrorToast
       .waitFor({ state: 'visible', timeout: 15000 })
       .then(() => 'error' as const),

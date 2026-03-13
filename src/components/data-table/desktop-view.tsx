@@ -1,6 +1,12 @@
 'use client';
 
-import { flexRender, HeaderGroup, Header, Row, Cell } from '@tanstack/react-table';
+import {
+  flexRender,
+  HeaderGroup,
+  Header,
+  Row,
+  Cell,
+} from '@tanstack/react-table';
 import {
   Table,
   TableBody,
@@ -65,20 +71,14 @@ export function DesktopView<TData, TValue>({
               >
                 {row.getVisibleCells().map((cell: Cell<TData, unknown>) => (
                   <TableCell key={cell.id}>
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="h-24 text-center"
-              >
+              <TableCell colSpan={columns.length} className="h-24 text-center">
                 {emptyMessage}
               </TableCell>
             </TableRow>

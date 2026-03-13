@@ -61,7 +61,7 @@ export class WorkReportService implements IWorkReportService {
         where: { projectId, deletedAt: null },
       }),
     ]);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const mapped = items.map(wr => ({
       ...wr,
       photoCount: wr.photos.length,

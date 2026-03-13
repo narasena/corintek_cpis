@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 
 /**
  * M-01: Database Schema Characterization Tests
- * 
+ *
  * These tests lock in the current STRUCTURAL contracts of the Prisma schema
- * as identified in Phase 1 (Baseline) and Phase 2 (Characterize). 
+ * as identified in Phase 1 (Baseline) and Phase 2 (Characterize).
  */
 
 describe('M-01: Database Schema Characterization', () => {
@@ -15,7 +15,7 @@ describe('M-01: Database Schema Characterization', () => {
         'submittedLogSheets',
         'approvedLogSheets',
         'technicianSignedLogSheets',
-        'clientPicSignedLogSheets'
+        'clientPicSignedLogSheets',
       ];
       expect(userRelations).toHaveLength(5);
     });
@@ -23,12 +23,7 @@ describe('M-01: Database Schema Characterization', () => {
 
   describe('2. Soft-Delete Capability', () => {
     it('should confirm core models have deletedAt field (Standardized)', () => {
-      const modelsWithSoftDelete = [
-        'User', 
-        'Project', 
-        'LogSheet', 
-        'Machine'
-      ];
+      const modelsWithSoftDelete = ['User', 'Project', 'LogSheet', 'Machine'];
       // Note: Notification and SummaryReport are deferred/commented out
       expect(modelsWithSoftDelete).toContain('User');
       expect(modelsWithSoftDelete).toContain('Project');
@@ -55,9 +50,9 @@ describe('M-01: Database Schema Characterization', () => {
         machineStatus: 'IDLE',
         projectStatus: 'PENDING',
         notificationSeverity: 'INFO',
-        machineOwnership: 'CORINTEK'
+        machineOwnership: 'CORINTEK',
       };
-      
+
       expect(defaults.machineStatus).toBe('IDLE');
       expect(defaults.projectStatus).toBe('PENDING');
       expect(defaults.notificationSeverity).toBe('INFO');
@@ -66,8 +61,14 @@ describe('M-01: Database Schema Characterization', () => {
 
     it('should characterize UserRole enum members', () => {
       const roles = [
-        'ADMIN', 'SUPERVISOR', 'TECHNICIAN', 'REPORTING', 
-        'DIRECTOR', 'CLIENT', 'CLIENT_TECHNICIAN', 'CLIENT_SUPERVISOR'
+        'ADMIN',
+        'SUPERVISOR',
+        'TECHNICIAN',
+        'REPORTING',
+        'DIRECTOR',
+        'CLIENT',
+        'CLIENT_TECHNICIAN',
+        'CLIENT_SUPERVISOR',
       ];
       expect(roles).toHaveLength(8);
       expect(roles).toContain('CLIENT_TECHNICIAN');
@@ -78,9 +79,12 @@ describe('M-01: Database Schema Characterization', () => {
     it('should characterize composite unique constraints', () => {
       const uniqueConstraints = [
         { model: 'ProjectAssignment', fields: ['projectId', 'userId', 'role'] },
-        { model: 'ProjectParameterOverride', fields: ['projectId', 'parameterId'] }
+        {
+          model: 'ProjectParameterOverride',
+          fields: ['projectId', 'parameterId'],
+        },
       ];
-      
+
       expect(uniqueConstraints).toContainEqual(
         expect.objectContaining({ model: 'ProjectAssignment' })
       );
@@ -100,7 +104,7 @@ describe('M-01: Database Schema Characterization', () => {
     it('should characterize high-risk indexes', () => {
       const criticalIndexes = [
         { model: 'Notification', fields: ['userId', 'isRead'] },
-        { model: 'Machine', fields: ['projectId'] }
+        { model: 'Machine', fields: ['projectId'] },
       ];
       expect(criticalIndexes).toHaveLength(2);
     });

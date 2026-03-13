@@ -34,7 +34,7 @@ export function WaterQualityTable({
   };
 
   return (
-    <div className="water-quality-section">
+    <div className="water-quality-section print:overflow-visible">
       {/* Header */}
       <div className="text-center mb-4">
         <div className="text-xs uppercase tracking-wider text-gray-500">
@@ -48,62 +48,64 @@ export function WaterQualityTable({
       </div>
 
       {/* Table */}
-      <table className="analytics-table w-full text-[8pt] border-collapse">
-        <thead>
-          <tr className="border-b-2 border-black">
-            <th className="text-left p-1 border-r border-gray-300 w-24">
-              Parameter
-            </th>
-            <th className="text-left p-1 border-r border-gray-300 w-20">
-              Jenis Air
-            </th>
-            <th className="text-center p-1 border-r border-gray-300 w-8">
-              Unit
-            </th>
-            {dayColumns.map(day => (
-              <th
-                key={day}
-                className="text-center p-0.5 w-6 border-r border-gray-200"
-              >
-                {day}
+      <div className="analytics-table-wrapper overflow-x-visible print:overflow-visible">
+        <table className="analytics-table w-full text-[8pt] border-collapse">
+          <thead>
+            <tr className="border-b-2 border-black">
+              <th className="text-left p-1 border-r border-gray-300 w-24">
+                Parameter
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, index) => (
-            <tr
-              key={`${row.variableName}-${row.source}`}
-              className="border-b border-gray-200"
-            >
-              {index === 0 || data[index - 1].parameter !== row.parameter ? (
-                <td
-                  className="p-1 border-r border-gray-300 font-medium"
-                  rowSpan={getRowSpan(data, row.parameter)}
+              <th className="text-left p-1 border-r border-gray-300 w-20">
+                Jenis Air
+              </th>
+              <th className="text-center p-1 border-r border-gray-300 w-8">
+                Unit
+              </th>
+              {dayColumns.map(day => (
+                <th
+                  key={day}
+                  className="text-center p-0.5 w-6 border-r border-gray-200"
                 >
-                  {row.parameter}
-                </td>
-              ) : null}
-              <td className="p-1 border-r border-gray-300">
-                {row.source === 'MAKE_WATER'
-                  ? 'Make Water'
-                  : 'Cooling Tower Water'}
-              </td>
-              <td className="p-1 text-center border-r border-gray-300">
-                {row.unit}
-              </td>
-              {row.dailyValues.map((value, dayIndex) => (
-                <td
-                  key={dayIndex}
-                  className="p-0.5 text-center border-r border-gray-100"
-                >
-                  {value !== null ? value.toFixed(1) : ''}
-                </td>
+                  {day}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((row, index) => (
+              <tr
+                key={`${row.variableName}-${row.source}`}
+                className="border-b border-gray-200"
+              >
+                {index === 0 || data[index - 1].parameter !== row.parameter ? (
+                  <td
+                    className="p-1 border-r border-gray-300 font-medium"
+                    rowSpan={getRowSpan(data, row.parameter)}
+                  >
+                    {row.parameter}
+                  </td>
+                ) : null}
+                <td className="p-1 border-r border-gray-300">
+                  {row.source === 'MAKE_WATER'
+                    ? 'Make Water'
+                    : 'Cooling Tower Water'}
+                </td>
+                <td className="p-1 text-center border-r border-gray-300">
+                  {row.unit}
+                </td>
+                {row.dailyValues.map((value, dayIndex) => (
+                  <td
+                    key={dayIndex}
+                    className="p-0.5 text-center border-r border-gray-100"
+                  >
+                    {value !== null ? value.toFixed(1) : ''}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Limits Footer */}
       <div className="mt-4 text-[8pt]">

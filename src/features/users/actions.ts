@@ -48,7 +48,9 @@ export const createUserAction = actionFactory.protected(
   },
   {
     schema: userCreateSchema,
-    metadata: { rbac: { resource: RbacResource.USERS_ADMIN, capability: 'create' } },
+    metadata: {
+      rbac: { resource: RbacResource.USERS_ADMIN, capability: 'create' },
+    },
   }
 );
 
@@ -60,7 +62,9 @@ export const getAllUsersAction = actionFactory.protected(
     return getAllUsers(actor);
   },
   {
-    metadata: { rbac: { resource: RbacResource.USERS_ADMIN, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.USERS_ADMIN, capability: 'read' },
+    },
   }
 );
 
@@ -72,7 +76,9 @@ export const getTechniciansListAction = actionFactory.protected(
     return getTechniciansList(actor);
   },
   {
-    metadata: { rbac: { resource: RbacResource.PROJECTS_LIST, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.PROJECTS_LIST, capability: 'read' },
+    },
   }
 );
 
@@ -87,7 +93,9 @@ export const getUserByIdAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid(),
-    metadata: { rbac: { resource: RbacResource.USERS_ADMIN, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.USERS_ADMIN, capability: 'read' },
+    },
   }
 );
 
@@ -105,7 +113,9 @@ export const updateUserAction = actionFactory.protected(
   },
   {
     schema: userUpdateSchema,
-    metadata: { rbac: { resource: RbacResource.USERS_ADMIN, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.USERS_ADMIN, capability: 'update' },
+    },
   }
 );
 
@@ -122,7 +132,9 @@ export const deleteUserAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid(),
-    metadata: { rbac: { resource: RbacResource.USERS_ADMIN, capability: 'delete' } },
+    metadata: {
+      rbac: { resource: RbacResource.USERS_ADMIN, capability: 'delete' },
+    },
   }
 );
 
@@ -150,4 +162,6 @@ export const uploadAvatarAction = actionFactory.protected(
 
     return { url };
   }
-) as (formData: FormData) => Promise<{ success: boolean; data: { url: string }; error?: string }>;
+) as (
+  formData: FormData
+) => Promise<{ success: boolean; data: { url: string }; error?: string }>;

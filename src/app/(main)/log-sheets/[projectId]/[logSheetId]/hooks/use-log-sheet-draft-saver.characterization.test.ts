@@ -331,12 +331,16 @@ describe('useLogSheetDraftSaver (characterization)', () => {
 
       await result.current.saveDraft(false);
 
-      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith(expect.objectContaining({
-        logSheetId: 'ls-1',
-        entries: [
-          expect.objectContaining({ fileUrl: 'http://uploaded.url/image.jpg' }),
-        ],
-      }));
+      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          logSheetId: 'ls-1',
+          entries: [
+            expect.objectContaining({
+              fileUrl: 'http://uploaded.url/image.jpg',
+            }),
+          ],
+        })
+      );
     });
 
     it('falls back to existing fileUrl when upload fails (error condition)', async () => {
@@ -359,12 +363,14 @@ describe('useLogSheetDraftSaver (characterization)', () => {
 
       await result.current.saveDraft(false);
 
-      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith(expect.objectContaining({
-        logSheetId: 'ls-1',
-        entries: [
-          expect.objectContaining({ fileUrl: 'http://existing.url/old.jpg' }),
-        ],
-      }));
+      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          logSheetId: 'ls-1',
+          entries: [
+            expect.objectContaining({ fileUrl: 'http://existing.url/old.jpg' }),
+          ],
+        })
+      );
     });
 
     it('continues saving other entries when one file upload throws (error condition)', async () => {
@@ -407,12 +413,16 @@ describe('useLogSheetDraftSaver (characterization)', () => {
       await result.current.saveDraft(false);
 
       expect(mockUploadLogSheetImageAction).not.toHaveBeenCalled();
-      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith(expect.objectContaining({
-        logSheetId: 'ls-1',
-        entries: [
-          expect.objectContaining({ fileUrl: 'http://existing.url/photo.jpg' }),
-        ],
-      }));
+      expect(mockSaveLogSheetEntriesAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          logSheetId: 'ls-1',
+          entries: [
+            expect.objectContaining({
+              fileUrl: 'http://existing.url/photo.jpg',
+            }),
+          ],
+        })
+      );
     });
   });
 

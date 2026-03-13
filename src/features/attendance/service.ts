@@ -4,7 +4,17 @@ import type {
   TAttendanceListFilters,
   TClockInInput,
   TClockOutInput,
+  TTechnicianAttendanceStatus,
 } from './types';
+
+function getJakartaDateLocal(date: Date) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
 
 function ensureAdminOrSupervisor(actor: IJwtPayload) {
   if (actor.role !== 'ADMIN' && actor.role !== 'SUPERVISOR') {
@@ -98,6 +108,21 @@ export async function listAttendance(
   });
 }
 
+export async function listOwnAttendance(
+  userId: string,
+  dateFrom: string,
+  dateTo: string
+) {
+  return prisma.attendance.findMany({
+    where: {
+      userId,
+      deletedAt: null,
+      dateLocal: { gte: dateFrom, lte: dateTo },
+    },
+    orderBy: [{ dateLocal: 'desc' }, { clockInAt: 'desc' }],
+  });
+}
+
 function csvEscape(value: unknown) {
   const s = value === null || value === undefined ? '' : String(value);
   if (/[",\r\n]/.test(s)) return `"${s.replaceAll('"', '""')}"`;
@@ -142,4 +167,178 @@ export async function exportAttendanceCsv(
   }
 
   return lines.join('\r\n');
+}
+
+export async function getTechniciansForPic(
+  picUserId: string
+): Promise<TTechnicianAttendanceStatus[]> {
+  const dateLocal = getJakartaDateLocal(new Date());
+
+  // Get project IDs where this user is CLIENT_PIC
+  const picAssignments = await prisma.projectAssignment.findMany({
+    where: {
+      userId: picUserId,
+      role: 'CLIENT_PIC',
+      isActive: true,
+    },
+    select: { projectId: true },
+  });
+
+  const projectIds = picAssignments.map(p => p.projectId);
+  if (projectIds.length === 0) {
+    return [];
+  }
+
+  // Get technicians assigned to these projects
+  const technicianAssignments = await prisma.projectAssignment.findMany({
+    where: {
+      projectId: { in: projectIds },
+      role: 'TECHNICIAN',
+      isActive: true,
+    },
+    select: { userId: true },
+  });
+
+  const technicianIds = technicianAssignments.map(t => t.userId);
+  if (technicianIds.length === 0) {
+    return [];
+  }
+
+  // Get technicians with their today's attendance
+  const technicians = await prisma.user.findMany({
+    where: {
+      id: { in: technicianIds },
+      isActive: true,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      avatarUrl: true,
+      attendances: {
+        where: {
+          dateLocal,
+          deletedAt: null,
+        },
+        select: {
+          clockInAt: true,
+          clockOutAt: true,
+          status: true,
+        },
+        take: 1,
+      },
+    },
+  });
+
+  return technicians.map(tech => {
+    const attendance = tech.attendances[0];
+    let attendanceStatus: TTechnicianAttendanceStatus['attendanceStatus'] =
+      'BELUM_ABSEN';
+
+    if (attendance) {
+      attendanceStatus =
+        attendance.status === 'OPEN' ? 'SUDAH_ABSEN' : 'SUDAH_PULANG';
+    }
+
+    return {
+      id: tech.id,
+      firstName: tech.firstName,
+      lastName: tech.lastName,
+      email: tech.email,
+      avatarUrl: tech.avatarUrl,
+      attendanceStatus,
+      clockInAt: attendance?.clockInAt ?? null,
+      clockOutAt: attendance?.clockOutAt ?? null,
+      dateLocal,
+    };
+  });
+}
+
+export async function getTechniciansForSupervisor(
+  supervisorUserId: string
+): Promise<TTechnicianAttendanceStatus[]> {
+  const dateLocal = getJakartaDateLocal(new Date());
+
+  // Get project IDs where this user is PROJECT_PIC (internal PIC / SUPERVISOR)
+  const picAssignments = await prisma.projectAssignment.findMany({
+    where: {
+      userId: supervisorUserId,
+      role: 'PROJECT_PIC',
+      isActive: true,
+    },
+    select: { projectId: true },
+  });
+
+  const projectIds = picAssignments.map(p => p.projectId);
+  if (projectIds.length === 0) {
+    return [];
+  }
+
+  // Get technicians assigned to these projects
+  const technicianAssignments = await prisma.projectAssignment.findMany({
+    where: {
+      projectId: { in: projectIds },
+      role: 'TECHNICIAN',
+      isActive: true,
+    },
+    select: { userId: true },
+  });
+
+  const technicianIds = [...new Set(technicianAssignments.map(t => t.userId))];
+  if (technicianIds.length === 0) {
+    return [];
+  }
+
+  // Get technicians with their today's attendance
+  const technicians = await prisma.user.findMany({
+    where: {
+      id: { in: technicianIds },
+      isActive: true,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      avatarUrl: true,
+      attendances: {
+        where: {
+          dateLocal,
+          deletedAt: null,
+        },
+        select: {
+          clockInAt: true,
+          clockOutAt: true,
+          status: true,
+        },
+        take: 1,
+      },
+    },
+  });
+
+  return technicians.map(tech => {
+    const attendance = tech.attendances[0];
+    let attendanceStatus: TTechnicianAttendanceStatus['attendanceStatus'] =
+      'BELUM_ABSEN';
+
+    if (attendance) {
+      attendanceStatus =
+        attendance.status === 'OPEN' ? 'SUDAH_ABSEN' : 'SUDAH_PULANG';
+    }
+
+    return {
+      id: tech.id,
+      firstName: tech.firstName,
+      lastName: tech.lastName,
+      email: tech.email,
+      avatarUrl: tech.avatarUrl,
+      attendanceStatus,
+      clockInAt: attendance?.clockInAt ?? null,
+      clockOutAt: attendance?.clockOutAt ?? null,
+      dateLocal,
+    };
+  });
 }

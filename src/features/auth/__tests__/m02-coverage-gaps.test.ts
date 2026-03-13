@@ -33,12 +33,17 @@ vi.mock('@/features/auth/service', () => ({
 }));
 
 describe('M-02 Coverage Gaps', () => {
-  
   describe('src/features/auth/actions.ts', () => {
     it('loginAction: characterizes success flow', async () => {
-      const mockUser = { id: '1', email: 'test@ex.com', role: 'ADMIN', firstName: 'A', lastName: 'B' };
+      const mockUser = {
+        id: '1',
+        email: 'test@ex.com',
+        role: 'ADMIN',
+        firstName: 'A',
+        lastName: 'B',
+      };
       (authenticateUser as any).mockResolvedValue(mockUser);
-      
+
       const formData = new FormData();
       formData.set('email', 'test@ex.com');
       formData.set('password', 'password123');
@@ -55,8 +60,10 @@ describe('M-02 Coverage Gaps', () => {
     });
 
     it('loginAction: characterizes failure flow', async () => {
-      (authenticateUser as any).mockRejectedValue(new Error('Invalid credentials'));
-      
+      (authenticateUser as any).mockRejectedValue(
+        new Error('Invalid credentials')
+      );
+
       const formData = new FormData();
       formData.set('email', 'test@ex.com');
       formData.set('password', 'wrong');
@@ -87,7 +94,7 @@ describe('M-02 Coverage Gaps', () => {
     it('getEncodedSecret: characterizes error when secret is missing', async () => {
       const originalSecret = process.env.JWT_SECRET;
       delete process.env.JWT_SECRET;
-      
+
       try {
         await verifyToken('any.token.here');
       } catch (error: any) {
@@ -117,10 +124,10 @@ describe('M-02 Coverage Gaps', () => {
       // Testing lines 79, 99 which were uncovered
       // Line 79 is likely related to ZodObject check
       // We can trigger this by passing null to a protected action that expects an object
-      
+
       const handler = vi.fn().mockResolvedValue('ok');
       const action = actionFactory.protected(handler);
-      
+
       // Bypassing auth to reach validation
       // This is hard without full DI, but we can characterize that it doesn't crash
       // when receiving null/undefined if we mock the auth.

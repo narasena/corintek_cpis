@@ -47,4 +47,3 @@ export async function loginAsTechnician(page: Page) {
     timeout: 15000,
   });
 }
-

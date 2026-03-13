@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { calculateAspectRatioFit, drawImageToCanvas, canvasToBlob } from './canvas';
+import {
+  calculateAspectRatioFit,
+  drawImageToCanvas,
+  canvasToBlob,
+} from './canvas';
 
 describe('Canvas Utilities', () => {
   describe('calculateAspectRatioFit', () => {
@@ -28,7 +32,7 @@ describe('Canvas Utilities', () => {
 
     const mockCanvas = {
       getContext: vi.fn(() => createMockContext()),
-      toBlob: vi.fn((cb) => cb(new Blob())),
+      toBlob: vi.fn(cb => cb(new Blob())),
       width: 0,
       height: 0,
     };
@@ -36,7 +40,7 @@ describe('Canvas Utilities', () => {
     beforeEach(() => {
       vi.clearAllMocks();
       global.document = {
-        createElement: vi.fn((tag) => {
+        createElement: vi.fn(tag => {
           if (tag === 'canvas') return mockCanvas;
           return {};
         }),
@@ -46,11 +50,11 @@ describe('Canvas Utilities', () => {
     it('drawImageToCanvas should configure high quality smoothing', () => {
       const img = {} as any;
       const canvas = drawImageToCanvas(img, 100, 100);
-      
+
       expect(canvas).toBe(mockCanvas);
       // Get the last context returned by the mock
       const ctx = vi.mocked(mockCanvas.getContext).mock.results[0].value;
-      
+
       expect(ctx.imageSmoothingEnabled).toBe(true);
       expect(ctx.imageSmoothingQuality).toBe('high');
       expect(ctx.drawImage).toHaveBeenCalled();
@@ -59,7 +63,11 @@ describe('Canvas Utilities', () => {
     it('canvasToBlob should return a promise with blob', async () => {
       const blob = await canvasToBlob(mockCanvas as any, 'image/webp', 0.8);
       expect(blob).toBeInstanceOf(Blob);
-      expect(mockCanvas.toBlob).toHaveBeenCalledWith(expect.any(Function), 'image/webp', 0.8);
+      expect(mockCanvas.toBlob).toHaveBeenCalledWith(
+        expect.any(Function),
+        'image/webp',
+        0.8
+      );
     });
   });
 });

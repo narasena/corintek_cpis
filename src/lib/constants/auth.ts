@@ -1,6 +1,6 @@
 /**
  * Core Security & Auth Infrastructure Constants
- * 
+ *
  * Foundational constants used by the infrastructure layer.
  * These are separated from feature-level constants to prevent circular dependencies.
  */

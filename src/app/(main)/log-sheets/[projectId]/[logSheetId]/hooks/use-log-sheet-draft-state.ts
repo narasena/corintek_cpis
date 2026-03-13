@@ -41,7 +41,8 @@ export function useLogSheetDraftState(detail: TDetail | null) {
 
     if (detail.activeMachineIds.coolingTowers.length > 0) {
       const boolParams = detail.parameters.filter(
-        p => p.valueType === 'BOOLEAN' && AUTO_INIT_CATEGORIES.includes(p.category)
+        p =>
+          p.valueType === 'BOOLEAN' && AUTO_INIT_CATEGORIES.includes(p.category)
       );
 
       for (const p of boolParams) {

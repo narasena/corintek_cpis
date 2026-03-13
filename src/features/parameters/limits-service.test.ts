@@ -38,7 +38,9 @@ describe('updateParameterLimit service', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(prisma.parameterLimitProfile.findFirst).mockResolvedValue(mockDefaultProfile as any);
+    vi.mocked(prisma.parameterLimitProfile.findFirst).mockResolvedValue(
+      mockDefaultProfile as any
+    );
   });
 
   it('updates single limit fields correctly', async () => {
@@ -46,7 +48,9 @@ describe('updateParameterLimit service', () => {
       id: 'limit-1',
       parameterId: 'param-1',
     } as any);
-    vi.mocked(prisma.parameterLimit.update).mockResolvedValue({ id: 'limit-1' } as any);
+    vi.mocked(prisma.parameterLimit.update).mockResolvedValue({
+      id: 'limit-1',
+    } as any);
 
     await updateParameterLimit(actor, {
       parameterId: 'param-1',
@@ -61,7 +65,9 @@ describe('updateParameterLimit service', () => {
 
   it('creates new limit if not exists', async () => {
     vi.mocked(prisma.parameterLimit.findFirst).mockResolvedValue(null);
-    vi.mocked(prisma.parameterLimit.create).mockResolvedValue({ id: 'new-limit' } as any);
+    vi.mocked(prisma.parameterLimit.create).mockResolvedValue({
+      id: 'new-limit',
+    } as any);
 
     await updateParameterLimit(actor, {
       parameterId: 'param-1',
@@ -78,7 +84,9 @@ describe('updateParameterLimit service', () => {
   });
 
   it('updates all provided limit fields together', async () => {
-    vi.mocked(prisma.parameterLimit.findFirst).mockResolvedValue({ id: 'limit-1' } as any);
+    vi.mocked(prisma.parameterLimit.findFirst).mockResolvedValue({
+      id: 'limit-1',
+    } as any);
 
     await updateParameterLimit(actor, {
       parameterId: 'param-1',
@@ -100,7 +108,9 @@ describe('updateParameterLimit service', () => {
   });
 
   it('allows null values and persists them', async () => {
-    vi.mocked(prisma.parameterLimit.findFirst).mockResolvedValue({ id: 'limit-1' } as any);
+    vi.mocked(prisma.parameterLimit.findFirst).mockResolvedValue({
+      id: 'limit-1',
+    } as any);
 
     await updateParameterLimit(actor, {
       parameterId: 'param-1',
@@ -144,7 +154,9 @@ describe('updateParameterLimitBatch service', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(prisma.parameterLimitProfile.findFirst).mockResolvedValue(mockDefaultProfile as any);
+    vi.mocked(prisma.parameterLimitProfile.findFirst).mockResolvedValue(
+      mockDefaultProfile as any
+    );
   });
 
   it('runs updates inside a single transaction using upsert', async () => {
@@ -157,15 +169,17 @@ describe('updateParameterLimitBatch service', () => {
 
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(prisma.parameterLimit.upsert).toHaveBeenCalledTimes(2);
-    
-    expect(prisma.parameterLimit.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      where: {
-        profileId_parameterId: {
-          profileId: mockDefaultProfile.id,
-          parameterId: 'p1',
+
+    expect(prisma.parameterLimit.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          profileId_parameterId: {
+            profileId: mockDefaultProfile.id,
+            parameterId: 'p1',
+          },
         },
-      },
-      update: { minValue: 1 },
-    }));
+        update: { minValue: 1 },
+      })
+    );
   });
 });

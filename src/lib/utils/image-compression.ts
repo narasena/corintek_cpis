@@ -31,10 +31,17 @@ export async function processImagePipeline(
   // 1. Center Crop to square
   // We check for videoWidth first to distinguish between Video and Image
   const isVideo = 'videoWidth' in source;
-  const srcWidth = isVideo ? (source as HTMLVideoElement).videoWidth : (source as HTMLImageElement).width;
-  const srcHeight = isVideo ? (source as HTMLVideoElement).videoHeight : (source as HTMLImageElement).height;
-  
-  const targetSize = Math.min(Math.min(srcWidth || maxDimension, srcHeight || maxDimension), maxDimension);
+  const srcWidth = isVideo
+    ? (source as HTMLVideoElement).videoWidth
+    : (source as HTMLImageElement).width;
+  const srcHeight = isVideo
+    ? (source as HTMLVideoElement).videoHeight
+    : (source as HTMLImageElement).height;
+
+  const targetSize = Math.min(
+    Math.min(srcWidth || maxDimension, srcHeight || maxDimension),
+    maxDimension
+  );
 
   const croppedCanvas = cropCenterToCanvas(source, targetSize);
 
@@ -43,7 +50,8 @@ export async function processImagePipeline(
 
   // 3. Return File
   const newName =
-    fileName.replace(/\.[^/.]+$/, '') + (type === 'image/webp' ? '.webp' : '.jpg');
+    fileName.replace(/\.[^/.]+$/, '') +
+    (type === 'image/webp' ? '.webp' : '.jpg');
 
   return new File([blob], newName, {
     type: type,

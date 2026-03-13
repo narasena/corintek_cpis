@@ -18,7 +18,9 @@ export const getLabAnalysesByProjectAction = actionFactory.protected(
   },
   {
     schema: z.string().uuid('ID proyek tidak valid'),
-    metadata: { rbac: { resource: RbacResource.LAB_ANALYSES, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.LAB_ANALYSES, capability: 'read' },
+    },
   }
 );
 
@@ -29,13 +31,15 @@ export const getLabAnalysisDetailAction = actionFactory.protected(
   async ({ input, actor }) => {
     const data = await service.getLabAnalysisDetail(input);
     if (!data) throw new Error('Data tidak ditemukan');
-    
+
     await projectService.assertCanAccessProject(actor, data.projectId);
     return data;
   },
   {
     schema: z.string().uuid('ID lab analysis tidak valid'),
-    metadata: { rbac: { resource: RbacResource.LAB_ANALYSES, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.LAB_ANALYSES, capability: 'read' },
+    },
   }
 );
 
@@ -45,18 +49,20 @@ export const getLabAnalysisDetailAction = actionFactory.protected(
 export const createLabAnalysisAction = actionFactory.protected(
   async ({ input, actor }) => {
     await projectService.assertCanAccessProject(actor, input.projectId);
-    
+
     const created = await service.createLabAnalysis(input);
-    
+
     revalidatePath(`/lab-analyses/${input.projectId}`);
     revalidatePath(`/lab-analyses/${input.projectId}/${created.id}/edit`);
     revalidatePath(`/lab-analyses/${input.projectId}/${created.id}/print`);
-    
+
     return { id: created.id };
   },
   {
     schema: CreateLabAnalysisSchema,
-    metadata: { rbac: { resource: RbacResource.LAB_ANALYSES, capability: 'create' } },
+    metadata: {
+      rbac: { resource: RbacResource.LAB_ANALYSES, capability: 'create' },
+    },
   }
 );
 
@@ -74,15 +80,17 @@ export const updateLabAnalysisAction = actionFactory.protected(
       ...input,
       projectId: existing.projectId,
     });
-    
+
     revalidatePath(`/lab-analyses/${existing.projectId}`);
     revalidatePath(`/lab-analyses/${existing.projectId}/${updated.id}/edit`);
     revalidatePath(`/lab-analyses/${existing.projectId}/${updated.id}/print`);
-    
+
     return { id: updated.id };
   },
   {
     schema: UpdateLabAnalysisSchema,
-    metadata: { rbac: { resource: RbacResource.LAB_ANALYSES, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.LAB_ANALYSES, capability: 'update' },
+    },
   }
 );

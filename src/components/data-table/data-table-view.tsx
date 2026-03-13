@@ -5,7 +5,9 @@ import { IDataTableViewProps } from './types';
 import { DesktopView } from './desktop-view';
 import { MobileView } from './mobile-view';
 
-export function DataTableView<TData, TValue>(props: IDataTableViewProps<TData, TValue>) {
+export function DataTableView<TData, TValue>(
+  props: IDataTableViewProps<TData, TValue>
+) {
   const { table } = props;
 
   return (

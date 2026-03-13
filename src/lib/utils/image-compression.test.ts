@@ -12,16 +12,16 @@ const mockCanvas = {
     imageSmoothingEnabled: true,
     imageSmoothingQuality: 'high',
   })),
-  toBlob: vi.fn((cb) => cb(mockBlob)),
+  toBlob: vi.fn(cb => cb(mockBlob)),
 };
 
 describe('image-compression characterization', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Mock document
     global.document = {
-      createElement: vi.fn((tag) => {
+      createElement: vi.fn(tag => {
         if (tag === 'canvas') return mockCanvas;
         return {};
       }),
@@ -63,9 +63,9 @@ describe('image-compression characterization', () => {
     });
 
     it('crops and compresses a video element', async () => {
-      const video = { 
-        videoWidth: 1000, 
-        videoHeight: 2000 
+      const video = {
+        videoWidth: 1000,
+        videoHeight: 2000,
       } as any;
 
       const result = await processImagePipeline(video, 'shot.jpg');

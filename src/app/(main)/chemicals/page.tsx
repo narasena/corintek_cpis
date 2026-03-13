@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { getAllChemicalsAction } from '@/features/chemicals/actions';
 import { TChemical } from '@/@types/chemical.type';
@@ -10,14 +11,29 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
 import { getChemicalColumns } from '@/features/chemicals/components/chemical-columns';
 import { ChemicalDialog } from '@/features/chemicals/components/chemical-dialog';
+import { useSession } from '@/hooks/use-session';
 
 export default function ChemicalsPage() {
+  const router = useRouter();
+  const { user, isLoading } = useSession();
   const [chemicals, setChemicals] = useState<TChemical[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedChemical, setSelectedChemical] = useState<TChemical | null>(
     null
   );
   const [showEditDialog, setShowEditDialog] = useState(false);
+
+  // RBAC: Only ADMIN can access this page
+  useEffect(() => {
+    if (!isLoading && user && user.role !== 'ADMIN') {
+      router.push('/');
+      toast.error('Akses ditolak. Halaman ini hanya untuk ADMIN.');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading || !user || user.role !== 'ADMIN') {
+    return null;
+  }
 
   const fetchChemicals = useCallback(async () => {
     const result = await getAllChemicalsAction({});

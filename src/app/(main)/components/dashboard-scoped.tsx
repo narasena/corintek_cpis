@@ -15,6 +15,7 @@ import {
   ClipboardList,
   FileText,
   LayoutDashboard,
+  Loader2,
 } from 'lucide-react';
 
 import type { IProjectDashboardCard } from '@/features/projects/types';
@@ -30,6 +31,7 @@ import {
 } from '@/components/ui/card';
 import { getDashboardProjectsAction } from '@/features/projects/actions';
 import { createLogSheetAction } from '@/features/log-sheets/actions';
+import { AttendancePromptCard } from './attendance-prompt-card';
 
 interface DashboardScopedProps {
   user: ICurrentUserDetails;
@@ -133,6 +135,8 @@ export function DashboardScoped({
         </p>
       </div>
 
+      <AttendancePromptCard userRole={user.role} />
+
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {projects.length === 0 ? (
           <Card className="col-span-full border-border/40 shadow-none bg-primary/5 p-12 flex flex-col items-center justify-center text-center rounded-2xl">
@@ -209,8 +213,12 @@ export function DashboardScoped({
                           onClick={() => handleQuickCreateLogSheet(project.id)}
                           disabled={isPending}
                         >
-                          <FileText className="h-4 w-4" />
-                          Buat Log Sheet Baru
+                          {isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <FileText className="h-4 w-4" />
+                          )}
+                          {isPending ? 'Membuat...' : 'Buat Log Sheet Baru'}
                         </Button>
                       )}
 

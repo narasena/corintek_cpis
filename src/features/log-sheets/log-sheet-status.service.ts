@@ -11,7 +11,8 @@ import { validateNumericRange } from './range-validation';
 export async function updateLogSheetStatus(
   actor: IJwtPayload,
   id: string,
-  status: ILogSheet['status']
+  status: ILogSheet['status'],
+  options?: { rejectionReason?: string }
 ): Promise<ILogSheet> {
   ensureAccess(actor.role, RbacResource.LOG_SHEETS, 'update');
 
@@ -30,6 +31,10 @@ export async function updateLogSheetStatus(
     actor.role === 'ADMIN' ||
     (actor.role === 'SUPERVISOR' &&
       (await hasProjectAssignment(actor.id, row.projectId, 'PROJECT_PIC')));
+  const isClientPic =
+    actor.role === 'CLIENT_SUPERVISOR' &&
+    (await hasProjectAssignment(actor.id, row.projectId, 'CLIENT_PIC'));
+  const isPic = isInternalPic || isClientPic;
   const isInternalTechnician =
     actor.role === 'TECHNICIAN' &&
     (await hasProjectAssignment(actor.id, row.projectId, 'TECHNICIAN'));
@@ -47,7 +52,7 @@ export async function updateLogSheetStatus(
   const decision = decideLogSheetStatusTransition({
     current: current as TLogSheetStatus,
     target: status as TLogSheetStatus,
-    isInternalPic,
+    isInternalPic: isPic,
     isInternalTechnician,
   });
 
@@ -69,6 +74,13 @@ export async function updateLogSheetStatus(
         : {}),
       ...(status === 'APPROVED'
         ? { approvedAt: now, approvedByUserId: actor.id }
+        : {}),
+      ...(status === 'DRAFT' && current === 'SUBMITTED'
+        ? {
+            rejectedAt: now,
+            rejectedByUserId: actor.id,
+            rejectionReason: options?.rejectionReason ?? null,
+          }
         : {}),
     },
   });

@@ -33,7 +33,7 @@ export function CondenserApproachTable({
   const approachLimit = limits.find(l => l.variableName === 'approach_cond');
 
   return (
-    <div className="condenser-approach-section mt-8">
+    <div className="condenser-approach-section mt-8 print:overflow-visible">
       {/* Header */}
       <div className="text-center mb-4">
         <div className="text-xs uppercase tracking-wider text-gray-500">
@@ -54,49 +54,51 @@ export function CondenserApproachTable({
             {unit.unitName} ({unit.capacity})
           </div>
 
-          <table className="analytics-table w-full text-[8pt] border-collapse mb-2">
-            <thead>
-              <tr className="border-b-2 border-black">
-                <th className="text-left p-1 border-r border-gray-300 w-32">
-                  Parameter
-                </th>
-                {dayColumns.map(day => (
-                  <th
-                    key={day}
-                    className="text-center p-0.5 w-6 border-r border-gray-200"
-                  >
-                    {day}
+          <div className="analytics-table-wrapper overflow-x-visible print:overflow-visible">
+            <table className="analytics-table w-full text-[8pt] border-collapse mb-2">
+              <thead>
+                <tr className="border-b-2 border-black">
+                  <th className="text-left p-1 border-r border-gray-300 w-32">
+                    Parameter
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-gray-200">
-                <td className="p-1 border-r border-gray-300">
-                  C. Approach (°C)
-                </td>
-                {unit.dailyApproach.map((value, dayIndex) => (
-                  <td
-                    key={dayIndex}
-                    className="p-0.5 text-center border-r border-gray-100"
-                  >
-                    {value !== null ? value.toFixed(1) : ''}
+                  {dayColumns.map(day => (
+                    <th
+                      key={day}
+                      className="text-center p-0.5 w-6 border-r border-gray-200"
+                    >
+                      {day}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-gray-200">
+                  <td className="p-1 border-r border-gray-300">
+                    C. Approach (°C)
                   </td>
-                ))}
-              </tr>
-              <tr className="border-b border-gray-200">
-                <td className="p-1 border-r border-gray-300">Load (%)</td>
-                {unit.dailyLoad.map((value, dayIndex) => (
-                  <td
-                    key={dayIndex}
-                    className="p-0.5 text-center border-r border-gray-100"
-                  >
-                    {value !== null ? value.toFixed(1) : ''}
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
+                  {unit.dailyApproach.map((value, dayIndex) => (
+                    <td
+                      key={dayIndex}
+                      className="p-0.5 text-center border-r border-gray-100"
+                    >
+                      {value !== null ? value.toFixed(1) : ''}
+                    </td>
+                  ))}
+                </tr>
+                <tr className="border-b border-gray-200">
+                  <td className="p-1 border-r border-gray-300">Load (%)</td>
+                  {unit.dailyLoad.map((value, dayIndex) => (
+                    <td
+                      key={dayIndex}
+                      className="p-0.5 text-center border-r border-gray-100"
+                    >
+                      {value !== null ? value.toFixed(1) : ''}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       ))}
 

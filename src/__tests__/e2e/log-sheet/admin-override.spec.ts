@@ -25,10 +25,14 @@ test.describe('Admin Override Flow', () => {
 
     // Sign both signatures (each triggers a data reload)
     await signAsTechnician(page);
-    await expect(page.locator('fieldset').getByRole('spinbutton').first()).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.locator('fieldset').getByRole('spinbutton').first()
+    ).toBeVisible({ timeout: 15000 });
     await addSignature(page, 'CLIENT_PIC');
     // Wait for reload to finish after signature saves
-    await expect(page.locator('fieldset').getByRole('spinbutton').first()).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.locator('fieldset').getByRole('spinbutton').first()
+    ).toBeVisible({ timeout: 15000 });
 
     // Fill all table-based fields (machine params, raw water, etc.)
     await completeLogSheet(page);
@@ -37,8 +41,14 @@ test.describe('Admin Override Flow', () => {
     await fillRawWaterEntry(page, 'Conductivity', 1200);
 
     // Fill Water Meter consumption fields (outside tables, in "Sebelum"/"Sesudah" section)
-    const sebelumInput = page.getByText('Sebelum').locator('..').getByRole('spinbutton');
-    const sesudahInput = page.getByText('Sesudah').locator('..').getByRole('spinbutton');
+    const sebelumInput = page
+      .getByText('Sebelum')
+      .locator('..')
+      .getByRole('spinbutton');
+    const sesudahInput = page
+      .getByText('Sesudah')
+      .locator('..')
+      .getByRole('spinbutton');
     await expect(sebelumInput).toBeVisible({ timeout: 10000 });
     await sebelumInput.fill('100');
     await sesudahInput.fill('120');
@@ -49,7 +59,9 @@ test.describe('Admin Override Flow', () => {
 
     // Refresh to ensure we get the locked state from server
     await page.reload();
-    await expect(page.getByRole('spinbutton').first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('spinbutton').first()).toBeVisible({
+      timeout: 15000,
+    });
 
     const firstInput = page.getByRole('spinbutton').first();
     await expect(firstInput).toBeDisabled();
@@ -60,7 +72,8 @@ test.describe('Admin Override Flow', () => {
       const tindakanBtn = page.getByRole('button', { name: /tindakan/i });
       if (await tindakanBtn.isVisible()) {
         await tindakanBtn.click();
-        unlockButton = page.getByRole('menuitem', { name: /buka kunci/i })
+        unlockButton = page
+          .getByRole('menuitem', { name: /buka kunci/i })
           .or(page.getByRole('button', { name: /buka kunci/i }))
           .first();
       }
@@ -80,7 +93,8 @@ test.describe('Admin Override Flow', () => {
       const tindakanBtn = page.getByRole('button', { name: /tindakan/i });
       if (await tindakanBtn.isVisible()) {
         await tindakanBtn.click();
-        lockButton = page.getByRole('menuitem', { name: /kunci kembali/i })
+        lockButton = page
+          .getByRole('menuitem', { name: /kunci kembali/i })
           .or(page.getByRole('button', { name: /kunci kembali/i }))
           .first();
       }
@@ -97,14 +111,18 @@ test.describe('Admin Override Flow', () => {
     const projectTable = page.getByRole('table');
     await expect(projectTable).toBeVisible({ timeout: 15000 });
 
-    const projectRows = page.getByRole('row').filter({ has: page.getByRole('link', { name: /buka/i }) });
+    const projectRows = page
+      .getByRole('row')
+      .filter({ has: page.getByRole('link', { name: /buka/i }) });
     const count = await projectRows.count();
 
     expect(count).toBeGreaterThan(0);
 
     const openButton = projectRows.first().getByRole('link', { name: /buka/i });
-    
+
     await openButton.click();
-    await expect(page.getByRole('heading', { name: /log sheet/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: /log sheet/i })).toBeVisible(
+      { timeout: 15000 }
+    );
   });
 });

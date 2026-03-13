@@ -9,6 +9,7 @@ import {
 type TUpdateLogSheetStatusInput = {
   id: string;
   status: TLogSheetStatus;
+  rejectionReason?: string;
 };
 
 export async function updateLogSheetStatusWithNotifications(
@@ -27,5 +28,12 @@ export async function updateLogSheetStatusWithNotifications(
     });
   }
 
-  return logSheetService.updateLogSheetStatus(actor, input.id, input.status);
+  return logSheetService.updateLogSheetStatus(
+    actor,
+    input.id,
+    input.status,
+    input.rejectionReason
+      ? { rejectionReason: input.rejectionReason }
+      : undefined
+  );
 }

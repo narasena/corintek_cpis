@@ -15,6 +15,7 @@ vi.mock('@/features/log-sheets/service', () => ({
   deleteLogSheet: vi.fn(),
   getLogSheetDetail: vi.fn(),
   getLogSheetProjectId: vi.fn(),
+  hasProjectAssignment: vi.fn(),
   upsertLogSheetEntries: vi.fn(),
   upsertLogSheetPhotos: vi.fn(),
   upsertLogSheetChemicalUsages: vi.fn(),
@@ -22,6 +23,10 @@ vi.mock('@/features/log-sheets/service', () => ({
   saveLogSheetSignature: vi.fn(),
   validateLogSheetForSubmission: vi.fn(),
   assertCanCreateLogSheet: vi.fn(),
+}));
+
+vi.mock('@/features/log-sheets/status-with-notifications', () => ({
+  updateLogSheetStatusWithNotifications: vi.fn(),
 }));
 
 vi.mock('@/features/projects/service', () => ({
@@ -103,6 +108,8 @@ import {
   saveLogSheetSignatureAction,
   uploadLogSheetImageAction,
 } from '@/features/log-sheets/actions';
+
+import { updateLogSheetStatusWithNotifications } from '@/features/log-sheets/status-with-notifications';
 
 import { ensureAccess } from '@/lib/rbac';
 
@@ -392,26 +399,49 @@ describe('submitLogSheetAction (characterization)', () => {
 });
 
 describe('approveLogSheetAction (characterization)', () => {
-  it('delegates to updateLogSheetStatusAction with APPROVED status', async () => {
+  it('delegates to updateLogSheetStatusWithNotifications with APPROVED status for authorized roles', async () => {
     mockUser('ADMIN');
-    const mockLogSheet = { id: validUUID, projectId: anotherUUID };
-    mockLogSheetService.updateLogSheetStatus.mockResolvedValue(mockLogSheet);
-    mockLogSheetService.getLogSheetDetail.mockResolvedValue({
-      id: validUUID,
-      entries: [],
-      project: { assignments: [] },
-    });
+    const mockLogSheet = { id: validUUID, projectId: anotherUUID } as any;
+    vi.mocked(updateLogSheetStatusWithNotifications).mockResolvedValue(
+      mockLogSheet
+    );
     mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
+    mockLogSheetService.hasProjectAssignment.mockResolvedValue(true);
     mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
     vi.mocked(ensureAccess).mockImplementation(() => {});
 
-    await approveLogSheetAction(validUUID);
+    await approveLogSheetAction({ id: validUUID });
 
-    expect(mockLogSheetService.updateLogSheetStatus).toHaveBeenCalledWith(
+    expect(updateLogSheetStatusWithNotifications).toHaveBeenCalledWith(
       expect.anything(),
-      validUUID,
-      'APPROVED'
+      { id: validUUID, status: 'APPROVED' }
     );
+  });
+
+  it('rejects TECHNICIAN from approving (defense-in-depth)', async () => {
+    mockUser('TECHNICIAN');
+    vi.mocked(ensureAccess).mockImplementation(() => {});
+
+    const result = await approveLogSheetAction({ id: validUUID });
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Unauthorized: Hanya PIC yang dapat menyetujui log sheet',
+    });
+    expect(updateLogSheetStatusWithNotifications).not.toHaveBeenCalled();
+  });
+
+  it('rejects CLIENT_TECHNICIAN from approving (defense-in-depth)', async () => {
+    mockUser('CLIENT_TECHNICIAN');
+    vi.mocked(ensureAccess).mockImplementation(() => {});
+
+    const result = await approveLogSheetAction({ id: validUUID });
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Unauthorized: Hanya PIC yang dapat menyetujui log sheet',
+    });
+    expect(updateLogSheetStatusWithNotifications).not.toHaveBeenCalled();
   });
 });
 
@@ -469,9 +499,8 @@ describe('saveLogSheetEntriesAction (characterization)', () => {
     mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
     mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
     vi.mocked(ensureAccess).mockImplementation(() => {});
-    const { isLogSheetEntryEmpty } = await import(
-      '@/features/log-sheets/utils'
-    );
+    const { isLogSheetEntryEmpty } =
+      await import('@/features/log-sheets/utils');
     vi.mocked(isLogSheetEntryEmpty).mockReturnValue(true);
 
     await saveLogSheetEntriesAction({
@@ -490,9 +519,8 @@ describe('saveLogSheetEntriesAction (characterization)', () => {
     mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
     mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
     vi.mocked(ensureAccess).mockImplementation(() => {});
-    const { isLogSheetEntryEmpty } = await import(
-      '@/features/log-sheets/utils'
-    );
+    const { isLogSheetEntryEmpty } =
+      await import('@/features/log-sheets/utils');
     vi.mocked(isLogSheetEntryEmpty).mockReturnValue(false);
 
     await saveLogSheetEntriesAction({
@@ -517,9 +545,8 @@ describe('saveLogSheetEntriesAction (characterization)', () => {
     mockLogSheetService.getLogSheetProjectId.mockResolvedValue(anotherUUID);
     mockProjectService.assertCanAccessProject.mockResolvedValue(undefined);
     vi.mocked(ensureAccess).mockImplementation(() => {});
-    const { isLogSheetEntryEmpty } = await import(
-      '@/features/log-sheets/utils'
-    );
+    const { isLogSheetEntryEmpty } =
+      await import('@/features/log-sheets/utils');
     vi.mocked(isLogSheetEntryEmpty).mockReturnValue(false);
 
     await saveLogSheetEntriesAction({

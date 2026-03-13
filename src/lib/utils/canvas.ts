@@ -1,6 +1,6 @@
 /**
  * Foundational Canvas Utilities
- * 
+ *
  * Shared logic for image manipulation, cropping, and exporting.
  * Standardizes high-quality smoothing and async Blob conversion.
  */
@@ -8,7 +8,10 @@
 /**
  * Internal helper to initialize a canvas with high-quality smoothing
  */
-function initCanvasContext(width: number, height: number): {
+function initCanvasContext(
+  width: number,
+  height: number
+): {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
 } {
@@ -98,8 +101,10 @@ export function cropCenterToCanvas(
   source: HTMLImageElement | HTMLVideoElement,
   targetSize: number
 ): HTMLCanvasElement {
-  const srcWidth = source instanceof HTMLVideoElement ? source.videoWidth : source.width;
-  const srcHeight = source instanceof HTMLVideoElement ? source.videoHeight : source.height;
+  const srcWidth =
+    source instanceof HTMLVideoElement ? source.videoWidth : source.width;
+  const srcHeight =
+    source instanceof HTMLVideoElement ? source.videoHeight : source.height;
 
   const size = Math.min(srcWidth, srcHeight);
   const x = (srcWidth - size) / 2;

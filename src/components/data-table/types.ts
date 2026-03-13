@@ -1,4 +1,10 @@
-import { ColumnDef, Table, OnChangeFn, SortingState, ColumnFiltersState } from '@tanstack/react-table';
+import {
+  ColumnDef,
+  Table,
+  OnChangeFn,
+  SortingState,
+  ColumnFiltersState,
+} from '@tanstack/react-table';
 
 export interface ITableTab<TData> {
   value: string;

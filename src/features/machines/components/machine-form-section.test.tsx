@@ -33,7 +33,7 @@ describe('MachineFormSection Characterization', () => {
 
   it('adds a chiller when button is clicked', async () => {
     render(<TestWrapper />);
-    
+
     const addButton = screen.getByText(/Tambah Chiller/i);
     fireEvent.click(addButton);
 
@@ -43,7 +43,7 @@ describe('MachineFormSection Characterization', () => {
 
   it('adds a cooling tower when button is clicked', async () => {
     render(<TestWrapper />);
-    
+
     const addButton = screen.getByText(/Tambah Cooling Tower/i);
     fireEvent.click(addButton);
 
@@ -52,7 +52,7 @@ describe('MachineFormSection Characterization', () => {
 
   it('groups machines by type', async () => {
     render(<TestWrapper />);
-    
+
     const addChillerBtn = screen.getByText(/Tambah Chiller/i);
     const addCTBtn = screen.getByText(/Tambah Cooling Tower/i);
 
@@ -63,7 +63,7 @@ describe('MachineFormSection Characterization', () => {
     // Should have headings for both groups
     expect(screen.getByText('Chiller (2)')).toBeDefined();
     expect(screen.getByText('Cooling Tower (1)')).toBeDefined();
-    
+
     // Should have specific card labels
     expect(screen.getByText('Chiller #1')).toBeDefined();
     expect(screen.getByText('Chiller #2')).toBeDefined();

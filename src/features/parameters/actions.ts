@@ -47,7 +47,9 @@ export const getParametersAction = actionFactory.protected(
     return parameterService.getAllParameters(actor);
   },
   {
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'read' },
+    },
   }
 );
 
@@ -121,7 +123,9 @@ export const getParameterLimitsAction = actionFactory.protected(
   },
   {
     schema: ParameterLimitListInputSchema.optional(),
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'read' },
+    },
   }
 );
 
@@ -168,6 +172,8 @@ export const checkParameterHasLimitsAction = actionFactory.protected(
   },
   {
     schema: z.string().min(1, 'ID parameter wajib diisi'),
-    metadata: { rbac: { resource: RbacResource.PARAMETERS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.PARAMETERS, capability: 'read' },
+    },
   }
 );

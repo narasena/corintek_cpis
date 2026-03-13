@@ -5,7 +5,6 @@ import { attendanceListFiltersSchema } from './types';
 import * as service from './service';
 import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
-import { z } from 'zod/v4';
 import { uploadToR2 } from '@/lib/r2-upload';
 
 function getJakartaDateLocal(date: Date) {
@@ -37,14 +36,22 @@ export const getTodayAttendanceAction = actionFactory.protected(
  */
 export const clockInAction = actionFactory.protected(
   async ({ input, actor }) => {
+    // BUG-013: Restrict to TECHNICIAN role only (not CLIENT_TECHNICIAN)
+    if (actor.role !== 'TECHNICIAN') {
+      throw new Error('Unauthorized: Only technicians can mark attendance');
+    }
+
     const photo = (input as any).get('photo') as File | null;
     if (!photo || !photo.size) throw new Error('Foto wajib diisi');
 
     const now = new Date();
     const dateLocal = getJakartaDateLocal(now);
-    
+
     const buffer = Buffer.from(await photo.arrayBuffer());
-    const sanitizedName = (photo.name || 'photo').replace(/[^a-zA-Z0-9.-]/g, '_');
+    const sanitizedName = (photo.name || 'photo').replace(
+      /[^a-zA-Z0-9.-]/g,
+      '_'
+    );
     const key = `attendance/${actor.id}/${dateLocal}/clock-in_${Date.now()}_${sanitizedName}`;
 
     const photoUrl = await uploadToR2({
@@ -78,14 +85,22 @@ export const clockInAction = actionFactory.protected(
  */
 export const clockOutAction = actionFactory.protected(
   async ({ input, actor }) => {
+    // BUG-013: Restrict to TECHNICIAN role only (not CLIENT_TECHNICIAN)
+    if (actor.role !== 'TECHNICIAN') {
+      throw new Error('Unauthorized: Only technicians can mark attendance');
+    }
+
     const photo = (input as any).get('photo') as File | null;
     if (!photo || !photo.size) throw new Error('Foto wajib diisi');
 
     const now = new Date();
     const dateLocal = getJakartaDateLocal(now);
-    
+
     const buffer = Buffer.from(await photo.arrayBuffer());
-    const sanitizedName = (photo.name || 'photo').replace(/[^a-zA-Z0-9.-]/g, '_');
+    const sanitizedName = (photo.name || 'photo').replace(
+      /[^a-zA-Z0-9.-]/g,
+      '_'
+    );
     const key = `attendance/${actor.id}/${dateLocal}/clock-out_${Date.now()}_${sanitizedName}`;
 
     const photoUrl = await uploadToR2({
@@ -139,6 +154,64 @@ export const exportAttendanceCsvAction = actionFactory.protected(
   },
   {
     schema: attendanceListFiltersSchema,
+    metadata: {
+      rbac: { resource: RbacResource.ATTENDANCE, capability: 'read' },
+    },
+  }
+);
+
+/**
+ * Server Action: Get own attendance history (for technicians)
+ */
+export const getMyAttendanceHistoryAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const filters = attendanceListFiltersSchema.parse(input);
+    return service.listOwnAttendance(
+      actor.id,
+      filters.dateFrom,
+      filters.dateTo
+    );
+  },
+  {
+    schema: attendanceListFiltersSchema,
+    metadata: {
+      rbac: { resource: RbacResource.ATTENDANCE, capability: 'read' },
+    },
+  }
+);
+
+/**
+ * Server Action: Get technicians assigned to PIC's projects with today's attendance
+ */
+export const getTechniciansForPicAction = actionFactory.protected(
+  async ({ actor }) => {
+    // Only CLIENT_SUPERVISOR can access this
+    if (actor.role !== 'CLIENT_SUPERVISOR') {
+      throw new Error('Unauthorized: Only PIC can view technicians');
+    }
+
+    return service.getTechniciansForPic(actor.id);
+  },
+  {
+    metadata: {
+      rbac: { resource: RbacResource.ATTENDANCE, capability: 'read' },
+    },
+  }
+);
+
+/**
+ * Server Action: Get technicians assigned to SUPERVISOR's projects with today's attendance
+ */
+export const getTechniciansForSupervisorAction = actionFactory.protected(
+  async ({ actor }) => {
+    // Only SUPERVISOR (internal PIC) can access this
+    if (actor.role !== 'SUPERVISOR') {
+      throw new Error('Unauthorized: Only SUPERVISOR can view technicians');
+    }
+
+    return service.getTechniciansForSupervisor(actor.id);
+  },
+  {
     metadata: {
       rbac: { resource: RbacResource.ATTENDANCE, capability: 'read' },
     },

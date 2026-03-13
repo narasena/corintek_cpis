@@ -83,7 +83,7 @@ export const updateSummaryReportAction = actionFactory.protected(
 
     const projectId = await service.getSummaryReportProjectId(validated.id);
     if (!projectId) throw new Error('Not found');
-    
+
     await projectService.assertCanAccessProject(actor, projectId);
     await service.updateSummaryReport(actor, validated);
 
@@ -91,7 +91,9 @@ export const updateSummaryReportAction = actionFactory.protected(
     return { success: true };
   },
   {
-    metadata: { rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'update' },
+    },
   }
 );
 
@@ -104,7 +106,7 @@ export const createSummaryReportAction = actionFactory.protected(
     const validated = createSchema.parse(data);
 
     await projectService.assertCanAccessProject(actor, validated.projectId);
-    
+
     const existing = await service.getSummaryReportByPeriod(
       validated.projectId,
       validated.period
@@ -129,7 +131,9 @@ export const createSummaryReportAction = actionFactory.protected(
     return created;
   },
   {
-    metadata: { rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'create' } },
+    metadata: {
+      rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'create' },
+    },
   }
 );
 
@@ -140,14 +144,21 @@ export const getSummaryReportByPeriodAction = actionFactory.protected(
   async ({ input, actor }) => {
     const validated = getByPeriodSchema.parse({
       projectId: (input as any).projectId,
-      period: ((input as any).period?.toISOString ? (input as any).period.toISOString() : (input as any).period),
+      period: (input as any).period?.toISOString
+        ? (input as any).period.toISOString()
+        : (input as any).period,
     });
 
     await projectService.assertCanAccessProject(actor, validated.projectId);
-    return service.getSummaryReportByPeriod(validated.projectId, validated.period);
+    return service.getSummaryReportByPeriod(
+      validated.projectId,
+      validated.period
+    );
   },
   {
-    metadata: { rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'read' },
+    },
   }
 );
 
@@ -183,7 +194,7 @@ export const uploadSummaryReportAttachmentsAction = actionFactory.protected(
         if (!isAllowedAttachmentType(file)) {
           throw new Error(`Tipe file ${keyPrefix} tidak didukung`);
         }
-        
+
         const buffer = Buffer.from(await file.arrayBuffer());
         const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const key = `projects/${parsed.projectId}/summary-reports/${report.id}/attachments/${Date.now()}_${sanitizedName}`;
@@ -198,21 +209,33 @@ export const uploadSummaryReportAttachmentsAction = actionFactory.protected(
     };
 
     updates.dataTemuanUrl = await processFile(dataTemuanFile, 'data temuan');
-    updates.dataBlowdownUrl = await processFile(dataBlowdownFile, 'data blowdown');
+    updates.dataBlowdownUrl = await processFile(
+      dataBlowdownFile,
+      'data blowdown'
+    );
     updates.dataSuhuUrl = await processFile(dataSuhuFile, 'data suhu');
-    updates.dataSuratJalanUrl = await processFile(dataSuratJalanFile, 'surat jalan');
+    updates.dataSuratJalanUrl = await processFile(
+      dataSuratJalanFile,
+      'surat jalan'
+    );
 
     await service.updateSummaryReport(actor, updates);
 
     revalidatePath('/summary-reports');
     if (periodLabel) {
-      revalidatePath(`/summary-reports/${parsed.projectId}/${periodLabel}/print`);
-      revalidatePath(`/summary-reports/${parsed.projectId}/${periodLabel}/attachments/print`);
+      revalidatePath(
+        `/summary-reports/${parsed.projectId}/${periodLabel}/print`
+      );
+      revalidatePath(
+        `/summary-reports/${parsed.projectId}/${periodLabel}/attachments/print`
+      );
     }
-    
+
     return { success: true };
   },
   {
-    metadata: { rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.SUMMARY_REPORTS, capability: 'update' },
+    },
   }
 );

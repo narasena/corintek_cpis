@@ -31,7 +31,7 @@ export async function comparePassword(
  * Securely compares a provided password against a potential user password.
  * Implements timing-attack prevention by always performing a comparison,
  * using a fake hash if the user's password is not provided.
- * 
+ *
  * @param providedPassword - Plain text password from login attempt
  * @param userPassword - Hashed password from database (or undefined if user not found)
  * @returns True only if userPassword exists AND matches providedPassword

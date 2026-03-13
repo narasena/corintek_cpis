@@ -222,6 +222,15 @@ export const uploadWorkReportPhotoAction = actionFactory.protected(
 
     await projectService.assertCanAccessProject(actor, validatedProjectId);
 
+    // BUG-041: Verify work report belongs to the specified project (IDOR prevention)
+    const workReport = await service.getWorkReportById(validatedWorkReportId);
+    if (!workReport) {
+      throw new Error('Work report not found');
+    }
+    if (workReport.projectId !== validatedProjectId) {
+      throw new Error('Work report does not belong to the specified project');
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
 

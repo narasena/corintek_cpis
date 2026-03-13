@@ -81,16 +81,19 @@ export function useUserForm({
   const isClientRole =
     selectedRole && CLIENT_ROLES.includes(selectedRole as TUserRole);
 
-  const { clients, isLoading: isLoadingClients } = useUserClients(
-    !!isClientRole
-  );
+  const { clients, isLoading: isLoadingClients } =
+    useUserClients(!!isClientRole);
 
   const onSubmit = async (data: TUserCreateInput | TUserUpdateInput) => {
     const MESSAGES = {
       success:
-        mode === 'create' ? 'Pengguna berhasil dibuat' : 'Pengguna berhasil diperbarui',
+        mode === 'create'
+          ? 'Pengguna berhasil dibuat'
+          : 'Pengguna berhasil diperbarui',
       error:
-        mode === 'create' ? 'Gagal membuat pengguna' : 'Gagal memperbarui pengguna',
+        mode === 'create'
+          ? 'Gagal membuat pengguna'
+          : 'Gagal memperbarui pengguna',
     };
 
     startTransition(async () => {
@@ -107,7 +110,7 @@ export function useUserForm({
         }
         result = await updateUserAction({
           id: defaultValues.id,
-          ...data
+          ...data,
         } as any);
       }
 

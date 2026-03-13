@@ -9,7 +9,7 @@ vi.mock('@/features/auth/lib/user-context', () => ({
   requireActor: vi.fn(),
 }));
 
-vi.mock('@/lib/auth-helpers', async (importOriginal) => {
+vi.mock('@/lib/auth-helpers', async importOriginal => {
   const actual = await importOriginal<typeof import('@/lib/auth-helpers')>();
   return {
     ...actual,
@@ -47,7 +47,10 @@ import {
   updateUserAction,
   deleteUserAction,
 } from './actions';
-import { getCurrentUserDetails, requireActor } from '@/features/auth/lib/user-context';
+import {
+  getCurrentUserDetails,
+  requireActor,
+} from '@/features/auth/lib/user-context';
 import { uploadToR2 } from '@/lib/r2-upload';
 import {
   updateCurrentUserProfile,
@@ -366,7 +369,9 @@ describe('uploadAvatarAction', () => {
 
 describe('User Admin Actions', () => {
   const actor = makeUser({ role: 'ADMIN' });
-  const targetUser = makeProfile({ id: '7f9c9c3e-8c3d-4c3e-8c3d-4c3e8c3d4c3e' });
+  const targetUser = makeProfile({
+    id: '7f9c9c3e-8c3d-4c3e-8c3d-4c3e8c3d4c3e',
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -414,7 +419,10 @@ describe('User Admin Actions', () => {
 
   it('updateUserAction updates user', async () => {
     mockUpdateUser.mockResolvedValue(targetUser as any);
-    const result = await updateUserAction({ id: targetUser.id, firstName: 'Updated' } as any);
+    const result = await updateUserAction({
+      id: targetUser.id,
+      firstName: 'Updated',
+    } as any);
     expect(result.success).toBe(true);
     expect(mockUpdateUser).toHaveBeenCalled();
   });

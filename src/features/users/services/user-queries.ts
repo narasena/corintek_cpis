@@ -43,7 +43,7 @@ async function findActiveUserOrThrow<T extends Prisma.UserSelect>(
 /**
  * Get all users with TECHNICIAN role (for dropdowns/assignments)
  * Accessible by any authenticated user who can view log sheets
- * 
+ *
  * NOTE: Using LOG_SHEETS resource is a characterization-locked behavior (Finding 1.1).
  */
 export async function getTechniciansList(actor: IJwtPayload) {

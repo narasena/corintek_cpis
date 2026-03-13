@@ -1,57 +1,58 @@
-# Session Handoff — 2026-03-12
+# Session Handoff — 2026-03-13
 
-## Current Status: Bug Fixing Session Complete
+## Current Status: BUG-016 Fix Complete
 
 **Branch:** `development_v2`
 
 ### Completed This Session
 
-✅ **BUG-003g Fix: Work Report Photos Not Deleting - ROOT CAUSE FOUND**
+✅ **BUG-016 Fix: Project create form missing assignment fields**
 
-**THE REAL ROOT CAUSE:**
+**Problem:**
 
-Your server logs showed the exact error:
-
-```
-[CPIS-ERROR] Error: Unauthorized
-    at ensureAccess (src/lib/rbac.ts:62:11)
-```
-
-The delete action was being **REJECTED by RBAC** before it even reached the database!
-
-**Issue:**
-
-- `deleteWorkReportPhotoAction` required `capability: 'delete'`
-- TECHNICIAN role only has `WORK_REPORTS: 'CRU'` (no 'D'!)
-- Action was rejected with "Unauthorized"
-
-**ALL Fixes Applied:**
-
-1. **RBAC fix** (actions.ts): Changed from `capability: 'delete'` to `capability: 'update'` - deleting photos is part of updating the work report
-
-2. **Stale closure fix** (work-report-form.tsx): Added `deletedPhotoIdsRef` pattern to avoid stale closure in async onSubmit
-
-3. **Dialog remount fix** (work-report-list.tsx): Added `key={editingRow?.id || 'new'}` to force React to remount when dialog opens
-
-4. **Form reset fix** (work-report-form.tsx): Added `form.reset()` useEffect for form field updates
+- The project creation form didn't show assignment fields
+- Service validation requires CLIENT_PIC but form had no way to add it
+- `ProjectAssignmentsSection` was returning `null` for create mode
 
 **Files Changed:**
 
-- `src/features/work-reports/actions.ts` - RBAC fix (delete → update)
-- `src/features/work-reports/components/work-report-form.tsx` - ref + useEffect fixes
-- `src/app/(main)/work-reports/[projectId]/components/work-report-list.tsx` - key prop
+1. **`src/features/projects/components/project-assignments-section.tsx`**
+   - Added `form` prop to accept react-hook-form
+   - Added create mode support with full assignment UI (PIC Project, Teknisi, PIC Klien)
+   - Uses `useFormContext` to integrate with form
+   - Updates `assignments` field when selections change
+
+2. **`src/features/projects/components/project-form.tsx`**
+   - Passes `form` prop to `ProjectAssignmentsSection`
+
+3. **`src/features/projects/types.ts`**
+   - Added client-side validation requiring at least one CLIENT_PIC in assignments
+
+### How It Works
+
+**Create Mode:**
+
+- Assignment UI renders with PIC Project, Teknisi, and PIC Klien dropdowns
+- When selections change, form's `assignments` field is updated via `setValue`
+- Client-side validation ensures at least one CLIENT_PIC before form can submit
+- On submit, assignments are included in the createProjectAction payload
+
+**Edit Mode:**
+
+- Existing behavior preserved - assignments loaded separately and saved via setProjectAssignmentsAction
 
 ---
 
 ## Next Steps (Cold Start Actions)
 
 1. Test the fix:
-   - Click "Ubah" on a work report
-   - Delete some photos
-   - Save
-   - Check Supabase - deletedAt should now have timestamps
-   - Reopen - deleted photos should be gone
-2. No P0 bugs remaining - all P0 blockers are now fixed
+   - Open project creation dialog
+   - Verify assignment section is visible with PIC Klien field marked required (\*)
+   - Try to submit without selecting CLIENT_PIC - should show validation error
+   - Select a CLIENT_SUPERVISOR user as CLIENT_PIC
+   - Submit - should succeed
+
+2. No changes needed to - build passes
 
 ---
 

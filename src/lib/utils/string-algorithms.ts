@@ -14,7 +14,7 @@ export interface IHighlightPart {
 /**
  * Calculate the Levenshtein distance between two strings.
  * Core edit distance algorithm used for fuzzy matching.
- * 
+ *
  * @param a - First string
  * @param b - Second string
  * @returns The minimum number of single-character edits required to change one word into the other.
@@ -40,8 +40,8 @@ export function calculateLevenshtein(a: string, b: string): number {
       } else {
         matrix[i][j] = Math.min(
           matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+          matrix[i][j - 1] + 1, // insertion
+          matrix[i - 1][j] + 1 // deletion
         );
       }
     }
@@ -53,7 +53,7 @@ export function calculateLevenshtein(a: string, b: string): number {
 /**
  * Segments a text into matching and non-matching parts based on a query.
  * Useful for rendering highlighted search results in the UI.
- * 
+ *
  * @param text - The source text to segment
  * @param query - The search query to find
  * @param caseInsensitive - Whether to ignore case during matching (default: true)

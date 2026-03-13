@@ -23,6 +23,9 @@ type TPrismaLogSheetFields = {
   submittedByUserId?: string | null;
   approvedAt?: Date | null;
   approvedByUserId?: string | null;
+  rejectedAt?: Date | null;
+  rejectedByUserId?: string | null;
+  rejectionReason?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
@@ -38,6 +41,11 @@ type TPrismaLogSheetFields = {
     lastName: string | null;
   } | null;
   approvedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+  } | null;
+  rejectedBy?: {
     id: string;
     firstName: string;
     lastName: string | null;
@@ -102,6 +110,9 @@ export function mapToLogSheet(row: TPrismaLogSheetFields): ILogSheet {
     submittedByUserId: row.submittedByUserId ?? null,
     approvedAt: row.approvedAt ?? null,
     approvedByUserId: row.approvedByUserId ?? null,
+    rejectedAt: row.rejectedAt ?? null,
+    rejectedByUserId: row.rejectedByUserId ?? null,
+    rejectionReason: row.rejectionReason ?? null,
     createdAt: row.createdAt ?? new Date(),
     updatedAt: row.updatedAt ?? new Date(),
     deletedAt: row.deletedAt ?? null,
@@ -109,6 +120,7 @@ export function mapToLogSheet(row: TPrismaLogSheetFields): ILogSheet {
     replacedBy: row.replacedBy,
     submittedBy: row.submittedBy,
     approvedBy: row.approvedBy,
+    rejectedBy: row.rejectedBy,
     technicianSignedBy: row.technicianSignedBy,
     clientPicSignedBy: row.clientPicSignedBy,
   };

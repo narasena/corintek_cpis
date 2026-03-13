@@ -30,7 +30,9 @@ export const createClientAction = actionFactory.protected(
   },
   {
     schema: clientCreateSchema,
-    metadata: { rbac: { resource: RbacResource.CLIENTS, capability: 'create' } },
+    metadata: {
+      rbac: { resource: RbacResource.CLIENTS, capability: 'create' },
+    },
   }
 );
 
@@ -74,7 +76,9 @@ export const updateClientAction = actionFactory.protected(
       id: z.string().min(1, 'ID klien tidak valid'),
       data: clientUpdateSchema,
     }),
-    metadata: { rbac: { resource: RbacResource.CLIENTS, capability: 'update' } },
+    metadata: {
+      rbac: { resource: RbacResource.CLIENTS, capability: 'update' },
+    },
   }
 );
 
@@ -89,6 +93,8 @@ export const deleteClientAction = actionFactory.protected(
   },
   {
     schema: z.string().min(1, 'ID klien tidak valid'),
-    metadata: { rbac: { resource: RbacResource.CLIENTS, capability: 'delete' } },
+    metadata: {
+      rbac: { resource: RbacResource.CLIENTS, capability: 'delete' },
+    },
   }
 );
