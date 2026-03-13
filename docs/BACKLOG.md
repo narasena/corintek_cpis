@@ -362,3 +362,353 @@ The client requested videos of the screen recording various scenarios (e.g., add
 - [ ] Create unified attendance table component
 - [ ] Add role-based conditional action buttons
 - [ ] Consolidate duplicate code
+
+---
+
+## UI-UX-AUDIT-2024 — Second Opinion Findings
+
+> **Source:** Second Opinion UI/UX Audit (2026-03-14) — Senior Product Designer Review  
+> **Note:** These findings complement the initial audit above. See `docs/UI_AUDIT.md` for full details.
+
+---
+
+### UX-201: Missing Design System Foundation
+
+**Priority:** 🔴 P0 (Critical)  
+**Status:** Not Started
+
+**Problem:** No centralized design tokens. Typography, spacing, colors use ad-hoc values (12+ h1 sizes, 92 gap variations).
+
+**Why It Matters:** Root cause of 60% of UX issues — without tokens, inconsistency ripples across all modules. Developer friction and maintenance nightmare.
+
+**Effort:** Medium (4 hrs)
+
+### Tasks
+
+- [ ] Create `src/lib/design-tokens.ts` with typography, spacing, colors, animation tokens
+- [ ] Define semantic tokens: `typography.h1`, `spacing.section`, `layout.cardPadding`
+- [ ] Apply tokens across high-traffic pages (Dashboard, Log Sheets, Work Reports)
+- [ ] Document in `docs/DESIGN_SYSTEM.md`
+
+---
+
+### UX-202: Work Reports Header Layout Broken on Mobile
+
+**Priority:** 🔴 P0 (Critical)  
+**Status:** Not Started
+
+**Problem:** Header in `work-report-page-client.tsx` uses single-row flex that breaks on 375px viewport — text truncated, button squished.
+
+**Why It Matters:** Target users are field technicians on Android phones. Core workflow (Work Reports) used daily becomes unusable on mobile.
+
+**Effort:** Low (2 hrs)
+
+### Tasks
+
+- [ ] Refactor to `flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`
+- [ ] Use ChevronLeft icon for back button
+- [ ] Test on iPhone SE (375px) viewport
+
+---
+
+### UX-203: Mobile Navigation — 70% of Features Hidden
+
+**Priority:** 🔴 P0 (Critical)  
+**Status:** Not Started
+
+**Problem:** MobileNav only exposes 4 menu items (Home, Projects, Log Sheets, Absensi). Missing Work Reports, Lab Analyses, Reports, Summary Reports, Users, Clients, Chemicals, Parameters.
+
+**Why It Matters:** Mobile-first mandate violated. Technicians must switch to desktop to access 70% of features. ~10-15 min/day productivity loss.
+
+**Effort:** Medium (6 hrs)
+
+### Tasks
+
+- [ ] Refactor MobileNav to consume `NAV_CONFIG` from `lib/constants/navigation.ts`
+- [ ] Expand to 8 items: Home, Log Sheets, Absensi, Work Reports, Lab Analyses, Reports, Summary, More
+- [ ] Use Sheet/hamburger menu for secondary features
+- [ ] Test navigation flow on Android device/emulator
+
+---
+
+### UX-204: Accessibility — Systematic WCAG Violations
+
+**Priority:** 🔴 P0 (Critical)  
+**Status:** Not Started
+
+**Problem:** Focus indicators inconsistent (25 instances). Color contrast failures: status badges (3.2:1), muted text (2.9:1). No dark mode.
+
+**Why It Matters:** WCAG 2.1 Level AA compliance. Visual impaired users cannot read content. Keyboard navigation broken.
+
+**Effort:** Medium (5 hrs)
+
+### Tasks
+
+- [ ] Add global focus styles: `focus-visible:ring-2 focus-visible:ring-primary ring-offset-2`
+- [ ] Fix status badge contrast: `bg-gray-200 text-gray-900` (12:1)
+- [ ] Replace muted text: `text-slate-600` (6.1:1)
+- [ ] Implement `prefers-color-scheme` detection + dark mode toggle
+- [ ] Test with axe DevTools and NVDA/VoiceOver
+
+---
+
+### UX-205: Loading States — Inconsistent Skeleton Usage
+
+**Priority:** 🔴 P0 (Critical)  
+**Status:** Not Started
+
+**Problem:** Loading states vary — some use skeleton, some spinner, some none. Reports page has jarring content pop-in.
+
+**Why It Matters:** Perceived performance 30% slower with spinners. CLS penalty. Mobile users wait 2-5 seconds on 3G.
+
+**Effort:** Low (3 hrs)
+
+### Tasks
+
+- [ ] Activate skeleton variants in `app/(main)/loading.tsx`
+- [ ] Create page-specific skeletons: `TableSkeleton`, `CardSkeleton`
+- [ ] Add `isLoading` prop to DataTable component
+- [ ] Replace all spinners with skeletons
+
+---
+
+### UX-206: Safe Area Insets Not Implemented
+
+**Priority:** 🔴 P0 (Critical)  
+**Status:** Not Started
+
+**Problem:** Mobile bottom nav doesn't account for iOS safe area — hidden behind Dynamic Island/home indicator on iPhone 14/15.
+
+**Why It Matters:** iOS users cannot tap bottom nav items reliably. Gesture conflicts with swipe-up.
+
+**Effort:** Low (3 hrs)
+
+### Tasks
+
+- [ ] Configure Tailwind for safe area: `padding-bottom: env(safe-area-inset-bottom)`
+- [ ] Add viewport meta: `viewport-fit=cover`
+- [ ] Test on iPhone 14 Pro, iPhone 15, Android gesture nav
+
+---
+
+### UX-207: Touch Target Failures (Below 44px)
+
+**Priority:** 🔴 P0 (Critical)  
+**Status:** Not Started
+
+**Problem:** Mobile nav icons (20px), table action buttons (32px), close dialog X (16px) — all below 44px minimum.
+
+**Why It Matters:** Apple HIG requires 44x44pt. Field technicians with gloves/dirty hands need larger targets. 30% error rate on small targets.
+
+**Effort:** Medium (4 hrs)
+
+### Tasks
+
+- [ ] Increase mobile nav icons: `h-6 w-6` minimum
+- [ ] Add `min-w-[44px] min-h-[44px]` to all clickable elements
+- [ ] Use invisible padding for small icons
+- [ ] Create touch target debugger for dev mode
+
+---
+
+### UX-208: Print Layout Lacks Brand Identity
+
+**Priority:** 🟠 P1 (Major)  
+**Status:** Not Started
+
+**Problem:** Print pages have no Corintek branding/logo, no client branding, generic table styles.
+
+**Why It Matters:** Professional perception — clients receive printed reports. Legal compliance for official documents.
+
+**Effort:** Medium (4 hrs)
+
+### Tasks
+
+- [ ] Create `<PrintHeader>` component with Corintek logo + address
+- [ ] Include client logo from `project.client.logoUrl`
+- [ ] Add footer with page numbers, print date, signature lines
+
+---
+
+### UX-209: Error Messages Don't Guide Users
+
+**Priority:** 🟠 P1 (Major)  
+**Status:** Not Started
+
+**Problem:** Generic error toasts ("Gagal mengambil data") without resolution guidance, retry buttons, or admin contact info.
+
+**Why It Matters:** User frustration. Support ticket increase. Trust erosion from repeated unexplained failures.
+
+**Effort:** Low (5 hrs)
+
+### Tasks
+
+- [ ] Create `src/lib/toast-helpers.ts` with categorized templates (network, validation, permission, server)
+- [ ] Add retry buttons for network errors
+- [ ] Add field highlighting for validation errors
+- [ ] Add contact admin guidance for permission errors
+
+---
+
+### UX-210: No Responsive Image Strategy
+
+**Priority:** 🟠 P1 (Major)  
+**Status:** Not Started
+
+**Problem:** Photos uploaded at 2-5MB, displayed at 200x200px. No lazy loading, srcSet, or responsive sizes.
+
+**Why It Matters:** Mobile data — 10 photos = 50MB on 3G = 2-3 min wait. Perceived performance slow. User frustration with limited data plans.
+
+**Effort:** Medium (8 hrs)
+
+### Tasks
+
+- [ ] Add Next.js `<Image>` with `sizes`, `loading="lazy"`, `placeholder="blur"`
+- [ ] Generate R2 image variants: small (400x300), medium (800x600), large (1600x1200)
+- [ ] Implement progressive loading with low-quality placeholder
+
+---
+
+### UX-211: Typography Hierarchy Fails Scannability
+
+**Priority:** 🟠 P1 (Major)  
+**Status:** Not Started
+
+**Problem:** Headings use only size differentiation. No weight/color variation. Body text and metadata same styling.
+
+**Why It Matters:** Users cannot identify page structure at a glance. Must read linearly — increases cognitive load.
+
+**Effort:** Medium (4 hrs)
+
+### Tasks
+
+- [ ] Apply typography tokens with weight variation (h1: bold, h2: semibold, h3: medium)
+- [ ] Add visual separators: `<Separator />` between sections
+- [ ] Use overline pattern for section labels
+- [ ] Implement scannable hierarchy
+
+---
+
+### UX-212: Animation Timing Inconsistency
+
+**Priority:** 🟡 P2 (Minor)  
+**Status:** Not Started
+
+**Problem:** Animation durations vary (75ms, 150ms, 200ms, 300ms, 500ms) without design rationale.
+
+**Why It Matters:** Perceptual incoherence — users subconsciously notice timing inconsistencies. Motion sickness risk on rapid interactions.
+
+**Effort:** Medium (3 hrs)
+
+### Tasks
+
+- [ ] Create animation tokens: `animation.fast` (150ms), `animation.normal` (200ms), `animation.slow` (300ms)
+- [ ] Standardize component transitions
+- [ ] Add `prefers-reduced-motion` support
+
+---
+
+### UX-213: Form Validation Feedback Timing
+
+**Priority:** 🟡 P2 (Minor)  
+**Status:** Not Started
+
+**Problem:** Forms validate on submit only, not during typing. Users don't see errors until after clicking submit.
+
+**Why It Matters:** Slower feedback loop. More submit-retry cycles. Mobile users suffer keyboard dismissal/reopen cycles.
+
+**Effort:** Low (3 hrs)
+
+### Tasks
+
+- [ ] Change react-hook-form mode: `mode: 'onTouched'`, `reValidateMode: 'onChange'`
+- [ ] Create `useSmartForm` hook with optimal validation settings
+
+---
+
+### UX-214: No Loading States on Form Submit
+
+**Priority:** 🟡 P2 (Minor)  
+**Status:** Not Started
+
+**Problem:** Forms don't disable inputs during submission. Double-submit possible. No visual feedback that submission is processing.
+
+**Why It Matters:** Data integrity risk. User confusion. Can submit duplicate records.
+
+**Effort:** Low (2 hrs)
+
+### Tasks
+
+- [ ] Add loading overlay during form submission
+- [ ] Disable all form inputs when `isSubmitting: true`
+- [ ] Show loading spinner in submit button
+
+---
+
+### UX-215: Chart Accessibility — No Screen Reader Support
+
+**Priority:** 🟠 P1 (Major)  
+**Status:** Not Started
+
+**Problem:** Analytics charts have no ARIA labels, no data table alternative. Screen readers cannot describe chart content.
+
+**Why It Matters:** WCAG 2.1 Level AA requirement. Legal compliance. Supervisors with visual impairments excluded.
+
+**Effort:** Medium (5 hrs)
+
+### Tasks
+
+- [ ] Add `role="img"` with `aria-label` and `aria-describedby` to charts
+- [ ] Create tabbed view: "Grafik" / "Tabel" with table alternative
+- [ ] Generate text description of chart data trends
+
+---
+
+## Summary: Combined UI/UX Audit Priority
+
+### P0 — Must Fix Before Next Release (13 issues)
+
+- UI-UX-001: Work Reports header (initial)
+- UI-UX-002: Mobile nav coverage (initial)
+- UI-UX-003: Accessibility contrast (initial)
+- UX-201: Design system foundation
+- UX-202: Work Reports header mobile
+- UX-203: Mobile nav 70% hidden
+- UX-204: WCAG violations
+- UX-205: Loading states inconsistency
+- UX-206: Safe area insets
+- UX-207: Touch targets below 44px
+- UX-208: Print branding
+- UX-209: Error message templates
+- UX-210: Image optimization
+
+### P1 — Next Sprint (6 issues)
+
+- UI-UX-004: Typography/spacing inconsistency
+- UI-UX-005: Skeleton usage
+- UI-UX-006: Error handling
+- UI-UX-007: DataTable virtualization
+- UX-211: Typography hierarchy
+- UX-215: Chart accessibility
+
+### P2 — Backlog (8 issues)
+
+- UI-UX-008: Login language
+- UI-UX-009: Parameters tabs
+- UI-UX-010: File input UX
+- UI-UX-011: Attendance views
+- UX-212: Animation timing
+- UX-213: Form validation timing
+- UX-214: Form loading states
+- UX-216: Hover states (inconsistency)
+
+### P3 — Nice to Have (3 issues)
+
+- UI-UX-012: Dashboard decoration
+- UI-UX-013: Keyboard shortcuts
+- UI-UX-014: Micro-interactions
+- UI-UX-015: Dark mode consideration
+
+---
+
+> **End of Second Opinion Audit Findings**

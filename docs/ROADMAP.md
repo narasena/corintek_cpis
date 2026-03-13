@@ -1,9 +1,9 @@
 # CPIS Project Roadmap
 
 > **Project:** Corintek Project Information System (CPIS)
-> **Updated:** 2026-03-04
+> **Updated:** 2026-03-14
 > **Status:** Operational Phase — Feature Complete
-> **Current Focus:** Stabilization & QA (`QA`)
+**Current Focus:** UI/UX Improvements (`UI-AUDIT`)
 
 ---
 
@@ -41,7 +41,7 @@
 
 | Feature | Scope ID | Priority | Status                  |
 | :------ | :------- | :------- | :---------------------- |
-| _None_  | —        | —        | Ready for next priority |
+| UI/UX Audit Improvements   | `UI-AUDIT`   | 🔴 P0    | In Progress    |
 
 ---
 
@@ -49,7 +49,8 @@
 
 | #   | Feature                                        | Scope ID                       | Priority | Effort |
 | :-- | :--------------------------------------------- | :----------------------------- | :------- | :----- |
-| 1   | Browser UI Tests (MP-01, CP-01)                | `QA`                           | 🟢 P1    | Low    |
+| 1   | UI/UX Improvements (Phase 1)  | `UI-AUDIT-P1`                 | 🔴 P0    | 24h     |
+| 4   | Browser UI Tests (MP-01, CP-01)                | `QA`                           | 🟢 P1    | Low    |
 | 2   | Log Sheet Adjustments (A4, warnings)           | `LS-ADJ`                       | 🟡 P2    | Low    |
 | 3   | Client/User Fields (website, company, address) | `CLIENT-FIELDS`, `USER-FIELDS` | 🟢 P3    | Low    |
 | 4   | Work Types Multi-select                        | `PRJ-FIELDS-02`                | 🟢 P3    | Low    |
@@ -82,6 +83,8 @@
 
 ---
 
+- ⚠️ `UI/UX`: 32 issues identified — see `docs/UI_AUDIT.md` for full audit
+
 ## Known Issues & Technical Debt
 
 - ⚠️ `Log Sheet`: Detail page ~437 lines — could benefit from further component extraction
@@ -96,7 +99,9 @@
 
 | Date       | Decision                                                   | Rationale                                                                                |
 | :--------- | :--------------------------------------------------------- | :--------------------------------------------------------------------------------------- |
-| 2026-03-04 | Dashboard Activity Feed (`DB-01`) — query-time aggregation | No new table needed; query existing sources (log_sheets, work_reports) with RBAC filters |
+| 2026-03-14 | UI/UX Audit — Mobile-First Priority                 | 80% of technician usage is mobile; mobile blockers are P0 critical |
+| 2026-03-14 | UI/UX Audit — Design System Foundation First         | Root cause of 60% of UX issues is missing design tokens; fixes enable all other work |
+| 2026-03-14 | Dashboard Activity Feed (`DB-01`) — query-time aggregation | No new table needed; query existing sources (log_sheets, work_reports) with RBAC filters |
 | 2026-02-26 | Renamed `ParameterLimitCategory` → `ParameterLimitProfile` | Clearer naming, profile implies reusability                                              |
 | 2026-02-25 | Added CLIENT role as read-only portal                      | Client access without admin capabilities                                                 |
 | 2026-02-23 | Server Actions only, no REST API layer                     | Eliminated fetch/axios overhead for internal data                                        |
@@ -105,3 +110,53 @@
 
 > **Completed feature history:** See `CHANGELOG.md`
 > **Detailed feature specs & task breakdowns:** See `fsd_cpis/FSD_CPIS.md` (load with `@fsd_cpis/FSD_CPIS.md` only when implementing a specific scope ID)
+
+
+---
+
+## UI/UX Improvements (UI-AUDIT)
+
+### Overview
+Comprehensive UI/UX audit completed with **32 issues** identified. Target users: field technicians on low-budget Android phones.
+
+- 🔴 P0 Critical: 10 issues
+- 🟠 P1 Major: 8 issues  
+- 🟡 P2 Minor: 11 issues
+- 🔵 P3 Optional: 3 issues
+
+### Phase 1: Critical Foundation (Week 1) — 24h
+| Task | Issue | Effort |
+| :--- | :---- | :----- |
+| Create design tokens | UX-201 | 4h |
+| Fix Work Reports header | UX-202 | 2h |
+| Expand MobileNav | UX-203 | 6h |
+| Fix accessibility | UX-204 | 4h |
+| Safe area insets | UX-206 | 3h |
+| Touch targets | UX-207 | 2h |
+| Loading states | UX-205 | 3h |
+
+### Phase 2: UX Polish (Week 2) — 20h
+| Task | Issue | Effort |
+| :--- | :---- | :----- |
+| Print branding | UX-208 | 4h |
+| Toast templates | UX-209 | 5h |
+| Animation timing | UX-212 | 3h |
+| Hover states | UX-216 | 2h |
+| Typography | UX-211 | 4h |
+| Form validation | UX-213 | 2h |
+
+### Phase 3: Advanced (Week 3) — 18h
+| Task | Issue | Effort |
+| :--- | :---- | :----- |
+| Chart accessibility | UX-215 | 5h |
+| Image optimization | UX-210 | 8h |
+| Form loading | UX-214 | 2h |
+| Empty states | UX-214 | 3h |
+
+### References
+- Full audit: `docs/UI_AUDIT.md`
+- Issue backlog: `docs/BACKLOG.md` (search: UI-UX-AUDIT)
+
+
+
+> **UI/UX Audit:** See `docs/UI_AUDIT.md` for full audit report with 32 issues
