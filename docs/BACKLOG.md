@@ -147,3 +147,218 @@ The client requested videos of the screen recording various scenarios (e.g., add
 - [ ] Create scenario script `02-technician-logsheet.spec.ts` for Technician Logsheet flows.
 - [ ] Create scenario script `03-client-portal.spec.ts` for Client dashboard/report viewing flows.
 - [ ] Add NPM script `record:videos` to run the new video suite.
+
+---
+
+## UI-UX-AUDIT — User Interface Improvements
+
+> **Source:** UI/UX Audit Report (2026-03-14) — see `docs/UI_AUDIT.md` for full details
+
+---
+
+### UI-UX-001: Work Reports Page Header Misalignment
+
+**Priority:** 🔴 P0 (Critical)  
+**Status:** Not Started
+
+**Problem:** Header layout breaks on mobile—back button and heading share row with create dialog button, causing overflow/squishing on small screens.
+
+**Impact:** Core workflow broken for mobile users (primary target: field technicians on Android)
+
+**Effort:** Low (2 hrs)
+
+### Tasks
+
+- [ ] Refactor header in `work-report-page-client.tsx` to use responsive flex layout
+- [ ] Add `flex-wrap` or `flex-col md:flex-row` for mobile/desktop breakpoints
+- [ ] Test on mobile viewport (375px width)
+
+---
+
+### UI-UX-002: Incomplete Mobile Navigation Coverage
+
+**Priority:** 🔴 P0 (Critical)  
+**Status:** Not Started
+
+**Problem:** MobileNav only exposes 4 menu items (Home, Projects, Log Sheets, Absensi). Critical features like Work Reports, Lab Analyses, Reports are not accessible on mobile.
+
+**Impact:** Mobile-first mandate violated—technicians cannot complete full workflow on primary device
+
+**Effort:** Medium (4 hrs)
+
+### Tasks
+
+- [ ] Expand MobileNav with Work Reports, Lab Analyses, Reports (top 8 menu items)
+- [ ] Implement expandable "More" menu for secondary features
+- [ ] Test navigation flow on Android device/emulator
+
+---
+
+### UI-UX-003: Accessibility — Focus Management & Color Contrast
+
+**Priority:** 🔴 P0 (Critical)  
+**Status:** Not Started
+
+**Problem:** Focus indicators inconsistent; color contrast may not meet WCAG 4.5:1 on header, status badges, and muted text.
+
+**Impact:** Keyboard users cannot track focus; visually impaired users cannot read content; compliance risk
+
+**Effort:** Medium (5 hrs)
+
+### Tasks
+
+- [ ] Add `focus-visible:ring-2 focus-visible:ring-primary` to all interactive elements
+- [ ] Audit all color combinations with axe-core or WAVE
+- [ ] Fix contrast on header gradient, status badges, muted text
+- [ ] Test with screen reader (NVDA/VoiceOver)
+
+---
+
+### UI-UX-004: Visual Inconsistency — Typography & Spacing
+
+**Priority:** 🟠 P1 (Major)  
+**Status:** Not Started
+
+**Problem:** Heading sizes and spacing vary across pages (text-3xl vs text-2xl, space-y-8 vs space-y-6).
+
+**Impact:** User disorientation; maintenance burden; unprofessional appearance
+
+**Effort:** Medium (4 hrs)
+
+### Tasks
+
+- [ ] Create design tokens in `src/lib/design-tokens.ts`
+- [ ] Apply consistent typography and spacing across all pages
+- [ ] Document in DESIGN_SYSTEM.md
+
+---
+
+### UI-UX-005: Loading States — Inconsistent Skeleton Usage
+
+**Priority:** 🟠 P1 (Major)  
+**Status:** Not Started
+
+**Problem:** Loading states vary—some use full skeleton, others use simple spinner. Skeletons don't match content layout.
+
+**Impact:** Reduced perceived performance; unprofessional feel
+
+**Effort:** Low (3 hrs)
+
+### Tasks
+
+- [ ] Create reusable skeleton components (SkeletonCard, SkeletonTable)
+- [ ] Apply consistently across all pages
+- [ ] Match skeleton structure to actual content
+
+---
+
+### UI-UX-006: Error Handling — Non-Informative Messages
+
+**Priority:** 🟠 P1 (Major)  
+**Status:** Not Started
+
+**Problem:** Error messages are generic ("Gagal mengambil data") with no resolution guidance.
+
+**Impact:** User frustration; increased support tickets; trust erosion
+
+**Effort:** Low (3 hrs)
+
+### Tasks
+
+- [ ] Categorize errors (network, validation, permission, server)
+- [ ] Create localized error message templates
+- [ ] Add retry buttons for transient errors
+
+---
+
+### UI-UX-007: DataTable Performance — No Virtualization
+
+**Priority:** 🟠 P1 (Major)  
+**Status:** Not Started
+
+**Problem:** Reports page loads all global log sheets without virtualization—thousands of DOM nodes freeze mobile devices.
+
+**Impact:** Severe performance degradation on low-end Android; scalability blocker
+
+**Effort:** Medium (6 hrs)
+
+### Tasks
+
+- [ ] Install `@tanstack/react-virtual`
+- [ ] Implement virtual scrolling for DataTable
+- [ ] Add pagination fallback
+- [ ] Test on low-end device emulator (512MB RAM)
+
+---
+
+### UI-UX-008: Login Page — Mixed Language
+
+**Priority:** 🟡 P2 (Minor)  
+**Status:** Not Started
+
+**Problem:** Login form uses mixed English ("Sign in") and Indonesian (toast messages).
+
+**Impact:** Inconsistent localization; unprofessional appearance
+
+**Effort:** Trivial (1 hr)
+
+### Tasks
+
+- [ ] Change "Sign in" to "Masuk" in login-form.tsx
+- [ ] Update description to Indonesian
+
+---
+
+### UI-UX-009: Parameter Page — Tab Crowding
+
+**Priority:** 🟡 P2 (Minor)  
+**Status:** Not Started
+
+**Problem:** Parameters page has 3 tabs with unrelated content—Limits + Profiles (related) mixed with Parameter CRUD (unrelated).
+
+**Impact:** Information architecture confusion
+
+**Effort:** Low (2 hrs)
+
+### Tasks
+
+- [ ] Restructure tabs: combine "Batas Default" + "Profil" into "Limit Profiles"
+- [ ] Move Parameter CRUD to separate section or page
+
+---
+
+### UI-UX-010: Summary Reports — File Input UX
+
+**Priority:** 🟡 P2 (Minor)  
+**Status:** Not Started
+
+**Problem:** File upload inputs use default browser styling with no preview/validation.
+
+**Impact:** User uncertainty; error-prone; poor UX
+
+**Effort:** Medium (4 hrs)
+
+### Tasks
+
+- [ ] Create custom file upload component with drag-drop
+- [ ] Add file type/size validation with feedback
+- [ ] Show selected file with remove button
+
+---
+
+### UI-UX-011: Attendance — Three Different Views
+
+**Priority:** 🟡 P2 (Minor)  
+**Status:** Not Started
+
+**Problem:** Attendance page has 3 duplicated role-specific views with different implementations.
+
+**Impact:** Code duplication; maintenance burden; inconsistent UX
+
+**Effort:** Medium (5 hrs)
+
+### Tasks
+
+- [ ] Create unified attendance table component
+- [ ] Add role-based conditional action buttons
+- [ ] Consolidate duplicate code

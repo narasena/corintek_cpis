@@ -1,8 +1,8 @@
 # Session Context — CONTEXT.md
 
-> CPIS — Corintek Project Information System
+> CPIS — Corintek Plant Information System
 
-**Last Updated:** 2026-03-08
+**Last Updated:** 2026-03-14
 
 ## Active Gotchas ⚠️
 
@@ -15,6 +15,7 @@
 - **Error Logging:** ALL catch blocks MUST prefix with `[CPIS-ERROR] <Feature>.<Action>:`
 - **Dashboard Activity:** No real-time updates — users must refresh page to see new activities
 - **Attendance Export:** CSV only — Excel (.xlsx) NOT implemented despite FSD mentioning it
+- **UI/UX Audit Complete:** See `docs/UI_AUDIT.md` — 3 P0, 4 P1, 5 P2 issues identified
 
 ## Active Decisions 🤔
 
@@ -22,6 +23,7 @@
 - **Next Priority:** Browser UI Tests (`QA`)
 - **Deferred:** Video attachments to Log Sheet (Scope `LS-ADJ`) — decision pending cost analysis
 - **Deferred:** Summary Report Analytics (`SR-02`) — dashboard charts provide sufficient visibility
+- **UI/UX Improvements:** Pending approval — see `docs/BACKLOG.md` for prioritized list
 
 ## Completed Recently ✅
 
@@ -31,6 +33,7 @@
 - **Work Reports** — Full approval workflow with signatures
 - **DB-01 Dashboard Recent Activity** — Fully implemented with RBAC, 7d/30d range, infinite scroll
 - **CG-05 Data Caching** — Next.js cache tags implemented (see `docs/CACHING.md`)
+- **UI/UX Audit (2026-03-14)** — Comprehensive audit across all modules with 12 prioritized improvements
 
 ## NOT Implemented (For Reference) 🔴
 
@@ -53,7 +56,7 @@ These features exist in FSD but are NOT built:
 
 ## Current Sprint Focus 🎯
 
-- **Sprint:** Stabilization & QA
-- **Focus:** Testing Dashboard Activity Feed (`DB-01`) in production
-- **Next:** Browser UI Tests (`QA`)
+- **Sprint:** UI/UX Improvements (Pending Approval)
+- **Focus:** Review `docs/UI_AUDIT.md` and prioritize fixes
+- **Next:** Implement P0 critical issues if approved
 - **Off-limits:** Do NOT touch Log Sheet detail page (~437 lines) — already refactored in LS-STAB
