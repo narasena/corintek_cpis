@@ -45,6 +45,7 @@ export function SignatureSection({
   const [open, setOpen] = useState(false);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [clearTrigger, setClearTrigger] = useState(0);
 
   const label = signatureRoleLabel(role);
 
@@ -75,6 +76,11 @@ export function SignatureSection({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleClear = () => {
+    setDataUrl(null);
+    setClearTrigger(prev => prev + 1);
   };
 
   return (
@@ -109,24 +115,31 @@ export function SignatureSection({
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-[95vw] max-w-lg h-[85vh] flex flex-col p-0 gap-0">
+        <DialogContent
+          className="w-[98vw] h-[90vh] sm:h-[85vh] sm:w-[90vw] sm:max-w-2xl flex flex-col p-0 !max-h-[95vh] !max-w-[98vw]"
+          style={{ maxHeight: '95vh', maxWidth: '98vw' }}
+        >
           <DialogHeader
-            className="px-4 py-3 m-0 rounded-t-lg shrink-0"
+            className="px-4 py-3 shrink-0 rounded-t-lg"
             style={{ backgroundColor: 'hsl(var(--primary))' }}
           >
             <DialogTitle className="text-white text-base">
               Tanda Tangan {label}
             </DialogTitle>
           </DialogHeader>
-          <div className="flex-1 flex flex-col overflow-hidden px-4 pb-4">
+          <div className="flex-1 flex flex-col overflow-hidden p-4">
             <p className="text-xs text-muted-foreground mb-2 shrink-0">
               Gunakan jari (di mobile) atau mouse/stylus untuk menggambar tanda
               tangan
             </p>
             <div className="flex-1 min-h-0">
-              <SignaturePad disabled={isSaving} onChange={setDataUrl} />
+              <SignaturePad
+                disabled={isSaving}
+                onChange={setDataUrl}
+                clearTrigger={clearTrigger}
+              />
             </div>
-            <div className="flex justify-end gap-2 pt-3 shrink-0 border-t">
+            <div className="flex items-center justify-between gap-2 pt-3 shrink-0 border-t">
               <Button
                 type="button"
                 variant="outline"
@@ -136,14 +149,25 @@ export function SignatureSection({
               >
                 Batal
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                disabled={!dataUrl || isSaving}
-                onClick={handleSave}
-              >
-                {isSaving ? 'Menyimpan...' : 'Simpan'}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClear}
+                  disabled={isSaving}
+                >
+                  Ulangi
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!dataUrl || isSaving}
+                  onClick={handleSave}
+                >
+                  {isSaving ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>

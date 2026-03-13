@@ -1,19 +1,57 @@
 'use client';
 
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 type TSignaturePadProps = {
   disabled?: boolean;
   onChange?: (dataUrl: string | null) => void;
+  clearTrigger?: number;
 };
 
-export function SignaturePad({ disabled, onChange }: TSignaturePadProps) {
+export function SignaturePad({
+  disabled,
+  onChange,
+  clearTrigger,
+}: TSignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [hasStroke, setHasStroke] = useState(false);
+
+  const handleClear = useCallback(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = container.getBoundingClientRect();
+    const containerWidth = rect.width;
+    const containerHeight = rect.height;
+
+    // Match the resize logic for consistent clear
+    let width: number;
+    let height: number;
+    if (containerWidth < containerHeight) {
+      height = containerHeight;
+      width = height * (3 / 2);
+    } else {
+      width = containerWidth;
+      height = width * (9 / 16);
+    }
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+
+    if (onChange) onChange(null);
+  }, [onChange]);
+
+  // Handle external clear trigger
+  useEffect(() => {
+    if (clearTrigger === undefined) return;
+    handleClear();
+  }, [clearTrigger, handleClear]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -22,9 +60,33 @@ export function SignaturePad({ disabled, onChange }: TSignaturePadProps) {
 
     const resize = () => {
       const rect = container.getBoundingClientRect();
-      const width = rect.width;
-      const height = width / (16 / 9);
+      const containerWidth = rect.width;
+      const containerHeight = rect.height;
       const ratio = Math.max(window.devicePixelRatio || 1, 2);
+
+      // Use full container space - fit within container bounds
+      let width: number;
+      let height: number;
+
+      if (containerWidth < containerHeight) {
+        // Portrait: use full height, calculate width from height (3:2 ratio for better signature area)
+        height = containerHeight;
+        width = height * (3 / 2);
+        // If width exceeds container, scale down to fit
+        if (width > containerWidth) {
+          width = containerWidth;
+          height = width * (2 / 3);
+        }
+      } else {
+        // Landscape: use full width, calculate height from width (16:9 ratio)
+        width = containerWidth;
+        height = width * (9 / 16);
+        // If height exceeds container, scale down to fit
+        if (height > containerHeight) {
+          height = containerHeight;
+          width = height * (16 / 9);
+        }
+      }
 
       const prev = canvas.toDataURL();
 
@@ -102,7 +164,6 @@ export function SignaturePad({ disabled, onChange }: TSignaturePadProps) {
     e.preventDefault();
     ctx.lineTo(point.x, point.y);
     ctx.stroke();
-    setHasStroke(true);
   };
 
   const finishStroke = () => {
@@ -138,47 +199,19 @@ export function SignaturePad({ disabled, onChange }: TSignaturePadProps) {
     finishStroke();
   };
 
-  const handleClear = () => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = container.getBoundingClientRect();
-    ctx.clearRect(0, 0, rect.width, rect.width / (16 / 9));
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, rect.width, rect.width / (16 / 9));
-
-    setHasStroke(false);
-    if (onChange) onChange(null);
-  };
-
   return (
-    <div className="space-y-2 h-full flex flex-col">
+    <div className="h-full flex flex-col">
       <div
         ref={containerRef}
-        className="relative flex-1 min-h-[150px] border rounded-md bg-white overflow-hidden touch-none select-none"
+        className="relative flex-1 min-h-[150px] border rounded-md bg-white overflow-hidden touch-none select-none flex items-center justify-center"
       >
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerLeave={handlePointerLeave}
         />
-      </div>
-      <div className="flex justify-between gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleClear}
-          disabled={disabled}
-        >
-          Ulangi
-        </Button>
       </div>
     </div>
   );

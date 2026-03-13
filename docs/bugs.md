@@ -521,11 +521,20 @@ console.log('[DEBUG] Checking for limit breaches...');
 
 ---
 
-### BUG-038 — Signature Dialog Portrait Mode
+### BUG-038 — Signature Dialog Layout
 
-**Location:** `src/features/log-sheets/components/signature-section.tsx`  
-**Problem:** Dialog not properly sized for portrait mobile  
-**Fix:** Added `w-[95vw] h-[80vh] flex flex-col` classes for better mobile responsiveness
+**Location:** `src/features/log-sheets/components/signature-section.tsx`, `signature-pad.tsx`  
+**Problem:** Dialog too small, canvas not visible, buttons not aligned, not responsive to portrait/landscape  
+**Fix (2026-03-13):**
+
+| Issue               | Fix                                                                                                                          |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Dialog too small    | Changed to `w-screen max-w-none h-screen sm:h-[85vh] sm:w-[95vw] sm:max-w-2xl` - fullscreen on mobile, responsive on desktop |
+| Canvas not visible  | Changed `min-h-[150px]` to `min-h-[200px]`, simplified container flex layout                                                 |
+| Buttons not aligned | Moved "Ulangi" button from SignaturePad to inline with "Batal/Simpan" using `flex justify-between`                           |
+| Portrait/landscape  | Full viewport on mobile (`w-screen h-screen`), constrained on desktop (`sm:` breakpoints)                                    |
+
+**Status:** Fixed
 
 ---
 
