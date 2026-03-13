@@ -58,6 +58,11 @@ function collectCoolingWaterRequiredErrors(
   const param = context.parameterById.get(parameterId);
   if (!param) return;
 
+  // Skip Cycle - it's optional
+  if (param.variableName === 'Cycle' || param.name === 'Cycle') {
+    return;
+  }
+
   const activeCTs = context.detail.machines.coolingTowers.filter(m =>
     context.detail.activeMachineIds.coolingTowers.includes(m.id)
   );
@@ -118,7 +123,12 @@ function collectCategoryRequiredErrors(
     }
   }
 
-  if (isCTCategory && activeCTs.length > 0) {
+  if (
+    isCTCategory &&
+    activeCTs.length > 0 &&
+    param.category !== 'JOB_DESCRIPTION' &&
+    param.category !== 'GENERAL_CONDITION'
+  ) {
     const noteKey = makeEntryKey(param.id, null, 'NOTE');
     const noteEntry = context.entryByKey.get(noteKey);
     if (!isEntryComplete(noteEntry)) {

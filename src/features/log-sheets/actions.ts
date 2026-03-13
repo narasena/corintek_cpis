@@ -214,9 +214,99 @@ export async function submitLogSheetAction(id: string) {
   return updateLogSheetStatusAction({ id, status: 'SUBMITTED' });
 }
 
-export async function approveLogSheetAction(id: string) {
-  return updateLogSheetStatusAction({ id, status: 'APPROVED' });
-}
+export const approveLogSheetAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    // RBAC: Only CLIENT_SUPERVISOR with CLIENT_PIC assignment or ADMIN/SUPERVISOR can approve
+    const isClientSupervisor = actor.role === 'CLIENT_SUPERVISOR';
+    const isInternalPic = actor.role === 'ADMIN' || actor.role === 'SUPERVISOR';
+
+    if (!isClientSupervisor && !isInternalPic) {
+      throw new Error(
+        'Unauthorized: Hanya PIC yang dapat menyetujui log sheet'
+      );
+    }
+
+    // If CLIENT_SUPERVISOR, verify they have CLIENT_PIC assignment
+    if (isClientSupervisor) {
+      const projectId = await logSheetService.getLogSheetProjectId(input.id);
+      if (!projectId) {
+        throw new Error('Log sheet tidak ditemukan');
+      }
+      const hasClientPicAssignment = await logSheetService.hasProjectAssignment(
+        actor.id,
+        projectId,
+        'CLIENT_PIC'
+      );
+      if (!hasClientPicAssignment) {
+        throw new Error(
+          'Unauthorized: Hanya PIC yang ditugaskan pada proyek ini yang dapat menyetujui'
+        );
+      }
+    }
+
+    const logSheet = await updateLogSheetStatusWithNotifications(actor, {
+      id: input.id,
+      status: 'APPROVED',
+    });
+    revalidateLogSheetPaths(logSheet.projectId);
+    return logSheet;
+  },
+  {
+    schema: z.object({
+      id: z.string().uuid(),
+    }),
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
+    },
+  }
+);
+
+export const rejectLogSheetAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    // RBAC: Only CLIENT_SUPERVISOR with CLIENT_PIC assignment or ADMIN/SUPERVISOR can reject
+    const isClientSupervisor = actor.role === 'CLIENT_SUPERVISOR';
+    const isInternalPic = actor.role === 'ADMIN' || actor.role === 'SUPERVISOR';
+
+    if (!isClientSupervisor && !isInternalPic) {
+      throw new Error('Unauthorized: Hanya PIC yang dapat menolak log sheet');
+    }
+
+    // If CLIENT_SUPERVISOR, verify they have CLIENT_PIC assignment
+    if (isClientSupervisor) {
+      const projectId = await logSheetService.getLogSheetProjectId(input.id);
+      if (!projectId) {
+        throw new Error('Log sheet tidak ditemukan');
+      }
+      const hasClientPicAssignment = await logSheetService.hasProjectAssignment(
+        actor.id,
+        projectId,
+        'CLIENT_PIC'
+      );
+      if (!hasClientPicAssignment) {
+        throw new Error(
+          'Unauthorized: Hanya PIC yang ditugaskan pada proyek ini yang dapat menolak'
+        );
+      }
+    }
+
+    const logSheet = await updateLogSheetStatusWithNotifications(actor, {
+      id: input.id,
+      status: 'DRAFT',
+      rejectionReason: input.rejectionReason,
+    });
+    revalidateLogSheetPaths(logSheet.projectId);
+    return logSheet;
+  },
+  {
+    schema: z.object({
+      id: z.string().uuid(),
+      rejectionReason: z.string().optional(),
+    }),
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
+    },
+  }
+);
 
 export const deleteLogSheetAction = actionFactory.protected(
   async ({ input, actor }) => {
