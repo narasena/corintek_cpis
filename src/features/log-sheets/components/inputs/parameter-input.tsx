@@ -192,6 +192,7 @@ function NumberInput({
           className={buildInputClass(hasError)}
           value={displayValue}
           onChange={e => updateNumber(entryKey, e.target.value)}
+          onWheel={e => e.currentTarget.blur()}
           disabled={disabled}
         />
         <RangeStatusIcon inRange={inRange} />

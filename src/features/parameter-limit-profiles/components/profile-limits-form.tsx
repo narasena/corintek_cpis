@@ -387,8 +387,13 @@ export function ProfileLimitsForm({
         {/* Add Parameter Dialog */}
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Tambah Parameter ke Profil</DialogTitle>
+            <DialogHeader
+              className="-mx-6 -mt-6 px-6 py-4 rounded-t-lg"
+              style={{ backgroundColor: 'hsl(var(--primary))' }}
+            >
+              <DialogTitle className="text-white">
+                Tambah Parameter ke Profil
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {availableParams.length === 0 ? (

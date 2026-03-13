@@ -7,6 +7,7 @@ import {
   useState,
   useTransition,
 } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/data-table';
@@ -312,6 +313,20 @@ function SupervisorAttendanceView() {
 
 export default function AttendancePage() {
   const { user: actor } = useSession();
+  const router = useRouter();
+
+  // BUG-047 FIX: Guard - only TECHNICIAN, SUPERVISOR, ADMIN, and CLIENT_SUPERVISOR can access
+  useEffect(() => {
+    if (
+      actor &&
+      actor.role !== 'TECHNICIAN' &&
+      actor.role !== 'SUPERVISOR' &&
+      actor.role !== 'ADMIN' &&
+      actor.role !== 'CLIENT_SUPERVISOR'
+    ) {
+      router.replace('/');
+    }
+  }, [actor, router]);
 
   // BUG-013 FIX: Always call hooks first before any conditional returns
   // This ensures hooks are called in the same order on every render

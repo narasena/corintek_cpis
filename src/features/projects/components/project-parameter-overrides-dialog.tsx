@@ -100,9 +100,14 @@ export function ProjectParameterOverridesDialog({
         )}
       </DialogTrigger>
       <DialogContent className="max-w-5xl h-[80vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle>Override Batas Parameter</DialogTitle>
-          <DialogDescription>
+        <DialogHeader
+          className="p-6 pb-2 -mx-6 -mt-6 px-6 py-4 rounded-t-lg"
+          style={{ backgroundColor: 'hsl(var(--primary))' }}
+        >
+          <DialogTitle className="text-white">
+            Override Batas Parameter
+          </DialogTitle>
+          <DialogDescription className="text-white/80">
             Atur batas minimum dan maksimum khusus untuk proyek{' '}
             <strong>{project.name}</strong>. Kosongkan untuk mengikuti standar
             global.

@@ -111,8 +111,13 @@ export function ParameterLimitDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Ubah Batas Parameter: {limit?.name}</DialogTitle>
+        <DialogHeader
+          className="-mx-6 -mt-6 px-6 py-4 rounded-t-lg"
+          style={{ backgroundColor: 'hsl(var(--primary))' }}
+        >
+          <DialogTitle className="text-white">
+            Ubah Batas Parameter: {limit?.name}
+          </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

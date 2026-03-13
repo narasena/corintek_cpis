@@ -186,13 +186,24 @@ function SignatureDialog({
         Tanda Tangan {label}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Tanda Tangan {label}</DialogTitle>
+        <DialogContent className="w-[95vw] max-w-lg h-[85vh] flex flex-col p-0 gap-0">
+          <DialogHeader
+            className="px-4 py-3 m-0 rounded-t-lg shrink-0"
+            style={{ backgroundColor: 'hsl(var(--primary))' }}
+          >
+            <DialogTitle className="text-white text-base">
+              Tanda Tangan {label}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <SignaturePad onChange={setDataUrl} disabled={isSaving} />
-            <div className="flex justify-end gap-2">
+          <div className="flex-1 flex flex-col overflow-hidden px-4 pb-4">
+            <p className="text-xs text-muted-foreground mb-2 shrink-0">
+              Gunakan jari (di mobile) atau mouse/stylus untuk menggambar tanda
+              tangan
+            </p>
+            <div className="flex-1 min-h-0">
+              <SignaturePad onChange={setDataUrl} disabled={isSaving} />
+            </div>
+            <div className="flex justify-end gap-2 pt-3 shrink-0 border-t">
               <Button
                 variant="outline"
                 size="sm"
@@ -209,7 +220,7 @@ function SignatureDialog({
                 onClick={handleSave}
                 disabled={!dataUrl || isSaving}
               >
-                Simpan
+                {isSaving ? 'Menyimpan...' : 'Simpan'}
               </Button>
             </div>
           </div>

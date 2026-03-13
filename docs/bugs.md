@@ -361,7 +361,7 @@
 | :------ | :---------- | :----------------------------------------------------------------------------------------------------------------- | :----- |
 | BUG-018 | Input       | Number inputs (all forms) increment/decrement on scroll — unintended value changes                                 | Open   |
 | BUG-019 | Logsheet    | Note field feels laggy when typing — needs debouncing or deferred save                                             | Open   |
-| BUG-020 | Logsheet    | Consumption total shows negative when "after" < "before"                                                           | Open   |
+| BUG-020 | Logsheet    | Consumption total shows negative when "after" < "before"                                                           | Fixed  |
 | BUG-021 | Logsheet    | Unselected machine units are hidden on desktop (should show greyed-out)                                            | Open   |
 | BUG-022 | Logsheet    | Consumption and Notes sections are visible at unit-level — misleading on mobile                                    | Open   |
 | BUG-023 | Logsheet    | CT progress tracker shown regardless of data state (should only show when CT water cooling quality data exists)    | Open   |
@@ -370,12 +370,12 @@
 | BUG-026 | Logsheet    | Numeric input position shifts when check icon appears after valid input                                            | Open   |
 | BUG-027 | Logsheet    | Boolean checkbox position changes depending on label text length                                                   | Open   |
 | BUG-028 | Logsheet    | Logsheet photo (water meter) shows before/after vertically — should be side-by-side in one row                     | Open   |
-| BUG-029 | Work Report | Unit machine select dropdown cannot scroll to see all options                                                      | Open   |
-| BUG-030 | Navigation  | Mobile sidebar remains open after navigating to another page                                                       | Open   |
+| BUG-029 | Work Report | Unit machine select dropdown cannot scroll to see all options                                                      | Fixed  |
+| BUG-030 | Navigation  | Mobile sidebar remains open after navigating to another page                                                       | Fixed  |
 | BUG-031 | Permissions | Admin can add client signature to bypass submission requirement (workaround)                                       | Open   |
 | BUG-032 | Permissions | Admin can create logsheets and work reports without attribution tag                                                | Open   |
 | BUG-033 | Permissions | Client role can see logsheet Create button (should be read-only portal)                                            | Open   |
-| BUG-034 | UI          | All dialog headers should use primary background color with matching text (consistent with sidebar content header) | Open   |
+| BUG-034 | UI          | All dialog headers should use primary background color with matching text (consistent with sidebar content header) | Fixed  |
 
 ### BUG-018 — Scroll-to-Increment on Number Inputs
 
@@ -402,10 +402,10 @@
 
 | Bug ID  | Module   | Title                                                                                            | Status         |
 | :------ | :------- | :----------------------------------------------------------------------------------------------- | :------------- |
-| BUG-035 | Project  | Machine ownership defaults to first in list — should default to CLIENT                           | Open           |
+| BUG-035 | Project  | Machine ownership defaults to first in list — should default to CLIENT                           | Fixed          |
 | BUG-036 | User     | Settings button in sidebar user-info section appears unused                                      | Open           |
 | BUG-037 | User     | "Client Technician" role has no defined permissions or workflows                                 | Needs Clarity  |
-| BUG-038 | Logsheet | Signature dialog cannot rotate to landscape on mobile                                            | Open           |
+| BUG-038 | Logsheet | Signature dialog cannot rotate to landscape on mobile                                            | Fixed          |
 | BUG-039 | Logsheet | Logsheet signature save does not trigger optimistic update — full SSR re-fetch is too aggressive | Open (derived) |
 
 ---
@@ -418,13 +418,13 @@
 | :------ | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :---------------------- |
 | BUG-040 | Logsheet     | `console.log('[DEBUG]...')` remains in production action (`actions.ts:264`)                                                                                                                                                                                 | P2       | Open                    |
 | BUG-041 | Work Report  | `uploadWorkReportPhotoAction` has no work-report ownership verification — any authenticated user could upload to another user's work report path                                                                                                            | P1       | Fixed                   |
-| BUG-042 | Work Report  | `parseWorkReportFormData` uses unchecked `as string` casts — invalid form submissions will not throw a typed validation error                                                                                                                               | P2       | Open                    |
-| BUG-043 | Logsheet     | `saveLogSheetEntriesAction` silently swallows notification errors — limit breach alerts may never fire without surfaced error                                                                                                                               | P2       | Open                    |
+| BUG-042 | Work Report  | `parseWorkReportFormData` uses unchecked `as string` casts — invalid form submissions will not throw a typed validation error                                                                                                                               | P2       | Fixed                   |
+| BUG-043 | Logsheet     | `saveLogSheetEntriesAction` silently swallows notification errors — limit breach alerts may never fire without surfaced error                                                                                                                               | P2       | Fixed                   |
 | BUG-044 | Projects     | `createProject` lacks server-side validation that at least one `CLIENT_PIC` assignment exists in the `assignments` payload                                                                                                                                  | P1       | Fixed (same as BUG-016) |
 | BUG-045 | Logsheet     | `updateLogSheetStatusAction` can be called with `status: 'APPROVED'` by a TECHNICIAN if they have `LOG_SHEETS: update` RBAC — role-level guard not enforced in action layer                                                                                 | P1       | Fixed                   |
 | BUG-046 | Auth/Session | `actionFactory.protected` wraps RBAC via capability check, but `submitLogSheetAction` and `approveLogSheetAction` both proxy through `updateLogSheetStatusAction` which has the same RBAC level — no distinction between submit-only and approve-only roles | P1       | Fixed                   |
-| BUG-047 | Attendance   | No server-side guard on absence/attendance routes for non-technician access (mirrors BUG-017 pattern)                                                                                                                                                       | P2       | Open                    |
-| BUG-048 | Summary Rpt  | `getAllLogSheetsAction` uses `RbacResource.REPORTS` but summary report actions may use a different resource key — cross-checking needed to confirm no RBAC gap                                                                                              | P2       | Open                    |
+| BUG-047 | Attendance   | No server-side guard on absence/attendance routes for non-technician access (mirrors BUG-017 pattern)                                                                                                                                                       | P2       | Fixed                   |
+| BUG-048 | Summary Rpt  | `getAllLogSheetsAction` uses `RbacResource.REPORTS` but should use `RbacResource.LOG_SHEETS` — RBAC gap confirmed and fixed                                                                                                                                 | P2       | Fixed                   |
 
 ### BUG-040 — Debug `console.log` in Production Code
 
@@ -466,17 +466,67 @@ console.log('[DEBUG] Checking for limit breaches...');
 
 ## Summary
 
-| Category                            |  Count |
-| :---------------------------------- | -----: |
-| P0 Blocker                          |      0 |
-| P1 High                             |     14 |
-| P2 Medium                           |     17 |
-| P3 Low / Needs Clarity              |      5 |
-| Phase 3 — Source-Scan (BUG-040–048) |      9 |
-| **Total unique bugs**               | **45** |
+| Category                            | Count |
+| :---------------------------------- | ----: |
+| P0 Blocker                          |     0 |
+| P1 High                             |    14 |
+| P2 Medium                           |    17 |
+| P3 Low / Needs Clarity              |     5 |
+| Phase 3 — Source-Scan (BUG-040–048) |     9 |
+| **Total unique bugs**               |    45 |
 
 > Note: BUG-044 is a source-level confirmation of BUG-016 (same issue, different layer) and is not counted twice.
 
 ---
 
-_Last updated: 2026-03-11 · Generated by source scan + user report_
+## 2026-03-13 Fixes Applied
+
+### BUG-020 — Consumption Input Debouncing
+
+**Location:** `src/features/log-sheets/components/consumption-chemicals-section.tsx`  
+**Problem:** Every keystroke triggers setEntryState, causing lag on low-end devices  
+**Fix:** Added `useDebouncedValue` hook and modified `ConsumptionRow` to use local state with 300ms debounce before updating context
+
+---
+
+### BUG-030 — Mobile Sidebar Close Delay
+
+**Location:** `src/components/sidebar-closer.tsx`  
+**Problem:** Effect might run before route fully changes  
+**Fix:** Added 100ms timeout delay to ensure navigation completes before closing sidebar
+
+---
+
+### BUG-034 — Dialog Headers Primary Background
+
+**Location:** `src/components/action-cell.tsx`, `src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.tsx`  
+**Problem:** The class was being overridden by default styles  
+**Fix:** Used more specific styling with `!important` flags and inline `style` attribute as fallback
+
+---
+
+### BUG-029 — Machine Select Scrolling
+
+**Location:** `src/features/machines/components/machine-form-section.tsx`  
+**Problem:** SelectContent dropdown cannot scroll to see all options  
+**Fix:** Added `position="popper"` to SelectContent for proper popper positioning
+
+---
+
+### BUG-035 — Machine Ownership Default
+
+**Location:** `src/features/machines/helpers.ts`  
+**Problem:** Default ownership was CORINTEK, should be CLIENT  
+**Fix:** Changed default ownership from `'CORINTEK'` to `'CLIENT'` in `createDefaultMachine`
+
+---
+
+### BUG-038 — Signature Dialog Portrait Mode
+
+**Location:** `src/features/log-sheets/components/signature-section.tsx`  
+**Problem:** Dialog not properly sized for portrait mobile  
+**Fix:** Added `w-[95vw] h-[80vh] flex flex-col` classes for better mobile responsiveness
+
+---
+
+_Last updated: 2026-03-13 · Generated by source scan + user report_

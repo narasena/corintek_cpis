@@ -101,9 +101,14 @@ export function ActionCell<TData>({
       {/* Delete Alert */}
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
-            <AlertDialogDescription>
+          <AlertDialogHeader
+            className="!bg-primary !text-white -mx-6 -mt-6 px-6 py-4 rounded-t-lg"
+            style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+          >
+            <AlertDialogTitle className="!text-white">
+              Apakah Anda yakin?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/80">
               Tindakan ini tidak dapat dibatalkan. {entityName}{' '}
               <strong>{displayName}</strong> akan dihapus secara permanen dari
               sistem.

@@ -20,7 +20,7 @@ export const CreateMachineSchema = z.object({
   projectId: z.string().uuid('Project ID tidak valid'),
   unitNumber: z.number().int().min(1, 'Nomor unit wajib diisi'),
   type: MachineTypeEnum,
-  ownership: MachineOwnershipEnum.default('CORINTEK'),
+  ownership: MachineOwnershipEnum.default('CLIENT'),
   status: MachineStatusEnum.default('IDLE'),
   capacity: z
     .number()

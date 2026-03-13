@@ -20,26 +20,6 @@ import { z } from 'zod/v4';
 // =============================================================================
 
 /**
- * Server Action: Create a new work report
- */
-export const createWorkReportAction = actionFactory.protected(
-  async ({ input, actor }) => {
-    const data =
-      input instanceof FormData ? parseWorkReportFormData(input) : input;
-    const report = await service.createWorkReport(
-      data as CreateWorkReportInput
-    );
-    if (report) revalidatePath(`/projects/${report.projectId}`);
-    return report;
-  },
-  {
-    metadata: {
-      rbac: { resource: RbacResource.WORK_REPORTS, capability: 'create' },
-    },
-  }
-);
-
-/**
  * Server Action: Update an existing work report
  */
 export const updateWorkReportAction = actionFactory.protected(
@@ -156,21 +136,43 @@ export const deleteWorkReportPhotoAction = actionFactory.protected(
 );
 
 /**
- * Server Action: Delete a work report
+ * Server Action: Create a new work report
  */
-export const deleteWorkReportAction = actionFactory.protected(
+export const createWorkReportAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const report = await service.getWorkReportById(input);
-    if (!report) throw new Error('Work report tidak ditemukan');
+    const isAdmin = actor.role === 'ADMIN';
 
-    await service.deleteWorkReport(input);
+    let reportData: CreateWorkReportInput;
+    if (input instanceof FormData) {
+      // Add createdByAdmin to formData before parsing
+      if (isAdmin) {
+        input.append('createdByAdmin', 'true');
+      }
+      reportData = parseWorkReportFormData(input);
+    } else {
+      const inp = input as unknown as CreateWorkReportInput;
+      reportData = {
+        projectId: inp.projectId,
+        date: inp.date,
+        situation: inp.situation,
+        workDone: inp.workDone,
+        workResult: inp.workResult,
+        timeStart: inp.timeStart,
+        timeEnd: inp.timeEnd,
+        zone: inp.zone,
+        machineIds: inp.machineIds,
+        status: inp.status,
+        createdByAdmin: isAdmin || inp.createdByAdmin,
+      };
+    }
+
+    const report = await service.createWorkReport(reportData);
     if (report) revalidatePath(`/projects/${report.projectId}`);
-    return { success: true };
+    return report;
   },
   {
-    schema: z.string().uuid(),
     metadata: {
-      rbac: { resource: RbacResource.WORK_REPORTS, capability: 'delete' },
+      rbac: { resource: RbacResource.WORK_REPORTS, capability: 'create' },
     },
   }
 );
@@ -180,29 +182,45 @@ import * as projectService from '@/features/projects/service';
 import { TActionResult } from '@/lib/action-helpers';
 
 function parseWorkReportFormData(formData: FormData) {
-  const projectId = formData.get('projectId') as string;
-  const dateStr = formData.get('date') as string;
-  const timeStart = formData.get('timeStart') as string | undefined;
-  const timeEnd = formData.get('timeEnd') as string | undefined;
-  const zone = formData.get('zone') as string | undefined;
-  const situation = formData.get('situation') as string;
-  const workDone = formData.get('workDone') as string;
-  const workResult = formData.get('workResult') as string;
-  const status = (formData.get('status') as string) || 'DRAFT';
+  const projectId = formData.get('projectId');
+  if (typeof projectId !== 'string') throw new Error('Invalid projectId');
+
+  const dateStr = formData.get('date');
+  if (typeof dateStr !== 'string') throw new Error('Invalid date');
+
+  const timeStart = formData.get('timeStart');
+  const timeEnd = formData.get('timeEnd');
+  const zone = formData.get('zone');
+  const situation = formData.get('situation');
+  if (typeof situation !== 'string') throw new Error('Invalid situation');
+
+  const workDone = formData.get('workDone');
+  if (typeof workDone !== 'string') throw new Error('Invalid workDone');
+
+  const workResult = formData.get('workResult');
+  if (typeof workResult !== 'string') throw new Error('Invalid workResult');
+
+  const statusRaw = formData.get('status');
+  const status = (typeof statusRaw === 'string' ? statusRaw : 'DRAFT') as
+    | 'DRAFT'
+    | 'SUBMITTED';
+
+  const createdByAdmin = formData.get('createdByAdmin') === 'true';
 
   const machineIds = formData.getAll('machineIds') as string[];
 
   return {
     projectId,
     date: new Date(dateStr),
-    timeStart: timeStart || undefined,
-    timeEnd: timeEnd || undefined,
-    zone: zone || undefined,
+    timeStart: typeof timeStart === 'string' ? timeStart : undefined,
+    timeEnd: typeof timeEnd === 'string' ? timeEnd : undefined,
+    zone: typeof zone === 'string' ? zone : undefined,
     situation,
     workDone,
     workResult,
     status: status as 'DRAFT' | 'SUBMITTED',
     machineIds: machineIds.length > 0 ? machineIds : [],
+    createdByAdmin: createdByAdmin || undefined,
   };
 }
 
@@ -268,6 +286,26 @@ export const approveWorkReportAction = async (id: string) => {
 export const rejectWorkReportAction = async (id: string) => {
   return updateWorkReportStatusAction({ id, status: 'REJECTED' });
 };
+
+/**
+ * Server Action: Delete a work report
+ */
+export const deleteWorkReportAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const report = await service.getWorkReportById(input);
+    if (!report) throw new Error('Work report tidak ditemukan');
+
+    await service.deleteWorkReport(input);
+    revalidatePath(`/projects/${report.projectId}`);
+    return { success: true };
+  },
+  {
+    schema: z.string().uuid(),
+    metadata: {
+      rbac: { resource: RbacResource.WORK_REPORTS, capability: 'delete' },
+    },
+  }
+);
 
 /**
  * Server Action: Get work reports by project

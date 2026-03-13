@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronsUpDown, LogOut, Settings, User } from 'lucide-react';
+import { ChevronsUpDown, LogOut, User } from 'lucide-react';
 import * as React from 'react';
 import Link from 'next/link';
 
@@ -95,12 +95,6 @@ export function NavUser({ user }: { user: User }) {
               <Link href="/my-profile">
                 <User />
                 Lihat Profil
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/settings">
-                <Settings />
-                Pengaturan
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

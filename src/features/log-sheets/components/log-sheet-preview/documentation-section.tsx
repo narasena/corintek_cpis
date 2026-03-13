@@ -135,7 +135,7 @@ export function DocumentationSection({
             <h2 className="text-lg font-bold mb-8 text-center underline">
               DOCUMENTATION
             </h2>
-            <div className="grid grid-cols-1 gap-8">
+            <div className="grid grid-cols-2 gap-8">
               {Array.from({
                 length: Math.max(
                   pagePhotos.filter(p => p.type === 'before').length,

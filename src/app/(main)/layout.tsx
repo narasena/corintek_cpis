@@ -13,6 +13,7 @@ import { AUTH_ROUTES } from '@/features/auth/constants';
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import type { TRbacRole } from '@/lib/rbac/types';
+import { SidebarCloser } from '@/components/sidebar-closer';
 
 function MainLayoutFallback() {
   return (
@@ -81,6 +82,7 @@ async function MainLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
+      <SidebarCloser />
       <div className="Print:hidden">
         <AppSidebar user={sidebarUser} />
       </div>

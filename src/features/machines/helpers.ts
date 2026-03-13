@@ -12,7 +12,7 @@ export function createDefaultMachine(
     projectId,
     unitNumber,
     type,
-    ownership: 'CORINTEK',
+    ownership: 'CLIENT',
     status: 'IDLE',
     capacity: null,
     brand: null,

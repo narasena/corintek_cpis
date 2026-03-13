@@ -21,6 +21,7 @@ export const CreateLogSheetSchema = z.object({
   date: z.coerce.date(),
   notes: z.string().optional(),
   replacedByUserId: z.string().uuid().optional().nullable(),
+  createdByAdmin: z.boolean().optional(),
 });
 
 export const UpdateLogSheetSchema = CreateLogSheetSchema.partial().extend({

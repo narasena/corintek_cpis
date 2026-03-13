@@ -222,7 +222,10 @@ function MachineCard({
                       <SelectValue placeholder="Pilih kepemilikan" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent
+                    position="popper"
+                    className="max-h-[300px] overflow-y-auto"
+                  >
                     {MachineOwnershipEnum.options.map(ownership => (
                       <SelectItem key={ownership} value={ownership}>
                         {ownership}
@@ -251,7 +254,10 @@ function MachineCard({
                       <SelectValue placeholder="Pilih status" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent
+                    position="popper"
+                    className="max-h-[300px] overflow-y-auto"
+                  >
                     {MachineStatusEnum.options.map(status => (
                       <SelectItem key={status} value={status}>
                         {status}

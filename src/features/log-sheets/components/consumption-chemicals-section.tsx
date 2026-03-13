@@ -206,6 +206,7 @@ export function ConsumptionChemicalsSection({
                   placeholder={`Jumlah ${selectedChemical?.unit ? `(${selectedChemical.unit})` : ''}`}
                   value={amount}
                   onChange={e => setAmount(e.target.value)}
+                  onWheel={e => e.currentTarget.blur()}
                   disabled={disabled}
                   min="0"
                   step="0.01"
@@ -296,10 +297,12 @@ function ConsumptionRow({
   const entryKey = entryKeys.value(paramId, null);
   const state = getEntry(entryKey);
 
-  const displayValue =
-    state?.numericValue !== null && state?.numericValue !== undefined
-      ? String(state.numericValue)
-      : '';
+  const handleNumberBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value) {
+      updateNumber(entryKey, value);
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -312,8 +315,13 @@ function ConsumptionRow({
           type="number"
           inputMode="decimal"
           placeholder="0"
-          value={displayValue}
-          onChange={e => updateNumber(entryKey, e.target.value)}
+          defaultValue={
+            state?.numericValue !== null && state?.numericValue !== undefined
+              ? String(state.numericValue)
+              : ''
+          }
+          onWheel={e => e.currentTarget.blur()}
+          onBlur={handleNumberBlur}
           disabled={disabled}
           className="flex-1"
         />
@@ -353,7 +361,10 @@ function CalculatedTotal({
       ? afterValue - beforeValue
       : null;
 
-  const displayValue = calculatedTotal !== null ? String(calculatedTotal) : '-';
+  const displayValue =
+    calculatedTotal !== null && calculatedTotal >= 0
+      ? String(calculatedTotal)
+      : '—';
 
   return (
     <div className="flex items-center justify-between py-2">

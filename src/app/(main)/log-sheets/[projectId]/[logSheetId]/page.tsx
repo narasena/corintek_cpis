@@ -326,9 +326,14 @@ export default function LogSheetDetailPage() {
         )}
       <AlertDialog open={isSubmitOpen} onOpenChange={setIsSubmitOpen}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Konfirmasi pengiriman log sheet</AlertDialogTitle>
-            <AlertDialogDescription>
+          <AlertDialogHeader
+            className="!bg-primary !text-white -mx-6 -mt-6 px-6 py-4 rounded-t-lg"
+            style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+          >
+            <AlertDialogTitle className="!text-white">
+              Konfirmasi pengiriman log sheet
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/80">
               Setelah dikirim, log sheet terkunci dan tidak bisa diubah.
               Pastikan semua data sudah benar.
             </AlertDialogDescription>
@@ -346,9 +351,14 @@ export default function LogSheetDetailPage() {
       </AlertDialog>
       <AlertDialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Tolak Log Sheet</AlertDialogTitle>
-            <AlertDialogDescription>
+          <AlertDialogHeader
+            className="!bg-primary !text-white -mx-6 -mt-6 px-6 py-4 rounded-t-lg"
+            style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+          >
+            <AlertDialogTitle className="!text-white">
+              Tolak Log Sheet
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/80">
               Berikan alasan penolakan untuk membantu teknisi memperbaiki log
               sheet ini. Log sheet akan dikembalikan ke status draft.
             </AlertDialogDescription>
@@ -375,9 +385,14 @@ export default function LogSheetDetailPage() {
       </AlertDialog>
       <AlertDialog open={isApproveOpen} onOpenChange={setIsApproveOpen}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Setuju Log Sheet?</AlertDialogTitle>
-            <AlertDialogDescription>
+          <AlertDialogHeader
+            className="!bg-primary !text-white -mx-6 -mt-6 px-6 py-4 rounded-t-lg"
+            style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+          >
+            <AlertDialogTitle className="!text-white">
+              Setuju Log Sheet?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/80">
               Log sheet akan disetujui dan dikunci.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -537,20 +552,25 @@ export default function LogSheetDetailPage() {
                 onSigned={handleSignatureUpdate}
                 onSuccess={handleTechnicianSignatureSuccess}
               />
-              <SignatureSection
-                logSheetId={logSheetId}
-                role="CLIENT_PIC"
-                canSign={canSignClientPic}
-                existingUrl={
-                  localSignatureUrls.CLIENT_PIC ??
-                  detail.logSheet.clientPicSignatureUrl
-                }
-                signedAt={detail.logSheet.clientPicSignedAt}
-                signedByName={clientPicSignedByName}
-                isLocked={isLocked}
-                onSigned={handleSignatureUpdate}
-                onSuccess={handleClientPicSignatureSuccess}
-              />
+              {/* Only show CLIENT_PIC signature for non-technician roles */}
+              {(viewerRole === 'ADMIN' ||
+                viewerRole === 'CLIENT_TECHNICIAN' ||
+                viewerRole === 'CLIENT_SUPERVISOR') && (
+                <SignatureSection
+                  logSheetId={logSheetId}
+                  role="CLIENT_PIC"
+                  canSign={canSignClientPic}
+                  existingUrl={
+                    localSignatureUrls.CLIENT_PIC ??
+                    detail.logSheet.clientPicSignatureUrl
+                  }
+                  signedAt={detail.logSheet.clientPicSignedAt}
+                  signedByName={clientPicSignedByName}
+                  isLocked={isLocked}
+                  onSigned={handleSignatureUpdate}
+                  onSuccess={handleClientPicSignatureSuccess}
+                />
+              )}
             </div>
           </div>
         </fieldset>

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod/v4';
 import { actionFactory } from '@/features/auth/di';
 import { TActionResult } from '@/lib/action-helpers';
+import { logger } from '@/lib/logger';
 import { RbacResource } from '@/lib/rbac';
 import * as logSheetService from './service';
 import { updateLogSheetStatusWithNotifications } from './status-with-notifications';
@@ -128,7 +129,9 @@ export const getAllLogSheetsAction = actionFactory.protected(
     return logSheetService.getAllLogSheets(projectIds ?? undefined);
   },
   {
-    metadata: { rbac: { resource: RbacResource.REPORTS, capability: 'read' } },
+    metadata: {
+      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'read' },
+    },
   }
 );
 
@@ -136,7 +139,10 @@ export const createLogSheetAction = actionFactory.protected(
   async ({ input, actor }) => {
     await projectService.assertCanAccessProject(actor, input.projectId);
     await logSheetService.assertCanCreateLogSheet(actor, input.projectId);
-    const logSheet = await logSheetService.createLogSheet(input);
+    const logSheet = await logSheetService.createLogSheet({
+      ...input,
+      createdByAdmin: actor.role === 'ADMIN' ? true : undefined,
+    });
 
     revalidateLogSheetPaths(input.projectId);
     return logSheet;
@@ -365,7 +371,6 @@ export const saveLogSheetEntriesAction = actionFactory.protected(
 
     // Check for limit breaches and notify
     try {
-      console.log('[DEBUG] Checking for limit breaches...');
       const detail = await logSheetService.getLogSheetDetail(input.logSheetId);
       const technicianIds = getTechnicianUserIds(detail);
 
@@ -374,8 +379,11 @@ export const saveLogSheetEntriesAction = actionFactory.protected(
         technicianUserIds: technicianIds,
         detail,
       });
-    } catch (error) {
-      console.error('[CPIS-ERROR] LogSheet.SaveEntries.Notify:', error);
+    } catch (notificationError) {
+      logger.error('LogSheet', 'Notification', 'Failed to send', {
+        error: notificationError,
+      });
+      // Don't re-throw - we still want to save the entry
     }
 
     const projectId = await logSheetService.getLogSheetProjectId(
@@ -489,6 +497,11 @@ export const saveLogSheetSignatureAction = actionFactory.protected(
     const projectId = await logSheetService.getLogSheetProjectId(logSheetId);
     if (!projectId) {
       throw new Error('Log sheet tidak ditemukan');
+    }
+
+    // Prevent ADMIN from signing as CLIENT_PIC
+    if (signatureRole === 'CLIENT_PIC' && actor.role === 'ADMIN') {
+      throw new Error('Unauthorized: Admin cannot sign as client PIC');
     }
 
     const matches = dataUrl.match(

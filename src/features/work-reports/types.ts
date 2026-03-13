@@ -15,6 +15,7 @@ export const WorkReportSchema = z.object({
   zone: z.string().optional(),
   machineIds: z.array(z.string()),
   status: WorkReportStatusEnum.optional(),
+  createdByAdmin: z.boolean().optional(),
 });
 
 export const UpdateWorkReportSchema = WorkReportSchema.extend({

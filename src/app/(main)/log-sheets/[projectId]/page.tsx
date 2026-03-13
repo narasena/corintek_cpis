@@ -36,6 +36,11 @@ export default function ProjectLogSheetsPage() {
     'delete'
   );
 
+  const canCreate =
+    actor?.role !== 'CLIENT' &&
+    actor?.role !== 'CLIENT_SUPERVISOR' &&
+    canAccess(actor?.role ?? '', RbacResource.LOG_SHEETS, 'create');
+
   const [project, setProject] = useState<IProject | null>(null);
   const [logSheets, setLogSheets] = useState<TLogSheetRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,18 +111,20 @@ export default function ProjectLogSheetsPage() {
           <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href={`/my-projects/${projectId}`}>Kembali ke Proyek</Link>
           </Button>
-          <LogSheetDialog
-            projectId={projectId}
-            onCreated={logSheetId =>
-              router.push(`/log-sheets/${projectId}/${logSheetId}`)
-            }
-            onSuccess={() => refresh()}
-            trigger={
-              <Button className="w-full sm:w-auto">
-                <Plus className="mr-2 h-4 w-4" /> Tambah Log Sheet
-              </Button>
-            }
-          />
+          {canCreate && (
+            <LogSheetDialog
+              projectId={projectId}
+              onCreated={logSheetId =>
+                router.push(`/log-sheets/${projectId}/${logSheetId}`)
+              }
+              onSuccess={() => refresh()}
+              trigger={
+                <Button className="w-full sm:w-auto">
+                  <Plus className="mr-2 h-4 w-4" /> Tambah Log Sheet
+                </Button>
+              }
+            />
+          )}
         </div>
       </div>
 

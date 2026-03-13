@@ -155,14 +155,14 @@ export function SignaturePad({ disabled, onChange }: TSignaturePadProps) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 h-full flex flex-col">
       <div
         ref={containerRef}
-        className="relative w-full max-w-full border rounded-md bg-white overflow-hidden touch-none select-none"
+        className="relative flex-1 min-h-[150px] border rounded-md bg-white overflow-hidden touch-none select-none"
       >
         <canvas
           ref={canvasRef}
-          className="block w-full h-auto"
+          className="absolute inset-0 w-full h-full"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -178,19 +178,6 @@ export function SignaturePad({ disabled, onChange }: TSignaturePadProps) {
           disabled={disabled}
         >
           Ulangi
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          disabled={disabled || !hasStroke}
-          onClick={() => {
-            const canvas = canvasRef.current;
-            if (!canvas || !onChange) return;
-            const dataUrl = canvas.toDataURL('image/png');
-            onChange(dataUrl);
-          }}
-        >
-          Simpan
         </Button>
       </div>
     </div>

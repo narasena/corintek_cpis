@@ -109,18 +109,24 @@ export function SignatureSection({
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Tanda Tangan {label}</DialogTitle>
+        <DialogContent className="w-[95vw] max-w-lg h-[85vh] flex flex-col p-0 gap-0">
+          <DialogHeader
+            className="px-4 py-3 m-0 rounded-t-lg shrink-0"
+            style={{ backgroundColor: 'hsl(var(--primary))' }}
+          >
+            <DialogTitle className="text-white text-base">
+              Tanda Tangan {label}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-xs text-muted-foreground">
-              Gunakan jari (di mobile) atau mouse/stylus (di desktop) untuk
-              menggambar tanda tangan pada kotak di bawah. Area ini dioptimalkan
-              untuk orientasi landscape 16:9.
+          <div className="flex-1 flex flex-col overflow-hidden px-4 pb-4">
+            <p className="text-xs text-muted-foreground mb-2 shrink-0">
+              Gunakan jari (di mobile) atau mouse/stylus untuk menggambar tanda
+              tangan
             </p>
-            <SignaturePad disabled={isSaving} onChange={setDataUrl} />
-            <div className="flex justify-end gap-2">
+            <div className="flex-1 min-h-0">
+              <SignaturePad disabled={isSaving} onChange={setDataUrl} />
+            </div>
+            <div className="flex justify-end gap-2 pt-3 shrink-0 border-t">
               <Button
                 type="button"
                 variant="outline"
