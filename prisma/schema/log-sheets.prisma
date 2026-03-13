@@ -51,10 +51,16 @@ model LogSheet {
   clientPicSignedByUserId String?
   clientPicSignedBy       User?   @relation("LogSheetClientPicSignedBy", fields: [clientPicSignedByUserId], references: [id])
 
+  rejectedAt       DateTime?
+  rejectedByUserId String?
+  rejectedBy       User?   @relation("LogSheetRejectedBy", fields: [rejectedByUserId], references: [id])
+  rejectionReason  String?
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  @@unique([projectId, date])
   @@index([projectId, date])
   @@map("log_sheets")
 }
