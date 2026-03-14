@@ -59,7 +59,7 @@ export const getUserColumns = ({
     accessorKey: 'role',
     header: 'Peran',
     cell: ({ row }) => (
-      <span className="text-xs bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">
+      <span className="text-xs bg-blue-200 dark:bg-blue-800 px-2 py-1 rounded">
         {row.original.role}
       </span>
     ),
@@ -71,8 +71,8 @@ export const getUserColumns = ({
       <span
         className={`text-xs px-2 py-1 rounded ${
           row.original.isActive
-            ? 'bg-green-100 dark:bg-green-900'
-            : 'bg-red-100 dark:bg-red-900'
+            ? 'bg-green-200 dark:bg-green-800'
+            : 'bg-red-200 dark:bg-red-800'
         }`}
       >
         {row.original.isActive ? 'Aktif' : 'Nonaktif'}

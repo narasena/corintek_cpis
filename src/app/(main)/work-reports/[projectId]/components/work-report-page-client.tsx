@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ChevronLeft } from 'lucide-react';
 
 import { WorkReportRow } from '@/features/work-reports/types';
 import { WorkReportList } from './work-report-list';
@@ -41,12 +42,23 @@ export function WorkReportPageClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* UX-202: Fixed mobile header layout - responsive flex */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/my-projects/${projectId}`}>Kembali ke Proyek</Link>
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="gap-1 touch-target"
+          >
+            <Link href={`/my-projects/${projectId}`}>
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Kembali ke Proyek</span>
+            </Link>
           </Button>
-          <h1 className="text-2xl font-bold tracking-tight">Laporan Kerja</h1>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+            Laporan Kerja
+          </h1>
         </div>
         <WorkReportCreateDialog
           projectId={projectId}

@@ -55,9 +55,9 @@ function getStatusBadge(
   status: TTechnicianAttendanceStatus['attendanceStatus']
 ) {
   const styles = {
-    BELUM_ABSEN: 'bg-gray-100 text-gray-800',
-    SUDAH_ABSEN: 'bg-green-100 text-green-800',
-    SUDAH_PULANG: 'bg-blue-100 text-blue-800',
+    BELUM_ABSEN: 'bg-gray-200 text-gray-900',
+    SUDAH_ABSEN: 'bg-green-200 text-green-900',
+    SUDAH_PULANG: 'bg-blue-200 text-blue-900',
   };
   const labels = {
     BELUM_ABSEN: 'Belum Absen',
