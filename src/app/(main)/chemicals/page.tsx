@@ -31,10 +31,6 @@ export default function ChemicalsPage() {
     }
   }, [user, isLoading, router]);
 
-  if (isLoading || !user || user.role !== 'ADMIN') {
-    return null;
-  }
-
   const fetchChemicals = useCallback(async () => {
     const result = await getAllChemicalsAction({});
     if (result.success && Array.isArray(result.data)) {
@@ -66,6 +62,10 @@ export default function ChemicalsPage() {
     () => getChemicalColumns({ onEdit: handleEdit, onRefresh: fetchChemicals }),
     [fetchChemicals]
   );
+
+  if (isLoading || !user || user.role !== 'ADMIN') {
+    return null;
+  }
 
   return (
     <div className="space-y-4 md:space-y-8">

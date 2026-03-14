@@ -199,92 +199,72 @@
 | BUG-015 | Attendance  | No "Not checked in today" prompt or checkout button on technician dashboard                       | Fixed  |
 | BUG-016 | Project     | New project can be created without assigning a CLIENT_PIC                                         | Fixed  |
 | BUG-017 | Permissions | Chemicals and Parameters pages are accessible to non-admin roles (nav hidden but route unguarded) | Fixed  |
+| BUG-018 | Input       | Number inputs (all forms) increment/decrement on scroll — unintended value changes                | Open   |
 
-### BUG-004 — No Loading Indicator on Logsheet Creation
+### BUG-017 — Parameters/Chemicals Routes Unguarded for Non-Admin
 
-**Symptom:** After clicking "Create Logsheet", there is a ~3-second delay with no visual feedback. Users may click again, creating duplicate logsheets.  
-**Fix:** Add `isPending` loading state to the create button or show a skeleton/spinner.  
-**Status:** Fixed (Loader2 spinner added to dashboard "Buat Log Sheet Baru" button)
-
----
-
-### BUG-005 — No Duplicate Logsheet Guard Per Day Per Project
-
-**Symptom:** Two logsheets can be created for the same project on the same day.  
-**Root Cause:** `createLogSheet` service does not check for an existing logsheet on the same `date` + `projectId`.  
-**Fix:**
-
-- Added `@@unique([projectId, date])` constraint to `LogSheet` model in `prisma/schema/log-sheets.prisma`
-- Added pre-check in `createLogSheet` service to query for existing logsheet before creating
-- Applied constraint to database via `prisma db push`
-
-**Status:** Fixed (2026-03-12)
+**Symptom:** Non-admin roles can directly navigate to `/parameters` and `/chemicals` even though the sidebar nav items are hidden.  
+**Root Cause:** Nav visibility is filtered via RBAC, but the page-level `ensureAccess` check may be absent or misconfigured. Needs route-level verification.  
+**Fix:** Added RBAC protection to both pages using `useSession` hook and client-side redirect for non-ADMIN users. Pages now redirect to `/` with an error toast if user role is not ADMIN.  
+**Status:** Fixed
 
 ---
 
-### BUG-006 & BUG-007 — Missing PIC Approval Workflow
+### BUG-018 — React Hooks Rules Violation (CRITICAL PATTERN)
 
-**Symptom:** After a technician submits a logsheet, the PIC has no in-app signal or enforced action to approve it. If the PIC rejects, the logsheet stays locked rather than unlocking for technician correction.  
-**Business Impact:** Logsheets are not counted until approved; this blocks reporting accuracy.
+**Symptom:** Runtime error: "Rendered more hooks than during the previous render" on Parameters and Chemicals pages.  
+**Root Cause:** **Hooks called AFTER early return** — violates React's Rules of Hooks.
 
-**Fix (2026-03-12):**
+```tsx
+// ❌ WRONG - hooks after early return
+export default function Page() {
+  const { user, isLoading } = useSession();
 
-1. **Prisma Schema** (`prisma/schema/log-sheets.prisma`):
-   - Added `rejectedAt`, `rejectedByUserId`, `rejectionReason` fields to `LogSheet` model
-   - Added `rejectedBy` relation to `User` model
+  if (isLoading) return null;  // Early return - no hooks called here
 
-2. **Status Transition Logic** (`src/features/log-sheets/log-sheet-status.ts`):
-   - Modified `decideLogSheetStatusTransition` to allow SUBMITTED → DRAFT transition (rejection)
-   - Only `isInternalPic` (ADMIN, SUPERVISOR with PROJECT_PIC assignment) can reject
+  const [state, setState] = useState([]);   // ERROR: Hook called after conditional!
+  const handleEdit = () => {...};
+  const columns = useMemo(...);              // ERROR: Hook called after conditional!
+}
+```
 
-3. **Status Service** (`src/features/log-sheets/log-sheet-status.service.ts`):
-   - Added `options?: { rejectionReason?: string }` parameter to `updateLogSheetStatus`
-   - Added `isClientPic` check for CLIENT_SUPERVISOR role with CLIENT_PIC assignment
-   - Stores rejection reason, timestamp, and user ID when transitioning to DRAFT from SUBMITTED
+When `isLoading` is `true`, hooks are skipped. When it becomes `false`, hooks are called — **different order = crash**.
 
-4. **Status Notifications** (`src/features/log-sheets/status-with-notifications.ts`):
-   - Extended input type to include optional `rejectionReason`
+**Fix:** Move ALL hooks **before** the early return:
 
-5. **Actions** (`src/features/log-sheets/actions.ts`):
-   - Added `rejectLogSheetAction` with RBAC:
-     - Only CLIENT_SUPERVISOR with CLIENT_PIC assignment OR ADMIN/SUPERVISOR can reject
-     - Validates project assignment for CLIENT_SUPERVISOR role
-   - Returns logsheet to DRAFT status with optional rejection reason
+```tsx
+// ✅ CORRECT - all hooks before early return
+export default function Page() {
+  const { user, isLoading } = useSession();
 
-6. **Types**:
-   - Updated `ILogSheet` interface in `src/features/log-sheets/types.ts` with rejection fields
-   - Updated `TDetail` in `src/app/(main)/log-sheets/[projectId]/[logSheetId]/types.ts`
-   - Updated `TPrismaLogSheetFields` in `src/features/log-sheets/dto.ts`
+  // React hooks (useState, useEffect, useCallback, useMemo)
+  const [state, setState] = useState([]);
+  const fetchData = useCallback(async () => {...}, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-7. **UI** (`src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.tsx`):
-   - Added reject dialog with reason textarea
-   - Added "Tolak" button in CLIENT_SUPERVISOR preview mode (only shows when status is SUBMITTED)
-   - Shows rejection reason banner if logsheet was previously rejected
+  // Regular functions that hooks depend on
+  const handleEdit = () => {...};
 
-**Status:** Fixed (2026-03-12)
+  // useMemo AFTER functions it depends on, but BEFORE early return
+  const columns = useMemo(() => {...}, [fetchData]);
 
----
+  // Early return at the END
+  if (isLoading || !user) return null;
 
-### BUG-012 — Print Preview Tables Overflow Page
+  return (...);
+}
+```
 
-**Symptom:** Print preview tables overflow the page width - Water Quality and Condenser Approach tables with 31 days of data exceed A4 landscape page width.  
-**Root Cause:** No proper `@media print` CSS handling for wide tables - missing overflow handling and scaling.
+**Correct Hook Order:**
 
-**Fix:**
-
-1. Updated `@media print` styles in `print/page.tsx`:
-   - Added `overflow-x: visible` to table sections
-   - Added `white-space: nowrap` to table cells to prevent line breaks
-   - Added `page-break-inside: avoid` to prevent table row breaks
-   - Added `.analytics-table-wrapper` with proper overflow handling
-   - Set max-width constraint (277mm) for landscape A4
-
-2. Updated `WaterQualityTable` component:
-   - Added wrapper div with `print:overflow-visible` class
-   - Added `analytics-table-wrapper` container with overflow handling
-
-3. Updated `CondenserApproachTable` component:
-   - Same wrapper pattern as WaterQualityTable
+1. React/Next.js hooks (`useRouter`, `useSearchParams`, `useSession`)
+2. All `useState` calls
+3. All `useCallback` calls
+4. All `useEffect` calls
+5. Regular functions that hooks depend on
+6. `useMemo` calls (functions it references must be defined first)
+7. Early return `if` statement
+8. Render
 
 **Status:** Fixed
 

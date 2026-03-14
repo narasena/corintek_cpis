@@ -37,14 +37,6 @@ export default function ParametersPage() {
     }
   }, [user, isLoading, router]);
 
-  if (isLoading || !user || user.role !== 'ADMIN') {
-    return null;
-  }
-
-  const onTabChange = (value: string) => {
-    router.push(`${pathname}?tab=${value}`);
-  };
-
   const [parameters, setParameters] = useState<IParameter[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedParameter, setSelectedParameter] = useState<
@@ -72,6 +64,10 @@ export default function ParametersPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const onTabChange = (value: string) => {
+    router.push(`${pathname}?tab=${value}`);
+  };
 
   const handleEdit = async (parameter: IParameter) => {
     setSelectedParameter(parameter);
@@ -115,6 +111,10 @@ export default function ParametersPage() {
       }),
     [fetchData]
   );
+
+  if (isLoading || !user || user.role !== 'ADMIN') {
+    return null;
+  }
 
   return (
     <div className="space-y-4 md:space-y-8">
