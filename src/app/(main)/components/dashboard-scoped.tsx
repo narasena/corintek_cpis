@@ -116,9 +116,10 @@ export function DashboardScoped({
         return;
       }
 
-      toast.success('Log sheet dibuat');
       const logSheetId = res.data.id;
-      router.push(`/log-sheets/${projectId}/${logSheetId}`);
+      toast.success('Log sheet dibuat');
+      // Use Promise-based approach to ensure navigation completes
+      await router.push(`/log-sheets/${projectId}/${logSheetId}`);
       router.refresh();
     });
   };
