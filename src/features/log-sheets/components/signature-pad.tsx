@@ -185,7 +185,11 @@ export function SignaturePad({
     if (!isDrawing) return;
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.releasePointerCapture(e.pointerId);
+      try {
+        canvas.releasePointerCapture(e.pointerId);
+      } catch {
+        // Pointer may not be captured or already released
+      }
     }
     finishStroke();
   };
@@ -194,7 +198,11 @@ export function SignaturePad({
     if (!isDrawing) return;
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.releasePointerCapture(e.pointerId);
+      try {
+        canvas.releasePointerCapture(e.pointerId);
+      } catch {
+        // Pointer may not be captured or already released
+      }
     }
     finishStroke();
   };
