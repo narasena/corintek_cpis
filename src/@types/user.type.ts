@@ -79,6 +79,7 @@ export const userCreateSchema = z
  */
 export const userUpdateSchema = z
   .object({
+    id: z.uuid(),
     firstName: z.string().min(1).max(100).optional(),
     lastName: z.string().max(100).optional().nullable(),
     idNumber: z.string().max(50).optional().nullable(),

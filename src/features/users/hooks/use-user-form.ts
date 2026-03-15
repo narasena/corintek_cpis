@@ -11,6 +11,7 @@ import {
   TUserUpdateInput,
   TUserResponse,
   TUserRole,
+  TEmploymentStatus,
 } from '@/@types/user.type';
 import { createUserAction, updateUserAction } from '@/features/users/actions';
 import { useUserClients } from '@/features/users/hooks/use-user-clients';
@@ -44,13 +45,15 @@ function getFormDefaults(
       password: '',
       confirmPassword: '',
       address: '',
-      role: undefined,
-      employmentStatus: undefined,
+      role: '' as TUserRole,
+      employmentStatus: '' as TEmploymentStatus,
       clientId: null,
     };
   }
 
   return {
+    // @ts-expect-error - id is required by schema but may be undefined at form init; validated at submit
+    id: defaultValues?.id,
     firstName: defaultValues?.firstName || '',
     lastName: defaultValues?.lastName || '',
     idNumber: defaultValues?.idNumber || '',
