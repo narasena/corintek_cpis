@@ -2,6 +2,8 @@
 
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
 import { Button } from '@/components/ui/button';
 import { CrudDialog } from '@/components/crud-dialog';
 import { WorkReportForm } from '@/features/work-reports/components/work-report-form';
@@ -16,6 +18,13 @@ export function WorkReportCreateDialog({
   defaultOpen,
 }: WorkReportCreateDialogProps) {
   const [open, setOpen] = useState(!!defaultOpen);
+  const router = useRouter();
+
+  const handleSuccess = (workReportId: string) => {
+    setOpen(false);
+    router.push(`/work-reports/${projectId}/${workReportId}`);
+    router.refresh();
+  };
 
   return (
     <CrudDialog
@@ -30,10 +39,10 @@ export function WorkReportCreateDialog({
         </Button>
       }
     >
-      {({ onSuccess, onCancel }) => (
+      {({ onCancel }) => (
         <WorkReportForm
           projectId={projectId}
-          onSuccess={onSuccess}
+          onSuccessWithId={handleSuccess}
           onCancel={onCancel}
         />
       )}

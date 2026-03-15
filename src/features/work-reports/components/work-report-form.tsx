@@ -41,7 +41,8 @@ import type { WorkReportRow } from '@/features/work-reports/types';
 interface IWorkReportFormProps {
   projectId: string;
   workReportId?: string;
-  onSuccess: () => void;
+  onSuccess?: () => void;
+  onSuccessWithId?: (workReportId: string) => void;
   onCancel: () => void;
 }
 
@@ -49,6 +50,7 @@ export function WorkReportForm({
   projectId,
   workReportId,
   onSuccess,
+  onSuccessWithId,
   onCancel,
 }: IWorkReportFormProps) {
   const [isPending, startTransition] = useTransition();
@@ -383,7 +385,11 @@ export function WorkReportForm({
               description: 'Data dan foto berhasil disimpan',
             }
           );
-          onSuccess();
+          // Call both callbacks - onSuccess for dialog close, onSuccessWithId for navigation
+          onSuccess?.();
+          if (reportId && onSuccessWithId) {
+            onSuccessWithId(reportId);
+          }
         } else {
           // If upload errors occurred, DO NOT close the dialog (don't call onSuccess)
           // The user can retry uploading the remaining pending photos.
