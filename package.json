@@ -30,7 +30,13 @@
     "test:e2e:ui": "dotenv -e .env.e2e.local -- playwright test --ui",
     "test:e2e:debug": "dotenv -e .env.e2e.local -- playwright test --debug",
     "test:e2e:headed": "dotenv -e .env.e2e.local -- playwright test --headed",
-    "record:videos": "npx tsx scripts/record-videos.ts"
+    "record:videos": "npx tsx scripts/record-videos.ts",
+    "prisma:migrate:uat": "dotenv -e .env.uat -- npx prisma migrate dev",
+    "prisma:status:uat": "dotenv -e .env.uat -- npx prisma migrate status",
+    "prisma:studio:uat": "dotenv -e .env.uat -- npx prisma studio",
+    "prisma:generate:uat": "dotenv -e .env.uat -- npx prisma generate",
+    "prisma:push:uat": "dotenv -e .env.uat -- npx prisma db push",
+    "prisma:seed:uat": "dotenv -e .env.uat -- npx prisma db seed"
   },
   "prisma": {
     "schema": "prisma/schema",

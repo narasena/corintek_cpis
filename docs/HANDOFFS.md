@@ -1,43 +1,76 @@
-# Session Handoff — 2026-04-29 (Logsheet Optional Machine-Type Validation)
+# Session Handoff — 2026-04-29 (UAT Environment Setup & Security Fix)
 
-## Target: Allow chiller-only or cooling-tower-only logsheet submissions
+> **⚠ TOP PRIORITY — Development Handoff Required**  
+> The `prisma/seed.ts` file previously contained hardcoded admin credentials (`admin@corintek.com / Corintek123!`). These have been externalized to environment variables for UAT. The development branch still uses hardcoded values and must be updated. Do not deploy or share any code until development branch is fixed. See: `docs/CONTEXT.md` → "Active Gotchas ⚠️" (add entry: "Secrets: Never hardcode credentials — use env vars SEED_ADMIN_EMAIL/PASSWORD")".
 
-**Branch:** `development_v2`
+## Target: Create isolated UAT environment with secure seeding
+
+**Branch:** `staging/uat-setup` (new)
 
 ### Completed This Session
 
 | Task | Status |
 |------|--------|
-| Analyze current validation logic requiring both machine types | ✅ Complete |
-| Relax `validateMachineCategory` to skip when machine type inactive | ✅ Complete |
-| Add overall guard requiring at least one machine type active | ✅ Complete |
-| Make raw water check conditional on active CTs | ✅ Complete |
-| Update `approval-validation` to also skip raw water when no CTs | ✅ Complete |
-| Fix `GENERAL_CONDITION` note requirement (was incorrectly excluded) | ✅ Complete |
-| Add 7 new unit tests covering chiller-only, CT-only, both-off, raw-water skip | ✅ Complete |
-| Update 2 existing tests to match new behavior | ✅ Complete |
-| Fix CT-only test data (duplicate prop, missing cycle raw water) | ✅ Complete |
-| Full test run: targeted test files (43/43 passed) | ✅ Complete |
+| Create Supabase UAT project (free tier, ap-northeast-1) | ✅ Complete |
+| Configure `.env.uat` with UAT DB credentials and R2 worker | ✅ Complete |
+| Add UAT-specific npm scripts (`prisma:seed:uat`, etc.) | ✅ Complete |
+| Create dedicated branch `staging/uat-setup` for UAT | ✅ Complete |
+| Fix seed script for new Parameter schema (ParameterLimit split) | ✅ Complete |
+| Secure admin credentials: moved to `SEED_ADMIN_EMAIL/PASSWORD` env vars | ✅ Complete |
+| Add SEED_CREATE_ADMIN flag to control admin seeding per environment | ✅ Complete |
+| Seed UAT database (admin + parameters + limits) | ✅ Complete |
 
 ### Changes Made
 
 | File | Change |
 |------|--------|
-| `src/features/log-sheets/validation.ts` | Skip type validation when `activeIds.length === 0`; add cross-type guard; make raw water conditional on `activeCTIds` |
-| `src/features/log-sheets/approval-validation.ts` | Wrap raw water check in `if (activeCTs.length > 0)`; remove `GENERAL_CONDITION` exclusion from NOTE requirement |
-| `src/features/log-sheets/validation.characterization.test.ts` | 7 new tests + 2 updated |
-| `src/features/log-sheets/approval-validation.characterization.test.ts` | 3 new tests + data fix |
+| `.env.uat` | Added `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_CREATE_ADMIN=true` |
+| `prisma/seed.ts` | Replaced hardcoded admin credentials with env vars; added `hasLimits` to Parameter seeding; created `ParameterLimitProfile` with limits for 23 numeric parameters |
+| `package.json` | Added `prisma:*:uat` scripts for migrations, seed, studio, generate, push, status |
 
-### Behavior Changes
+### UAT Environment Details
 
-| Scenario | Old Behavior | New Behavior |
-|----------|-------------|-------------|
-| Only chillers active (CTs all off) | Blocked: "Minimal satu Cooling Tower..." | ✅ Pass (consumption + chiller data required) |
-| Only cooling towers active (chillers all off) | Blocked: "Minimal satu Chiller..." | ✅ Pass (consumption + CT data required) |
-| Both machine types off | Blocked: same messages | ❌ Still blocked with generic "Minimal satu unit..." |
-| Raw water required when CTs off | Still collected (bug) | ✅ Skipped (no CT → no raw water) |
-| `GENERAL_CONDITION` note required | ❌ Not enforced (code excluded it) | ✅ Now enforced per UI |
+- **Supabase Project:** `corintek-cpis-uat` (ap-northeast-1)
+- **Database:** PostgreSQL via connection pooling
+- **Branch:** `staging/uat-setup`
+- **Deployment:** Preview deployment configured (Vercel or similar)
+- **Admin Credentials (UAT):**
+  - Email: `admin@corintek.com`
+  - Password: `CorintekUAT123!@#`
+  - **Security:** Unique to UAT, different from development
 
+### Next Steps (Critical)
+
+1. **Fix Development Branch** (`development_v2`):
+   - Update `prisma/seed.ts` on `development_v2` to also use env vars (avoid hardcoded secrets)
+   - Create `.env.development` entries: `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_CREATE_ADMIN=true`
+   - Commit as: `feat(security): externalize seed admin credentials to env vars`
+   - **Priority:** HIGH — addresses security vulnerability
+
+2. **Production Planning**:
+   - For `main`/production: set `SEED_CREATE_ADMIN=false` in `.env.production`
+   - Create initial admin via secure invite flow (not seeding)
+   - Document production bootstrapping process in `docs/PRODUCTION_SETUP.md`
+
+3. **Client Handover**:
+   - Share UAT preview URL with client
+   - Provide UAT admin credentials (use password manager)
+   - Document UAT reset procedure (delete Supabase project, rerun migrations + seed)
+
+### Security Notes
+
+- **Never commit hardcoded credentials** (even in private repos).
+- Use branch-specific env files to inject secrets at runtime.
+- Rotate UAT admin password after client acceptance.
+- Consider adding `.env*` check to pre-commit hooks (if not already present).
+
+### Migration Status
+
+- UAT database fully seeded and operational.
+- All 23 parameters + limits created under `Default Profile`.
+- Parameter schema changes accommodated in seed (limits moved to `ParameterLimit` table).
+
+---
 ### Why This Change?
 
 Field technicians often service only chillers OR only cooling towers on a given day. The existing "active machine" toggle already signals intent. Forcing data entry for inactive machine types creates unnecessary friction and does not match field reality.
