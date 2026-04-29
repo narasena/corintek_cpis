@@ -405,6 +405,7 @@ export default function Page() {
 | BUG-046 | Auth/Session | `actionFactory.protected` wraps RBAC via capability check, but `submitLogSheetAction` and `approveLogSheetAction` both proxy through `updateLogSheetStatusAction` which has the same RBAC level — no distinction between submit-only and approve-only roles | P1       | Fixed                   |
 | BUG-047 | Attendance   | No server-side guard on absence/attendance routes for non-technician access (mirrors BUG-017 pattern)                                                                                                                                                       | P2       | Fixed                   |
 | BUG-048 | Summary Rpt  | `getAllLogSheetsAction` uses `RbacResource.REPORTS` but should use `RbacResource.LOG_SHEETS` — RBAC gap confirmed and fixed                                                                                                                                 | P2       | Fixed                   |
+| BUG-049 | Logsheet     | Water meter camera capture can save black image when stream is stopped before canvas copies current frame                                                                                                                                                   | P1       | Fixed                   |
 
 ### BUG-040 — Debug `console.log` in Production Code
 
@@ -444,16 +445,26 @@ console.log('[DEBUG] Checking for limit breaches...');
 
 ---
 
+### BUG-049 — Water Meter Camera Capture Saves Black Image
+
+**Location:** `src/components/camera-input.tsx:capturePhoto`  
+**Symptom:** Logsheet water meter camera preview is visible, but captured photo is black, especially on first attempt on mobile/Vercel production.  
+**Root Cause:** `capturePhoto()` stopped the `MediaStream` before `processImagePipeline(video, ...)` copied pixels from the live `<video>` into canvas. On mobile browsers, stopping tracks can blank the hardware-backed video surface immediately, so `canvas.drawImage(video, ...)` reads black.  
+**Fix:** Capture/compress from active video first, then stop camera after canvas processing succeeds. Remove forced readiness fallback that can enable capture before a drawable frame exists.  
+**Status:** Fixed
+
+---
+
 ## Summary
 
 | Category                            | Count |
 | :---------------------------------- | ----: |
 | P0 Blocker                          |     0 |
-| P1 High                             |    14 |
+| P1 High                             |    15 |
 | P2 Medium                           |    17 |
 | P3 Low / Needs Clarity              |     5 |
-| Phase 3 — Source-Scan (BUG-040–048) |     9 |
-| **Total unique bugs**               |    45 |
+| Phase 3 — Source-Scan (BUG-040–049) |    10 |
+| **Total unique bugs**               |    46 |
 
 > Note: BUG-044 is a source-level confirmation of BUG-016 (same issue, different layer) and is not counted twice.
 

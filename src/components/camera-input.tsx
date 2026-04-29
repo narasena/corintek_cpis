@@ -26,11 +26,10 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
-   const videoRef = useRef<HTMLVideoElement>(null);
-   const readyCheckInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-   const fallbackTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const readyCheckInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
-   const isMounted = useRef(false);
+  const isMounted = useRef(false);
   const { create: createObjectURL, revoke: revokeCurrentPreview } =
     useObjectURL();
 
@@ -42,94 +41,73 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
     };
   }, []);
 
-   const startCamera = async () => {
-     // Clear any existing timers (defensive)
-     if (readyCheckInterval.current) {
-       clearInterval(readyCheckInterval.current);
-       readyCheckInterval.current = null;
-     }
-     if (fallbackTimeout.current) {
-       clearTimeout(fallbackTimeout.current);
-       fallbackTimeout.current = null;
-     }
+  const startCamera = async () => {
+    if (readyCheckInterval.current) {
+      clearInterval(readyCheckInterval.current);
+      readyCheckInterval.current = null;
+    }
 
-     try {
-       const mediaStream = await navigator.mediaDevices.getUserMedia({
-         video: { facingMode: 'environment' },
-       });
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+      });
 
-       // Prevent race condition if component unmounted
-       if (!isMounted.current) {
-         mediaStream.getTracks().forEach(track => track.stop());
-         return;
-       }
+      // Prevent race condition if component unmounted
+      if (!isMounted.current) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        return;
+      }
 
-       setStream(mediaStream);
-       setIsCameraReady(false);
+      setStream(mediaStream);
+      setIsCameraReady(false);
 
-       if (videoRef.current) {
-         const video = videoRef.current;
-         video.srcObject = mediaStream;
-         // Ensure autoplay is allowed on all devices
-         video.muted = true;
-         video.playsInline = true;
-         // Start playback immediately
-         video.play().catch(e => console.error('Auto-play failed:', e));
-         // Poll for readiness every 100ms
-         readyCheckInterval.current = setInterval(() => {
-           if (video.readyState >= 2) {
-             setIsCameraReady(true);
-             if (readyCheckInterval.current) {
-               clearInterval(readyCheckInterval.current);
-               readyCheckInterval.current = null;
-             }
-             if (fallbackTimeout.current) {
-               clearTimeout(fallbackTimeout.current);
-               fallbackTimeout.current = null;
-             }
-           }
-         }, 100);
-       }
+      if (videoRef.current) {
+        const video = videoRef.current;
+        video.srcObject = mediaStream;
+        video.muted = true;
+        video.playsInline = true;
+        video.play().catch(e => console.error('Auto-play failed:', e));
 
-       // Fallback: force enable after 2s regardless (prevents infinite disable)
-       fallbackTimeout.current = setTimeout(() => {
-         setIsCameraReady(true);
-         fallbackTimeout.current = null;
-       }, 2000);
-     } catch (error) {
-       console.error('Camera access error:', error);
-       toast.error('Gagal mengakses kamera', {
-         description: 'Pastikan izin kamera diberikan.',
-       });
-       setIsOpen(false);
-     }
-   };
+        readyCheckInterval.current = setInterval(() => {
+          if (video.readyState >= 2) {
+            setIsCameraReady(true);
+            if (readyCheckInterval.current) {
+              clearInterval(readyCheckInterval.current);
+              readyCheckInterval.current = null;
+            }
+          }
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Camera access error:', error);
+      toast.error('Gagal mengakses kamera', {
+        description: 'Pastikan izin kamera diberikan.',
+      });
+      setIsOpen(false);
+    }
+  };
 
-   const stopCamera = () => {
-     if (stream) {
-       stream.getTracks().forEach(track => track.stop());
-       setStream(null);
-     }
-     if (readyCheckInterval.current) {
-       clearInterval(readyCheckInterval.current);
-       readyCheckInterval.current = null;
-     }
-     if (fallbackTimeout.current) {
-       clearTimeout(fallbackTimeout.current);
-       fallbackTimeout.current = null;
-     }
-     setIsCameraReady(false);
-   };
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    if (readyCheckInterval.current) {
+      clearInterval(readyCheckInterval.current);
+      readyCheckInterval.current = null;
+    }
+    setIsCameraReady(false);
+  };
 
-   // Sync camera state with Dialog open state
-   useEffect(() => {
-     if (isOpen) {
-       startCamera();
-     } else {
-       stopCamera();
-     }
-     // eslint-disable-next-line react-hooks/exhaustive-deps
-   }, [isOpen]);
+  // Sync camera state with Dialog open state
+  useEffect(() => {
+    if (isOpen) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -152,7 +130,6 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
     }
 
     setIsProcessing(true);
-    stopCamera(); // Freeze UX immediately
 
     try {
       // Use the unified pipeline: Crop 1:1 -> Compress WebP -> Return File
@@ -161,6 +138,8 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
         maxDimension: 1600,
         type: 'image/webp',
       });
+
+      stopCamera();
 
       const previewUrl = createObjectURL(compressedFile);
 

@@ -1,17 +1,41 @@
-# Session Handoff — 2026-04-29 (Log Sheet Transaction Timeout)
+# Session Handoff — 2026-04-29 (Camera Black Capture)
 
-## Current Status: Fix Applied — Awaiting Verification & Commit
+## Current Status: Fix Applied — Build Passing
 
-**Branch:** `development_v2` (merged `fix/log-sheets/transaction-timeout`)
+**Branch:** `development_v2`
 
 ### Completed This Session
 
 | Task | Status |
 |------|--------|
-| Fix transaction timeout on Vercel | ✅ Complete — merged into development_v2 |
-| Run characterization tests | ✅ 78/78 passed |
-| Update CHANGELOG | ✅ Complete |
-| Document root cause & fix | ✅ Complete |
+| Diagnose water meter camera black first capture | ✅ Complete |
+| Identify root cause | ✅ Complete — camera stream was stopped before canvas copied video pixels |
+| Fix capture order in `CameraInput` | ✅ Complete |
+| Remove forced camera-ready fallback | ✅ Complete |
+| Log bug as BUG-049 | ✅ Complete |
+| Run production build | ✅ Passed (`npm run build`) |
+
+### Root Cause
+
+`src/components/camera-input.tsx` called `stopCamera()` before `processImagePipeline(video, ...)`. On mobile browsers, stopping `MediaStreamTrack`s can immediately blank the hardware-backed `<video>` surface. Canvas then draws black pixels even though the preview was visible just before capture.
+
+### Fix
+
+Capture/compress from active video first, then stop the camera after canvas processing succeeds. Camera button readiness still waits for `video.readyState >= 2`, but no longer has a forced timeout fallback that can enable capture before the video is drawable.
+
+### Files Modified
+
+1. `src/components/camera-input.tsx` — capture order and readiness cleanup
+2. `docs/bugs.md` — added BUG-049
+3. `docs/HANDOFFS.md` — current session state
+
+### Verification
+
+- `npm run build` passed.
+
+### Cold Start Action
+
+Test on deployed Vercel/mobile Android: open logsheet water meter camera, wait for preview, capture once. Expected: first capture matches preview and is not black.
 
 ---
 
