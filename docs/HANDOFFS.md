@@ -1,21 +1,45 @@
-# Session Handoff — 2026-03-14 (UI/UX Audit)
+# Session Handoff — 2026-04-29 (Log Sheet Transaction Timeout)
 
-## Current Status: UI/UX Audit Complete - Documentation Created
+## Current Status: Fix Applied — Awaiting Verification & Commit
 
-**Branch:** `development_v2`
+**Branch:** `fix/log-sheets/transaction-timeout`
 
-### Completed This Session
+### Problem
+Vercel preview deployments fail when saving logsheet entries:
+```
+Transaction API error: A query cannot be executed on an expired transaction.
+Timeout: 5000 ms, but 5668 ms elapsed
+```
+Local dev works fine — Vercel's remote DB latency pushes transaction past 5s default timeout.
 
-| Task | Status |
-|------|--------|
-| Comprehensive UI/UX audit across all modules | ✅ Complete |
-| Created `docs/UI_AUDIT.md` with findings | ✅ Complete |
-| Added UI/UX items to `docs/BACKLOG.md` | ✅ Complete |
-| Awaiting approval to implement fixes | ⏳ Pending |
+### Root Cause
+`upsertLogSheetEntries` processes entries **sequentially** inside a single transaction:
+```typescript
+for (const entry of entries) {
+  await upsertSingleLogSheetEntry(...); // each await = network round-trip
+}
+```
+With many entries, cumulative RTT exceeds Prisma's 5s transaction timeout.
+
+### Fix Applied
+1. **Parallelized entry processing** — replaced sequential loop with `Promise.all()`. Entries are independent (disjoint keys) and safe to run concurrently.
+2. **Extended transaction timeout** to 30 seconds via `{ timeout: 30000 }` option.
+
+**Modified:** `src/features/log-sheets/log-sheet-entries.service.ts` (lines 210–229)
+
+### Verification
+- ✅ Characterization tests pass (78/78)
+- ✅ Service unit tests pass (4/5 — 1 pre-existing failure unrelated to this fix)
+- ✅ Type-check clean
+
+### Next Steps
+1. Merge `fix/log-sheets/transaction-timeout` into `development_v2`
+2. Deploy to Vercel preview to confirm timeout resolved
+3. Monitor production for similar transaction patterns elsewhere
 
 ---
 
-## UI/UX Audit Summary
+# Session Handoff — 2026-03-14 (UI/UX Audit)
 
 **Critical (P0) Issues Found:** 3
 - Work Reports header misalignment (mobile)

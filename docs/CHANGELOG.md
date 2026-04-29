@@ -6,6 +6,19 @@
 
 ---
 
+## v0.7.1 — Log Sheet Transaction Timeout Fix (2026-04-29)
+
+**Branch:** `fix/log-sheets/transaction-timeout`
+
+### Bug Fixes
+
+- [x] **Transaction timeout on Vercel:** Fixed `P2028` error when saving logsheet entries with many rows. Parallelized entry processing with `Promise.all()` and increased transaction timeout from 5s to 30s.
+  - Modified `src/features/log-sheets/log-sheet-entries.service.ts`
+  - Root cause: Sequential `for...await` loop accumulated network RTT beyond 5s on Vercel's remote DB
+  - All characterization tests pass (78/78)
+
+---
+
 ## v0.7.0 — Dashboard Analytics Refinement (2026-03-10)
 
 **Branch:** `feat/dashboard/analytics-refinement`

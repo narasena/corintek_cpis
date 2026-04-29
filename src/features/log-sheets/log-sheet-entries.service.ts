@@ -207,24 +207,22 @@ export async function upsertLogSheetEntries(
 
   const waterMeterParams = await getWaterMeterParams(logSheetId);
 
-  await prisma.$transaction(async tx => {
-    const now = new Date();
-    for (const entry of entries) {
-      await upsertSingleLogSheetEntry(
+  await prisma.$transaction(
+    async tx => {
+      const now = new Date();
+      await Promise.all(
+        entries.map(entry =>
+          upsertSingleLogSheetEntry(tx, logSheetId, entry, existingByKey, now)
+        )
+      );
+      await calculateAndSaveWaterMeterTotal(
         tx,
         logSheetId,
-        entry,
+        waterMeterParams,
         existingByKey,
         now
       );
-    }
-
-    await calculateAndSaveWaterMeterTotal(
-      tx,
-      logSheetId,
-      waterMeterParams,
-      existingByKey,
-      now
-    );
-  });
+    },
+    { timeout: 30000 } // 30 seconds
+  );
 }
