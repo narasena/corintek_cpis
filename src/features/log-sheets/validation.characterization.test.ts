@@ -110,24 +110,198 @@ describe('validateLogSheetEntries (characterization)', () => {
     expect(result.missingFields).toEqual([]);
   });
 
-  it('requires at least one active chiller when there are chillers (submit-blocking path)', () => {
+  it('allows chillers to be inactive when cooling towers are active (no chiller error)', () => {
     const input = baseInput({ activeChillerIds: [] });
     const result = validateLogSheetEntries(input);
 
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain(
+    // CT data incomplete in baseInput, so error about CT expected, but NOT chiller error
+    expect(result.errors).not.toContain(
       'Minimal satu Chiller harus dipilih dan diisi lengkap.'
     );
   });
 
-  it('requires at least one active cooling tower when there are cooling towers (submit-blocking path)', () => {
+  it('allows cooling towers to be inactive when chillers are active (no CT error)', () => {
     const input = baseInput({ activeCTIds: [] });
     const result = validateLogSheetEntries(input);
 
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain(
+    // Chiller data incomplete in baseInput, so error about chiller expected, but NOT CT error
+    expect(result.errors).not.toContain(
       'Minimal satu Cooling Tower harus dipilih dan diisi lengkap.'
     );
+  });
+
+  it('allows chillers to be inactive when cooling towers are active', () => {
+    const input = baseInput({
+      activeChillerIds: [],
+      entryState: {
+        // satisfy CT completely
+        [makeEntryKey('p-ph', 't1', 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 7,
+        },
+        [makeEntryKey('p-cycle', 't1', 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 3,
+        },
+        [makeEntryKey('p-gc', 't1', 'VALUE')]: {
+          valueType: 'BOOLEAN',
+          boolValue: true,
+        },
+        [makeEntryKey('p-job', 't1', 'VALUE')]: {
+          valueType: 'TEXT',
+          textValue: 'Job done',
+        },
+        [makeEntryKey('p-ph', null, 'RAW_WATER')]: {
+          valueType: 'NUMBER',
+          numericValue: 7,
+        },
+        [makeEntryKey('p-cons', null, 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 10,
+        },
+      },
+    });
+    const result = validateLogSheetEntries(input);
+
+    expect(result.errors).not.toContain(
+      'Minimal satu Chiller harus dipilih dan diisi lengkap.'
+    );
+  });
+
+  it('allows cooling towers to be inactive when chillers are active (no CT error)', () => {
+    const input = baseInput({ activeCTIds: [] });
+    const result = validateLogSheetEntries(input);
+
+    expect(result.valid).toBe(false);
+    // Chiller data incomplete in baseInput, so error about chiller expected, but NOT CT error
+    expect(result.errors).not.toContain(
+      'Minimal satu Cooling Tower harus dipilih dan diisi lengkap.'
+    );
+  });
+
+  it('allows cooling towers to be inactive when chillers are active', () => {
+    const input = baseInput({
+      activeCTIds: [],
+      entryState: {
+        // satisfy chiller completely
+        [makeEntryKey('p-cond', 'c1', 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 1,
+        },
+        [makeEntryKey('p-evap', 'c1', 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 1,
+        },
+        [makeEntryKey('p-cons', null, 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 10,
+        },
+      },
+    });
+    const result = validateLogSheetEntries(input);
+
+    expect(result.errors).not.toContain(
+      'Minimal satu Cooling Tower harus dipilih dan diisi lengkap.'
+    );
+  });
+
+  it('rejects when both chillers and cooling towers are inactive', () => {
+    const input = baseInput({ activeChillerIds: [], activeCTIds: [] });
+    const result = validateLogSheetEntries(input);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(
+      'Minimal satu unit harus dipilih dan diisi.'
+    );
+  });
+
+  it('passes with only cooling tower data when chillers are inactive', () => {
+    const input = baseInput({
+      activeChillerIds: [],
+      entryState: {
+        [makeEntryKey('p-ph', 't1', 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 7,
+        },
+        [makeEntryKey('p-cycle', 't1', 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 3,
+        },
+        [makeEntryKey('p-gc', 't1', 'VALUE')]: {
+          valueType: 'BOOLEAN',
+          boolValue: true,
+        },
+        [makeEntryKey('p-job', 't1', 'VALUE')]: {
+          valueType: 'TEXT',
+          textValue: 'Job done',
+        },
+        [makeEntryKey('p-ph', null, 'RAW_WATER')]: {
+          valueType: 'NUMBER',
+          numericValue: 7,
+        },
+        [makeEntryKey('p-cons', null, 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 10,
+        },
+      },
+    });
+    const result = validateLogSheetEntries(input);
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.missingFields).toEqual([]);
+  });
+
+  it('passes with only chiller data when cooling towers are inactive', () => {
+    const input = baseInput({
+      activeCTIds: [],
+      entryState: {
+        [makeEntryKey('p-cond', 'c1', 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 1,
+        },
+        [makeEntryKey('p-evap', 'c1', 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 1,
+        },
+        [makeEntryKey('p-cons', null, 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 10,
+        },
+      },
+    });
+    const result = validateLogSheetEntries(input);
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.missingFields).toEqual([]);
+  });
+
+  it('does not require raw water when no cooling towers are active', () => {
+    const input = baseInput({
+      activeCTIds: [],
+      entryState: {
+        [makeEntryKey('p-cond', 'c1', 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 1,
+        },
+        [makeEntryKey('p-evap', 'c1', 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 1,
+        },
+        [makeEntryKey('p-cons', null, 'VALUE')]: {
+          valueType: 'NUMBER',
+          numericValue: 10,
+        },
+      },
+    });
+    const result = validateLogSheetEntries(input);
+
+    expect(
+      result.missingFields.some(f => f.includes('Raw Water'))
+    ).toBe(false);
   });
 
   it('collects missing fields from the first active chiller if none are complete (surprising/buggy-ish: only first machine detailed)', () => {

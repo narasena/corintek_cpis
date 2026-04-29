@@ -6,6 +6,27 @@
 
 ---
 
+## v0.7.2 — Logsheet Optional Machine-Type Validation (2026-04-29)
+
+**Branch:** `development_v2`
+
+### Validation & Flexibility Improvements
+
+- [x] **Optional Machine-Type Requirement:** Technicians can now submit logsheets with only chillers *or* only cooling towers populated. Previously both types had to be fully filled regardless of active selection.
+- [x] **Raw Water Conditional:** Raw water quality check is now enforced only when at least one cooling tower is active (previously always required).
+- [x] **General Condition Note Enforcement:** Fixed approval validation to correctly require the `GENERAL_CONDITION` note field (previously excluded by mistake).
+- [x] **Cross-Type Guard:** Added explicit validation to ensure at least one machine type (chillers or CTs) is active before submission.
+- [x] **Test Coverage:** Added 10 new characterization tests covering chiller-only, CT-only, both-inactive, raw-water skip, and note enforcement scenarios.
+- [x] **Data Accuracy:** Fixed CT-only test data (removed duplicate `boolValue`, added missing `RAW_WATER` entry for cycle of concentration).
+
+**Files Modified:**
+- `src/features/log-sheets/validation.ts` (3 changes)
+- `src/features/log-sheets/validation.characterization.test.ts` (7 tests)
+- `src/features/log-sheets/approval-validation.ts` (2 changes)
+- `src/features/log-sheets/approval-validation.characterization.test.ts` (3 tests + data fix)
+
+---
+
 ## v0.7.1 — Log Sheet Transaction Timeout Fix (2026-04-29)
 
 **Branch:** `fix/log-sheets/transaction-timeout`

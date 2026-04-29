@@ -69,6 +69,7 @@ function validateMachineCategory(params: TMachineCategoryValidatorParams) {
   const { machines, activeIds, categories, machineTypeLabel, input, result } =
     params;
   if (machines.length === 0) return;
+  if (activeIds.length === 0) return;
 
   const active = machines.filter(m => activeIds.includes(m.id));
 
@@ -142,6 +143,8 @@ function collectRawWaterMissing(
   input: TLogSheetValidationInput,
   result: TLogSheetValidationResult
 ) {
+  if (input.activeCTIds.length === 0) return;
+
   const params = input.parametersByCategory.get('COOLING_WATER_QUALITY') ?? [];
   params.forEach(param => {
     if (param.variableName.toLowerCase().includes('cycle')) return;
@@ -250,6 +253,13 @@ export function validateLogSheetEntries(
 
   validateChillers(input, result);
   validateCoolingTowers(input, result);
+
+  const hasAnyActiveMachine =
+    input.activeChillerIds.length > 0 || input.activeCTIds.length > 0;
+  if (!hasAnyActiveMachine) {
+    result.errors.push('Minimal satu unit harus dipilih dan diisi.');
+  }
+
   collectRawWaterMissing(input, result);
   collectConsumptionMissing(input, result);
 

@@ -329,6 +329,223 @@ describe('validateLogSheetApprovalDetail (characterization)', () => {
       expect(() => validateLogSheetApprovalDetail(detail)).not.toThrow();
     });
 
+    it('passes with only chiller data (no active CTs)', () => {
+      const detail = createBaseDetail({
+        activeMachineIds: {
+          chillers: ['ch-1'],
+          coolingTowers: [],
+        },
+        entries: [
+          {
+            id: 'e-1',
+            logSheetId: 'ls-1',
+            parameterId: 'param-cond',
+            machineId: 'ch-1',
+            role: 'VALUE',
+            valueType: 'NUMBER',
+            numericValue: 50,
+            boolValue: null,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-2',
+            logSheetId: 'ls-1',
+            parameterId: 'param-evap',
+            machineId: 'ch-1',
+            role: 'VALUE',
+            valueType: 'NUMBER',
+            numericValue: 10,
+            boolValue: null,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-3',
+            logSheetId: 'ls-1',
+            parameterId: 'param-cons',
+            machineId: null,
+            role: 'VALUE',
+            valueType: 'NUMBER',
+            numericValue: 100,
+            boolValue: null,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+        ] as any,
+      });
+
+      expect(() => validateLogSheetApprovalDetail(detail)).not.toThrow();
+    });
+
+    it('passes with only cooling tower data (no active chillers)', () => {
+      const detail = createBaseDetail({
+        activeMachineIds: {
+          chillers: [],
+          coolingTowers: ['ct-1'],
+        },
+        entries: [
+          {
+            id: 'e-1',
+            logSheetId: 'ls-1',
+            parameterId: 'param-cw',
+            machineId: 'ct-1',
+            role: 'VALUE',
+            valueType: 'NUMBER',
+            numericValue: 7,
+            boolValue: null,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-raw',
+            logSheetId: 'ls-1',
+            parameterId: 'param-cw',
+            machineId: null,
+            role: 'RAW_WATER',
+            valueType: 'NUMBER',
+            numericValue: 7,
+            boolValue: null,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-2',
+            logSheetId: 'ls-1',
+            parameterId: 'param-cycle',
+            machineId: 'ct-1',
+            role: 'VALUE',
+            valueType: 'NUMBER',
+            numericValue: 3,
+            boolValue: null,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-2-raw',
+            logSheetId: 'ls-1',
+            parameterId: 'param-cycle',
+            machineId: null,
+            role: 'RAW_WATER',
+            valueType: 'NUMBER',
+            numericValue: 3,
+            boolValue: null,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-3',
+            logSheetId: 'ls-1',
+            parameterId: 'param-gc',
+            machineId: 'ct-1',
+            role: 'VALUE',
+            valueType: 'BOOLEAN',
+            boolValue: true,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-3-note',
+            logSheetId: 'ls-1',
+            parameterId: 'param-gc',
+            machineId: null,
+            role: 'NOTE',
+            valueType: 'TEXT',
+            numericValue: null,
+            boolValue: null,
+            textValue: 'All good',
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-4',
+            logSheetId: 'ls-1',
+            parameterId: 'param-jd',
+            machineId: 'ct-1',
+            role: 'VALUE',
+            valueType: 'TEXT',
+            numericValue: null,
+            boolValue: null,
+            textValue: 'Job done',
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-4-note',
+            logSheetId: 'ls-1',
+            parameterId: 'param-jd',
+            machineId: null,
+            role: 'NOTE',
+            valueType: 'TEXT',
+            numericValue: null,
+            boolValue: null,
+            textValue: 'Job notes',
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-5',
+            logSheetId: 'ls-1',
+            parameterId: 'param-cons',
+            machineId: null,
+            role: 'VALUE',
+            valueType: 'NUMBER',
+            numericValue: 100,
+            boolValue: null,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+        ] as any,
+      });
+
+      expect(() => validateLogSheetApprovalDetail(detail)).not.toThrow();
+    });
+
     it('fails when value is below minimum', () => {
       const detail = createBaseDetail({
         entries: [
@@ -554,6 +771,70 @@ describe('validateLogSheetApprovalDetail (characterization)', () => {
 
       expect(() => validateLogSheetApprovalDetail(detail)).toThrow(
         /Cycle of concentration \(Raw Water\) wajib diisi/
+      );
+    });
+
+    it('does not require raw water when no cooling towers are active', () => {
+      const detail = createBaseDetail({
+        activeMachineIds: {
+          chillers: ['ch-1'],
+          coolingTowers: [],
+        },
+        entries: [
+          {
+            id: 'e-1',
+            logSheetId: 'ls-1',
+            parameterId: 'param-cond',
+            machineId: 'ch-1',
+            role: 'VALUE',
+            valueType: 'NUMBER',
+            numericValue: 50,
+            boolValue: null,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-2',
+            logSheetId: 'ls-1',
+            parameterId: 'param-evap',
+            machineId: 'ch-1',
+            role: 'VALUE',
+            valueType: 'NUMBER',
+            numericValue: 10,
+            boolValue: null,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+          {
+            id: 'e-3',
+            logSheetId: 'ls-1',
+            parameterId: 'param-cons',
+            machineId: null,
+            role: 'VALUE',
+            valueType: 'NUMBER',
+            numericValue: 100,
+            boolValue: null,
+            textValue: null,
+            fileUrl: null,
+            checkedAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            deletedAt: null,
+          },
+        ] as any,
+      });
+
+      // No raw water entries, no active CTs → should pass
+      expect(() => validateLogSheetApprovalDetail(detail)).not.toThrow(
+        /Raw Water.*wajib diisi/
       );
     });
   });

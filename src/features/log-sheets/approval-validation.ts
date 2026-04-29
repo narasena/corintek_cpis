@@ -76,10 +76,12 @@ function collectCoolingWaterRequiredErrors(
     }
   }
 
-  const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
-  const rawEntry = context.entryByKey.get(rawKey);
-  if (!isEntryComplete(rawEntry)) {
-    errors.push(`${param.name} (Raw Water) wajib diisi`);
+  if (activeCTs.length > 0) {
+    const rawKey = makeEntryKey(param.id, null, 'RAW_WATER');
+    const rawEntry = context.entryByKey.get(rawKey);
+    if (!isEntryComplete(rawEntry)) {
+      errors.push(`${param.name} (Raw Water) wajib diisi`);
+    }
   }
 }
 
@@ -126,8 +128,7 @@ function collectCategoryRequiredErrors(
   if (
     isCTCategory &&
     activeCTs.length > 0 &&
-    param.category !== 'JOB_DESCRIPTION' &&
-    param.category !== 'GENERAL_CONDITION'
+    param.category !== 'JOB_DESCRIPTION'
   ) {
     const noteKey = makeEntryKey(param.id, null, 'NOTE');
     const noteEntry = context.entryByKey.get(noteKey);
