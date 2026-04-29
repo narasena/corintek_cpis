@@ -25,9 +25,12 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+   const videoRef = useRef<HTMLVideoElement>(null);
+   const readyCheckInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+   const fallbackTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const isMounted = useRef(false);
+   const isMounted = useRef(false);
   const { create: createObjectURL, revoke: revokeCurrentPreview } =
     useObjectURL();
 
@@ -39,53 +42,94 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
     };
   }, []);
 
-  const startCamera = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
+   const startCamera = async () => {
+     // Clear any existing timers (defensive)
+     if (readyCheckInterval.current) {
+       clearInterval(readyCheckInterval.current);
+       readyCheckInterval.current = null;
+     }
+     if (fallbackTimeout.current) {
+       clearTimeout(fallbackTimeout.current);
+       fallbackTimeout.current = null;
+     }
 
-      // Prevent race condition if component unmounted
-      if (!isMounted.current) {
-        mediaStream.getTracks().forEach(track => track.stop());
-        return;
-      }
+     try {
+       const mediaStream = await navigator.mediaDevices.getUserMedia({
+         video: { facingMode: 'environment' },
+       });
 
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        // Explicitly play to avoid black screen on some devices
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current
-            ?.play()
-            .catch(e => console.error('Auto-play failed:', e));
-        };
-      }
-    } catch (error) {
-      console.error('Camera access error:', error);
-      toast.error('Gagal mengakses kamera', {
-        description: 'Pastikan izin kamera diberikan.',
-      });
-      setIsOpen(false);
-    }
-  };
+       // Prevent race condition if component unmounted
+       if (!isMounted.current) {
+         mediaStream.getTracks().forEach(track => track.stop());
+         return;
+       }
 
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-  };
+       setStream(mediaStream);
+       setIsCameraReady(false);
 
-  // Sync camera state with Dialog open state
-  useEffect(() => {
-    if (isOpen) {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+       if (videoRef.current) {
+         const video = videoRef.current;
+         video.srcObject = mediaStream;
+         // Ensure autoplay is allowed on all devices
+         video.muted = true;
+         video.playsInline = true;
+         // Start playback immediately
+         video.play().catch(e => console.error('Auto-play failed:', e));
+         // Poll for readiness every 100ms
+         readyCheckInterval.current = setInterval(() => {
+           if (video.readyState >= 2) {
+             setIsCameraReady(true);
+             if (readyCheckInterval.current) {
+               clearInterval(readyCheckInterval.current);
+               readyCheckInterval.current = null;
+             }
+             if (fallbackTimeout.current) {
+               clearTimeout(fallbackTimeout.current);
+               fallbackTimeout.current = null;
+             }
+           }
+         }, 100);
+       }
+
+       // Fallback: force enable after 2s regardless (prevents infinite disable)
+       fallbackTimeout.current = setTimeout(() => {
+         setIsCameraReady(true);
+         fallbackTimeout.current = null;
+       }, 2000);
+     } catch (error) {
+       console.error('Camera access error:', error);
+       toast.error('Gagal mengakses kamera', {
+         description: 'Pastikan izin kamera diberikan.',
+       });
+       setIsOpen(false);
+     }
+   };
+
+   const stopCamera = () => {
+     if (stream) {
+       stream.getTracks().forEach(track => track.stop());
+       setStream(null);
+     }
+     if (readyCheckInterval.current) {
+       clearInterval(readyCheckInterval.current);
+       readyCheckInterval.current = null;
+     }
+     if (fallbackTimeout.current) {
+       clearTimeout(fallbackTimeout.current);
+       fallbackTimeout.current = null;
+     }
+     setIsCameraReady(false);
+   };
+
+   // Sync camera state with Dialog open state
+   useEffect(() => {
+     if (isOpen) {
+       startCamera();
+     } else {
+       stopCamera();
+     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [isOpen]);
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -101,8 +145,9 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
 
     const video = videoRef.current;
 
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
-      toast.error('Kamera belum siap', { description: 'Tunggu sebentar...' });
+    // Safety check - should rarely trigger since button is disabled until ready
+    if (video.videoWidth === 0 || video.videoHeight === 0 || video.readyState < 2) {
+      toast.error('Kamera belum siap', { description: 'Tunggu sebentar hingga kamera menyala sepenuhnya...' });
       return;
     }
 
@@ -261,22 +306,28 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
             </div>
           </div>
 
-          <div className="p-6 flex justify-center bg-black">
-            {isProcessing ? (
-              <Button
-                disabled
-                className="rounded-full h-16 w-16 bg-white/20"
-                type="button"
-              >
-                <Loader2 className="h-8 w-8 animate-spin text-white" />
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                className="rounded-full h-16 w-16 bg-white hover:bg-gray-200 border-4 border-gray-300 ring-2 ring-white ring-offset-2 ring-offset-black"
-                onClick={capturePhoto}
-              />
-            )}
+           <div className="p-6 flex justify-center bg-black">
+             {isProcessing ? (
+               <Button
+                 disabled
+                 className="rounded-full h-16 w-16 bg-white/20"
+                 type="button"
+               >
+                 <Loader2 className="h-8 w-8 animate-spin text-white" />
+               </Button>
+             ) : (
+               <Button
+                 type="button"
+                 className={`rounded-full h-16 w-16 border-4 transition-all ${
+                   isCameraReady
+                     ? 'bg-white hover:bg-gray-200 border-gray-300 ring-2 ring-white ring-offset-2 ring-offset-black cursor-pointer'
+                     : 'bg-gray-600 border-gray-700 cursor-not-allowed opacity-50'
+                 }`}
+                 onClick={capturePhoto}
+                 disabled={!isCameraReady}
+                 title={isCameraReady ? 'Ambil foto' : 'Tunggu kamera menyala...'}
+               />
+             )}
           </div>
         </DialogContent>
       </Dialog>
