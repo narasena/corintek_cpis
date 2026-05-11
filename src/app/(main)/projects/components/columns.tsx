@@ -170,7 +170,13 @@ export const getProjectColumns = ({
           <ProjectParameterOverridesDialog project={row.original} />
           <ActionCell
             data={row.original}
+            customDescription={
+              row.original._count.logSheets > 0
+                ? `Sudah ada ${row.original._count.logSheets} logsheet tersimpan di database.`
+                : undefined
+            }
             entityName="Proyek"
+            getDisplayName={row => row.name}
             getEntityId={project => project.id}
             onEdit={() => onEdit(row.original)}
             onDelete={() => onDelete(row.original.id)}

@@ -6,6 +6,19 @@
 
 ---
 
+## v0.7.4.1 — ActionCell Delete Dialog Bug Fix (2026-05-11)
+
+**Branch:** `staging`
+
+### Bug Fixes
+
+- [x] **ActionCell customDescription:** Fixed "Sudah ada undefined log sheet" message caused by nullish coalescing misuse in the projects table's delete confirmation dialog. Now correctly shows no message when count is 0, and "Sudah ada {count} logsheet tersimpan di database." when count > 0.
+
+**Files Modified:**
+- `src/app/(main)/projects/components/columns.tsx`
+
+---
+
 ## v0.7.4 — Project Personnel Assignment & UI Fixes (2026-05-11)
 
 **Branch:** `fix/project-creation-no-personel`

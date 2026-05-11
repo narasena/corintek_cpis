@@ -49,6 +49,7 @@ function applyClientsResponse(
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<IProject[]>([]);
+  console.log(projects);
   const [clients, setClients] = useState<TClientResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<IProject | undefined>(
