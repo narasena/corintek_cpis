@@ -32,6 +32,10 @@
 .DS_Store
 *.pem
 
+#temporary
+/tmp
+/temp*
+
 # Prisma Generated
 **/generated/**
 
