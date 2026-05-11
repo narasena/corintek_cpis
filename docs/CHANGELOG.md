@@ -6,6 +6,27 @@
 
 ---
 
+## v0.7.3 — Admin Password Reset (2026-05-11)
+
+**Branch:** `fix/password-change-by-admin`
+
+### Security & Administration
+
+- [x] **Admin-Only Password Reset:** Administrators can now reset passwords for other users via the user edit dialog. The dialog shows "New Password" and "Confirm Password" fields when the current user is an admin editing a different user. Admins cannot reset their own password via this UI—those cases require developer intervention. Password match validation activates only when a new password is entered.
+- [x] **Schema Update:** Added optional `confirmPassword` field to `userUpdateSchema` with a conditional refine that enforces matching only when a password is provided.
+- [x] **Server Action Adjustment:** `updateUserAction` now strips `confirmPassword` before passing data to the service layer (consistent with create action).
+- [x] **UI Propagation:** Actor role and target user ID flow through `UsersPage → UserDialog → UserForm → UserSecurityFields`, showing password fields only when `canResetPassword` is true (admin editing another user).
+
+**Files Modified:**
+- `src/@types/user.type.ts`
+- `src/features/users/actions.ts`
+- `src/app/(main)/users/page.tsx`
+- `src/features/users/components/user-dialog.tsx`
+- `src/features/users/components/user-form.tsx`
+- `src/features/users/components/form-sections/UserSecurityFields.tsx`
+
+---
+
 ## v0.7.2 — Logsheet Optional Machine-Type Validation (2026-04-29)
 
 **Branch:** `development_v2`

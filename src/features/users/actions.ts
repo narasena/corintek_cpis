@@ -104,7 +104,7 @@ export const getUserByIdAction = actionFactory.protected(
  */
 export const updateUserAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const { id, ...data } = input as any;
+    const { id, confirmPassword, ...data } = input as any;
     const user = await updateUser(actor, id, data);
 
     revalidateUserPaths(id);
