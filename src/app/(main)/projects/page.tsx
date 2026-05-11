@@ -6,7 +6,6 @@ import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
-import { DataTableEmpty } from '@/components/ui/data-table-empty';
 import {
   getProjectColumns,
   PROJECT_STATUS_OPTIONS,

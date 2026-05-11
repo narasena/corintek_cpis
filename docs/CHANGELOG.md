@@ -6,6 +6,28 @@
 
 ---
 
+## v0.7.4 — Project Personnel Assignment & UI Fixes (2026-05-11)
+
+**Branch:** `fix/project-creation-no-personel`
+
+### Bug Fixes & Improvements
+
+- [x] **Persist Personnel Assignments on Project Creation:** Fixed bug where assignment fields (PIC Project, Teknisi, PIC Klien) were ignored during project creation. Assignments are now saved within the same transaction via `applyProjectAssignmentsTransaction`.
+- [x] **Date Display Format:** Corrected project table date columns to display in "12 Sep 2026" format using `toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })`.
+- [x] **UI Polish:** Responsive layout adjustments in project form, machine section sticky header padding, and dialog height consistency.
+
+**Files Modified:**
+- `src/features/projects/service.ts` (core fix)
+- `src/features/projects/service.test.ts` (test coverage)
+- `src/app/(main)/projects/components/columns.tsx` (date format fix + lint)
+- `src/features/projects/components/project-form.tsx` (responsive layout)
+- `src/features/projects/components/project-meta-section.tsx` (responsive layout)
+- `src/features/machines/components/machine-form-section.tsx` (responsive sticky)
+- `src/components/crud-dialog.tsx` (height)
+- `src/app/(main)/projects/page.tsx` (unused import cleanup)
+
+---
+
 ## v0.7.3 — Admin Password Reset (2026-05-11)
 
 **Branch:** `fix/password-change-by-admin`

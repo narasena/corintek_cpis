@@ -161,7 +161,7 @@ describe('Projects Service', () => {
   });
 
   describe('createProject', () => {
-    it('should create a project with machines', async () => {
+    it('should create a project with machines and assignments', async () => {
       const input = {
         name: 'New Project',
         clientId: 'c-1',
@@ -174,6 +174,10 @@ describe('Projects Service', () => {
             status: 'IDLE' as const,
           },
         ],
+        assignments: [
+          { userId: 'u-pic', role: 'CLIENT_PIC' as const },
+          { userId: 'u-tech', role: 'TECHNICIAN' as const },
+        ],
       };
 
       vi.mocked(prisma.project.create).mockResolvedValue({
@@ -185,6 +189,8 @@ describe('Projects Service', () => {
 
       expect(result.id).toBe('p-1');
       expect(prisma.project.create).toHaveBeenCalled();
+      // Verify assignments were created via applyProjectAssignmentsTransaction
+      expect(prisma.projectAssignment.upsert).toHaveBeenCalled();
     });
   });
 

@@ -88,9 +88,9 @@ export function ProjectForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col h-[calc(90vh-140px)] min-h-[500px] max-h-[900px]"
+        className="flex flex-col h-[calc(90vh-140px)] min-h-[500px] h-full max-h-[900px]"
       >
-        <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 overflow-hidden">
+        <div className="flex flex-col gap-4 lg:gap-0 lg:grid lg:grid-cols-12 flex-1 overflow-hidden">
           {/* Left Column: Project Information */}
           <div className="lg:col-span-5 h-full overflow-y-auto p-6 space-y-4 bg-muted/5">
             <h3 className="font-semibold text-lg border-b pb-2">
@@ -107,7 +107,7 @@ export function ProjectForm({
           </div>
 
           {/* Right Column: Machine List */}
-          <div className="lg:col-span-7 h-full overflow-y-auto p-6 lg:border-l space-y-4">
+          <div className="lg:col-span-7 h-full overflow-y-auto md:p-6 px-6 lg:border-l space-y-4 relative">
             <MachineFormSection control={form.control} />
           </div>
         </div>
