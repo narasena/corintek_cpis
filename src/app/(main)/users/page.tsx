@@ -12,7 +12,6 @@ import { TUserResponse } from '@/@types/user.type';
 import { TClientResponse } from '@/@types/client.type';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
-import { DataTableEmpty } from '@/components/ui/data-table-empty';
 import {
   getUserColumns,
   ROLE_OPTIONS,
@@ -174,6 +173,9 @@ export default function UsersPage() {
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
         onSuccess={handleEditSuccess}
+        canResetPassword={
+          actor?.role === 'ADMIN' && selectedUser?.id !== actor?.id
+        }
       />
     </div>
   );

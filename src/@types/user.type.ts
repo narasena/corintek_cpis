@@ -86,6 +86,7 @@ export const userUpdateSchema = z
     email: z.email().optional(),
     phoneNumber: z.string().min(1).max(20).optional(),
     password: z.string().min(8).optional(),
+    confirmPassword: z.string().optional(),
     avatarUrl: z.url().optional().nullable(),
     address: z.string().max(255).optional().nullable(),
     role: z.enum(UserRole as unknown as { [k: string]: string }).optional(),
@@ -96,6 +97,18 @@ export const userUpdateSchema = z
     isBlocked: z.boolean().optional(),
     clientId: z.uuid().optional().nullable(),
   })
+  .refine(
+    data => {
+      if (data.password && data.password.length > 0) {
+        return data.confirmPassword === data.password;
+      }
+      return true;
+    },
+    {
+      message: 'Passwords do not match',
+      path: ['confirmPassword'],
+    }
+  )
   .refine(
     data => {
       // Client roles must have a clientId when role is being updated

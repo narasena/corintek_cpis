@@ -13,11 +13,17 @@ import { TUserCreateInput, TUserUpdateInput } from '@/@types/user.type';
 
 interface IUserSecurityFieldsProps {
   control: Control<TUserCreateInput | TUserUpdateInput>;
+  mode?: 'create' | 'edit';
 }
 
-export function UserSecurityFields({ control }: IUserSecurityFieldsProps) {
+export function UserSecurityFields({ control, mode }: IUserSecurityFieldsProps) {
   return (
     <>
+      {mode === 'edit' && (
+        <p className="text-sm text-muted-foreground">
+          Kosongkan jika tidak ingin mengubah password
+        </p>
+      )}
       <FormField
         control={control}
         name="password"

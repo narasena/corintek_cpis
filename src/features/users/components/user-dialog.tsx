@@ -11,6 +11,7 @@ interface IUserDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSuccess?: () => void;
+  canResetPassword?: boolean;
 }
 
 export function UserDialog({
@@ -20,6 +21,7 @@ export function UserDialog({
   open,
   onOpenChange,
   onSuccess,
+  canResetPassword,
 }: IUserDialogProps) {
   const title =
     mode === 'create' ? 'Tambah Pengguna Baru' : 'Ubah Data Pengguna';
@@ -39,6 +41,7 @@ export function UserDialog({
           defaultValues={user}
           onSuccess={handleSuccess}
           onCancel={onCancel}
+          canResetPassword={canResetPassword}
         />
       )}
     </CrudDialog>
