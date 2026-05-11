@@ -6,6 +6,7 @@
 
 ## Active Gotchas ⚠️
 
+- **Secrets:** Never hardcode credentials in seed scripts or source. Use env vars (`SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_CREATE_ADMIN`). Dev branch still has hardcoded admin — fix immediately.
 - **Prisma:** The `Parameter` model NO LONGER has `minValue`/`maxValue` — all limits now live in `ParameterLimit` table via `ParameterLimitProfile`. Old code referencing `parameter.minValue` will break.
 - **Auth Service:** Use `toUserResponse()` and `userResponseSelect` from `src/features/users/utils.ts` for ALL user data retrieval to ensure security and type safety.
 - **Auth Primitives:** Use `hashPassword()` and `comparePassword()` from `src/features/auth/service.ts` (re-exported via `lib/auth-helpers.ts`).

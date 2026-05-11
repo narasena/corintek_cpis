@@ -43,6 +43,11 @@ export async function getProjects(actor: IJwtPayload): Promise<IProject[]> {
         },
         orderBy: [{ type: 'asc' }, { unitNumber: 'asc' }],
       },
+      _count: {
+        select: {
+          logSheets: true,
+        },
+      },
     },
     orderBy: {
       createdAt: 'desc',

@@ -26,6 +26,7 @@ import {
 
 interface IActionCellProps<TData> {
   data: TData;
+  customDescription?: string;
   entityName: string;
   getDisplayName?: (data: TData) => string;
   onEdit: () => void;
@@ -38,6 +39,7 @@ interface IActionCellProps<TData> {
 
 export function ActionCell<TData>({
   data,
+  customDescription,
   entityName,
   getDisplayName,
   onEdit,
@@ -109,6 +111,10 @@ export function ActionCell<TData>({
               Apakah Anda yakin?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-white/80">
+              {customDescription ? (
+                <p className="font-bold text-orange-300">{customDescription}</p>
+              ) : null}
+              {'\n'}
               Tindakan ini tidak dapat dibatalkan. {entityName}{' '}
               <strong>{displayName}</strong> akan dihapus secara permanen dari
               sistem.
