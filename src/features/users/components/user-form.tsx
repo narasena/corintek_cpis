@@ -13,6 +13,7 @@ interface IUserFormProps {
   defaultValues?: Partial<TUserResponse>;
   onSuccess?: () => void;
   onCancel?: () => void;
+  canResetPassword?: boolean;
 }
 
 export function UserForm({
@@ -20,6 +21,7 @@ export function UserForm({
   defaultValues,
   onSuccess,
   onCancel,
+  canResetPassword,
 }: IUserFormProps) {
   const { form, onSubmit, isPending, clients, isLoadingClients, isClientRole } =
     useUserForm({ mode, defaultValues, onSuccess });
@@ -36,7 +38,9 @@ export function UserForm({
           isLoadingClients={isLoadingClients}
         />
 
-        {mode === 'create' && <UserSecurityFields control={form.control} />}
+        {(mode === 'create' || canResetPassword) && (
+          <UserSecurityFields control={form.control} mode={mode} />
+        )}
 
         <div className="flex gap-2 pt-4">
           <Button type="submit" disabled={isPending} className="flex-1">
