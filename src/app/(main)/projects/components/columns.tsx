@@ -37,7 +37,7 @@ interface GetColumnsProps {
 }
 
 const formatWarrantyMonths = (value?: number | null) => {
-  if (value == null) return '-';
+  if (value === null || value === undefined) return '-';
   if (Number.isNaN(value) || value < 0) return '-';
   return `${value} bulan`;
 };
@@ -97,7 +97,11 @@ export const getProjectColumns = ({
       header: 'Mulai',
       cell: ({ row }) => {
         const date = new Date(row.getValue('startDate'));
-        return date.toLocaleDateString('id-ID');
+        return date.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        });
       },
     },
     {
@@ -106,7 +110,11 @@ export const getProjectColumns = ({
       cell: ({ row }) => {
         const date = row.getValue('endDate');
         if (!date) return '-';
-        return new Date(date as string).toLocaleDateString('id-ID');
+        return new Date(date as string).toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        });
       },
     },
     {

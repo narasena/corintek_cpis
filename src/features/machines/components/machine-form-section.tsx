@@ -65,7 +65,7 @@ export function MachineFormSection({ control }: IMachineFormSectionProps) {
 
   return (
     <div className="space-y-4">
-      <div className="sticky top-0 bg-background/95 backdrop-blur z-10 py-3 border-b mb-4">
+      <div className="sticky top-0 bg-background/95 backdrop-blur z-10 md:py-3 border-b mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
           <h3 className="text-lg font-semibold tracking-tight">
             Mesin ({machineFields.length || 0})

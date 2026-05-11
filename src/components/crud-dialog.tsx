@@ -77,7 +77,7 @@ export function CrudDialog({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
         className={cn(
-          'flex flex-col gap-0 p-0 overflow-hidden max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh]',
+          'flex flex-col gap-0 p-0 overflow-hidden max-h-[calc(100dvh-1rem)] h-full sm:max-h-[90dvh]',
           sizeClasses[size]
         )}
         closeButtonClassName={closeButtonClassName}

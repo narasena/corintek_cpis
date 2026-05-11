@@ -1,3 +1,41 @@
+# Session Handoff — 2026-05-11 (Project Personnel Assignment Persistence)
+
+## Target: Fix project creation bug where personnel assignments are ignored on creation
+
+**Branch:** `fix/project-creation-no-personel`
+
+### Completed This Session
+
+| Task | Status |
+|------|--------|
+| Identify root cause: `createProject` discards assignments | ✅ Complete |
+| Persist assignments in same transaction via `applyProjectAssignmentsTransaction` | ✅ Complete |
+| Add unit test for assignment persistence | ✅ Complete |
+| Fix project table date format to "12 Sep 2026" | ✅ Complete |
+| UI polish: responsive form layout, dialog height | ✅ Complete |
+
+### Files Modified
+
+- `src/features/projects/service.ts` — core fix
+- `src/features/projects/service.test.ts` — test coverage
+- `src/app/(main)/projects/components/columns.tsx` — date formatting + lint
+- `src/features/projects/components/project-form.tsx` — responsive layout
+- `src/features/projects/components/project-meta-section.tsx` — responsive layout
+- `src/features/machines/components/machine-form-section.tsx` — sticky header
+- `src/components/crud-dialog.tsx` — height consistency
+- `src/app/(main)/projects/page.tsx` — cleanup unused import
+- `docs/bugs.md` — added BUG-050
+- `docs/CHANGELOG.md` — added v0.7.4 entry
+- `docs/HANDOFFS.md` — this entry
+
+### Verification
+
+- Unit tests: `npm run test -- src/features/projects/service.test.ts` (16/16 passed)
+- Lint: Prettier formatted; no new errors
+- Manual: Create project with assignments → verify saved immediately
+
+---
+
 # Session Handoff — 2026-04-29 (Logsheet Optional Machine-Type Validation)
 
 ## Target: Allow chiller-only or cooling-tower-only logsheet submissions

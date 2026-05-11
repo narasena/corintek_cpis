@@ -200,6 +200,7 @@
 | BUG-016 | Project     | New project can be created without assigning a CLIENT_PIC                                         | Fixed  |
 | BUG-017 | Permissions | Chemicals and Parameters pages are accessible to non-admin roles (nav hidden but route unguarded) | Fixed  |
 | BUG-018 | Input       | Number inputs (all forms) increment/decrement on scroll — unintended value changes                | Open   |
+| BUG-050 | Project     | Personnel assignments ignored on project creation                                                  | Fixed  |
 
 ### BUG-017 — Parameters/Chemicals Routes Unguarded for Non-Admin
 
@@ -331,6 +332,20 @@ export default function Page() {
 **Symptom:** Non-admin roles can directly navigate to `/parameters` and `/chemicals` even though the sidebar nav items are hidden.  
 **Root Cause:** Nav visibility is filtered via RBAC, but the page-level `ensureAccess` check may be absent or misconfigured. Needs route-level verification.  
 **Fix:** Added RBAC protection to both pages using `useSession` hook and client-side redirect for non-ADMIN users. Pages now redirect to `/` with an error toast if user role is not ADMIN.  
+**Status:** Fixed
+
+---
+
+### BUG-050 — Project Personnel Assignments Not Persisted on Creation
+
+**Symptom:** When creating a project, the personnel assignment fields (PIC Project, Teknisi, PIC Klien) are displayed and can be filled, but the data is completely ignored upon submission. The assignments are not saved to the database. Users must edit the project again after creation to add assignments, causing significant UX friction.
+
+**Root Cause:** In `createProject()` service function, the `assignments` array was validated but then destructured out and discarded during project creation. No code persisted the assignments to the `ProjectAssignment` table.
+
+**Fix:** Modified `src/features/projects/service.ts:createProject()` to persist assignments within the same transaction. After creating the project (and machines), the code now calls `applyProjectAssignmentsTransaction(tx, newProject.id, data.assignments)` to create assignment records. Existing validation ensures at least one CLIENT_PIC is present.
+
+**Additional Changes:** Date formatting in project table columns corrected to "12 Sep 2026" format; minor UI polish in project form layout and sticky headers.
+
 **Status:** Fixed
 
 ---

@@ -108,7 +108,7 @@ export function ProjectMetaSection({ form, clients }: ProjectMetaSectionProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col md:grid md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="startDate"
@@ -146,7 +146,7 @@ export function ProjectMetaSection({ form, clients }: ProjectMetaSectionProps) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col md:grid md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="quoteNumber"
@@ -193,7 +193,7 @@ export function ProjectMetaSection({ form, clients }: ProjectMetaSectionProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col md:grid md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="projectType"
@@ -231,7 +231,7 @@ export function ProjectMetaSection({ form, clients }: ProjectMetaSectionProps) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col md:grid md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="workCategory"

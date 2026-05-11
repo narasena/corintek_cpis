@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@/generated/prisma/client';
 import {
   TCreateProject,
   TUpdateProject,
@@ -499,6 +498,15 @@ export async function createProject(
           serialNumber: machine.serialNumber ?? null,
         })),
       });
+    }
+
+    // Create assignments if provided
+    if (data.assignments && data.assignments.length > 0) {
+      await applyProjectAssignmentsTransaction(
+        tx,
+        newProject.id,
+        data.assignments
+      );
     }
 
     return newProject;
