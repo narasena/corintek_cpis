@@ -1,3 +1,53 @@
+# Session Handoff — 2026-05-11 (ActionCell Custom Description Bug Fix)
+
+## Target: Fix "Sudah ada undefined log sheet" message
+
+**Branch:** `staging`
+
+### Completed This Session
+
+| Task | Status |
+|------|--------|
+| Identify root cause: nullish coalescing misuse in columns.tsx:173 | ✅ Complete |
+| Replace with conditional that passes `undefined` when count is 0 | ✅ Complete |
+| Verify build succeeds | ✅ Complete |
+
+### Problem
+
+In `src/app/(main)/projects/components/columns.tsx:173`:
+```typescript
+customDescription={`${row.original.logSheets._count ?? `Sudah ada ${row.original.logSheets._count} log sheet`}`}
+```
+When `_count` is `undefined`, the fallback string interpolates `undefined`, producing: "Sudah ada undefined log sheet".
+
+### Desired Behavior
+- If count = 0 → no custom description
+- If count > 0 → "Sudah ada {count} logsheet tersimpan di database."
+
+### Changes
+
+**File:** `src/app/(main)/projects/components/columns.tsx:173`
+
+**Before:**
+```typescript
+customDescription={`${row.original.logSheets._count ?? `Sudah ada ${row.original.logSheets._count} log sheet`}`}
+```
+
+**After:**
+```typescript
+customDescription={
+  row.original.logSheets._count > 0
+    ? `Sudah ada ${row.original.logSheets._count} logsheet tersimpan di database.`
+    : undefined
+}
+```
+
+### Verification
+
+- Build: `npm run build` passed
+
+---
+
 # Session Handoff — 2026-05-11 (Project Personnel Assignment Persistence)
 
 ## Target: Fix project creation bug where personnel assignments are ignored on creation

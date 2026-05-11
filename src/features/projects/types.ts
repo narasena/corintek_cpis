@@ -161,6 +161,9 @@ export interface IProject {
       unit: string | null;
     };
   }>;
+  _count: {
+    logSheets: number;
+  };
 }
 
 export interface IProjectDashboardCard {
