@@ -27,6 +27,10 @@ vi.mock('@/hooks/use-mobile', () => ({
   useIsMobile: () => false,
 }));
 
+vi.mock('@/hooks/use-session', () => ({
+  useSession: () => ({ user: null, isLoading: false, error: null }),
+}));
+
 vi.mock('@/features/log-sheets/components/log-sheet-preview', () => ({
   LogSheetPreview: () => <div data-testid="log-sheet-preview">Preview</div>,
 }));

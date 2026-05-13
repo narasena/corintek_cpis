@@ -106,7 +106,7 @@ function CoolingWaterTableHeader({
             )}
           </TableHead>
         ))}
-        <TableHead className="w-[100px] text-center">Raw Water</TableHead>
+        <TableHead className="w-[140px] text-center">Raw Water</TableHead>
         <TableHead className="w-[120px] text-center">Limit (Raw)</TableHead>
       </TableRow>
     </TableHeader>
@@ -151,7 +151,7 @@ interface IParameterNameCellProps {
 function ParameterNameCell({ param }: IParameterNameCellProps) {
   const displayName = param.unit ? `${param.name} (${param.unit})` : param.name;
   return (
-    <TableCell>
+    <TableCell className="whitespace-normal break-words">
       <div className="font-medium">{displayName}</div>
     </TableCell>
   );
