@@ -18,7 +18,12 @@ export async function updateLogSheetStatus(
 
   const row = await prisma.logSheet.findFirst({
     where: { id, deletedAt: null },
-    select: { id: true, projectId: true, status: true },
+    select: {
+      id: true,
+      projectId: true,
+      status: true,
+      replacedByUserId: true,
+    },
   });
 
   if (!row) {
@@ -36,8 +41,9 @@ export async function updateLogSheetStatus(
     (await hasProjectAssignment(actor.id, row.projectId, 'CLIENT_PIC'));
   const isPic = isInternalPic || isClientPic;
   const isInternalTechnician =
-    actor.role === 'TECHNICIAN' &&
-    (await hasProjectAssignment(actor.id, row.projectId, 'TECHNICIAN'));
+    (actor.role === 'TECHNICIAN' &&
+      (await hasProjectAssignment(actor.id, row.projectId, 'TECHNICIAN'))) ||
+    actor.id === row.replacedByUserId;
 
   const current = row.status;
 

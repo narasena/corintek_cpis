@@ -354,11 +354,10 @@ describe('LogSheetDetailPage (characterization)', () => {
        const kirimButtons = screen.getAllByRole('button', { name: /kirim/i });
        await user.click(kirimButtons[0]);
 
-       expect(screen.queryByRole('alertdialog')).toBeNull();
-     });
-   });
+        expect(screen.queryByRole('alertdialog')).toBeNull();
+      });
 
-  describe('navigation', () => {
+   describe('navigation', () => {
     it('navigates back when back button is clicked (main path)', async () => {
       const mocks = createTestMocks();
       await renderPageWithMocks(mocks);

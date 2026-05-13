@@ -38,7 +38,6 @@ import { useLogSheetDerived } from './hooks/use-log-sheet-derived';
 import { useLogSheetDraftState } from './hooks/use-log-sheet-draft-state';
 import { useLogSheetDraftSaver } from './hooks/use-log-sheet-draft-saver';
 import { useLogSheetActiveMachines } from './hooks/use-log-sheet-active-machines';
-import { useLogSheetValidation } from './hooks/use-log-sheet-validation';
 import { useLogSheetDerivedUsers } from './hooks/use-log-sheet-derived-users';
 import { useMobileUnitViewModel } from './hooks/use-mobile-unit-view-model';
 import { formatUserName } from '@/lib/utils/user';
@@ -50,7 +49,10 @@ import { LogSheetCategorySection } from '@/features/log-sheets/components/log-sh
 import { ConsumptionChemicalsSection } from '@/features/log-sheets/components/consumption-chemicals-section';
 import { EntryStateProvider } from '@/features/log-sheets/context';
 import { formatDate } from './utils';
-import { hasCompleteMachine, type TValidationParameter } from '@/features/log-sheets/validation';
+import {
+  hasCompleteMachine,
+  type TValidationParameter,
+} from '@/features/log-sheets/validation';
 
 function LoadingState() {
   return (
@@ -81,13 +83,13 @@ export default function LogSheetDetailPage() {
     CLIENT_PIC: string | null;
   }>({ TECHNICIAN: null, CLIENT_PIC: null });
 
-   const isMobileView = useIsMobile();
-   const { user } = useSession();
-   const {
-     detail,
-     loading,
-     reload: fetchData,
-   } = useLogSheetDetailData(logSheetId);
+  const isMobileView = useIsMobile();
+  const { user } = useSession();
+  const {
+    detail,
+    loading,
+    reload: fetchData,
+  } = useLogSheetDetailData(logSheetId);
   const {
     notes,
     setNotes,
@@ -115,8 +117,6 @@ export default function LogSheetDetailPage() {
     technicians: detail?.technicians ?? [],
     replacedByUserId,
   });
-
-
 
   const { saveDraft } = useLogSheetDraftSaver({
     projectId,
@@ -152,9 +152,16 @@ export default function LogSheetDetailPage() {
   });
 
   const viewerRole = detail?.viewerRole;
-  const isPicRole =
-    viewerRole === 'CLIENT_SUPERVISOR' || viewerRole === 'SUPERVISOR';
-  const effectiveMode = isPicRole ? 'preview' : mode;
+  // Only CLIENT roles are forced into preview mode; internal staff can edit
+  const isClientRole =
+    viewerRole === 'CLIENT' ||
+    viewerRole === 'CLIENT_TECHNICIAN' ||
+    viewerRole === 'CLIENT_SUPERVISOR';
+  const effectiveMode = isClientRole ? 'preview' : mode;
+
+  // For showing approval actions in preview: SUPERVISOR or CLIENT_SUPERVISOR
+  const canApproveInPreview =
+    viewerRole === 'SUPERVISOR' || viewerRole === 'CLIENT_SUPERVISOR';
 
   const handleSave = () => {
     if (isLocked) {
@@ -282,7 +289,7 @@ export default function LogSheetDetailPage() {
 
   return (
     <div className="space-y-4 md:space-y-8 pb-28 md:pb-0 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
-      {!isPicRole && (
+      {!isClientRole && (
         <LogSheetToolbar
           projectId={projectId}
           mode={effectiveMode}
@@ -300,7 +307,7 @@ export default function LogSheetDetailPage() {
         />
       )}
       {/* PIC: Show approval buttons at TOP when status is SUBMITTED */}
-      {isPicRole &&
+      {canApproveInPreview &&
         effectiveMode === 'preview' &&
         detail.logSheet.status === 'SUBMITTED' && (
           <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 print:hidden">
@@ -422,7 +429,7 @@ export default function LogSheetDetailPage() {
               {formatDate(detail.logSheet.date)} • {detail.logSheet.status}
             </p>
           </div>
-          {isPicRole && (
+          {isClientRole && (
             <Button variant="outline" onClick={handlePrint}>
               Cetak / Preview
             </Button>
@@ -444,27 +451,29 @@ export default function LogSheetDetailPage() {
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                 <label className="text-sm font-medium text-muted-foreground">
-                   Petugas Hari Ini
-                 </label>
-                 <Select
-                   value={replacedByUserId ?? 'none'}
-                   onValueChange={v =>
-                     setReplacedByUserId(v === 'none' ? null : v)
-                   }
-                 >
-                   <SelectTrigger>
-                     <SelectValue placeholder="Pilih nama teknisi" />
-                   </SelectTrigger>
-                   <SelectContent>
-                     <SelectItem value="none">- Saya Sendiri -</SelectItem>
-                     {(detail?.technicians ?? []).filter(t => t.id !== user?.id).map(t => (
-                       <SelectItem key={t.id} value={t.id}>
-                         {formatUserName(t)}
-                       </SelectItem>
-                     ))}
-                   </SelectContent>
-                 </Select>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Petugas Hari Ini
+                </label>
+                <Select
+                  value={replacedByUserId ?? 'none'}
+                  onValueChange={v =>
+                    setReplacedByUserId(v === 'none' ? null : v)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih nama teknisi" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">- Saya Sendiri -</SelectItem>
+                    {(detail?.technicians ?? [])
+                      .filter(t => t.id !== user?.id)
+                      .map(t => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {formatUserName(t)}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
                 <p className="text-xs text-muted-foreground">
                   Pilih nama jika ada pengganti
                 </p>
@@ -606,7 +615,7 @@ export default function LogSheetDetailPage() {
       )}
 
       {/* CLIENT_SUPERVISOR: Show signature section in preview mode */}
-      {isPicRole && effectiveMode === 'preview' && (
+      {canApproveInPreview && effectiveMode === 'preview' && (
         <div className="rounded-lg border bg-card p-4 space-y-4 print:hidden">
           {/* Status Banner */}
           {detail.logSheet.status === 'SUBMITTED' && (

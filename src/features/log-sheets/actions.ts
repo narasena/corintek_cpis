@@ -334,7 +334,25 @@ export const getLogSheetDetailAction = actionFactory.protected(
   async ({ input, actor }) => {
     await assertCanAccessLogSheet(actor, input);
     const detail = await logSheetService.getLogSheetDetail(input);
-    return { ...detail, viewerRole: actor.role };
+
+    // Compute signing permissions using same rules as backend service
+    const canSignTechnician =
+      actor.role === 'ADMIN' ||
+      actor.role === 'TECHNICIAN' ||
+      actor.role === 'SUPERVISOR' ||
+      detail.logSheet.replacedBy?.id === actor.id;
+
+    const canSignClientPic =
+      actor.role === 'ADMIN' ||
+      actor.role === 'CLIENT_TECHNICIAN' ||
+      actor.role === 'CLIENT_SUPERVISOR';
+
+    return {
+      ...detail,
+      viewerRole: actor.role,
+      canSignTechnician,
+      canSignClientPic,
+    };
   },
   {
     schema: z.string().uuid(),

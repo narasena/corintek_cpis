@@ -107,11 +107,14 @@ export type TDetail = {
     firstName: string;
     lastName: string | null;
   }>;
-  chemicals: Array<{
-    id: string;
-    name: string;
-    unit: string | null;
-  }>;
+   chemicals: Array<{
+     id: string;
+     name: string;
+     unit: string | null;
+   }>;
+  // Permission flags computed by getLogSheetDetailAction (optional for service compatibility)
+  canSignTechnician?: boolean;
+  canSignClientPic?: boolean;
 };
 
 export type TEntryState = TEntryStateBase & {

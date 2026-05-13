@@ -65,25 +65,14 @@ function computeDerivedUsers(detail: TDetail): IDerivedUsers {
     clientPicName: assignedClientPicName ?? '-',
     technicianSignedByName: formatUserName(detail.logSheet.technicianSignedBy),
     clientPicSignedByName: formatUserName(detail.logSheet.clientPicSignedBy),
-    canSignTechnician: getCanSignTechnician(detail.viewerRole),
-    canSignClientPic: getCanSignClientPic(detail.viewerRole),
+    // Use server-computed permission flags (includes replacement & supervisor fallback)
+    canSignTechnician: detail.canSignTechnician ?? false,
+    canSignClientPic: detail.canSignClientPic ?? false,
     canAdminOverride: getCanAdminOverride(
       detail.viewerRole,
       detail.logSheet.status
     ),
   };
-}
-
-function getCanSignTechnician(role: string): boolean {
-  return role === 'ADMIN' || role === 'TECHNICIAN';
-}
-
-function getCanSignClientPic(role: string): boolean {
-  return (
-    role === 'ADMIN' ||
-    role === 'CLIENT_TECHNICIAN' ||
-    role === 'CLIENT_SUPERVISOR'
-  );
 }
 
 function getCanAdminOverride(role: string, status: string): boolean {
