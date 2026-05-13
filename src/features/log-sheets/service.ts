@@ -53,7 +53,12 @@ async function assertCanSignLogSheet(
 ) {
   const row = await prisma.logSheet.findFirst({
     where: { id: logSheetId, deletedAt: null },
-    select: { id: true, projectId: true, status: true },
+    select: {
+      id: true,
+      projectId: true,
+      status: true,
+      replacedByUserId: true,
+    },
   });
 
   if (!row) {
@@ -71,23 +76,43 @@ async function assertCanSignLogSheet(
   }
 
   if (role === 'TECHNICIAN') {
+    // Original technician with active assignment
     const isTechnician =
       actor.role === 'TECHNICIAN' &&
       (await hasProjectAssignment(actor.id, row.projectId, 'TECHNICIAN'));
-    if (!isTechnician) {
-      throw new Error('Hanya teknisi proyek yang dapat menandatangani');
+    // Replacement user (designated on this logsheet)
+    const isReplacement = actor.id === row.replacedByUserId;
+    // Supervisor fallback
+    const isSupervisor = actor.role === 'SUPERVISOR';
+
+    if (!isTechnician && !isReplacement && !isSupervisor) {
+      throw new Error(
+        'Hanya teknisi proyek, pengganti, atau supervisor yang dapat menandatangani'
+      );
     }
-  } else if (role === 'CLIENT_PIC') {
+
+    return row;
+  }
+
+  if (role === 'CLIENT_PIC') {
+    // Original client PIC with active assignment
     const isClientPic =
       (actor.role === 'CLIENT_TECHNICIAN' ||
         actor.role === 'CLIENT_SUPERVISOR') &&
       (await hasProjectAssignment(actor.id, row.projectId, 'CLIENT_PIC'));
-    if (!isClientPic) {
-      throw new Error('Hanya PIC klien proyek yang dapat menandatangani');
+    // Client supervisor fallback (no assignment check needed beyond project access)
+    const isClientSupervisor = actor.role === 'CLIENT_SUPERVISOR';
+
+    if (!isClientPic && !isClientSupervisor) {
+      throw new Error(
+        'Hanya PIC klien proyek atau supervisor klien yang dapat menandatangani'
+      );
     }
+
+    return row;
   }
 
-  return row;
+  throw new Error('Role tanda tangan tidak valid');
 }
 
 export async function saveLogSheetSignature(

@@ -1,37 +1,46 @@
-## [Unreleased] — Attendance RBAC & Project Filter + Logsheet UI Fixes (2026-05-13)
+## [Unreleased] — Supervisor/Replacement Logsheet Permissions & Attendance Fixes (2026-05-13)
 
 ### New Features
 
-- Role-based access control for attendance module with strict separation: ADMIN (admin view), SUPERVISOR (read-only assignment-scoped), TECHNICIAN (clock in/out + own history), CLIENT_SUPERVISOR (blocked).
-- Admin attendance page (`/attendance/admin`) with **project dropdown** filter, date range, and technician selector. CSV export respects all active filters.
-- Auto-redirect: ADMIN → admin page; CLIENT_SUPERVISOR → home with error toast.
-- E2E test suite for access control scenarios (technician, supervisor, admin, client-supervisor).
+- **[LOG-004] Supervisor and replacement signature workflow**  
+  **Branch:** `fix/log-sheets-supervisor-replacement-permissions`  
+  Supervisors can edit draft logsheets in assigned projects, add technician signature (fallback), and submit. Replacement technicians (via `replacedByUserId`) can edit, sign, and submit their assigned logsheet. Client supervisors can sign as CLIENT_PIC fallback.  
+  **Files Modified:**  
+  - `src/features/projects/access-policy.ts`  
+  - `src/features/log-sheets/internal/edit-permission.ts`  
+  - `src/features/log-sheets/service.ts`  
+  - `src/features/log-sheets/log-sheet-status.service.ts`  
+  - `src/features/log-sheets/actions.ts`  
+  - `src/features/log-sheets/types.ts`  
+  - `src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.tsx`  
+  - `src/app/(main)/log-sheets/[projectId]/[logSheetId]/hooks/use-log-sheet-derived-users.ts`  
+  - `src/app/(main)/log-sheets/[projectId]/[logSheetId]/types.ts`  
+  - Test files: `service.characterization.test.ts`, `page.characterization.test.tsx`.
 
 ### Technical Changes
 
-- **Schema:** Extended `attendanceListFiltersSchema` with optional `projectId`.
-- **Service:** Both functional (`service.ts`) and class-based (`attendance-service.ts`) `listAttendance` now filter by `user.projectAssignments.some({ projectId, role: 'TECHNICIAN' })`.
-- **Admin UI:** Integrated `getProjectsAction` for project dropdown; updated filter state, dependencies, and reset logic.
-- **Guards:** `useSession`-based admin guard; main page early redirects for ADMIN and CLIENT_SUPERVISOR.
-- **Tests:** Unit test for projectId filter; new E2E spec + supervisor auth setup; Playwright config updated.
+- **Project Access:** Extended `buildProjectAccessWhere` to include `replacedByUserId` OR condition, enabling replacement users to see projects they're covering.
+- **Signature Flags:** Added `canSignTechnician` and `canSignClientPic` to detail view; computed server-side for UI consistency.
+- **UI Mode:** Changed preview-only restriction to apply only to CLIENT roles; internal staff now get input mode.
 
 ### Bug Fixes
 
-- **[LOG-001]** Petugas Hari Ini dropdown: removed redundant self-reference. The logged-in technician no longer appears twice ("Saya Sendiri" + their name). User is filtered from the list.
-- **[LOG-002]** COOLING_WATER_QUALITY table overflow: parameter names now wrap; Raw Water column widened from 100px to 140px to prevent overflow in edit mode.
-- **[ATT-001]** AttendancePromptCard: fixed conditional hooks violation by moving `useEffect` before early return; replaced `console.error` with `logger.error`.
-- **[LOG-003]** Simplified log sheet validation: TEXT parameters now optional; submission requires at least one complete chiller or cooling tower; draft save warnings removed. Updated characterization tests.
+- [LOG-001] Petugas Hari Ini dropdown: removed redundant self-reference.
+- [LOG-002] COOLING_WATER_QUALITY table overflow: parameter names wrap; Raw Water column widened.
+- [ATT-001] AttendancePromptCard: fixed conditional hooks violation; replaced console.error with logger.error.
+- [LOG-003] Simplified log sheet validation: TEXT parameters optional; submission requires at least one complete machine; draft save warnings removed.
 
-**Files Modified:**
+**Files Modified (cumulative this session):**
 
 - `src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.tsx`
 - `src/features/log-sheets/components/category-sections/cooling-water-desktop.tsx`
 - `src/app/(main)/components/attendance-prompt-card.tsx`
-- `src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.characterization.test.tsx`
 - `src/features/log-sheets/validation.ts`
-- `src/features/log-sheets/validation.characterization.test.ts`
+- Plus all permission-related files listed above.
 
 ---
+
+## [Unreleased] — Attendance RBAC & Project Filter + Logsheet UI Fixes (2026-05-13)
 
 # Changelog — CHANGELOG.md
 

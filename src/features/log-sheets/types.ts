@@ -275,4 +275,7 @@ export interface ILogSheetDetailView {
     name: string;
     unit: string | null;
   }>;
+  // Permission flags computed by getLogSheetDetailAction (optional for service compatibility)
+  canSignTechnician?: boolean;
+  canSignClientPic?: boolean;
 }
