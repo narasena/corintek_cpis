@@ -6,6 +6,7 @@ export const attendanceListFiltersSchema = z.object({
   dateFrom: dateLocalSchema,
   dateTo: dateLocalSchema,
   userId: z.string().uuid().optional(),
+  projectId: z.string().uuid().optional(),
 });
 
 export const paginationInputSchema = z.object({

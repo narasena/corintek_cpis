@@ -33,11 +33,17 @@ function formatClock(value: string | Date | null) {
   return format(d, 'HH:mm', { locale: id });
 }
 
+function formatDate(value: string) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return format(d, 'dd MMMM yyyy', { locale: id });
+}
+
 export const columns: ColumnDef<TAttendanceTechnicianRow>[] = [
   {
     accessorKey: 'dateLocal',
     header: 'Tanggal',
-    cell: ({ row }) => row.getValue('dateLocal') as string,
+    cell: ({ row }) => formatDate(row.getValue('dateLocal') as string),
   },
   {
     accessorKey: 'clockInAt',

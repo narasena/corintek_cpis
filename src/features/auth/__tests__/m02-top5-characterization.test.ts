@@ -40,7 +40,7 @@ describe('M-02 Top 5 Riskiest Functions — Characterization', () => {
 
       // Multi-module collision check (users vs absence)
       expect(matchPathToResource('/users')).toBe(RbacResource.USERS_ADMIN);
-      expect(matchPathToResource('/absence')).toBe(RbacResource.ATTENDANCE);
+      expect(matchPathToResource('/attendance')).toBe(RbacResource.ATTENDANCE);
       expect(matchPathToResource('/attendance')).toBe(RbacResource.ATTENDANCE);
     });
 

@@ -928,3 +928,49 @@ The stabilization phase revealed 48 unique bugs across multiple modules. Manual 
 - `BACKLOG.md` is now significantly smaller and more focused on scope.
 - `AGENTS.md` governs bug documentation behavior.
 - Manual UAT preparation is faster by simply reviewing `docs/bugs.md`.
+
+---
+
+## ADR-017: Attendance Role-Based Access Control & Project Filtering
+
+**Date:** 2026-05-13  
+**Status:** Accepted  
+**Scope:** Attendance module, RBAC, Admin UI, Data Filtering
+
+### Context
+
+Attendance records are audit artifacts. All users can view their own history, but supervisors should only see their assigned technicians, and admins need a consolidated view with flexible filters. Client supervisors must have no access (internal-only). Additionally, the admin view needed to support filtering by project to slice attendance data per project assignment.
+
+### Decision
+
+Implement strict role-based access for the attendance module:
+
+| Role                | Access Scope                                                                                                   |
+| ------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `TECHNICIAN`        | Clock in/out + view own attendance history only (read-only).                                                   |
+| `SUPERVISOR`        | Read-only table of technicians assigned to their projects (no clock UI).                                       |
+| `ADMIN`             | Admin-only page (`/attendance/admin`) with date, technician, **project** filters; CSV export respects filters. |
+| `CLIENT_SUPERVISOR` | No access to internal attendance; redirected to home with error toast.                                         |
+
+Additionally, admin page gains a **project dropdown** that filters attendance to technicians who have a `TECHNICIAN` assignment on the selected project. Unassigned technicians appear only when "Semua Proyek" (empty projectId) is selected.
+
+### Implementation Highlights
+
+1. **Filter Propagation:** Extended `attendanceListFiltersSchema` with optional `projectId`. Service layer (functional `service.ts` and class-based `attendance-service.ts`) incorporates `user.projectAssignments.some({ projectId, role: 'TECHNICIAN' })` into the `where` clause.
+2. **Admin Guard:** `/attendance/admin` uses `useSession` to ensure only ADMIN role can access; non-admin redirects home with toast.
+3. **Main Page Routing:** ADMIN users are auto-redirected to `/attendance/admin`; CLIENT_SUPERVISOR blocked with error toast.
+4. **UI:** Admin page adds project dropdown populated via `getProjectsAction`; filter state drives data fetch and CSV export.
+5. **Read-Only Principle:** No edit/delete actions anywhere on attendance pages — enforced by not rendering any action UI.
+
+### Rationale
+
+- **Security & Compliance:** Attendance records must be immutable audit logs; no edits after creation.
+- **Project Context:** Supervisors and admins often need to view attendance per project; project filter provides this efficiently.
+- **Role Separation:** CLIENT_SUPERVISOR role has no business in internal attendance; blocking prevents accidental exposure.
+- **Scalability:** As projects and technicians grow, the project filter maintains usable admin interface.
+
+### Consequences
+
+- Technicians not assigned to any project are visible only when no project filter is active.
+- CSV export automatically reflects current filter selection (date, technician, project).
+- No future developer can inadvertently add edit/delete UI without a deliberate decision (documented in `docs/CONTEXT.md`).

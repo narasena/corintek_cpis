@@ -1,258 +1,71 @@
-# Session Handoff — 2026-05-11 (ActionCell Custom Description Bug Fix)
+# Session Handoff — 2026-05-13 (Attendance Role-Based Access & Project Filter)
 
-## Target: Fix "Sudah ada undefined log sheet" message
-
-**Branch:** `staging`
+**Branch:** `fix/absence-list`
 
 ### Completed This Session
 
-| Task | Status |
-|------|--------|
-| Identify root cause: nullish coalescing misuse in columns.tsx:173 | ✅ Complete |
-| Replace with conditional that passes `undefined` when count is 0 | ✅ Complete |
-| Verify build succeeds | ✅ Complete |
+| Task                                                                            | Status      |
+| ------------------------------------------------------------------------------- | ----------- |
+| Add `projectId` filter to attendance schema and services                        | ✅ Complete |
+| Extend `listAttendance` and buildWhereClause with project-based user filtering  | ✅ Complete |
+| Add project dropdown to admin page, fetch projects, integrate with filters      | ✅ Complete |
+| Add admin route guard using `useSession`                                        | ✅ Complete |
+| Redirect ADMIN from main page to admin page; block CLIENT_SUPERVISOR with toast | ✅ Complete |
+| Unit test for projectId filter in attendance-service.test.ts                    | ✅ Complete |
+| E2E tests: create access-control.spec.ts + supervisor.setup.ts                  | ✅ Complete |
+| Update Playwright config for attendance test project                            | ✅ Complete |
+| Documentation: DECISIONS, CHANGELOG, HANDOFFS                                   | ✅ Complete |
 
-### Problem
+### Objective
 
-In `src/app/(main)/projects/components/columns.tsx:173`:
-```typescript
-customDescription={`${row.original.logSheets._count ?? `Sudah ada ${row.original.logSheets._count} log sheet`}`}
-```
-When `_count` is `undefined`, the fallback string interpolates `undefined`, producing: "Sudah ada undefined log sheet".
+Restrict attendance features based on user roles with immutable records:
 
-### Desired Behavior
-- If count = 0 → no custom description
-- If count > 0 → "Sudah ada {count} logsheet tersimpan di database."
+- **ADMIN**: Admin-only view with date, technician, and **project filters**; CSV export respects filters.
+- **SUPERVISOR**: Read-only table of assigned technicians.
+- **TECHNICIAN**: Clock in/out + own history.
+- **CLIENT_SUPERVISOR**: No access — redirect to home with error toast.
 
-### Changes
+### Key Changes
 
-**File:** `src/app/(main)/projects/components/columns.tsx:173`
+**Schema & Types**
 
-**Before:**
-```typescript
-customDescription={`${row.original.logSheets._count ?? `Sudah ada ${row.original.logSheets._count} log sheet`}`}
-```
+- `src/features/attendance/types.ts`: Add `projectId: z.string().uuid().optional()` to `attendanceListFiltersSchema`.
 
-**After:**
-```typescript
-customDescription={
-  row.original.logSheets._count > 0
-    ? `Sudah ada ${row.original.logSheets._count} logsheet tersimpan di database.`
-    : undefined
-}
-```
+**Service Layer**
 
-### Verification
+- `src/features/attendance/service.ts`: Extend `listAttendance` where clause to join through `ProjectAssignment`:
+  ```ts
+  ...(filters.projectId ? { user: { projectAssignments: { some: { projectId, role: 'TECHNICIAN' } } } } : {})
+  ```
+- `src/features/attendance/attendance-service.ts`: Same filter added to `buildWhereClause`; typed where as `Prisma.AttendanceWhereInput` to satisfy TS.
 
-- Build: `npm run build` passed
+**Admin Page: Guards & Filters**
 
----
+- `src/app/(main)/attendance/admin/page.tsx`:
+  - Use `useSession` hook; guard redirects non-ADMIN.
+  - State: `projectId` added; fetch projects via `getProjectsAction`.
+  - UI: Project dropdown ("Semua Proyek") alongside date range and technician filter.
+  - `fetchAttendance` and `handleExport` now include `projectId`.
+  - `canReset` and `resetFilters` handle all three filters.
 
-# Session Handoff — 2026-05-11 (Project Personnel Assignment Persistence)
+**Main Attendance Page**
 
-## Target: Fix project creation bug where personnel assignments are ignored on creation
+- `src/app/(main)/attendance/page.tsx`:
+  - Early ADMIN redirect to `/attendance/admin`.
+  - CLIENT_SUPERVISOR block with toast error and redirect to `/`.
 
-**Branch:** `fix/project-creation-no-personel`
+**Tests**
 
-### Completed This Session
-
-| Task | Status |
-|------|--------|
-| Identify root cause: `createProject` discards assignments | ✅ Complete |
-| Persist assignments in same transaction via `applyProjectAssignmentsTransaction` | ✅ Complete |
-| Add unit test for assignment persistence | ✅ Complete |
-| Fix project table date format to "12 Sep 2026" | ✅ Complete |
-| UI polish: responsive form layout, dialog height | ✅ Complete |
-
-### Files Modified
-
-- `src/features/projects/service.ts` — core fix
-- `src/features/projects/service.test.ts` — test coverage
-- `src/app/(main)/projects/components/columns.tsx` — date formatting + lint
-- `src/features/projects/components/project-form.tsx` — responsive layout
-- `src/features/projects/components/project-meta-section.tsx` — responsive layout
-- `src/features/machines/components/machine-form-section.tsx` — sticky header
-- `src/components/crud-dialog.tsx` — height consistency
-- `src/app/(main)/projects/page.tsx` — cleanup unused import
-- `docs/bugs.md` — added BUG-050
-- `docs/CHANGELOG.md` — added v0.7.4 entry
-- `docs/HANDOFFS.md` — this entry
+- `src/features/attendance/attendance-service.test.ts`: Added test verifying `projectId` some-join condition.
+- `src/__tests__/e2e/attendance/access-control.spec.ts`: New E2E spec covering all role access patterns.
+- `src/__tests__/e2e/auth/supervisor.setup.ts`: Auth helper for SUPERVISOR role.
+- `playwright.config.ts`: Added `attendance:access-control` project depending on all four auth setups.
 
 ### Verification
 
-- Unit tests: `npm run test -- src/features/projects/service.test.ts` (16/16 passed)
-- Lint: Prettier formatted; no new errors
-- Manual: Create project with assignments → verify saved immediately
+- Build: `npm run build` passes cleanly.
+- TypeScript: No new errors in modified files.
+- Project filter: Admins can select a project to restrict technician list to those assigned as `TECHNICIAN` in that project.
+- CSV export: Includes current filtered rows.
 
 ---
-
-# Session Handoff — 2026-04-29 (UAT Environment Setup & Security Fix)
-
-> **⚠ TOP PRIORITY — Development Handoff Required**  
-> The `prisma/seed.ts` file previously contained hardcoded admin credentials (`admin@corintek.com / Corintek123!`). These have been externalized to environment variables for UAT. The development branch still uses hardcoded values and must be updated. Do not deploy or share any code until development branch is fixed. See: `docs/CONTEXT.md` → "Active Gotchas ⚠️" (add entry: "Secrets: Never hardcode credentials — use env vars SEED_ADMIN_EMAIL/PASSWORD")".
-
-## Target: Create isolated UAT environment with secure seeding
-
-**Branch:** `staging/uat-setup` (new)
-
-### Completed This Session
-
-| Task | Status |
-|------|--------|
-| Create Supabase UAT project (free tier, ap-northeast-1) | ✅ Complete |
-| Configure `.env.uat` with UAT DB credentials and R2 worker | ✅ Complete |
-| Add UAT-specific npm scripts (`prisma:seed:uat`, etc.) | ✅ Complete |
-| Create dedicated branch `staging/uat-setup` for UAT | ✅ Complete |
-| Fix seed script for new Parameter schema (ParameterLimit split) | ✅ Complete |
-| Secure admin credentials: moved to `SEED_ADMIN_EMAIL/PASSWORD` env vars | ✅ Complete |
-| Add SEED_CREATE_ADMIN flag to control admin seeding per environment | ✅ Complete |
-| Seed UAT database (admin + parameters + limits) | ✅ Complete |
-
-### Changes Made
-
-| File | Change |
-|------|--------|
-| `.env.uat` | Added `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_CREATE_ADMIN=true` |
-| `prisma/seed.ts` | Replaced hardcoded admin credentials with env vars; added `hasLimits` to Parameter seeding; created `ParameterLimitProfile` with limits for 23 numeric parameters |
-| `package.json` | Added `prisma:*:uat` scripts for migrations, seed, studio, generate, push, status |
-
-### UAT Environment Details
-
-- **Supabase Project:** `corintek-cpis-uat` (ap-northeast-1)
-- **Database:** PostgreSQL via connection pooling
-- **Branch:** `staging/uat-setup`
-- **Deployment:** Preview deployment configured (Vercel or similar)
-- **Admin Credentials (UAT):**
-  - Email: `admin@corintek.com`
-  - Password: `CorintekUAT123!@#`
-  - **Security:** Unique to UAT, different from development
-
-### Next Steps (Critical)
-
-1. **Fix Development Branch** (`development_v2`):
-   - Update `prisma/seed.ts` on `development_v2` to also use env vars (avoid hardcoded secrets)
-   - Create `.env.development` entries: `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_CREATE_ADMIN=true`
-   - Commit as: `feat(security): externalize seed admin credentials to env vars`
-   - **Priority:** HIGH — addresses security vulnerability
-
-2. **Production Planning**:
-   - For `main`/production: set `SEED_CREATE_ADMIN=false` in `.env.production`
-   - Create initial admin via secure invite flow (not seeding)
-   - Document production bootstrapping process in `docs/PRODUCTION_SETUP.md`
-
-3. **Client Handover**:
-   - Share UAT preview URL with client
-   - Provide UAT admin credentials (use password manager)
-   - Document UAT reset procedure (delete Supabase project, rerun migrations + seed)
-
-### Security Notes
-
-- **Never commit hardcoded credentials** (even in private repos).
-- Use branch-specific env files to inject secrets at runtime.
-- Rotate UAT admin password after client acceptance.
-- Consider adding `.env*` check to pre-commit hooks (if not already present).
-
-### Migration Status
-
-- UAT database fully seeded and operational.
-- All 23 parameters + limits created under `Default Profile`.
-- Parameter schema changes accommodated in seed (limits moved to `ParameterLimit` table).
-
----
-### Why This Change?
-
-Field technicians often service only chillers OR only cooling towers on a given day. The existing "active machine" toggle already signals intent. Forcing data entry for inactive machine types creates unnecessary friction and does not match field reality.
-
-### Verification
-
-```bash
-npm run test:run -- src/features/log-sheets/validation.characterization.test.ts \
-  src/features/log-sheets/approval-validation.characterization.test.ts \
-  src/features/log-sheets/service.test.ts
-```
-
-All 43 tests pass.
-
----
-
-# Session Handoff — 2026-04-29 (Camera Black Capture)
-
-## Current Status: Fix Applied — Build Passing
-
-**Branch:** `development_v2`
-
-### Completed This Session
-
-| Task | Status |
-|------|--------|
-| Diagnose water meter camera black first capture | ✅ Complete |
-| Identify root cause | ✅ Complete — camera stream was stopped before canvas copied video pixels |
-| Fix capture order in `CameraInput` | ✅ Complete |
-| Remove forced camera-ready fallback | ✅ Complete |
-| Log bug as BUG-049 | ✅ Complete |
-| Run production build | ✅ Passed (`npm run build`) |
-
-### Root Cause
-
-`src/components/camera-input.tsx` called `stopCamera()` before `processImagePipeline(video, ...)`. On mobile browsers, stopping `MediaStreamTrack`s can immediately blank the hardware-backed `<video>` surface. Canvas then draws black pixels even though the preview was visible just before capture.
-
-### Fix
-
-Capture/compress from active video first, then stop the camera after canvas processing succeeds. Camera button readiness still waits for `video.readyState >= 2`, but no longer has a forced timeout fallback that can enable capture before the video is drawable.
-
-### Files Modified
-
-1. `src/components/camera-input.tsx` — capture order and readiness cleanup
-2. `docs/bugs.md` — added BUG-049
-3. `docs/HANDOFFS.md` — current session state
-
-### Verification
-
-- `npm run build` passed.
-
-### Cold Start Action
-
-Test on deployed Vercel/mobile Android: open logsheet water meter camera, wait for preview, capture once. Expected: first capture matches preview and is not black.
-
----
-
-# Session Handoff — 2026-03-14 (UI/UX Audit)
-
-**Critical (P0) Issues Found:** 3
-- Work Reports header misalignment (mobile)
-- Incomplete mobile navigation coverage
-- Accessibility (focus + contrast)
-
-**Major (P1) Issues Found:** 4
-- Visual inconsistency (typography/spacing)
-- Loading states inconsistency
-- Error messages not informative
-- DataTable no virtualization
-
-**Minor (P2) Issues Found:** 5
-- Login mixed language
-- Parameter page tab crowding
-- File input UX poor
-- Attendance view duplication
-- Dashboard decoration
-
----
-
-## Files Created/Modified
-
-1. `docs/UI_AUDIT.md` — NEW — Full audit report with priorities
-2. `docs/BACKLOG.md` — Updated — Added 12 UI-UX items
-
----
-
-## Next Steps (Cold Start Actions)
-
-1. Review `docs/UI_AUDIT.md` for full details
-2. Approve implementation plan
-3. Begin Phase 1 fixes (P0 critical issues)
-
----
-
-## Active Branch
-
-`development_v2`

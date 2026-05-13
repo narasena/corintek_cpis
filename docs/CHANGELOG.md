@@ -1,3 +1,34 @@
+## [Unreleased] — Attendance RBAC & Project Filter (2026-05-13)
+
+### New Features
+
+- Role-based access control for attendance module with strict separation: ADMIN (admin view), SUPERVISOR (read-only assignment-scoped), TECHNICIAN (clock in/out + own history), CLIENT_SUPERVISOR (blocked).
+- Admin attendance page (`/attendance/admin`) with **project dropdown** filter, date range, and technician selector. CSV export respects all active filters.
+- Auto-redirect: ADMIN → admin page; CLIENT_SUPERVISOR → home with error toast.
+- E2E test suite for access control scenarios (technician, supervisor, admin, client-supervisor).
+
+### Technical Changes
+
+- **Schema:** Extended `attendanceListFiltersSchema` with optional `projectId`.
+- **Service:** Both functional (`service.ts`) and class-based (`attendance-service.ts`) `listAttendance` now filter by `user.projectAssignments.some({ projectId, role: 'TECHNICIAN' })`.
+- **Admin UI:** Integrated `getProjectsAction` for project dropdown; updated filter state, dependencies, and reset logic.
+- **Guards:** `useSession`-based admin guard; main page early redirects for ADMIN and CLIENT_SUPERVISOR.
+- **Tests:** Unit test for projectId filter; new E2E spec + supervisor auth setup; Playwright config updated.
+
+**Files Modified:**
+
+- `src/features/attendance/types.ts`
+- `src/features/attendance/service.ts`
+- `src/features/attendance/attendance-service.ts`
+- `src/features/attendance/attendance-service.test.ts`
+- `src/app/(main)/attendance/admin/page.tsx`
+- `src/app/(main)/attendance/page.tsx`
+- `src/__tests__/e2e/attendance/access-control.spec.ts` (new)
+- `src/__tests__/e2e/auth/supervisor.setup.ts` (new)
+- `playwright.config.ts`
+
+---
+
 # Changelog — CHANGELOG.md
 
 > CPIS — Corintek Project Information System
@@ -15,6 +46,7 @@
 - [x] **ActionCell customDescription:** Fixed "Sudah ada undefined log sheet" message caused by nullish coalescing misuse in the projects table's delete confirmation dialog. Now correctly shows no message when count is 0, and "Sudah ada {count} logsheet tersimpan di database." when count > 0.
 
 **Files Modified:**
+
 - `src/app/(main)/projects/components/columns.tsx`
 
 ---
@@ -30,6 +62,7 @@
 - [x] **UI Polish:** Responsive layout adjustments in project form, machine section sticky header padding, and dialog height consistency.
 
 **Files Modified:**
+
 - `src/features/projects/service.ts` (core fix)
 - `src/features/projects/service.test.ts` (test coverage)
 - `src/app/(main)/projects/components/columns.tsx` (date format fix + lint)
@@ -53,6 +86,7 @@
 - [x] **UI Propagation:** Actor role and target user ID flow through `UsersPage → UserDialog → UserForm → UserSecurityFields`, showing password fields only when `canResetPassword` is true (admin editing another user).
 
 **Files Modified:**
+
 - `src/@types/user.type.ts`
 - `src/features/users/actions.ts`
 - `src/app/(main)/users/page.tsx`
@@ -68,7 +102,7 @@
 
 ### Validation & Flexibility Improvements
 
-- [x] **Optional Machine-Type Requirement:** Technicians can now submit logsheets with only chillers *or* only cooling towers populated. Previously both types had to be fully filled regardless of active selection.
+- [x] **Optional Machine-Type Requirement:** Technicians can now submit logsheets with only chillers _or_ only cooling towers populated. Previously both types had to be fully filled regardless of active selection.
 - [x] **Raw Water Conditional:** Raw water quality check is now enforced only when at least one cooling tower is active (previously always required).
 - [x] **General Condition Note Enforcement:** Fixed approval validation to correctly require the `GENERAL_CONDITION` note field (previously excluded by mistake).
 - [x] **Cross-Type Guard:** Added explicit validation to ensure at least one machine type (chillers or CTs) is active before submission.
@@ -76,6 +110,7 @@
 - [x] **Data Accuracy:** Fixed CT-only test data (removed duplicate `boolValue`, added missing `RAW_WATER` entry for cycle of concentration).
 
 **Files Modified:**
+
 - `src/features/log-sheets/validation.ts` (3 changes)
 - `src/features/log-sheets/validation.characterization.test.ts` (7 tests)
 - `src/features/log-sheets/approval-validation.ts` (2 changes)

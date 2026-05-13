@@ -98,6 +98,15 @@ export async function listAttendance(
       deletedAt: null,
       dateLocal: { gte: filters.dateFrom, lte: filters.dateTo },
       ...(filters.userId ? { userId: filters.userId } : {}),
+      ...(filters.projectId
+        ? {
+            user: {
+              projectAssignments: {
+                some: { projectId: filters.projectId, role: 'TECHNICIAN' },
+              },
+            },
+          }
+        : {}),
     },
     include: {
       user: {
