@@ -69,3 +69,67 @@ Restrict attendance features based on user roles with immutable records:
 - CSV export: Includes current filtered rows.
 
 ---
+
+# Session Handoff — 2026-05-13 (Logsheet UI Fixes & Attendance Hook Correction)
+
+**Branch:** `fix/logsheet-ui-overflow-attendance-hooks`
+
+### Completed This Session
+
+| Task                                                                                                      | Status      |
+| --------------------------------------------------------------------------------------------------------- | ----------- |
+| Remove redundant self-reference in Petugas Hari Ini dropdown                                             | ✅ Complete |
+| Fix COOLING_WATER_QUALITY table overflow (parameter name wrapping + Raw Water column width)              | ✅ Complete |
+| Fix conditional hooks violation in AttendancePromptCard                                                  | ✅ Complete |
+| Replace console.error with logger.error in AttendancePromptCard                                          | ✅ Complete |
+| Unit tests: page.characterization.test.tsx pass                                                          | ✅ Complete |
+| ESLint: attendance-prompt-card.tsx passes                                                                 | ✅ Complete |
+
+### Objective
+
+Address two user-reported UI issues and a hooks violation discovered during linting:
+
+1. **Logsheet — Redundant technician dropdown**: When creating a logsheet, the "Petugas Hari Ini" dropdown showed both "Saya Sendiri" and the logged-in technician's name, which is redundant.
+2. **Logsheet — COOLING_WATER_QUALITY overflow**: Some field labels in the COOLING_WATER_QUALITY table were overflowing their container on desktop when filled.
+3. **AttendancePromptCard — Conditional hooks**: `useEffect` was placed after an early return, violating React Hooks rules.
+
+### Key Changes
+
+**Logsheet Detail Page** (`src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.tsx`)
+
+- Import and call `useSession()` to obtain current user.
+- Filter `detail.technicians` to exclude `user.id` from the dropdown:
+  ```tsx
+  {(detail?.technicians ?? []).filter(t => t.id !== user?.id).map(...)}
+  ```
+- Now the dropdown only shows "Saya Sendiri" + other technicians (no duplicate self-reference).
+
+**Cooling Water Quality Table** (`src/features/log-sheets/components/category-sections/cooling-water-desktop.tsx`)
+
+- `ParameterNameCell`: Added `className="whitespace-normal break-words"` to `TableCell` — long parameter names with units now wrap instead of horizontal overflow.
+- `CoolingWaterTableHeader`: Increased Raw Water column width from `w-[100px]` to `w-[140px]` — accommodates the `w-24` (96px) numeric input + `RangeStatusIcon` + optional clear button without overflow.
+
+**Attendance Prompt Card** (`src/app/(main)/components/attendance-prompt-card.tsx`)
+
+- Restructured component to comply with React Hooks Rules:
+  1. All hooks (`useState`, `useTransition`, `useEffect`) called FIRST.
+  2. Computed `isAllowedRole` as a variable.
+  3. Early return `if (!isAllowedRole) return null;` placed AFTER all hooks.
+- Replaced `console.error` with `logger.error` from `@/lib/logger` per project standards.
+
+**Tests** (`src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.characterization.test.tsx`)
+
+- Added `vi.mock('@/hooks/use-session', ...)` to maintain test isolation.
+
+### Verification
+
+- Build: `npm run build` passes.
+- Lint: `npm run lint` on modified files passes (no hooks errors, logger used).
+- Tests: `npm run test:run` on logsheet detail page (12 tests) passes.
+- Manual check: Technician dropdown excludes current user; Raw Water column fits inputs cleanly; AttendancePromptCard renders for allowed roles without hooks warnings.
+
+### Notes
+
+- The `useSession` hook in logsheet detail page introduces a client-side fetch for current user. This aligns with existing usage pattern (see other pages).
+- Column width change is backward-compatible: preview mode (read-only) gains whitespace but no layout breakage; mobile already uses horizontal scroll container (`overflow-x-auto`).
+

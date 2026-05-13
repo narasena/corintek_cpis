@@ -1,4 +1,4 @@
-## [Unreleased] — Attendance RBAC & Project Filter (2026-05-13)
+## [Unreleased] — Attendance RBAC & Project Filter + Logsheet UI Fixes (2026-05-13)
 
 ### New Features
 
@@ -15,17 +15,18 @@
 - **Guards:** `useSession`-based admin guard; main page early redirects for ADMIN and CLIENT_SUPERVISOR.
 - **Tests:** Unit test for projectId filter; new E2E spec + supervisor auth setup; Playwright config updated.
 
+### Bug Fixes
+
+- **[LOG-001]** Petugas Hari Ini dropdown: removed redundant self-reference. The logged-in technician no longer appears twice ("Saya Sendiri" + their name). User is filtered from the list.
+- **[LOG-002]** COOLING_WATER_QUALITY table overflow: parameter names now wrap; Raw Water column widened from 100px to 140px to prevent overflow in edit mode.
+- **[ATT-001]** AttendancePromptCard: fixed conditional hooks violation by moving `useEffect` before early return; replaced `console.error` with `logger.error`.
+
 **Files Modified:**
 
-- `src/features/attendance/types.ts`
-- `src/features/attendance/service.ts`
-- `src/features/attendance/attendance-service.ts`
-- `src/features/attendance/attendance-service.test.ts`
-- `src/app/(main)/attendance/admin/page.tsx`
-- `src/app/(main)/attendance/page.tsx`
-- `src/__tests__/e2e/attendance/access-control.spec.ts` (new)
-- `src/__tests__/e2e/auth/supervisor.setup.ts` (new)
-- `playwright.config.ts`
+- `src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.tsx`
+- `src/features/log-sheets/components/category-sections/cooling-water-desktop.tsx`
+- `src/app/(main)/components/attendance-prompt-card.tsx`
+- `src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.characterization.test.tsx`
 
 ---
 
