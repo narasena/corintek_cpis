@@ -2450,10 +2450,10 @@ describe('P2 - Important Tests', () => {
           'CLIENT_PIC',
           'https://example.com/sig.webp'
         )
-      ).rejects.toThrow('Hanya PIC klien proyek yang dapat menandatangani');
+      ).rejects.toThrow('Hanya PIC klien proyek atau supervisor klien yang dapat menandatangani');
     });
 
-    it('rejects CLIENT_SUPERVISOR without CLIENT_PIC assignment', async () => {
+    it('allows CLIENT_SUPERVISOR without CLIENT_PIC assignment (fallback)', async () => {
       const actor = createMockActor({ role: 'CLIENT_SUPERVISOR' });
       const logSheetRow = {
         id: validUUID,
@@ -2462,17 +2462,28 @@ describe('P2 - Important Tests', () => {
       };
 
       mockPrisma.logSheet.findFirst.mockResolvedValue(logSheetRow);
+      mockPrisma.logSheet.update.mockResolvedValue({});
       vi.mocked(assertCanAccessProject).mockResolvedValue(undefined);
       mockPrisma.projectAssignment.findFirst.mockResolvedValue(null);
 
-      await expect(
-        saveLogSheetSignature(
-          actor,
-          validUUID,
-          'CLIENT_PIC',
-          'https://example.com/sig.webp'
-        )
-      ).rejects.toThrow('Hanya PIC klien proyek yang dapat menandatangani');
+      // Should succeed without requiring CLIENT_PIC assignment
+      await saveLogSheetSignature(
+        actor,
+        validUUID,
+        'CLIENT_PIC',
+        'https://example.com/sig.webp'
+      );
+
+      expect(mockPrisma.logSheet.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: validUUID },
+          data: {
+            clientPicSignatureUrl: 'https://example.com/sig.webp',
+            clientPicSignedAt: expect.any(Date),
+            clientPicSignedByUserId: actor.id,
+          },
+        })
+      );
     });
 
     it('rejects TECHNICIAN trying to sign as CLIENT_PIC', async () => {
@@ -2493,7 +2504,7 @@ describe('P2 - Important Tests', () => {
           'CLIENT_PIC',
           'https://example.com/sig.webp'
         )
-      ).rejects.toThrow('Hanya PIC klien proyek yang dapat menandatangani');
+      ).rejects.toThrow('Hanya PIC klien proyek atau supervisor klien yang dapat menandatangani');
     });
 
     it('rejects SUPERVISOR trying to sign as CLIENT_PIC', async () => {
@@ -2514,7 +2525,7 @@ describe('P2 - Important Tests', () => {
           'CLIENT_PIC',
           'https://example.com/sig.webp'
         )
-      ).rejects.toThrow('Hanya PIC klien proyek yang dapat menandatangani');
+      ).rejects.toThrow('Hanya PIC klien proyek atau supervisor klien yang dapat menandatangani');
     });
 
     it('allows ADMIN to sign as CLIENT_PIC without project assignment check', async () => {

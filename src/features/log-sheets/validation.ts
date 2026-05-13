@@ -74,7 +74,7 @@ export function validateCategoryEntries(params: {
   machines: TValidationMachine[];
   activeMachineIds: string[];
   entryState: Record<string, TValidationEntryState>;
-  categories: TValidationParameter['category'][];
+  categories: readonly TValidationParameter['category'][];
   machineTypeLabel: string;
   isComplete: TCompletenessChecker;
   role?: 'VALUE' | 'RAW_WATER' | 'NOTE';

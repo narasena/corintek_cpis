@@ -10,6 +10,10 @@ export type TProjectAccessWhere = {
       isActive: boolean;
     };
   };
+  /**
+   * For internal use: advanced OR conditions not expressible via direct fields
+   */
+  OR?: Array<Record<string, unknown>>;
 };
 
 export type TProjectActor = {
@@ -29,7 +33,7 @@ export function isProjectScopedRole(role: string): boolean {
 
 export function buildProjectAccessWhere(
   actor: TProjectActor,
-  baseWhere?: TProjectAccessWhere
+  baseWhere?: Omit<TProjectAccessWhere, 'OR'>
 ): TProjectAccessWhere {
   try {
     const safeBase: TProjectAccessWhere = {
@@ -41,15 +45,28 @@ export function buildProjectAccessWhere(
       return safeBase;
     }
 
+    // Project-scoped roles: require ONGOING status AND (assignment OR replacement relationship)
     return {
       ...safeBase,
       status: 'ONGOING',
-      assignments: {
-        some: {
-          userId: actor.id,
-          isActive: true,
+      OR: [
+        {
+          assignments: {
+            some: {
+              userId: actor.id,
+              isActive: true,
+            },
+          },
         },
-      },
+        {
+          logSheets: {
+            some: {
+              replacedByUserId: actor.id,
+              deletedAt: null,
+            },
+          },
+        },
+      ],
     };
   } catch (error) {
     console.error('[CPIS-ERROR] Projects.BuildAccessWhere:', error);

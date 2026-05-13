@@ -41,6 +41,12 @@ vi.mock('sonner', () => ({
   },
 }));
 
+vi.mock('@/hooks/use-session', () => ({
+  useSession: () => ({
+    user: { id: 'u-1', role: 'SUPERVISOR' },
+  }),
+}));
+
 vi.mock('@/components/data-table', () => ({
   DataTable: ({
     data,

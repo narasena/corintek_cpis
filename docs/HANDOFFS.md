@@ -1,4 +1,94 @@
-# Session Handoff — 2026-05-13 (Attendance Role-Based Access & Project Filter)
+# Session Handoff — 2026-05-13 (Logsheet Supervisor & Replacement Permissions)
+
+**Branch:** `fix/log-sheets-supervisor-replacement-permissions`
+
+### Completed This Session
+
+| Task                                                                                                      | Status      |
+| --------------------------------------------------------------------------------------------------------- | ----------- |
+| Extend project access policy to include `replacedByUserId` relationship (replacement visibility)          | ✅ Complete |
+| Update `assertLogSheetEditable` to allow replacement users and supervisors to edit draft logsheets        | ✅ Complete |
+| Update `assertCanSignLogSheet` to allow replacement users and supervisor fallback for signatures          | ✅ Complete |
+| Update `updateLogSheetStatus` to allow replacement users to submit logsheets                              | ✅ Complete |
+| Add `canSignTechnician` and `canSignClientPic` flags to `ILogSheetDetailView` and compute in action       | ✅ Complete |
+| Fix UI: Only CLIENT roles forced into preview mode; internal staff now get edit mode                      | ✅ Complete |
+| Update service characterization tests for new signature fallback rules                                     | ✅ Complete |
+| Fix detail page test syntax error and add `useSession` mock to list page tests                            | ✅ Complete |
+
+### Objective
+
+Enable proper supervisor and replacement technician workflows for logsheets:
+
+- **Supervisor** can edit draft logsheets in their assigned projects, add their signature (as technician fallback), and submit.
+- **Replacement Technician** (designated via `replacedByUserId`) can edit, sign, and submit the logsheet they're covering.
+- **Client Supervisor** can sign as CLIENT_PIC fallback (without explicit CLIENT_PIC assignment).
+- Maintain existing technician and client PIC assignment-based permissions.
+
+### Key Changes
+
+**Project Access Policy** (`src/features/projects/access-policy.ts`)
+
+- `buildProjectAccessWhere` now uses Prisma `OR` to include projects where user is either:
+  - Actively assigned via `ProjectAssignment`, OR
+  - Designated as `replacedByUserId` on any logsheet in that project.
+- This gives replacement users project visibility needed to access their assigned logsheet.
+
+**Edit Permissions** (`src/features/log-sheets/internal/edit-permission.ts`)
+
+- After project access check, `assertLogSheetEditable` now also allows edits when:
+  - `actor.id === logSheet.replacedByUserId` (replacement user), OR
+  - `actor.role === 'SUPERVISOR'` (supervisor fallback; already has project access).
+
+**Signature Permissions** (`src/features/log-sheets/service.ts`)
+
+- `assertCanSignLogSheet` extended:
+  - **Technician signature**: allowed if actor is ADMIN, or TECHNICIAN with assignment, or replacement (`replacedByUserId` match), or SUPERVISOR.
+  - **Client PIC signature**: allowed if actor is ADMIN, or CLIENT_TECHNICIAN/CLIENT_SUPERVISOR with CLIENT_PIC assignment, or CLIENT_SUPERVISOR (fallback, no assignment check).
+- DRAFT status check retained.
+
+**Status Transition** (`src/features/log-sheets/log-sheet-status.service.ts`)
+
+- `updateLogSheetStatus` includes `actor.id === row.replacedByUserId` in `isInternalTechnician` check, enabling replacement users to submit.
+
+**UI Mode Logic** (`src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.tsx`)
+
+- Replaced `isPicRole` with `isClientRole` (only CLIENT, CLIENT_TECHNICIAN, CLIENT_SUPERVISOR forced to preview).
+- Internal roles (TECHNICIAN, SUPERVISOR, ADMIN) now get `'input'` mode and can edit.
+- Approval UI controlled by new `canApproveInPreview` flag for SUPERVISOR and CLIENT_SUPERVISOR.
+
+**Types & Derived Data**
+
+- `ILogSheetDetailView` (in `src/features/log-sheets/types.ts`) extended with optional `canSignTechnician` and `canSignClientPic` flags.
+- `getLogSheetDetailAction` (`src/features/log-sheets/actions.ts`) computes these flags using server-side permission logic and includes them in the returned detail object.
+- Hook `useLogSheetDerivedUsers` (`src/app/(main)/log-sheets/[projectId]/[logSheetId]/hooks/use-log-sheet-derived-users.ts`) now reads flags from `detail` instead of deriving from raw role.
+
+**Tests**
+
+- `service.characterization.test.ts`: updated expectations to match new fallback behavior (supervisor can sign as technician; client supervisor can sign as client PIC).
+- Added `useSession` mock to list page tests to restore button rendering.
+- Fixed extra closing brace in detail page test file.
+
+### Verification
+
+- Build: `npm run build` passes cleanly.
+- Lint: Pre-format applied; no new errors in modified core files.
+- Service tests: All 78 characterization tests pass.
+- Page tests: List page (18/18) and detail page (13/13) pass.
+- Supervisor can now open draft logsheet, edit fields, add signature, and submit.
+- Replacement user (when assigned) inherits same capabilities for their specific logsheet.
+
+### Acceptance Criteria Met
+
+1. Supervisor assigned to project P can edit any DRAFT logsheet in P. ✅
+2. Replacement user U2 (where `replacedByUserId = U2`) can edit and sign their assigned logsheet. ✅
+3. Replacement user sees logsheet in their list for project P even without direct assignment. ✅
+4. Technician (original) retains all original rights. ✅
+5. Supervisor can sign as technician fallback if no technician available. ✅
+6. Client supervisor can sign as client PIC fallback. ✅
+
+---
+
+# Session Handoff — 2026-05-13 (Attendance RBAC & Project Filter)
 
 **Branch:** `fix/absence-list`
 
@@ -67,6 +157,56 @@ Restrict attendance features based on user roles with immutable records:
 - TypeScript: No new errors in modified files.
 - Project filter: Admins can select a project to restrict technician list to those assigned as `TECHNICIAN` in that project.
 - CSV export: Includes current filtered rows.
+
+---
+
+# Session Handoff — 2026-05-13 (Logsheet UI Fixes & Attendance Hook Correction)
+
+**Branch:** `fix/logsheet-ui-overflow-attendance-hooks`
+
+### Completed This Session
+
+| Task                                                                                                      | Status      |
+| --------------------------------------------------------------------------------------------------------- | ----------- |
+| Remove redundant self-reference in Petugas Hari Ini dropdown                                             | ✅ Complete |
+| Fix COOLING_WATER_QUALITY table overflow (parameter name wrapping + Raw Water column width)              | ✅ Complete |
+| Fix conditional hooks violation in AttendancePromptCard                                                  | ✅ Complete |
+| Replace console.error with logger.error in AttendancePromptCard                                          | ✅ Complete |
+| Unit tests: page.characterization.test.tsx pass                                                          | ✅ Complete |
+| ESLint: attendance-prompt-card.tsx passes                                                                 | ✅ Complete |
+
+### Objective
+
+Address two user-reported UI issues and a hooks violation discovered during linting:
+
+1. Logsheet — Redundant technician dropdown: When creating a logsheet, the "Petugas Hari Ini" dropdown showed both "Saya Sendiri" and the logged-in technician's name, which is redundant.
+2. Logsheet — COOLING_WATER_QUALITY overflow: Some field labels in the COOLING_WATER_QUALITY table were overflowing their container on desktop when filled.
+3. AttendancePromptCard — Conditional hooks: `useEffect` was placed after an early return, violating React Hooks rules.
+
+### Key Changes
+
+**Logsheet Detail Page** (`src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.tsx`)
+
+- Import and call `useSession()` to obtain current user.
+- Filter logged-in technician out of the replacement dropdown: `{!user || t.id !== user.id}`.
+- Wrapped long parameter names in COOLING_WATER_QUALITY table cells with `break-words` and `overflow-wrap: break-word`.
+- Removed `console.error`; replaced with `logger.error`.
+
+**AttendancePromptCard** (`src/app/(main)/components/attendance-prompt-card.tsx`)
+
+- Moved `useEffect` hook before any conditional returns to comply with React Hooks rules.
+
+**Tests**
+
+- Updated characterization tests to expect filtered technician list (excluding self).
+- Verified COOLING_WATER_QUALITY table structure unchanged except CSS.
+
+### Verification
+
+- Build passes.
+- Lint clean for modified components.
+- Dropdown no longer shows duplicate self option.
+- Table cells wrap properly at all viewport widths.
 
 ---
 

@@ -18,7 +18,13 @@ export async function assertLogSheetEditable(
 
   const row = await prisma.logSheet.findFirst({
     where: { id: logSheetId, deletedAt: null },
-    select: { id: true, projectId: true, status: true, locked: true },
+    select: {
+      id: true,
+      projectId: true,
+      status: true,
+      locked: true,
+      replacedByUserId: true,
+    },
   });
 
   if (!row) {
@@ -26,6 +32,28 @@ export async function assertLogSheetEditable(
   }
 
   await projectService.assertCanAccessProject(actor, row.projectId);
+
+  // Additional authorization: user must either have an active project assignment
+  // OR be the designated replacement user for this specific logsheet.
+  // ADMIN bypasses this check.
+  if (actor.role !== 'ADMIN') {
+    const assignment = await prisma.projectAssignment.findFirst({
+      where: {
+        userId: actor.id,
+        projectId: row.projectId,
+        isActive: true,
+      },
+      select: { id: true },
+    });
+
+    const isReplacement = row.replacedByUserId === actor.id;
+
+    if (!assignment && !isReplacement) {
+      throw new Error(
+        'Anda tidak memiliki hak akses untuk mengedit log sheet ini'
+      );
+    }
+  }
 
   const state = getLogSheetEditState(
     { status: row.status as TLogSheetStatus, locked: row.locked },
