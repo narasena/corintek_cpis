@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Check, Clock, LogIn, LogOut, Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -38,11 +39,9 @@ export function AttendancePromptCard({ userRole }: AttendancePromptCardProps) {
   const isPending = isClockingIn || isClockingOut;
 
   // Only show for TECHNICIAN and SUPERVISOR
-  if (
-    !ATTENDANCE_ROLES.includes(userRole as (typeof ATTENDANCE_ROLES)[number])
-  ) {
-    return null;
-  }
+  const isAllowedRole = ATTENDANCE_ROLES.includes(
+    userRole as (typeof ATTENDANCE_ROLES)[number]
+  );
 
   useEffect(() => {
     async function fetchTodayAttendance() {
@@ -52,13 +51,17 @@ export function AttendancePromptCard({ userRole }: AttendancePromptCardProps) {
           setAttendance(result.data as TodayAttendance);
         }
       } catch (error) {
-        console.error('[CPIS-ERROR] Failed to fetch today attendance:', error);
+        logger.error('[CPIS-ERROR] Failed to fetch today attendance:', error);
       } finally {
         setIsLoading(false);
       }
     }
     fetchTodayAttendance();
   }, []);
+
+  if (!isAllowedRole) {
+    return null;
+  }
 
   const handleClockIn = () => {
     // Create a dummy file to trigger the action - in production user would select a photo
@@ -171,7 +174,8 @@ export function AttendancePromptCard({ userRole }: AttendancePromptCardProps) {
                   Sudah absen masuk
                 </CardTitle>
                 <CardDescription className="text-sm text-amber-700">
-                  Jangan lupa absen pulang nanti
+                  Jangan lupa lakukan absen pulang saat menyelesaikan pekerjaan
+                  hari ini.
                 </CardDescription>
               </div>
             </div>
