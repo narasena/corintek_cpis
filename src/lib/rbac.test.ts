@@ -40,7 +40,7 @@ describe('matchPathToResource', () => {
       RbacResource.LOG_SHEETS
     );
     expect(matchPathToResource('/attendance')).toBe(RbacResource.ATTENDANCE);
-    expect(matchPathToResource('/absence')).toBe(RbacResource.ATTENDANCE);
+    expect(matchPathToResource('/attendance')).toBe(RbacResource.ATTENDANCE);
   });
 
   it('matches master data paths', () => {

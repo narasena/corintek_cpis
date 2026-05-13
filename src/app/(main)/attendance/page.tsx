@@ -25,6 +25,8 @@ import { Button } from '@/components/ui/button';
 import { columns, type TAttendanceTechnicianRow } from './components/columns';
 import { useSession } from '@/hooks/use-session';
 import type { TTechnicianAttendanceStatus } from '@/features/attendance/types';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 type TAttendance = {
   id: string;
@@ -42,6 +44,12 @@ function formatTime(value: string | Date | null | undefined) {
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return '-';
   return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDate(value: string) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return format(d, 'dd MMMM yyyy', { locale: id });
 }
 
 function getDefaultDateRange() {
@@ -312,40 +320,43 @@ function SupervisorAttendanceView() {
 }
 
 export default function AttendancePage() {
-  const { user: actor } = useSession();
+  const { user: actor, isLoading: sessionLoading } = useSession();
   const router = useRouter();
 
-  // BUG-047 FIX: Guard - only TECHNICIAN, SUPERVISOR, ADMIN, and CLIENT_SUPERVISOR can access
+  // Redirect effect — runs after session load to navigate based on role
   useEffect(() => {
-    if (
-      actor &&
-      actor.role !== 'TECHNICIAN' &&
-      actor.role !== 'SUPERVISOR' &&
-      actor.role !== 'ADMIN' &&
-      actor.role !== 'CLIENT_SUPERVISOR'
-    ) {
+    if (sessionLoading) return;
+
+    if (!actor) {
+      router.replace('/');
+      return;
+    }
+
+    if (actor.role === 'ADMIN') {
+      router.replace('/attendance/admin');
+    } else if (actor.role === 'CLIENT_SUPERVISOR') {
+      toast.error('Akses ditolak', {
+        description: 'Absensi hanya untuk teknisi internal',
+      });
+      router.replace('/');
+    } else if (actor.role !== 'TECHNICIAN' && actor.role !== 'SUPERVISOR') {
       router.replace('/');
     }
-  }, [actor, router]);
+  }, [actor, sessionLoading, router]);
 
-  // BUG-013 FIX: Always call hooks first before any conditional returns
-  // This ensures hooks are called in the same order on every render
+  // --- All hooks must be declared before any conditional returns ---
   const [attendance, setAttendance] = useState<TAttendance | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [historyData, setHistoryData] = useState<TAttendanceTechnicianRow[]>(
     []
   );
   const [historyLoading, setHistoryLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState(getDefaultDateRange().dateFrom);
   const [dateTo, setDateTo] = useState(getDefaultDateRange().dateTo);
-
   const [clockInPreview, setClockInPreview] = useState<string | null>(null);
   const [clockInFile, setClockInFile] = useState<File | null>(null);
-
   const [clockOutPreview, setClockOutPreview] = useState<string | null>(null);
   const [clockOutFile, setClockOutFile] = useState<File | null>(null);
-
   const [isPending, startTransition] = useTransition();
 
   const refresh = useCallback(async () => {
@@ -384,26 +395,25 @@ export default function AttendancePage() {
     fetchHistory();
   }, [fetchHistory]);
 
-  // BUG-013 FIX: Now do role-based conditional rendering AFTER hooks
-  if (actor?.role === 'CLIENT_SUPERVISOR') {
-    return <PicAttendanceView />;
-  }
-
-  if (actor?.role === 'SUPERVISOR') {
-    return <SupervisorAttendanceView />;
-  }
-
   const statusLabel = useMemo(() => {
     if (!attendance) return 'Belum Absen Masuk';
     if (attendance.status === 'OPEN') return 'Sudah Absen Masuk';
     return 'Sudah Absen Pulang';
   }, [attendance]);
 
-  // Only TECHNICIAN role can mark attendance
   const canMarkAttendance = actor?.role === 'TECHNICIAN';
   const canClockIn = canMarkAttendance && !attendance;
   const canClockOut =
     canMarkAttendance && !!attendance && attendance.status === 'OPEN';
+
+  // Guard: show nothing while session loads OR if actor is not allowed
+  if (sessionLoading) {
+    return null;
+  }
+
+  if (!actor || (actor.role !== 'TECHNICIAN' && actor.role !== 'SUPERVISOR')) {
+    return null;
+  }
 
   const handleClockIn = () => {
     if (!clockInFile) {
@@ -469,7 +479,9 @@ export default function AttendancePage() {
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="space-y-1">
             <div className="text-muted-foreground">Tanggal</div>
-            <div className="font-medium">{attendance?.dateLocal ?? '-'}</div>
+            <div className="font-medium">
+              {attendance?.dateLocal ? formatDate(attendance.dateLocal) : '-'}
+            </div>
           </div>
           <div className="space-y-1">
             <div className="text-muted-foreground">Status</div>

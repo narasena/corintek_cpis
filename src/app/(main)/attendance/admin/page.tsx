@@ -7,34 +7,53 @@ import {
   useState,
   useTransition,
 } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Download, X } from 'lucide-react';
 
 import { DataTable } from '@/components/data-table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   exportAttendanceCsvAction,
   getAttendanceListAction,
 } from '@/features/attendance/actions';
 import { getAllUsersAction } from '@/features/users/actions';
+import { getProjectsAction } from '@/features/projects/actions';
+import { useSession } from '@/hooks/use-session';
 import type { TUserResponse } from '@/@types/user.type';
 import { columns, type TAttendanceAdminRow } from './components/columns';
 
-function todayLocal() {
-  return new Date().toISOString().split('T')[0];
+type TProjectOption = { id: string; name: string };
+
+function getJakartaDateLocal(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function todayJakarta(): Date {
+  const now = new Date();
+  const jakartaDateStr = getJakartaDateLocal(now);
+  return new Date(jakartaDateStr);
 }
 
 export default function AttendanceAdminPage() {
+  const { user: actor, isLoading } = useSession();
+  const router = useRouter();
+
+  // Initialize all state hooks BEFORE any conditional returns
   const [data, setData] = useState<TAttendanceAdminRow[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [dateFrom, setDateFrom] = useState(todayLocal());
-  const [dateTo, setDateTo] = useState(todayLocal());
+  const [dateFrom, setDateFrom] = useState<Date>(todayJakarta());
+  const [dateTo, setDateTo] = useState<Date>(todayJakarta());
   const [userId, setUserId] = useState('');
-
+  const [projectId, setProjectId] = useState('');
   const [technicians, setTechnicians] = useState<TUserResponse[]>([]);
-
+  const [projects, setProjects] = useState<TProjectOption[]>([]);
   const [isPending, startTransition] = useTransition();
 
   const fetchTechnicians = useCallback(async () => {
@@ -49,12 +68,27 @@ export default function AttendanceAdminPage() {
     setTechnicians(list);
   }, []);
 
+  const fetchProjects = useCallback(async () => {
+    const result = await getProjectsAction({});
+    if (!result.success || !Array.isArray(result.data)) {
+      return;
+    }
+    const mapped = (
+      result.data as unknown as Array<{ id: string; name: string }>
+    ).map(p => ({
+      id: p.id,
+      name: p.name,
+    }));
+    setProjects(mapped);
+  }, []);
+
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
     const result = await getAttendanceListAction({
-      dateFrom,
-      dateTo,
+      dateFrom: getJakartaDateLocal(dateFrom),
+      dateTo: getJakartaDateLocal(dateTo),
       userId: userId || undefined,
+      projectId: projectId || undefined,
     });
 
     if (!result.success) {
@@ -66,30 +100,42 @@ export default function AttendanceAdminPage() {
       setData(result.data as TAttendanceAdminRow[]);
     }
     setLoading(false);
-  }, [dateFrom, dateTo, userId]);
+  }, [dateFrom, dateTo, userId, projectId]);
 
   useEffect(() => {
+    if (isLoading) return;
     fetchTechnicians();
-  }, [fetchTechnicians]);
+    fetchProjects();
+  }, [fetchTechnicians, fetchProjects, isLoading]);
 
   useEffect(() => {
+    if (isLoading || !actor) return;
     fetchAttendance();
-  }, [fetchAttendance]);
+  }, [fetchAttendance, actor, isLoading]);
 
   const canReset = useMemo(() => {
-    return userId !== '';
-  }, [userId]);
+    return userId !== '' || projectId !== '';
+  }, [userId, projectId]);
 
   const resetFilters = () => {
     setUserId('');
+    setProjectId('');
   };
+
+  // Admin-only guard — placed after all hooks to respect Rules of Hooks
+  if (!isLoading && (!actor || actor.role !== 'ADMIN')) {
+    router.replace('/');
+    toast.error('Akses ditolak');
+    return null;
+  }
 
   const handleExport = () => {
     startTransition(async () => {
       const result = await exportAttendanceCsvAction({
-        dateFrom,
-        dateTo,
+        dateFrom: getJakartaDateLocal(dateFrom),
+        dateTo: getJakartaDateLocal(dateTo),
         userId: userId || undefined,
+        projectId: projectId || undefined,
       });
 
       if (!result.success) {
@@ -135,19 +181,17 @@ export default function AttendanceAdminPage() {
 
       <div className="flex flex-col md:flex-row gap-4 items-end md:items-center">
         <div className="w-full md:w-auto">
-          <Input
-            type="date"
+          <DatePicker
             value={dateFrom}
-            onChange={e => setDateFrom(e.target.value)}
-            className="w-full md:w-[180px]"
+            onChange={date => date && setDateFrom(date)}
+            placeholder="Pilih tanggal mulai"
           />
         </div>
         <div className="w-full md:w-auto">
-          <Input
-            type="date"
+          <DatePicker
             value={dateTo}
-            onChange={e => setDateTo(e.target.value)}
-            className="w-full md:w-[180px]"
+            onChange={date => date && setDateTo(date)}
+            placeholder="Pilih tanggal akhir"
           />
         </div>
         <div className="w-full md:w-[320px]">
@@ -160,6 +204,20 @@ export default function AttendanceAdminPage() {
             {technicians.map(u => (
               <option key={u.id} value={u.id}>
                 {[u.firstName, u.lastName].filter(Boolean).join(' ')}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="w-full md:w-[320px]">
+          <select
+            value={projectId}
+            onChange={e => setProjectId(e.target.value)}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">Semua Proyek</option>
+            {projects.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name}
               </option>
             ))}
           </select>

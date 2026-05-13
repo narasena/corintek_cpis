@@ -93,5 +93,4 @@ npm run prisma:seed      # Seed database
 
 - **Architecture & file structure:** See `docs/STRUCTURE.md`
 - **Project trajectory & status:** See `docs/ROADMAP.md`
-- **Detailed feature specs:** See `fsd_cpis/FSD_CPIS.md` (load only when implementing specific scope IDs)
 - **Global agent protocols:** Loaded via `.agent/rules/` symlink — DO NOT duplicate here

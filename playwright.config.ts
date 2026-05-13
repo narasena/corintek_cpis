@@ -36,6 +36,10 @@ export default defineConfig({
       testMatch: /client-pic\.setup\.ts/,
     },
     {
+      name: 'setup:supervisor',
+      testMatch: /supervisor\.setup\.ts/,
+    },
+    {
       name: 'setup:client',
       testMatch: /client\.setup\.ts/,
     },
@@ -120,6 +124,16 @@ export default defineConfig({
       use: {
         storageState: '.auth/client.json',
       },
+    },
+    {
+      name: 'attendance:access-control',
+      testMatch: /attendance\/.*\.spec\.ts/,
+      dependencies: [
+        'setup:admin',
+        'setup:technician',
+        'setup:supervisor',
+        'setup:client-pic',
+      ],
     },
   ],
   webServer: {

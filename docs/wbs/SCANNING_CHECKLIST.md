@@ -59,7 +59,7 @@
   - Scope: Machine CRUD within project context
   - Maps to: EP-005
 
-- [x] **M-10: Attendance** — `src/features/attendance/`, `src/app/(main)/attendance/`, `src/app/(main)/absence/`, `prisma/schema/attendance.prisma`
+- [x] **M-10: Attendance** — `src/features/attendance/`, `src/app/(main)/attendance/`, `prisma/schema/attendance.prisma`
   - Files: 3 feature + 3 app files
   - Scope: Clock in/out, photo validation, admin view, absence
   - Maps to: EP-007
@@ -115,7 +115,7 @@
   - Scope: Seed scripts, Husky, lint-staged, ESLint, Prettier, commitlint
   - Maps to: EP-016 (Infrastructure)
 
-- [x] **M-20: Testing** — src/__tests__/, all *.test.ts / *.test.tsx / *.characterization.test.*
+- [x] **M-20: Testing** — src/**tests**/, all _.test.ts / _.test.tsx / _.characterization.test._
   - Files: 17 centralized test files + colocated tests
   - Scope: Unit tests, characterization tests, E2E setup
   - Maps to: Testing WPs across all Epics
@@ -124,9 +124,9 @@
 
 ## Progress Summary
 
-| Group              | Modules      | Status       |
-| :----------------- | :----------- | :----------- |
-| A: Foundation      | M-01 to M-03 | ✅ Completed |
+| Group              | Modules      | Status          |
+| :----------------- | :----------- | :-------------- |
+| A: Foundation      | M-01 to M-03 | ✅ Completed    |
 | B: Master Data     | M-04 to M-07 | 🔍 1/20 scanned |
 | C: Core Business   | M-08 to M-10 | 🔍 1/20 scanned |
 | D: Complex Domains | M-11 to M-14 | 🔍 1/20 scanned |
