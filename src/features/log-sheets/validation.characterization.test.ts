@@ -304,22 +304,19 @@ describe('validateLogSheetEntries (characterization)', () => {
     ).toBe(false);
   });
 
-  it('collects missing fields from the first active chiller if none are complete (surprising/buggy-ish: only first machine detailed)', () => {
-    const input = baseInput();
-    const result = validateLogSheetEntries(input);
+   it('collects missing fields from all active machines if none are complete and shows generic error', () => {
+     const input = baseInput();
+     const result = validateLogSheetEntries(input);
 
-    expect(result.valid).toBe(false);
+     expect(result.valid).toBe(false);
 
-    // It will complain about missing chiller params, but only for the first active chiller.
-    expect(result.missingFields.some(s => s.includes('Chiller #1'))).toBe(true);
-    expect(result.errors).toContain(
-      'Minimal satu Chiller harus diisi lengkap.'
-    );
-  });
+     // It will include missing fields from active machines (chiller and/or cooling tower)
+     expect(result.missingFields.some(s => s.includes('Chiller #1'))).toBe(true);
+     expect(result.errors[0]).toMatch(/^\d+ field wajib belum diisi\.$/);
+   });
 
-  it('TEXT parameters are considered missing when no entryState exists for them (surprising behavior)', () => {
-    // The validator treats `undefined` state as empty *before* it checks TEXT.
-    // So a TEXT parameter is required unless there is at least an entryState object.
+  it('TEXT parameters are NOT considered missing when no entryState exists (corrected behavior)', () => {
+    // TEXT parameters are optional; they are considered complete even without an entryState.
     const input = baseInput({
       entryState: {
         [makeEntryKey('p-cond', 'c1', 'VALUE')]: {
@@ -342,14 +339,12 @@ describe('validateLogSheetEntries (characterization)', () => {
           valueType: 'NUMBER',
           numericValue: 10,
         },
-        // NOTE: no entry for p-job (TEXT) at all => expected missing
+        // NOTE: JOB_DESCRIPTION (TEXT) has no entryState and should NOT be flagged as missing.
       },
     });
 
     const result = validateLogSheetEntries(input);
-    expect(result.missingFields.some(s => s.includes('JOB_DESCRIPTION'))).toBe(
-      true
-    );
+    expect(result.missingFields.some(s => s.includes('JOB_DESCRIPTION'))).toBe(false);
   });
 
   it('raw water missing is collected from COOLING_WATER_QUALITY excluding variableName containing "cycle" (main path)', () => {

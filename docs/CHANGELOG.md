@@ -20,6 +20,7 @@
 - **[LOG-001]** Petugas Hari Ini dropdown: removed redundant self-reference. The logged-in technician no longer appears twice ("Saya Sendiri" + their name). User is filtered from the list.
 - **[LOG-002]** COOLING_WATER_QUALITY table overflow: parameter names now wrap; Raw Water column widened from 100px to 140px to prevent overflow in edit mode.
 - **[ATT-001]** AttendancePromptCard: fixed conditional hooks violation by moving `useEffect` before early return; replaced `console.error` with `logger.error`.
+- **[LOG-003]** Simplified log sheet validation: TEXT parameters now optional; submission requires at least one complete chiller or cooling tower; draft save warnings removed. Updated characterization tests.
 
 **Files Modified:**
 
@@ -27,6 +28,8 @@
 - `src/features/log-sheets/components/category-sections/cooling-water-desktop.tsx`
 - `src/app/(main)/components/attendance-prompt-card.tsx`
 - `src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.characterization.test.tsx`
+- `src/features/log-sheets/validation.ts`
+- `src/features/log-sheets/validation.characterization.test.ts`
 
 ---
 

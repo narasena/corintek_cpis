@@ -50,124 +50,12 @@ function isEmpty(
   state: TValidationEntryState | undefined,
   param?: TValidationParameter
 ) {
+  // TEXT parameters are always considered complete (optional)
+  if (param?.valueType === 'TEXT') return false;
   if (!state) return true;
   if (state.fileUrl) return false;
-  if (state.valueType === 'TEXT' || param?.valueType === 'TEXT') return false;
+  if (state.valueType === 'TEXT') return false;
   return isEntryValueEmpty(state);
-}
-
-type TMachineCategoryValidatorParams = {
-  machines: TValidationMachine[];
-  activeIds: string[];
-  categories: TValidationParameter['category'][];
-  machineTypeLabel: string;
-  input: TLogSheetValidationInput;
-  result: TLogSheetValidationResult;
-};
-
-function validateMachineCategory(params: TMachineCategoryValidatorParams) {
-  const { machines, activeIds, categories, machineTypeLabel, input, result } =
-    params;
-  if (machines.length === 0) return;
-  if (activeIds.length === 0) return;
-
-  const active = machines.filter(m => activeIds.includes(m.id));
-
-  let completeId: string | null = null;
-  const missingById = new Map<string, string[]>();
-
-  active.forEach(machine => {
-    const missing: string[] = [];
-    categories.forEach(cat => {
-      const catParams = input.parametersByCategory.get(cat) ?? [];
-      catParams.forEach(param => {
-        const key = makeEntryKey(param.id, machine.id, 'VALUE');
-        const state = input.entryState[key];
-        if (isEmpty(state, param)) {
-          missing.push(
-            `${cat}: ${param.name} (${machineTypeLabel} #${machine.unitNumber})`
-          );
-        }
-      });
-    });
-    if (missing.length === 0) {
-      completeId = machine.id;
-    } else {
-      missingById.set(machine.id, missing);
-    }
-  });
-
-  if (completeId) return;
-  if (active.length === 0) {
-    result.errors.push(
-      `Minimal satu ${machineTypeLabel} harus dipilih dan diisi lengkap.`
-    );
-    return;
-  }
-
-  const firstId = active[0].id;
-  const missing = missingById.get(firstId) ?? [];
-  result.missingFields.push(...missing);
-  result.errors.push(`Minimal satu ${machineTypeLabel} harus diisi lengkap.`);
-}
-
-function validateChillers(
-  input: TLogSheetValidationInput,
-  result: TLogSheetValidationResult
-) {
-  validateMachineCategory({
-    machines: input.detail?.machines.chillers ?? [],
-    activeIds: input.activeChillerIds,
-    categories: [...CHILLER_CATEGORIES],
-    machineTypeLabel: 'Chiller',
-    input,
-    result,
-  });
-}
-
-function validateCoolingTowers(
-  input: TLogSheetValidationInput,
-  result: TLogSheetValidationResult
-) {
-  validateMachineCategory({
-    machines: input.detail?.machines.coolingTowers ?? [],
-    activeIds: input.activeCTIds,
-    categories: [...CT_CATEGORIES],
-    machineTypeLabel: 'Cooling Tower',
-    input,
-    result,
-  });
-}
-
-function collectRawWaterMissing(
-  input: TLogSheetValidationInput,
-  result: TLogSheetValidationResult
-) {
-  if (input.activeCTIds.length === 0) return;
-
-  const params = input.parametersByCategory.get('COOLING_WATER_QUALITY') ?? [];
-  params.forEach(param => {
-    if (param.variableName.toLowerCase().includes('cycle')) return;
-    const key = makeEntryKey(param.id, null, 'RAW_WATER');
-    if (isEmpty(input.entryState[key], param)) {
-      result.missingFields.push(`Raw Water Quality: ${param.name}`);
-    }
-  });
-}
-
-function collectConsumptionMissing(
-  input: TLogSheetValidationInput,
-  result: TLogSheetValidationResult
-) {
-  const params = input.parametersByCategory.get('CONSUMPTION') ?? [];
-  params.forEach(param => {
-    // Skip auto-calculated "Total Consumption" (derived from After - Before)
-    if (param.name.toLowerCase().includes('total')) return;
-    const key = makeEntryKey(param.id, null, 'VALUE');
-    if (isEmpty(input.entryState[key], param)) {
-      result.missingFields.push(`Consumption: ${param.name}`);
-    }
-  });
 }
 
 export type TCompletenessChecker = (
@@ -234,6 +122,37 @@ export function validateCategoryEntries(params: {
   return { missingByMachine, completeMachineId, allMissing };
 }
 
+function collectRawWaterMissing(
+  input: TLogSheetValidationInput,
+  result: TLogSheetValidationResult
+) {
+  if (input.activeCTIds.length === 0) return;
+
+  const params = input.parametersByCategory.get('COOLING_WATER_QUALITY') ?? [];
+  params.forEach(param => {
+    if (param.variableName.toLowerCase().includes('cycle')) return;
+    const key = makeEntryKey(param.id, null, 'RAW_WATER');
+    if (isEmpty(input.entryState[key], param)) {
+      result.missingFields.push(`Raw Water Quality: ${param.name}`);
+    }
+  });
+}
+
+function collectConsumptionMissing(
+  input: TLogSheetValidationInput,
+  result: TLogSheetValidationResult
+) {
+  const params = input.parametersByCategory.get('CONSUMPTION') ?? [];
+  params.forEach(param => {
+    // Skip auto-calculated "Total Consumption" (derived from After - Before)
+    if (param.name.toLowerCase().includes('total')) return;
+    const key = makeEntryKey(param.id, null, 'VALUE');
+    if (isEmpty(input.entryState[key], param)) {
+      result.missingFields.push(`Consumption: ${param.name}`);
+    }
+  });
+}
+
 export function validateLogSheetEntries(
   input: TLogSheetValidationInput
 ): TLogSheetValidationResult {
@@ -251,17 +170,57 @@ export function validateLogSheetEntries(
     missingFields: [],
   };
 
-  validateChillers(input, result);
-  validateCoolingTowers(input, result);
+  // Helper: completeness predicate (true if entry is complete)
+  const isComplete = (state: TValidationEntryState | undefined, param?: TValidationParameter) => !isEmpty(state, param);
 
-  const hasAnyActiveMachine =
-    input.activeChillerIds.length > 0 || input.activeCTIds.length > 0;
-  if (!hasAnyActiveMachine) {
-    result.errors.push('Minimal satu unit harus dipilih dan diisi.');
-  }
+  // Build parameter lists for each machine type
+  const chillerParams = CHILLER_CATEGORIES.flatMap(
+    cat => input.parametersByCategory.get(cat) ?? []
+  );
+  const ctParams = CT_CATEGORIES.flatMap(
+    cat => input.parametersByCategory.get(cat) ?? []
+  );
 
-  collectRawWaterMissing(input, result);
-  collectConsumptionMissing(input, result);
+  const chillerResult = validateCategoryEntries({
+    parameters: chillerParams,
+    machines: input.detail.machines.chillers,
+    activeMachineIds: input.activeChillerIds,
+    entryState: input.entryState,
+    categories: CHILLER_CATEGORIES,
+    machineTypeLabel: 'Chiller',
+    isComplete,
+  });
+
+  const ctResult = validateCategoryEntries({
+    parameters: ctParams,
+    machines: input.detail.machines.coolingTowers,
+    activeMachineIds: input.activeCTIds,
+    entryState: input.entryState,
+    categories: CT_CATEGORIES,
+    machineTypeLabel: 'Cooling Tower',
+    isComplete,
+  });
+
+   const hasAnyActiveMachine =
+     input.activeChillerIds.length > 0 || input.activeCTIds.length > 0;
+   const anyCompleteMachine =
+     !!chillerResult.completeMachineId || !!ctResult.completeMachineId;
+
+   // If no machine is complete, add missing fields from both types
+   if (hasAnyActiveMachine && !anyCompleteMachine) {
+     result.missingFields.push(...chillerResult.allMissing, ...ctResult.allMissing);
+   }
+
+   if (!hasAnyActiveMachine) {
+     result.errors.push('Minimal satu unit harus dipilih dan diisi.');
+   }
+
+   // Raw water required only if CT is active AND no complete chiller (i.e., CT is the only hope)
+   if (input.activeCTIds.length > 0 && !chillerResult.completeMachineId) {
+     collectRawWaterMissing(input, result);
+   }
+
+   collectConsumptionMissing(input, result);
 
   if (result.missingFields.length > 0) {
     result.errors.push(
@@ -269,6 +228,37 @@ export function validateLogSheetEntries(
     );
   }
 
-  result.valid = result.errors.length === 0;
-  return result;
+   result.valid = result.errors.length === 0;
+   return result;
+ }
+
+export function hasCompleteMachine(input: TLogSheetValidationInput): boolean {
+  if (!input.detail) return false;
+
+  const isComplete = (state: TValidationEntryState | undefined, param?: TValidationParameter) => !isEmpty(state, param);
+
+  const chillerParams = CHILLER_CATEGORIES.flatMap(cat => input.parametersByCategory.get(cat) ?? []);
+  const ctParams = CT_CATEGORIES.flatMap(cat => input.parametersByCategory.get(cat) ?? []);
+
+  const chillerResult = validateCategoryEntries({
+    parameters: chillerParams,
+    machines: input.detail.machines.chillers,
+    activeMachineIds: input.activeChillerIds,
+    entryState: input.entryState,
+    categories: CHILLER_CATEGORIES,
+    machineTypeLabel: 'Chiller',
+    isComplete,
+  });
+
+  const ctResult = validateCategoryEntries({
+    parameters: ctParams,
+    machines: input.detail.machines.coolingTowers,
+    activeMachineIds: input.activeCTIds,
+    entryState: input.entryState,
+    categories: CT_CATEGORIES,
+    machineTypeLabel: 'Cooling Tower',
+    isComplete,
+  });
+
+  return !!chillerResult.completeMachineId || !!ctResult.completeMachineId;
 }
