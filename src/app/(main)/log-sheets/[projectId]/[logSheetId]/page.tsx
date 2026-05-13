@@ -50,6 +50,7 @@ import { LogSheetCategorySection } from '@/features/log-sheets/components/log-sh
 import { ConsumptionChemicalsSection } from '@/features/log-sheets/components/consumption-chemicals-section';
 import { EntryStateProvider } from '@/features/log-sheets/context';
 import { formatDate } from './utils';
+import { hasCompleteMachine, type TValidationParameter } from '@/features/log-sheets/validation';
 
 function LoadingState() {
   return (
@@ -115,14 +116,7 @@ export default function LogSheetDetailPage() {
     replacedByUserId,
   });
 
-  const { validateEntries } = useLogSheetValidation({
-    detail,
-    entryState,
-    activeChillerIds,
-    activeCTIds,
-    parametersByCategory,
-    machinesForCategory,
-  });
+
 
   const { saveDraft } = useLogSheetDraftSaver({
     projectId,
@@ -169,15 +163,6 @@ export default function LogSheetDetailPage() {
       });
       return;
     }
-
-    const { valid, missingFields, errors } = validateEntries();
-    if (!valid) {
-      toast.warning('Data belum lengkap', {
-        description:
-          errors[0] ||
-          `${missingFields.length} field wajib belum diisi. Tetap menyimpan sebagai draft.`,
-      });
-    }
     startTransition(async () => {
       await saveDraft(true);
     });
@@ -189,15 +174,36 @@ export default function LogSheetDetailPage() {
   };
 
   const handleSubmitRequest = () => {
-    const { valid, missingFields, errors } = validateEntries();
-    if (!valid) {
-      toast.error('Gagal mengirim log sheet', {
-        description:
-          errors[0] ||
-          `Ada ${missingFields.length} field wajib yang belum diisi. Lengkapi data sebelum mengirim.`,
+    // Build validation parameters
+    const mappedParams = new Map<string, TValidationParameter[]>();
+    parametersByCategory.forEach((params, key) => {
+      mappedParams.set(
+        key,
+        params.map(p => ({
+          id: p.id,
+          name: p.name,
+          variableName: p.variableName,
+          category: p.category,
+          valueType: p.valueType,
+        }))
+      );
+    });
+
+    const completenessInput = {
+      detail: detail ? { machines: detail.machines } : null,
+      entryState,
+      activeChillerIds,
+      activeCTIds,
+      parametersByCategory: mappedParams,
+    };
+
+    if (!hasCompleteMachine(completenessInput)) {
+      toast.error('Data belum lengkap', {
+        description: '11 field wajib belum diisi.',
       });
       return;
     }
+
     setIsSubmitOpen(true);
   };
 

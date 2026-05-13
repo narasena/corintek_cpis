@@ -621,6 +621,53 @@ Encapsulate timing-attack and user-existence verification logic within a special
 
 ---
 
+## ADR-018: Log Sheet Validation Simplification
+
+**Date:** 2026-05-13  
+**Status:** Accepted  
+**Scope:** Log Sheet Validation, UI/UX, Draft Saving
+
+### Context
+
+The original client-side validation for log sheets was overly strict, requiring all 11+ fields across both chiller and cooling tower machines to be filled before submission. This created friction: technicians had to complete all machines even if only one was in use. Additionally, TEXT parameters (e.g., `JOB_DESCRIPTION`) were incorrectly treated as required even when no entryState existed, causing unexpected validation failures.
+
+### Decision
+
+1. Make TEXT parameters optional — they are considered complete regardless of whether an entryState object exists.
+2. For submission, only require that **at least one** machine (either a chiller OR a cooling tower) is fully complete (all required non-TEXT parameters filled). No per-machine-type errors are shown.
+3. Draft saves produce **no validation warnings**; partial data can be saved silently.
+4. On submission with no complete machine, show a generic toast:
+   ```
+   Data belum lengkap
+   11 field wajib belum diisi.
+   ```
+
+### Implementation
+
+- **validation.ts**: 
+  - `isEmpty` returns `false` for TEXT params even if `state` is undefined.
+  - Added `hasCompleteMachine(input)` that checks completeness using existing `validateCategoryEntries`.
+- **page.tsx**:
+  - Removed pre-save warning in `handleSave`.
+  - `handleSubmitRequest` now calls `hasCompleteMachine` and displays fixed toast on failure.
+- **Tests**:
+  - Updated `validation.characterization.test.ts`: relaxed TEXT requirement test; changed generic error assertion to regex match count-based message.
+  - Adjusted `page.characterization.test.tsx`: submit-dialog tests now reflect new validation path.
+
+### Rationale
+
+- **User Experience**: Technicians can save drafts without interruption; submission only blocked when absolutely necessary.
+- **Operational Realism**: In practice, a log sheet needs at least one fully-filled machine — either chiller *or* cooling tower — not both.
+- **Maintainability**: Simplified client-side validation reduces complexity while server-side checks (signatures, numeric ranges) remain authoritative.
+
+### Consequences
+
+- `validateLogSheetEntries` retains full validation for other uses (e.g., potential future features), but its error message is now count-based.
+- TEXT fields are now truly optional, aligning with intended behavior.
+- Future changes to required field counts will automatically reflect in the toast description via `${missingFields.length}` if revert to dynamic; currently hardcoded "11" per specification.
+
+---
+
 ## ADR-014: Structured Logging Standardization
 
 **Date:** 2026-03-08  

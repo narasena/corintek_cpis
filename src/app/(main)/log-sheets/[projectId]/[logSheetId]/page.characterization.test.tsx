@@ -313,30 +313,50 @@ describe('LogSheetDetailPage (characterization)', () => {
     });
   });
 
-  describe('submit confirmation dialog', () => {
-    it('opens dialog when submit button is clicked (main path)', async () => {
-      const mocks = createTestMocks();
-      await renderPageWithMocks(mocks);
+   describe('submit confirmation dialog', () => {
+     it('opens dialog when submit button is clicked (main path)', async () => {
+       const mocks = createTestMocks();
+       await renderPageWithMocks(mocks);
 
-      const user = userEvent.setup();
-      const kirimButtons = screen.getAllByRole('button', { name: /kirim/i });
-      await user.click(kirimButtons[0]);
+       const user = userEvent.setup();
+       const kirimButtons = screen.getAllByRole('button', { name: /kirim/i });
+       await user.click(kirimButtons[0]);
 
-      expect(screen.queryByRole('alertdialog')).not.toBeNull();
-      expect(screen.queryByText(/konfirmasi pengiriman/i)).not.toBeNull();
-    });
+       expect(screen.queryByRole('alertdialog')).not.toBeNull();
+       expect(screen.queryByText(/konfirmasi pengiriman/i)).not.toBeNull();
+     });
 
-    it('does not open dialog when validation fails (error path)', async () => {
-      const mocks = createTestMocks({ validationValid: false });
-      await renderPageWithMocks(mocks);
+     it('does not open dialog when validation fails (error path)', async () => {
+       // Validation fails when no machine is selected (incomplete)
+       const mocks = createTestMocks({
+         activeChillerIds: [],
+         activeCTIds: [],
+       });
+       await renderPageWithMocks(mocks);
 
-      const user = userEvent.setup();
-      const kirimButtons = screen.getAllByRole('button', { name: /kirim/i });
-      await user.click(kirimButtons[0]);
+       const user = userEvent.setup();
+       const kirimButtons = screen.getAllByRole('button', { name: /kirim/i });
+       await user.click(kirimButtons[0]);
 
-      expect(screen.queryByRole('alertdialog')).toBeNull();
-    });
-  });
+       expect(screen.queryByRole('alertdialog')).toBeNull();
+     });
+   });
+
+     it('does not open dialog when validation fails (error path)', async () => {
+       // Validation fails when no machine is complete (no active machines selected)
+       const mocks = createTestMocks({
+         activeChillerIds: [],
+         activeCTIds: [],
+       });
+       await renderPageWithMocks(mocks);
+
+       const user = userEvent.setup();
+       const kirimButtons = screen.getAllByRole('button', { name: /kirim/i });
+       await user.click(kirimButtons[0]);
+
+       expect(screen.queryByRole('alertdialog')).toBeNull();
+     });
+   });
 
   describe('navigation', () => {
     it('navigates back when back button is clicked (main path)', async () => {

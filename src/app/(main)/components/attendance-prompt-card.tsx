@@ -51,7 +51,7 @@ export function AttendancePromptCard({ userRole }: AttendancePromptCardProps) {
           setAttendance(result.data as TodayAttendance);
         }
       } catch (error) {
-        logger.error('[CPIS-ERROR] Failed to fetch today attendance:', error);
+        console.error('[CPIS-ERROR] Failed to fetch today attendance:', error);
       } finally {
         setIsLoading(false);
       }
