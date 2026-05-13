@@ -107,7 +107,10 @@ const PATH_RESOURCE_MAP: Array<{
     pattern: createPathPattern('/attendance'),
     resource: RbacResource.ATTENDANCE,
   },
-  { pattern: createPathPattern('/absence'), resource: RbacResource.ATTENDANCE },
+  {
+    pattern: createPathPattern('/attendance'),
+    resource: RbacResource.ATTENDANCE,
+  },
   { pattern: createPathPattern('/users'), resource: RbacResource.USERS_ADMIN },
   {
     pattern: createPathPattern('/my-projects'),

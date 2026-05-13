@@ -116,6 +116,33 @@ describe('AttendanceService', () => {
       );
     });
 
+    it('should apply projectId filter when provided', async () => {
+      mockPrisma.attendance.findMany.mockResolvedValue([]);
+      mockPrisma.attendance.count.mockResolvedValue(0);
+
+      await service.listAttendance(
+        mockActor,
+        {
+          dateFrom: '2024-01-01',
+          dateTo: '2024-01-31',
+          projectId: 'project-123',
+        },
+        { page: 1, limit: 10 }
+      );
+
+      expect(mockPrisma.attendance.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            user: {
+              projectAssignments: {
+                some: { projectId: 'project-123', role: 'TECHNICIAN' },
+              },
+            },
+          }),
+        })
+      );
+    });
+
     it('should calculate correct offset for page 2', async () => {
       mockPrisma.attendance.findMany.mockResolvedValue([]);
       mockPrisma.attendance.count.mockResolvedValue(100);

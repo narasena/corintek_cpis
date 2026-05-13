@@ -13,6 +13,7 @@ import {
   logPagination,
   logPaginationError,
 } from '@/lib/observability';
+import { Prisma } from '@/generated/prisma/client';
 import type { PrismaClient } from '@/generated/prisma/client';
 import type { IJwtPayload } from '@/@types/auth.type';
 import type { IPaginatedResponse, IListQueryParams } from '@/types/pagination';
@@ -106,7 +107,7 @@ export class AttendanceService implements IAttendanceService {
       );
 
       return {
-        data: items as TAttendanceAdminRow[],
+        data: items as unknown as TAttendanceAdminRow[],
         ...buildPaginationMeta(total, pagination.page, pagination.limit),
       };
     } catch (error) {
@@ -120,12 +121,23 @@ export class AttendanceService implements IAttendanceService {
     }
   }
 
-  private buildWhereClause(filters: TAttendanceListFilters) {
+  private buildWhereClause(
+    filters: TAttendanceListFilters
+  ): Prisma.AttendanceWhereInput {
     return {
       deletedAt: null,
       dateLocal: { gte: filters.dateFrom, lte: filters.dateTo },
       ...(filters.userId ? { userId: filters.userId } : {}),
-    };
+      ...(filters.projectId
+        ? {
+            user: {
+              projectAssignments: {
+                some: { projectId: filters.projectId, role: 'TECHNICIAN' },
+              },
+            },
+          }
+        : {}),
+    } as Prisma.AttendanceWhereInput;
   }
 
   private getCacheKey(filters: TAttendanceListFilters): string {
@@ -134,7 +146,7 @@ export class AttendanceService implements IAttendanceService {
 
   private getCachedCount(
     filters: TAttendanceListFilters,
-    where: object
+    where: Prisma.AttendanceWhereInput
   ): Promise<number> {
     return this.countCache.getOrCompute(this.getCacheKey(filters), () =>
       withRetry(() => this.deps.prisma.attendance.count({ where }))
