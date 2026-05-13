@@ -32,6 +32,7 @@ import {
   approveLogSheetAction,
 } from '@/features/log-sheets/actions';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSession } from '@/hooks/use-session';
 import { useLogSheetDetailData } from './hooks/use-log-sheet-detail-data';
 import { useLogSheetDerived } from './hooks/use-log-sheet-derived';
 import { useLogSheetDraftState } from './hooks/use-log-sheet-draft-state';
@@ -79,12 +80,13 @@ export default function LogSheetDetailPage() {
     CLIENT_PIC: string | null;
   }>({ TECHNICIAN: null, CLIENT_PIC: null });
 
-  const isMobileView = useIsMobile();
-  const {
-    detail,
-    loading,
-    reload: fetchData,
-  } = useLogSheetDetailData(logSheetId);
+   const isMobileView = useIsMobile();
+   const { user } = useSession();
+   const {
+     detail,
+     loading,
+     reload: fetchData,
+   } = useLogSheetDetailData(logSheetId);
   const {
     notes,
     setNotes,
@@ -436,27 +438,27 @@ export default function LogSheetDetailPage() {
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Petugas Hari Ini
-                </label>
-                <Select
-                  value={replacedByUserId ?? 'none'}
-                  onValueChange={v =>
-                    setReplacedByUserId(v === 'none' ? null : v)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih nama teknisi" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">- Saya Sendiri -</SelectItem>
-                    {(detail?.technicians ?? []).map(t => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {formatUserName(t)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                 <label className="text-sm font-medium text-muted-foreground">
+                   Petugas Hari Ini
+                 </label>
+                 <Select
+                   value={replacedByUserId ?? 'none'}
+                   onValueChange={v =>
+                     setReplacedByUserId(v === 'none' ? null : v)
+                   }
+                 >
+                   <SelectTrigger>
+                     <SelectValue placeholder="Pilih nama teknisi" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="none">- Saya Sendiri -</SelectItem>
+                     {(detail?.technicians ?? []).filter(t => t.id !== user?.id).map(t => (
+                       <SelectItem key={t.id} value={t.id}>
+                         {formatUserName(t)}
+                       </SelectItem>
+                     ))}
+                   </SelectContent>
+                 </Select>
                 <p className="text-xs text-muted-foreground">
                   Pilih nama jika ada pengganti
                 </p>
