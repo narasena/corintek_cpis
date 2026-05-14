@@ -1,26 +1,16 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { IParameter } from '@/features/parameters/types';
+import { IParameter, TParameterCategory } from '@/features/parameters/types';
 import { ActionCell } from '@/components/action-cell';
 import { Badge } from '@/components/ui/badge';
+import { CATEGORY_LABELS } from '@/features/parameters/constants';
 
 interface GetColumnsProps {
   onEdit: (parameter: IParameter) => void;
   onRefresh: () => void;
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>;
 }
-
-// Indonesian labels for enums
-const categoryLabels: Record<string, string> = {
-  UNIT_CONDENSOR: 'Unit Condensor',
-  UNIT_EVAPORATOR: 'Unit Evaporator',
-  COOLING_WATER_QUALITY: 'Kualitas Air Pendingin',
-  GENERAL_CONDITION: 'Kondisi Umum',
-  JOB_DESCRIPTION: 'Deskripsi Pekerjaan',
-  CONSUMPTION: 'Konsumsi',
-  LAB_ANALYSIS: 'Lab Analysis',
-};
 
 const valueTypeLabels: Record<string, string> = {
   NUMBER: 'Angka',
@@ -52,10 +42,10 @@ export const getParameterColumns = ({
       accessorKey: 'category',
       header: 'Kategori',
       cell: ({ row }) => {
-        const category = row.getValue('category') as string;
+        const category = row.getValue('category') as TParameterCategory;
         return (
           <span className="text-sm">
-            {categoryLabels[category] || category}
+            {CATEGORY_LABELS[category] || category}
           </span>
         );
       },

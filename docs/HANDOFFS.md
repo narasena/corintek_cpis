@@ -1,3 +1,61 @@
+# Session Handoff — 2026-05-14 (Parameters Category Filter)
+
+**Branch:** `feat/parameters-category-filter`
+
+### Completed This Session
+
+| Task                                                                                                      | Status      |
+| --------------------------------------------------------------------------------------------------------- | ----------- |
+| Fix FilterSelect handleValueChange blocking bug                                                          | ✅ Complete |
+| Create centralized constants (CATEGORY_LABELS, CATEGORY_OPTIONS)                                          | ✅ Complete |
+| Update limits table category column to display human-readable labels                                      | ✅ Complete |
+| Add category filter to Parameters tab                                                                     | ✅ Complete |
+| Add category filter to Limits tab                                                                         | ✅ Complete |
+| Remove duplicate categoryLabels from parameter-form.tsx and columns.tsx                                   | ✅ Complete |
+
+### Objective
+
+Add category filter to both tabs on Parameters page and fix critical FilterSelect bug that disabled all Select-based filters app-wide.
+
+### Key Changes
+
+**FilterSelect** (`src/components/filter-controls.tsx`)
+- Implement `handleValueChange` to pass value (or `undefined` for "all").
+- Use `value ?? ''` to bind Select value; empty string maps to "all".
+
+**Constants** (`src/features/parameters/constants.ts`)
+- New file with `CATEGORY_LABELS` (Record<TParameterCategory, string>) and `CATEGORY_OPTIONS` (including empty "Semua").
+
+**Parameters columns** (`src/app/(main)/parameters/components/columns.tsx`)
+- Replace local `categoryLabels` with imported `CATEGORY_LABELS`.
+- Add import `TParameterCategory` for type-safe indexing.
+
+**Parameter form** (`src/features/parameters/components/parameter-form.tsx`)
+- Replace local `categoryLabels` with imported `CATEGORY_LABELS`.
+- Add import `CATEGORY_LABELS`.
+
+**Limits columns** (`src/features/parameter-limit-profiles/components/columns.tsx`)
+- Import `CATEGORY_LABELS` and `TParameterCategory`.
+- Render category cell with label lookup.
+
+**Parameters page** (`src/app/(main)/parameters/page.tsx`)
+- Import `IColumnFilterConfig` and `CATEGORY_OPTIONS`.
+- Define `filterConfigs` with category select.
+- Pass `columnFilters={true}`, `filterConfigs={filterConfigs}`, `persistFiltersInUrl={true}` to DataTable.
+
+**Limits content** (`src/features/parameter-limit-profiles/components/parameter-limits-content.tsx`)
+- Import `IColumnFilterConfig`, `CATEGORY_OPTIONS`, and `useMemo`.
+- Define `filterConfigs` with category select.
+- Pass filter props to DataTable.
+
+### Verification
+
+- TypeScript: clean on all modified files.
+- Lint: Prettier formatted; no new errors introduced.
+- Filters: Category dropdown appears on both tabs; selecting a category filters the table client-side; "Semua" clears filter; URL sync enabled.
+
+---
+
 # Session Handoff — 2026-05-14 (Work Report Signature Authorization & Storage)
 
 **Branch:** `feat/work-reports/signature-authorization-fixes`
@@ -357,71 +415,6 @@ Address two user-reported UI issues and a hooks violation discovered during lint
 
 ---
 
-# Session Handoff — 2026-05-13 (Logsheet UI Fixes & Attendance Hook Correction)
-
-**Branch:** `fix/logsheet-ui-overflow-attendance-hooks`
-
-### Completed This Session
-
-| Task                                                                                                      | Status      |
-| --------------------------------------------------------------------------------------------------------- | ----------- |
-| Remove redundant self-reference in Petugas Hari Ini dropdown                                             | ✅ Complete |
-| Fix COOLING_WATER_QUALITY table overflow (parameter name wrapping + Raw Water column width)              | ✅ Complete |
-| Fix conditional hooks violation in AttendancePromptCard                                                  | ✅ Complete |
-| Replace console.error with logger.error in AttendancePromptCard                                          | ✅ Complete |
-| Unit tests: page.characterization.test.tsx pass                                                          | ✅ Complete |
-| ESLint: attendance-prompt-card.tsx passes                                                                 | ✅ Complete |
-
-### Objective
-
-Address two user-reported UI issues and a hooks violation discovered during linting:
-
-1. **Logsheet — Redundant technician dropdown**: When creating a logsheet, the "Petugas Hari Ini" dropdown showed both "Saya Sendiri" and the logged-in technician's name, which is redundant.
-2. **Logsheet — COOLING_WATER_QUALITY overflow**: Some field labels in the COOLING_WATER_QUALITY table were overflowing their container on desktop when filled.
-3. **AttendancePromptCard — Conditional hooks**: `useEffect` was placed after an early return, violating React Hooks rules.
-
-### Key Changes
-
-**Logsheet Detail Page** (`src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.tsx`)
-
-- Import and call `useSession()` to obtain current user.
-- Filter `detail.technicians` to exclude `user.id` from the dropdown:
-  ```tsx
-  {(detail?.technicians ?? []).filter(t => t.id !== user?.id).map(...)}
-  ```
-- Now the dropdown only shows "Saya Sendiri" + other technicians (no duplicate self-reference).
-
-**Cooling Water Quality Table** (`src/features/log-sheets/components/category-sections/cooling-water-desktop.tsx`)
-
-- `ParameterNameCell`: Added `className="whitespace-normal break-words"` to `TableCell` — long parameter names with units now wrap instead of horizontal overflow.
-- `CoolingWaterTableHeader`: Increased Raw Water column width from `w-[100px]` to `w-[140px]` — accommodates the `w-24` (96px) numeric input + `RangeStatusIcon` + optional clear button without overflow.
-
-**Attendance Prompt Card** (`src/app/(main)/components/attendance-prompt-card.tsx`)
-
-- Restructured component to comply with React Hooks Rules:
-  1. All hooks (`useState`, `useTransition`, `useEffect`) called FIRST.
-  2. Computed `isAllowedRole` as a variable.
-  3. Early return `if (!isAllowedRole) return null;` placed AFTER all hooks.
-- Replaced `console.error` with `logger.error` from `@/lib/logger` per project standards.
-
-**Tests** (`src/app/(main)/log-sheets/[projectId]/[logSheetId]/page.characterization.test.tsx`)
-
-- Added `vi.mock('@/hooks/use-session', ...)` to maintain test isolation.
-
-### Verification
-
-- Build: `npm run build` passes.
-- Lint: `npm run lint` on modified files passes (no hooks errors, logger used).
-- Tests: `npm run test:run` on logsheet detail page (12 tests) passes.
-- Manual check: Technician dropdown excludes current user; Raw Water column fits inputs cleanly; AttendancePromptCard renders for allowed roles without hooks warnings.
-
-### Notes
-
-- The `useSession` hook in logsheet detail page introduces a client-side fetch for current user. This aligns with existing usage pattern (see other pages).
-- Column width change is backward-compatible: preview mode (read-only) gains whitespace but no layout breakage; mobile already uses horizontal scroll container (`overflow-x-auto`).
-
----
-
 # Session Handoff — 2026-05-13 (Log Sheet Validation Simplification & Draft Save Behavior)
 
 **Branch:** `fix/logsheet-validation-simplify`
@@ -470,4 +463,3 @@ Streamline client-side validation for log sheets:
 
 - Verify server-side `validateLogSheetForSubmission` remains the source of truth for signatures and numeric ranges.
 - Consider alignment of Indonesian copy: "Data belum lengkap | 11 field wajib belum diisi." might be simplified or made dynamic based on actual missing count.
-

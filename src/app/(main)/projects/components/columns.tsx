@@ -12,6 +12,7 @@ import { ActionCell } from '@/components/action-cell';
 import { Badge } from '@/components/ui/badge';
 
 export const PROJECT_STATUS_OPTIONS = [
+  { label: 'Semua', value: 'all' },
   { label: 'Menunggu', value: 'PENDING' },
   { label: 'Berjalan', value: 'ONGOING' },
   { label: 'Ditunda', value: 'PAUSED' },
@@ -20,6 +21,7 @@ export const PROJECT_STATUS_OPTIONS = [
 ];
 
 export const CONTRACT_TYPE_OPTIONS = [
+  { label: 'Semua', value: 'all' },
   { label: 'Langsung', value: 'DIRECT' },
   { label: 'Subkon', value: 'SUBCONTRACT' },
 ];

@@ -3,8 +3,12 @@ import { ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import type { IParameterLimitMasterItem } from '../../parameters/types';
+import type {
+  IParameterLimitMasterItem,
+  TParameterCategory,
+} from '../../parameters/types';
 import type { IParameterLimitProfile } from '../types';
+import { CATEGORY_LABELS } from '@/features/parameters/constants';
 
 type TParameterLimitColumnDeps = {
   onEdit: (limit: IParameterLimitMasterItem) => void;
@@ -31,6 +35,10 @@ export function getParameterLimitColumns(
     {
       accessorKey: 'category',
       header: 'Kategori',
+      cell: ({ row }) => {
+        const category = row.getValue('category') as TParameterCategory;
+        return <span>{CATEGORY_LABELS[category] || category}</span>;
+      },
     },
     {
       accessorKey: 'unit',

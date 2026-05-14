@@ -1,3 +1,36 @@
+## [Unreleased] — Parameters Category Filter (2026-05-14)
+
+### New Features
+
+- [PARAM-FILTER-001] Added category dropdown filter to Parameters and Limits tabs, using client-side DataTable filtering with optional URL persistence.
+- [PARAM-FIX-002] Fixed critical FilterSelect component: `handleValueChange` now correctly forwards value; empty selection maps to `undefined` to clear filter.
+- [PARAM-REFACTOR-003] Centralized category labels and options into `src/features/parameters/constants.ts`; removed duplicate definitions in `parameter-form.tsx` and `parameters/components/columns.tsx`.
+
+### Technical Changes
+
+- **FilterSelect** (`src/components/filter-controls.tsx`): bind value as `value ?? ''`; caller-provided options must include empty entry for "all".
+- **Parameters page** (`src/app/(main)/parameters/page.tsx`): added `filterConfigs` with category select; enabled `columnFilters` and `persistFiltersInUrl`.
+- **Limits content** (`src/features/parameter-limit-profiles/components/parameter-limits-content.tsx`): added `filterConfigs` and DataTable filter props; imported `useMemo`.
+- **Limits columns** (`src/features/parameter-limit-profiles/components/columns.tsx`): render category labels using `CATEGORY_LABELS`.
+- **Removed unused import** `DataTableEmpty` from parameters page.
+
+### Tests & Verification
+
+- TypeScript: no errors in modified files.
+- Lint: Prettier formatting applied; no new errors introduced.
+- Manual: Category dropdown appears and filters tables correctly; "Semua" clears filter; URL sync functional.
+
+**Files Modified:**
+- `src/components/filter-controls.tsx`
+- `src/features/parameters/constants.ts` (new)
+- `src/app/(main)/parameters/components/columns.tsx`
+- `src/features/parameters/components/parameter-form.tsx`
+- `src/features/parameter-limit-profiles/components/columns.tsx`
+- `src/app/(main)/parameters/page.tsx`
+- `src/features/parameter-limit-profiles/components/parameter-limits-content.tsx`
+
+---
+
 ## [Unreleased] — Work Report Signature & UI Fixes (2026-05-14)
 
 ### Bug Fixes
@@ -171,7 +204,7 @@
 
 ---
 
-## v0.7.2 — Logsheet Optional Machine-Type Validation (2026-04-29)
+## v0.7.2 — Log Sheet Optional Machine-Type Validation (2026-04-29)
 
 **Branch:** `development_v2`
 
@@ -472,5 +505,3 @@
 - [x] Server Actions architecture (no REST API for internal)
 - [x] Cloudflare Worker (R2) for file uploads
 - [x] Sonner toast protocol for all user feedback
-
-(End of file - total 220 lines)
