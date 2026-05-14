@@ -8,9 +8,9 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/data-table';
-import { DataTableEmpty } from '@/components/ui/data-table-empty';
 import { getParameterColumns } from './components/columns';
 import { ParameterDialog } from '@/features/parameters/components/parameter-dialog';
+import type { IColumnFilterConfig } from '@/components/data-table';
 
 import {
   getParametersAction,
@@ -18,6 +18,7 @@ import {
   checkParameterHasLimitsAction,
 } from '@/features/parameters/actions';
 import { IParameter } from '@/features/parameters/types';
+import { CATEGORY_OPTIONS } from '@/features/parameters/constants';
 import { ParameterLimitsContent } from '@/features/parameter-limit-profiles/components/parameter-limits-content';
 import { ProfilesContent } from '@/features/parameter-limit-profiles/components/profiles-content';
 import { useSession } from '@/hooks/use-session';
@@ -112,6 +113,18 @@ export default function ParametersPage() {
     [fetchData]
   );
 
+  const filterConfigs = useMemo<IColumnFilterConfig<IParameter>[]>(
+    () => [
+      {
+        columnId: 'category',
+        type: 'select',
+        label: 'Kategori',
+        options: CATEGORY_OPTIONS,
+      },
+    ],
+    []
+  );
+
   if (isLoading || !user || user.role !== 'ADMIN') {
     return null;
   }
@@ -168,6 +181,9 @@ export default function ParametersPage() {
               columns={columns}
               data={parameters}
               emptyMessage="Belum Ada Parameter"
+              columnFilters={true}
+              filterConfigs={filterConfigs}
+              persistFiltersInUrl={true}
             />
           )}
 

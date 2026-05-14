@@ -37,6 +37,7 @@ import {
   ParameterCategoryEnum,
   ValueTypeEnum,
 } from '@/features/parameters/types';
+import { CATEGORY_LABELS } from '@/features/parameters/constants';
 import { AlertCircle } from 'lucide-react';
 
 interface ParameterFormProps {
@@ -46,17 +47,6 @@ interface ParameterFormProps {
   onCancel: () => void;
   hasExistingLimits?: boolean;
 }
-
-// Indonesian labels for enums
-const categoryLabels: Record<string, string> = {
-  UNIT_CONDENSOR: 'Unit Condensor',
-  UNIT_EVAPORATOR: 'Unit Evaporator',
-  COOLING_WATER_QUALITY: 'Kualitas Air Pendingin',
-  GENERAL_CONDITION: 'Kondisi Umum',
-  JOB_DESCRIPTION: 'Deskripsi Pekerjaan',
-  CONSUMPTION: 'Konsumsi',
-  LAB_ANALYSIS: 'Lab Analysis',
-};
 
 const valueTypeLabels: Record<string, string> = {
   NUMBER: 'Angka',
@@ -196,7 +186,7 @@ export function ParameterForm({
                       <SelectContent>
                         {ParameterCategoryEnum.options.map(category => (
                           <SelectItem key={category} value={category}>
-                            {categoryLabels[category]}
+                            {CATEGORY_LABELS[category]}
                           </SelectItem>
                         ))}
                       </SelectContent>
