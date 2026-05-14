@@ -34,7 +34,13 @@ export function FilterSelect<TData>({
   onChange,
   onClear,
 }: IFilterSelectProps<TData>) {
-  const handleValueChange = (newValue: string) => {};
+  const handleValueChange = (newValue: string) => {
+    if (newValue === 'all') {
+      onChange(undefined);
+    } else {
+      onChange(newValue);
+    }
+  };
 
   return (
     <Select value={value ?? 'all'} onValueChange={handleValueChange}>

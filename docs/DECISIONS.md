@@ -519,6 +519,7 @@ Implement a constant-time and generic-failure authentication pattern to protect 
 ### Consequences
 
 - Developers must use `ERROR_MESSAGES.AUTHENTICATION_FAILED` for authentication-related errors.
+- External error messages remain generic as per ADR-010.
 - Internal logging (if implemented) should still capture the specific failure reason for debugging while shielding the end-user.
 
 ---
@@ -1052,6 +1053,7 @@ Additionally, the log sheet module had already established a mature authorizatio
 
 2. **Role-Based Authorization Matrix**  
    Mirroring the log sheet policy, service `saveWorkReportSignature` enforces:
+
    | Actor Role       | Technician Signature | Client PIC Signature | Notes                                    |
    | ---------------- | ------------------- | -------------------- | ---------------------------------------- |
    | `ADMIN`          | ✅ Bypass           | ✅ Bypass            | All-powerful                             |
@@ -1096,20 +1098,27 @@ Additionally, the log sheet module had already established a mature authorizatio
 - **Types** (`src/features/work-reports/types.ts`): schema extensions.
 - **Tests**: New unit test file (5 tests), updated component tests; **44/44** work-report tests pass.
 
-### Rationale
+### Verification
 
-- **Security**: Only authorized personnel can sign; cross-role overwrites prevented.
-- **Clarity**: Signature storage is explicit, not conflated with photos.
-- **Consistency**: Matches the proven log sheet signature policy.
-- **Compliance**: Client role restrictions enforce read-only scope for CLIENT users.
-- **Reliability**: Photo upload flow works consistently across draft and submit phases.
+- Build: `npm run build` passes cleanly.
+- Lint: Pre-commit format applied; no new errors in modified files.
+- Tests: `npm run test:run` reports all work-report tests passing (service, actions, components).
+- Authorization: CLIENT_SUPERVISOR can sign without assignment; CLIENT_TECHNICIAN blocked when no `CLIENT_PIC` assignment exists; TECHNICIAN blocked without `TECHNICIAN` assignment.
+- UI: Role-based button visibility confirmed; client roles cannot access create/edit dialogs.
+- Photo upload: pending photos correctly attached after draft creation; no stale state errors on submit.
 
-### Consequences
+### Acceptance Criteria Met
 
-- Existing work reports without signature columns will have `NULL` values — handled gracefully by UI.
-- Direct DB migration required to add new signature columns to `WorkReport` table.
-- Authorization is now enforced at the service layer; any future callers must respect the same checks.
-- Future changes to signature policy should be made in both log sheet and work report services simultaneously to maintain convergence.
+1. Supervisor can sign work report as technician fallback without explicit assignment. ✅
+2. Client supervisor can sign as client PIC without explicit CLIENT_PIC assignment. ✅
+3. Client technician requires active CLIENT_PIC assignment to sign; blocked otherwise. ✅
+4. Technician requires active TECHNICIAN assignment to sign. ✅
+5. Both signatures present before status SUBMITTED allowed. ✅
+6. CLIENT, CLIENT_SUPERVISOR, CLIENT_TECHNICIAN cannot create or edit work reports. ✅
+7. Signature stored in dedicated columns, not as photos. ✅
+8. R2 storage used for signature image upload. ✅
+9. UI shows correct signature button based on role. ✅
+10. Preview visibility respects viewer role. ✅
 
 ---
 
@@ -1146,5 +1155,43 @@ Implement two-way state synchronization:
 - Photo upload now succeeds on draft → sign → submit flow.
 - No regression observed in create flow (new photos remain `isNew` until saved).
 - The pattern may be reused for other nested-mutation forms in the future.
+
+---
+
+## ADR-020: Parameter Category Filter & FilterSelect Contract Fix
+
+**Date:** 2026-05-14  
+**Status:** Accepted  
+**Scope:** UI Components, Parameters, Limit Profiles
+
+### Context
+
+FilterSelect component had empty `handleValueChange` and used `value ?? 'all'`, causing no Select filter to work anywhere in the app. Additionally, category display labels were duplicated across multiple files, risking inconsistency.
+
+### Decision
+
+1. **Fix FilterSelect** (`src/components/filter-controls.tsx`):
+   - Implement `handleValueChange` to forward value, converting empty string to `undefined` to clear filter.
+   - Bind Select value as `value ?? ''`; caller options must include an empty entry ("Semua") representing "all".
+2. **Centralize Category Constants**: Created `src/features/parameters/constants.ts` exposing `CATEGORY_LABELS` (typed record) and `CATEGORY_OPTIONS` (array with empty entry).
+3. **Update Consumers**:
+   - `src/app/(main)/parameters/components/columns.tsx`: Replace local `categoryLabels` with `CATEGORY_LABELS`; import `TParameterCategory` for safe indexing.
+   - `src/features/parameters/components/parameter-form.tsx`: Replace local `categoryLabels` with `CATEGORY_LABELS`.
+   - `src/features/parameter-limit-profiles/components/columns.tsx`: Import `CATEGORY_LABELS`; use for category cell rendering.
+4. **Add Category Filters**:
+   - Parameters page (`src/app/(main)/parameters/page.tsx`): added `filterConfigs` with category select; enabled `columnFilters`, `persistFiltersInUrl`.
+   - Limits content (`src/features/parameter-limit-profiles/components/parameter-limits-content.tsx`): added `filterConfigs` and filter props to DataTable; imported `useMemo`.
+
+### Rationale
+
+- FilterSelect is a reusable component used by multiple DataTables (Users, Projects, Parameters, Limits). The broken onChange prevented all Select-based filtering.
+- Single source of truth for category labels prevents drift and ensures consistency across UI and filter dropdowns.
+
+### Consequences
+
+- Category filtering now works on Parameters and Limits tabs.
+- Filters persist in URL (shared filter mechanism).
+- Existing Users and Projects pages already included empty option; unaffected.
+- Prettier formatting applied; no new lint errors.
 
 ---

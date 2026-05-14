@@ -94,3 +94,27 @@ export const updateLabAnalysisAction = actionFactory.protected(
     },
   }
 );
+
+/**
+ * Server Action: Delete a lab analysis
+ */
+export const deleteLabAnalysisAction = actionFactory.protected(
+  async ({ input, actor }) => {
+    const labAnalysis = await service.getLabAnalysisDetail(input);
+    if (!labAnalysis) throw new Error('Data tidak ditemukan');
+
+    await projectService.assertCanAccessProject(actor, labAnalysis.projectId);
+
+    await service.deleteLabAnalysis(input);
+
+    revalidatePath(`/lab-analyses/${labAnalysis.projectId}`);
+
+    return { success: true };
+  },
+  {
+    schema: z.string().uuid('ID lab analysis tidak valid'),
+    metadata: {
+      rbac: { resource: RbacResource.LAB_ANALYSES, capability: 'delete' },
+    },
+  }
+);

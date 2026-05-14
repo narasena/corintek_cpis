@@ -18,6 +18,10 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { LabAnalysisColumnKind, ValueType } from '@/generated/prisma/enums';
+import {
+  formatNumericLimit,
+  formatRawWaterLimit,
+} from '@/features/parameters/limits-format';
 
 import { createLabAnalysisAction, updateLabAnalysisAction } from '../actions';
 
@@ -65,6 +69,16 @@ type LabAnalysisDetailLite = {
   }>;
 };
 
+type EffectiveLimits = Record<
+  string,
+  {
+    minValue: number | null;
+    maxValue: number | null;
+    rawWaterMinValue: number | null;
+    rawWaterMaxValue: number | null;
+  }
+>;
+
 export function LabAnalysisForm({
   mode,
   projectId,
@@ -72,6 +86,7 @@ export function LabAnalysisForm({
   defaultCustomer,
   defaultAddress,
   initialData,
+  effectiveLimits = {},
 }: {
   mode: 'create' | 'edit';
   projectId: string;
@@ -79,6 +94,7 @@ export function LabAnalysisForm({
   defaultCustomer?: string;
   defaultAddress?: string;
   initialData?: LabAnalysisDetailLite;
+  effectiveLimits?: EffectiveLimits;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -435,49 +451,73 @@ export function LabAnalysisForm({
                     {col.name}
                   </th>
                 ))}
+                <th className="p-3 text-left text-sm font-medium">
+                  Batas Raw Water
+                </th>
+                <th className="p-3 text-left text-sm font-medium">
+                  Batas Standard
+                </th>
               </tr>
             </thead>
             <tbody>
-              {parameters.map(parameter => (
-                <tr key={parameter.id} className="border-b last:border-b-0">
-                  <td className="p-3 align-top">
-                    <div className="font-medium">{parameter.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {parameter.unit || ''}
-                    </div>
-                  </td>
-                  {columns.map(col => (
-                    <td key={col.key} className="p-3 align-top">
-                      {parameter.valueType === 'BOOLEAN' ? (
-                        <Select
-                          value={getCellValue(parameter.id, col.key)}
-                          onValueChange={v =>
-                            setCellValue(parameter.id, col.key, v)
-                          }
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Pilih" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="true">Ya</SelectItem>
-                            <SelectItem value="false">Tidak</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Input
-                          value={getCellValue(parameter.id, col.key)}
-                          onChange={e =>
-                            setCellValue(parameter.id, col.key, e.target.value)
-                          }
-                          className={cn(
-                            parameter.valueType === 'NUMBER' && 'w-[140px]'
-                          )}
-                        />
-                      )}
+              {parameters.map(parameter => {
+                const limits = effectiveLimits[parameter.id];
+                const rawMin = limits?.rawWaterMinValue ?? null;
+                const rawMax = limits?.rawWaterMaxValue ?? null;
+                const stdMin = limits?.minValue ?? null;
+                const stdMax = limits?.maxValue ?? null;
+
+                return (
+                  <tr key={parameter.id} className="border-b last:border-b-0">
+                    <td className="p-3 align-top">
+                      <div className="font-medium">{parameter.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {parameter.unit || ''}
+                      </div>
                     </td>
-                  ))}
-                </tr>
-              ))}
+                    {columns.map(col => (
+                      <td key={col.key} className="p-3 align-top">
+                        {parameter.valueType === 'BOOLEAN' ? (
+                          <Select
+                            value={getCellValue(parameter.id, col.key)}
+                            onValueChange={v =>
+                              setCellValue(parameter.id, col.key, v)
+                            }
+                          >
+                            <SelectTrigger className="w-[140px]">
+                              <SelectValue placeholder="Pilih" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="true">Ya</SelectItem>
+                              <SelectItem value="false">Tidak</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input
+                            value={getCellValue(parameter.id, col.key)}
+                            onChange={e =>
+                              setCellValue(
+                                parameter.id,
+                                col.key,
+                                e.target.value
+                              )
+                            }
+                            className={cn(
+                              parameter.valueType === 'NUMBER' && 'w-[140px]'
+                            )}
+                          />
+                        )}
+                      </td>
+                    ))}
+                    <td className="p-3 align-top text-xs text-muted-foreground">
+                      {formatRawWaterLimit(rawMin, rawMax, parameter.unit)}
+                    </td>
+                    <td className="p-3 align-top text-xs text-muted-foreground">
+                      {formatNumericLimit(stdMin, stdMax, parameter.unit)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

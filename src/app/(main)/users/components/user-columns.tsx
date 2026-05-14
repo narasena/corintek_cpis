@@ -6,6 +6,7 @@ import { ActionCell } from '@/components/action-cell';
 import { deleteUserAction } from '@/features/users/actions';
 
 export const ROLE_OPTIONS = [
+  { label: 'Semua', value: 'all' },
   { label: 'Admin', value: 'ADMIN' },
   { label: 'Teknisi', value: 'TECHNICIAN' },
   { label: 'Supervisor', value: 'SUPERVISOR' },
@@ -13,6 +14,7 @@ export const ROLE_OPTIONS = [
 ];
 
 export const STATUS_OPTIONS = [
+  { label: 'Semua', value: 'all' },
   { label: 'Aktif', value: 'true' },
   { label: 'Nonaktif', value: 'false' },
 ];

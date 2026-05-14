@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 
@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
 import { getParameterLimitColumns } from './columns';
 import { ParameterLimitDialog } from './parameter-limit-dialog';
+import type { IColumnFilterConfig } from '@/components/data-table';
 
 import {
   getParameterLimitsAction,
   updateParameterLimitAction,
 } from '../../parameters/actions';
 import type { IParameterLimitMasterItem } from '../../parameters/types';
+import { CATEGORY_OPTIONS } from '@/features/parameters/constants';
 
 export function ParameterLimitsContent() {
   const [limits, setLimits] = useState<IParameterLimitMasterItem[]>([]);
@@ -58,6 +60,20 @@ export function ParameterLimitsContent() {
     onEdit: handleEdit,
   });
 
+  const filterConfigs = useMemo<
+    IColumnFilterConfig<IParameterLimitMasterItem>[]
+  >(
+    () => [
+      {
+        columnId: 'category',
+        type: 'select',
+        label: 'Kategori',
+        options: CATEGORY_OPTIONS,
+      },
+    ],
+    []
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -78,6 +94,9 @@ export function ParameterLimitsContent() {
           columns={columns}
           data={limits}
           emptyMessage="Belum ada data batas parameter."
+          columnFilters={true}
+          filterConfigs={filterConfigs}
+          persistFiltersInUrl={true}
         />
       )}
 
