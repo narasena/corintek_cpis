@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { getCoolingWaterQualityParameters } from '@/features/lab-analyses/service';
+import {
+  getCoolingWaterQualityParameters,
+  getEffectiveParameterLimits,
+} from '@/features/lab-analyses/service';
 import { LabAnalysisForm } from '@/features/lab-analyses/components/lab-analysis-form';
 
 interface PageProps {
@@ -16,7 +19,10 @@ export default async function NewLabAnalysisPage({ params }: PageProps) {
   });
   if (!project) notFound();
 
-  const parameters = await getCoolingWaterQualityParameters();
+  const [parameters, effectiveLimits] = await Promise.all([
+    getCoolingWaterQualityParameters(),
+    getEffectiveParameterLimits(projectId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -29,6 +35,7 @@ export default async function NewLabAnalysisPage({ params }: PageProps) {
         parameters={parameters}
         defaultCustomer={project.client?.name ?? ''}
         defaultAddress={project.client?.address ?? ''}
+        effectiveLimits={effectiveLimits}
       />
     </div>
   );

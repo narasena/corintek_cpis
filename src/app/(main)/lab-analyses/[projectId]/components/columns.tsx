@@ -3,8 +3,9 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { MoreHorizontal, Pencil, Printer } from 'lucide-react';
+import { MoreHorizontal, Pencil, Printer, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -15,15 +16,38 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LabAnalysisRow } from '@/features/lab-analyses/types';
+import { deleteLabAnalysisAction } from '@/features/lab-analyses/actions';
 
 function LabAnalysisActions({
   projectId,
   labAnalysisId,
+  locked,
 }: {
   projectId: string;
   labAnalysisId: string;
+  locked: boolean;
 }) {
   const router = useRouter();
+
+  const handleDelete = async () => {
+    const confirmed = confirm(
+      'Hapus lab analysis ini? Tindakan ini tidak dapat dibatalkan.'
+    );
+    if (!confirmed) return;
+
+    try {
+      const result = await deleteLabAnalysisAction(labAnalysisId);
+      if (result.success) {
+        toast.success('Lab analysis berhasil dihapus');
+        router.refresh();
+      }
+    } catch (error) {
+      toast.error('Gagal menghapus', {
+        description:
+          error instanceof Error ? error.message : 'Terjadi kesalahan',
+      });
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -49,6 +73,14 @@ function LabAnalysisActions({
         >
           <Printer className="mr-2 h-4 w-4" /> Print
         </DropdownMenuItem>
+        {!locked && (
+          <DropdownMenuItem
+            onClick={handleDelete}
+            className="text-red-600 focus:text-red-600"
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Hapus
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -99,6 +131,7 @@ export const getLabAnalysisColumns = ({
       <LabAnalysisActions
         projectId={projectId}
         labAnalysisId={row.original.id}
+        locked={row.original.locked}
       />
     ),
   },

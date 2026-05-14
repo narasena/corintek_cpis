@@ -5,6 +5,10 @@ import {
   ValueType,
 } from '@/generated/prisma/client';
 import { CreateLabAnalysisInput, UpdateLabAnalysisInput } from './types';
+import {
+  applyProjectOverridesToParameters,
+  IParameterLike,
+} from '@/features/parameters/limits-utils';
 
 export async function getLabAnalysesByProject(projectId: string) {
   return await prisma.labAnalysis.findMany({
@@ -44,15 +48,35 @@ export async function getCoolingWaterQualityParameters() {
     ParameterCategory.LAB_ANALYSIS,
   ];
 
-  return await prisma.parameter.findMany({
+  const parameters = await prisma.parameter.findMany({
     where: {
-      category: {
-        in: targetCategories,
-      },
+      category: { in: targetCategories },
       deletedAt: null,
       isActive: true,
     },
     orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
+  });
+
+  // Deduplicate by name: if a parameter name exists in both categories,
+  // keep the LAB_ANALYSIS version. This prevents duplicates like "Conductivity"
+  // appearing twice when both COOLING_WATER_QUALITY and LAB_ANALYSIS exist.
+  const dedupedMap = new Map<string, (typeof parameters)[0]>();
+  for (const param of parameters) {
+    const existing = dedupedMap.get(param.name);
+    if (!existing) {
+      dedupedMap.set(param.name, param);
+    } else if (
+      existing.category === ParameterCategory.COOLING_WATER_QUALITY &&
+      param.category === ParameterCategory.LAB_ANALYSIS
+    ) {
+      dedupedMap.set(param.name, param); // Replace with LAB_ANALYSIS
+    }
+  }
+
+  return Array.from(dedupedMap.values()).sort((a, b) => {
+    if (a.displayOrder !== b.displayOrder)
+      return a.displayOrder - b.displayOrder;
+    return a.name.localeCompare(b.name);
   });
 }
 
@@ -392,4 +416,141 @@ async function upsertLabAnalysisEntries(
       },
     });
   }
+}
+
+/**
+ * Get effective parameter limits for a project
+ * Merges parameter profile limits with project-specific overrides
+ */
+export async function getEffectiveParameterLimits(projectId: string) {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: {
+      parameterLimitProfile: {
+        include: {
+          limits: {
+            select: {
+              parameterId: true,
+              minValue: true,
+              maxValue: true,
+              rawWaterMinValue: true,
+              rawWaterMaxValue: true,
+            },
+          },
+        },
+      },
+      parameterOverrides: true,
+    },
+  });
+
+  if (!project) {
+    throw new Error('Project not found');
+  }
+
+  // Fetch numeric parameters from both COOLING_WATER_QUALITY and LAB_ANALYSIS
+  const numericParameters = await prisma.parameter.findMany({
+    where: {
+      category: {
+        in: [ParameterCategory.COOLING_WATER_QUALITY, ParameterCategory.LAB_ANALYSIS],
+      },
+      valueType: 'NUMBER',
+      deletedAt: null,
+      isActive: true,
+    },
+    orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
+  });
+
+  // Deduplicate by name: prefer LAB_ANALYSIS over COOLING_WATER_QUALITY
+  const dedupedMap = new Map<string, typeof numericParameters[0]>();
+  for (const param of numericParameters) {
+    const existing = dedupedMap.get(param.name);
+    if (!existing) {
+      dedupedMap.set(param.name, param);
+    } else if (
+      existing.category === ParameterCategory.COOLING_WATER_QUALITY &&
+      param.category === ParameterCategory.LAB_ANALYSIS
+    ) {
+      dedupedMap.set(param.name, param);
+    }
+  }
+  const uniqueParameters = Array.from(dedupedMap.values()).sort((a, b) => {
+    if (a.displayOrder !== b.displayOrder) return a.displayOrder - b.displayOrder;
+    return a.name.localeCompare(b.name);
+  });
+
+  // Build base parameters with all limit fields null
+  const parametersBase: IParameterLike[] = uniqueParameters.map(param => ({
+    id: param.id,
+    minValue: null,
+    maxValue: null,
+    rawWaterMinValue: null,
+    rawWaterMaxValue: null,
+  }));
+
+  // Build profile limit overrides
+  const profileLimits = project.parameterLimitProfile?.limits ?? [];
+  const profileLimitOverrides = profileLimits.map(limit => ({
+    parameterId: limit.parameterId,
+    minValue: limit.minValue ?? null,
+    maxValue: limit.maxValue ?? null,
+    rawWaterMinValue: limit.rawWaterMinValue ?? null,
+    rawWaterMaxValue: limit.rawWaterMaxValue ?? null,
+  }));
+
+  // Apply profile limits
+  const parametersWithProfileLimits = applyProjectOverridesToParameters(
+    parametersBase,
+    profileLimitOverrides
+  );
+
+  // Apply project overrides
+  const projectOverrides = project.parameterOverrides;
+  const parametersWithOverrides = applyProjectOverridesToParameters(
+    parametersWithProfileLimits,
+    projectOverrides
+  );
+
+  // Convert to plain object indexed by parameterId
+  const result: Record<string, {
+    minValue: number | null;
+    maxValue: number | null;
+    rawWaterMinValue: number | null;
+    rawWaterMaxValue: number | null;
+  }> = {};
+
+  for (const param of parametersWithOverrides) {
+    result[param.id] = {
+      minValue: param.minValue ?? null,
+      maxValue: param.maxValue ?? null,
+      rawWaterMinValue: param.rawWaterMinValue ?? null,
+      rawWaterMaxValue: param.rawWaterMaxValue ?? null,
+    };
+  }
+
+  return result;
+}
+
+/**
+ * Soft delete a lab analysis
+ */
+export async function deleteLabAnalysis(id: string) {
+  const labAnalysis = await prisma.labAnalysis.findUnique({
+    where: { id },
+    select: { id: true, locked: true },
+  });
+
+  if (!labAnalysis) {
+    throw new Error('Lab analysis tidak ditemukan');
+  }
+
+  if (labAnalysis.locked) {
+    throw new Error('Lab analysis terkunci tidak dapat dihapus');
+  }
+
+  return await prisma.labAnalysis.update({
+    where: { id },
+    data: {
+      deletedAt: new Date(),
+    },
+  });
 }

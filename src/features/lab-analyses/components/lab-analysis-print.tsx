@@ -55,6 +55,15 @@ type LabAnalysisDetailLite = {
   };
 };
 
+type EffectiveLimits = {
+  [parameterId: string]: {
+    minValue: number | null;
+    maxValue: number | null;
+    rawWaterMinValue: number | null;
+    rawWaterMaxValue: number | null;
+  };
+};
+
 function formatLimit(minValue: number | null, maxValue: number | null) {
   const min = minValue;
   const max = maxValue;
@@ -90,9 +99,11 @@ function formatValue(entry?: {
 export function LabAnalysisPrint({
   labAnalysis,
   parameters,
+  effectiveLimits = {},
 }: {
   labAnalysis: LabAnalysisDetailLite;
   parameters: ParameterLite[];
+  effectiveLimits?: EffectiveLimits;
 }) {
   const columns = useMemo(
     () =>
@@ -100,14 +111,22 @@ export function LabAnalysisPrint({
     [labAnalysis.columns]
   );
 
-  const overrideByParameterId = useMemo(() => {
-    return new Map(
-      (labAnalysis.project.parameterOverrides ?? []).map(o => [
-        o.parameterId,
-        o,
-      ])
-    );
-  }, [labAnalysis.project.parameterOverrides]);
+  // Build effective limits map from project's computed effective limits
+  const effectiveLimitsMap = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        minValue: number | null;
+        maxValue: number | null;
+        rawWaterMinValue: number | null;
+        rawWaterMaxValue: number | null;
+      }
+    >();
+    for (const [paramId, limits] of Object.entries(effectiveLimits)) {
+      map.set(paramId, limits);
+    }
+    return map;
+  }, [effectiveLimits]);
 
   const entryByKey = useMemo(() => {
     const map = new Map<string, (typeof labAnalysis.entries)[number]>();
@@ -213,11 +232,12 @@ export function LabAnalysisPrint({
               </thead>
               <tbody>
                 {parameters.map(parameter => {
-                  const override = overrideByParameterId.get(parameter.id);
-                  const rawMin = override?.rawWaterMinValue ?? null;
-                  const rawMax = override?.rawWaterMaxValue ?? null;
-                  const min = override?.minValue ?? null;
-                  const max = override?.maxValue ?? null;
+                  // Get computed effective limits (profile + overrides)
+                  const limits = effectiveLimitsMap.get(parameter.id);
+                  const rawMin = limits?.rawWaterMinValue ?? null;
+                  const rawMax = limits?.rawWaterMaxValue ?? null;
+                  const stdMin = limits?.minValue ?? null;
+                  const stdMax = limits?.maxValue ?? null;
 
                   return (
                     <tr key={parameter.id}>
@@ -246,7 +266,7 @@ export function LabAnalysisPrint({
                         {formatRawWaterLimit(rawMin, rawMax, parameter.unit)}
                       </td>
                       <td className="border border-black p-2 text-center">
-                        {formatLimit(min, max)}
+                        {formatLimit(stdMin, stdMax)}
                       </td>
                     </tr>
                   );
