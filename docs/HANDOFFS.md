@@ -13,19 +13,22 @@
 | Verify all logsheet tests pass (service, actions, notifications)                                          | ✅ Complete |
 
 ### Problem
-Logsheet submission blocked when numeric entries exceed parameter boundaries. Expected: out-of-range values should be submittable with warnings; only signatures are mandatory.
+Logsheet submission and approval blocked when numeric entries exceed parameter boundaries. Expected: out-of-range values should be accepted with warnings; only signatures and required-field completeness are mandatory.
 
 ### Solution
-`validateLogSheetForSubmission` now only checks signatures. Range violations are handled by `notifyLimitBreachesOnSubmission` as non-blocking warnings.
+- **Submission:** `validateLogSheetForSubmission` now only checks signatures. Range violations handled by `notifyLimitBreachesOnSubmission` as non-blocking warnings.
+- **Approval:** `validateLogSheetApprovalDetail` no longer checks numeric ranges; only required-field validation remains enforced.
 
 ### Verification
-- All tests pass: service (78), status-with-notifications (4), actions (50).
-- Manual submission with value far outside range succeeds with warning notification.
-- Approval validation unchanged (still blocks).
+- All tests pass: service (78), approval-validation (15), status-with-notifications (4), actions (50).
+- Manual: submission with out-of-range value succeeds; approval now succeeds as well.
+- Required-field validation still functional (e.g., missing Temp In for active chiller blocks).
 
 ### Files Modified
 - `src/features/log-sheets/log-sheet-status.service.ts`
+- `src/features/log-sheets/approval-validation.ts`
 - `src/features/log-sheets/service.characterization.test.ts`
+- `src/features/log-sheets/approval-validation.characterization.test.ts`
 - `src/features/log-sheets/status-with-notifications.test.ts`
 - `src/features/log-sheets/actions.characterization.test.ts`
 

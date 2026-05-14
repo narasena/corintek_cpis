@@ -1,15 +1,20 @@
-## [Unreleased] — Logsheet Submission Validation Fix (2026-05-14)
+## [Unreleased] — Logsheet Validation Relaxation (2026-05-14)
 
 ### Bug Fixes
 
-- [LOG-051] Relaxed numeric range validation on logsheet submission: out-of-range values now generate warnings instead of blocking. Approval flow still enforces range checks.
+- [LOG-051] Relaxed numeric range validation on logsheet submission: out-of-range values now generate warnings instead of blocking.
   - `validateLogSheetForSubmission` no longer checks numeric ranges; only signatures are mandatory.
   - Range breaches still reported via `notifyLimitBreachesOnSubmission` as warning notifications.
-  - Updated characterization tests accordingly.
+- [LOG-052] Relaxed numeric range validation on logsheet approval: out-of-range values no longer block approval.
+  - `validateLogSheetApprovalDetail` no longer checks numeric ranges; required-field validation remains enforced.
+  - This aligns approval behavior with submission; range issues are warnings only.
+- Updated all affected characterization tests (service, approval, actions, status).
 
 **Files Modified:**
 - `src/features/log-sheets/log-sheet-status.service.ts`
+- `src/features/log-sheets/approval-validation.ts`
 - `src/features/log-sheets/service.characterization.test.ts`
+- `src/features/log-sheets/approval-validation.characterization.test.ts`
 - `src/features/log-sheets/status-with-notifications.test.ts`
 - `src/features/log-sheets/actions.characterization.test.ts`
 
