@@ -1195,3 +1195,42 @@ FilterSelect component had empty `handleValueChange` and used `value ?? 'all'`, 
 - Prettier formatting applied; no new lint errors.
 
 ---
+
+## ADR-0XX: Dashboard Project Filter via URL Query Parameters
+
+**Date:** 2026-05-14  
+**Status:** Accepted  
+**Scope:** Dashboard, Filtering, UX
+
+### Context
+
+Dashboard metrics and photos needed to be filtered by project. Multiple filtering approaches were considered: global state (Zustand), URL query params, or search params with router push. The solution needed to:
+- Persist filter across page navigation/refreshes
+- Be shareable via URL
+- Work with Next.js Server Components
+- Not introduce global client-side state complexity
+
+### Decision
+
+Use URL query parameters (`?projectId=<id>`) as the single source of truth for the selected project filter. The ProjectSelector client component reads and writes the query param directly via `useSearchParams` and `router.push`. The AnalyticsDashboard server component receives `projectId` as a prop (default `null`) and passes it to server actions.
+
+Filtering logic:
+- `projectId = null` or `undefined`: server actions return data across all accessible projects
+- `projectId = "<id>"`: server actions filter results to the specified project
+
+ProjectSelector visibility is role-gated: only rendered for ADMIN role; other roles see unfiltered data (their access is inherently scoped by server-side assignment).
+
+### Rationale
+
+- **Shareable/bookmarkable URLs:** Users can send a link with pre-selected project filter
+- **No global state:** Eliminates Zustand complexity for a single filter value
+- **Server-driven:** Filter applied at data-fetching layer (server actions) — no client-side filtering overhead
+- **Progressive enhancement:** URL param can be set manually, deep-linked, or cleared
+- **Consistent with CPIS conventions:** Other filters (e.g., timeRange) already use URL query params
+
+### Consequences
+
+- Requires parent pages to forward `searchParams.projectId` as `projectId` prop to AnalyticsDashboard (added as part of integration).
+- Server actions must accept `projectId?: string | undefined` and handle both undefined (all projects) and specific ID cases.
+- Client component (ProjectSelector) performs role-based project fetching; server component (AnalyticsDashboard) performs data fetching — clean separation of concerns.
+- TypeScript type workaround needed (`projectId ?? undefined`) to satisfy action signature constraints; consider normalizing action input types to accept `string | null | undefined` for consistency.

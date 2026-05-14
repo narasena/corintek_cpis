@@ -6,6 +6,7 @@ import { ApproachChart } from './approach-chart';
 import { AmpereChart } from './ampere-chart';
 import { RecentPhotosGallery } from './recent-photos-gallery';
 import { TimeRangeSelector } from './time-range-selector';
+import { ProjectSelector } from './project-selector';
 import {
   Card,
   CardContent,
@@ -13,21 +14,23 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { subDays } from 'date-fns';
+import { getCurrentUserDetails } from '@/features/auth/lib/user-context';
 
 export async function AnalyticsDashboard({
   timeRange = '30d',
+  projectId = null,
 }: {
   timeRange?: '7d' | '30d' | '90d';
+  projectId?: string | null;
 }) {
-  // We can default to the last 30 days for metrics
-  const days = timeRange === '90d' ? 90 : timeRange === '30d' ? 30 : 7;
-  const to = new Date();
-  const from = subDays(to, days);
+  const user = await getCurrentUserDetails();
+  if (!user) {
+    return <div>User not found</div>;
+  }
 
   const [metricsRes, photosRes] = await Promise.all([
-    getDashboardMetricsAction({ timeRange }),
-    getRecentPhotosAction({ limit: 12 }),
+    getDashboardMetricsAction({ timeRange, projectId: projectId ?? undefined }),
+    getRecentPhotosAction({ limit: 12, projectId: projectId ?? undefined }),
   ]);
 
   const metrics =
@@ -47,7 +50,10 @@ export async function AnalyticsDashboard({
             Pantau metrik performa unit pendingin
           </p>
         </div>
-        <TimeRangeSelector defaultValue={timeRange} />
+        <div className="flex items-center gap-4">
+          <ProjectSelector userRole={user.role} />
+          <TimeRangeSelector defaultValue={timeRange} />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
