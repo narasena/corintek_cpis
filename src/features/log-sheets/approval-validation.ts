@@ -1,6 +1,6 @@
 import type { ILogSheetDetailView, ILogSheetEntry, TParameter } from './types';
 import { makeEntryKey, isEntryComplete } from './utils';
-import { validateNumericRange } from './range-validation';
+
 import {
   usesChillers,
   usesCoolingTowers,
@@ -37,18 +37,7 @@ function buildApprovalContext(detail: ILogSheetDetailView): TApprovalContext {
   return { detail, parameterById, entryByKey, machineLabelById };
 }
 
-function collectApprovalRangeErrors(
-  context: TApprovalContext,
-  errors: string[]
-) {
-  for (const entry of context.detail.entries) {
-    if (entry.valueType !== 'NUMBER') continue;
-    const param = context.parameterById.get(entry.parameterId);
-    if (!param) continue;
 
-    errors.push(...validateNumericRange(entry, param));
-  }
-}
 
 function collectCoolingWaterRequiredErrors(
   context: TApprovalContext,
@@ -158,7 +147,7 @@ export function validateLogSheetApprovalDetail(
   const context = buildApprovalContext(detail);
   const errors: string[] = [];
 
-  collectApprovalRangeErrors(context, errors);
+
   collectApprovalRequiredFieldErrors(context, errors);
 
   if (errors.length > 0) {

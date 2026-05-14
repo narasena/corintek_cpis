@@ -98,7 +98,8 @@ describe('updateLogSheetStatusWithNotifications', () => {
     expect(serviceMock.updateLogSheetStatus).toHaveBeenCalledWith(
       actor,
       'ls-1',
-      'APPROVED'
+      'APPROVED',
+      undefined
     );
     expect(result).toBe(logSheet);
   });
@@ -143,7 +144,8 @@ describe('updateLogSheetStatusWithNotifications', () => {
     expect(serviceMock.updateLogSheetStatus).toHaveBeenCalledWith(
       actor,
       'ls-1',
-      'SUBMITTED'
+      'SUBMITTED',
+      undefined
     );
     expect(result).toBe(logSheet);
   });
@@ -179,7 +181,8 @@ describe('updateLogSheetStatusWithNotifications', () => {
     expect(serviceMock.updateLogSheetStatus).toHaveBeenCalledWith(
       actor,
       'ls-1',
-      'SUBMITTED'
+      'SUBMITTED',
+      undefined
     );
     expect(result).toBe(logSheet);
   });

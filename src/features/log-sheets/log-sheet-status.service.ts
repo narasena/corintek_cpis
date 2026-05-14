@@ -6,7 +6,6 @@ import type { ILogSheet, TLogSheetStatus } from './types';
 import { validateLogSheetApprovalDetail } from './approval-validation';
 import { decideLogSheetStatusTransition } from './log-sheet-status';
 import { getLogSheetDetail, hasProjectAssignment } from './service';
-import { validateNumericRange } from './range-validation';
 
 export async function updateLogSheetStatus(
   actor: IJwtPayload,
@@ -104,15 +103,8 @@ export async function validateLogSheetForSubmission(id: string) {
   if (!detail.logSheet.clientPicSignatureUrl) {
     errors.push('Tanda tangan PIC klien belum diisi');
   }
-
-  for (const entry of detail.entries) {
-    if (entry.valueType === 'NUMBER') {
-      const param = detail.parameters.find(p => p.id === entry.parameterId);
-      if (!param) continue;
-
-      errors.push(...validateNumericRange(entry, param));
-    }
-  }
+  // Numeric range validation removed: out-of-range values are warnings, not blockers.
+  // Warnings are handled by notifyLimitBreachesOnSubmission in status-with-notifications.ts
 
   if (errors.length > 0) {
     throw new Error(`Validasi gagal:\n${errors.join('\n')}`);

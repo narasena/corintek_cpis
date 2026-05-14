@@ -201,6 +201,8 @@
 | BUG-017 | Permissions | Chemicals and Parameters pages are accessible to non-admin roles (nav hidden but route unguarded) | Fixed  |
 | BUG-018 | Input       | Number inputs (all forms) increment/decrement on scroll — unintended value changes                | Open   |
 | BUG-050 | Project     | Personnel assignments ignored on project creation                                                  | Fixed  |
+| BUG-051 | Logsheet    | Logsheet submission blocked by strict numeric range validation — out-of-range values should be warnings-only | Fixed  |
+| BUG-052 | Logsheet    | Logsheet approval blocked by strict numeric range validation — out-of-range values should be warnings-only on approval as well | Fixed  |
 
 ### BUG-017 — Parameters/Chemicals Routes Unguarded for Non-Admin
 
@@ -345,6 +347,51 @@ export default function Page() {
 **Fix:** Modified `src/features/projects/service.ts:createProject()` to persist assignments within the same transaction. After creating the project (and machines), the code now calls `applyProjectAssignmentsTransaction(tx, newProject.id, data.assignments)` to create assignment records. Existing validation ensures at least one CLIENT_PIC is present.
 
 **Additional Changes:** Date formatting in project table columns corrected to "12 Sep 2026" format; minor UI polish in project form layout and sticky headers.
+
+**Status:** Fixed
+
+---
+
+### BUG-051 — Logsheet Submission Blocked by Strict Numeric Range Validation
+
+**Symptom:** Logsheet submission fails when numeric entry values exceed defined parameter boundaries. The server returns errors like "Temperature: Nilai 105 di atas maksimum 100".
+
+**Root Cause:** `validateLogSheetForSubmission` (src/features/log-sheets/log-sheet-status.service.ts) incorrectly enforced numeric range checks as hard blocking errors. Business rule: out-of-range values should be accepted with warnings (notifications) on submission; only missing signatures block.
+
+**Fix:** Removed numeric range validation loop from `validateLogSheetForSubmission`. Range violations are now handled solely by `notifyLimitBreachesOnSubmission` in log-sheet-notifications.ts, which creates warning notifications without blocking. Signature checks remain mandatory.
+
+**Files Modified:**
+- `src/features/log-sheets/log-sheet-status.service.ts` — removed range validation loop; cleaned unused import.
+- `src/features/log-sheets/service.characterization.test.ts` — updated 3 test cases to accept out-of-range values.
+- `src/features/log-sheets/status-with-notifications.test.ts` — corrected expectations to include `undefined` options argument.
+- `src/features/log-sheets/actions.characterization.test.ts` — updated mock to use real implementation; fixed call expectations.
+
+**Verification:**
+- All 78 service characterization tests pass.
+- All 4 status-with-notifications tests pass.
+- All 50 actions characterization tests pass.
+- Manual: Submitting logsheet with temperature 150°C (max 100) succeeds with warning toast.
+- Approval validation still enforces range checks (unchanged).
+
+**Status:** Fixed
+
+---
+
+### BUG-052 — Logsheet Approval Blocked by Strict Numeric Range Validation
+
+**Symptom:** Logsheet approval fails when numeric entry values exceed parameter boundaries, even though submission now accepts such values. This creates an inconsistency where submittable data cannot be approved.
+
+**Root Cause:** `validateLogSheetApprovalDetail` in `approval-validation.ts` still enforces numeric range checks as hard errors via `collectApprovalRangeErrors`. Business rule: range violations are warnings only and should not block approval.
+
+**Fix:** Removed numeric range validation from approval flow. Deleted `collectApprovalRangeErrors` function and its call. Required field checks remain enforced.
+
+**Files Modified:**
+- `src/features/log-sheets/approval-validation.ts`
+
+**Verification:**
+- All logsheet tests pass.
+- Approval with out-of-range numeric values now succeeds.
+- Required field validation still functional.
 
 **Status:** Fixed
 

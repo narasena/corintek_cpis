@@ -1146,7 +1146,7 @@ describe('validateLogSheetForSubmission (characterization)', () => {
     );
   });
 
-  it('rejects entry value below minValue (boundary: min - 1)', async () => {
+  it('accepts entry value below minValue (warnings-only, not blocking)', async () => {
     const mockLogSheet = {
       id: validUUID,
       projectId: anotherUUID,
@@ -1200,12 +1200,12 @@ describe('validateLogSheetForSubmission (characterization)', () => {
       },
     ]);
 
-    await expect(validateLogSheetForSubmission(validUUID)).rejects.toThrow(
-      'di bawah minimum'
-    );
+    await expect(
+      validateLogSheetForSubmission(validUUID)
+    ).resolves.not.toThrow();
   });
 
-  it('rejects entry value above maxValue (boundary: max + 1)', async () => {
+  it('accepts entry value above maxValue (warnings-only, not blocking)', async () => {
     const mockLogSheet = {
       id: validUUID,
       projectId: anotherUUID,
@@ -1259,9 +1259,9 @@ describe('validateLogSheetForSubmission (characterization)', () => {
       },
     ]);
 
-    await expect(validateLogSheetForSubmission(validUUID)).rejects.toThrow(
-      'di atas maksimum'
-    );
+    await expect(
+      validateLogSheetForSubmission(validUUID)
+    ).resolves.not.toThrow();
   });
 
   it('accepts entry value at exact minValue boundary', async () => {
@@ -1382,7 +1382,7 @@ describe('validateLogSheetForSubmission (characterization)', () => {
     ).resolves.not.toThrow();
   });
 
-  it('uses rawWaterMinValue/rawWaterMaxValue for RAW_WATER role entries', async () => {
+  it('accepts RAW_WATER entry value outside rawWaterMin/rawWaterMax (warnings-only)', async () => {
     const mockLogSheet = {
       id: validUUID,
       projectId: anotherUUID,
@@ -1436,9 +1436,9 @@ describe('validateLogSheetForSubmission (characterization)', () => {
       },
     ]);
 
-    await expect(validateLogSheetForSubmission(validUUID)).rejects.toThrow(
-      'di bawah minimum 6'
-    );
+    await expect(
+      validateLogSheetForSubmission(validUUID)
+    ).resolves.not.toThrow();
   });
 
   it('silently skips validation when parameter not found in lookup (SURPRISING BEHAVIOR)', async () => {
