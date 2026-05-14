@@ -47,13 +47,15 @@ type TSignatureVisibility = {
 
 const technicianViewerRoles: readonly TUserRole[] = [
   'TECHNICIAN',
-  'CLIENT_TECHNICIAN',
+  'SUPERVISOR',
 ];
 
-const clientViewerRoles: readonly TUserRole[] = ['CLIENT_SUPERVISOR'];
+const clientViewerRoles: readonly TUserRole[] = [
+  'CLIENT_TECHNICIAN',
+  'CLIENT_SUPERVISOR',
+];
 
 const nonSigningViewerRoles: readonly TUserRole[] = [
-  'SUPERVISOR',
   'REPORTING',
   'DIRECTOR',
 ];
@@ -111,14 +113,14 @@ const previewVisibilityByRole: Record<TUserRole, TSignaturePreviewVisibility> =
     TECHNICIAN: { showTechnicianPreview: true, showClientPreview: false },
     CLIENT: { showTechnicianPreview: false, showClientPreview: true },
     CLIENT_TECHNICIAN: {
-      showTechnicianPreview: true,
-      showClientPreview: false,
+      showTechnicianPreview: false,
+      showClientPreview: true,
     },
     CLIENT_SUPERVISOR: {
       showTechnicianPreview: false,
       showClientPreview: true,
     },
-    SUPERVISOR: { showTechnicianPreview: false, showClientPreview: false },
+    SUPERVISOR: { showTechnicianPreview: true, showClientPreview: false },
     REPORTING: { showTechnicianPreview: false, showClientPreview: false },
     DIRECTOR: { showTechnicianPreview: false, showClientPreview: false },
   };
@@ -153,6 +155,7 @@ function SignatureDialog({
       const res = await saveWorkReportSignatureAction({
         workReportId,
         dataUrl,
+        role,
       });
 
       if (!res.success) {

@@ -26,6 +26,7 @@ describe('saveWorkReportSignatureAction', () => {
   const validPayload = {
     workReportId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
     dataUrl: 'data:image/png;base64,fake-data',
+    role: 'TECHNICIAN' as const,
   };
 
   beforeEach(() => {
@@ -54,8 +55,6 @@ describe('saveWorkReportSignatureAction', () => {
   it('calls domain service and revalidates paths on success', async () => {
     vi.mocked(requireActor).mockResolvedValueOnce(mockActor as any);
     const mockResult = {
-      id: 'sig-1',
-      workReportId: validPayload.workReportId,
       projectId: 'proj-1',
     };
     vi.mocked(service.saveWorkReportSignature).mockResolvedValueOnce(
@@ -69,7 +68,12 @@ describe('saveWorkReportSignatureAction', () => {
     expect(result.success).toBe(true);
     expect(service.saveWorkReportSignature).toHaveBeenCalledWith(
       validPayload.workReportId,
-      { signatureDataUrl: validPayload.dataUrl, signedByUserId: mockActor.id }
+      expect.objectContaining({
+        signatureDataUrl: validPayload.dataUrl,
+        signedByUserId: mockActor.id,
+        role: validPayload.role,
+        actorRole: mockActor.role,
+      })
     );
     expect(revalidatePath).toHaveBeenCalledWith('/projects/proj-1');
   });
@@ -79,6 +83,7 @@ describe('saveWorkReportSignatureAction', () => {
     const invalidPayload = {
       workReportId: 'not-a-uuid',
       dataUrl: 'not-a-data-url',
+      role: 'TECHNICIAN',
     };
 
     const result = await saveWorkReportSignatureAction(invalidPayload as any);
@@ -94,6 +99,7 @@ describe('saveWorkReportSignatureAction', () => {
     const invalidPayload = {
       workReportId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       // dataUrl missing
+      role: 'TECHNICIAN',
     };
 
     const result = await saveWorkReportSignatureAction(invalidPayload as any);

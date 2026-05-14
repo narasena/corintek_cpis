@@ -19,11 +19,25 @@ export function WorkReportCreateDialog({
 }: WorkReportCreateDialogProps) {
   const [open, setOpen] = useState(!!defaultOpen);
   const router = useRouter();
+  const [currentWorkReportId, setCurrentWorkReportId] = useState<string | undefined>(undefined);
 
-  const handleSuccess = (workReportId: string) => {
+  const handleSuccessWithId = (workReportId: string) => {
     setOpen(false);
     router.push(`/work-reports/${projectId}/${workReportId}`);
     router.refresh();
+  };
+
+  const handleDraftSaved = (workReportId: string) => {
+    setCurrentWorkReportId(workReportId);
+    // Keep dialog open; toast handled by form
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      // Reset draft ID when dialog closes
+      setCurrentWorkReportId(undefined);
+    }
   };
 
   return (
@@ -31,7 +45,7 @@ export function WorkReportCreateDialog({
       mode="create"
       title="Buat Laporan Kerja"
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={handleOpenChange}
       trigger={
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -42,7 +56,9 @@ export function WorkReportCreateDialog({
       {({ onCancel }) => (
         <WorkReportForm
           projectId={projectId}
-          onSuccessWithId={handleSuccess}
+          workReportId={currentWorkReportId}
+          onDraftSaved={handleDraftSaved}
+          onSuccessWithId={handleSuccessWithId}
           onCancel={onCancel}
         />
       )}
