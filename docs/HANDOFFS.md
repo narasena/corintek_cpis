@@ -13,7 +13,7 @@
 | Apply Indonesian labels and shadcn/ui Select component styling                                            | ✅ Complete |
 | Integrate ProjectSelector into AnalyticsDashboard (server component)                                     | ✅ Complete |
 | Add `projectId` parameter to AnalyticsDashboard with null default                                         | ✅ Complete |
-| Fetch user via `getCurrentUserDetails()` and conditionally render ProjectSelector for ADMIN role only     | ✅ Complete |
+| Fetch user via `getCurrentUserDetails()` and render ProjectSelector for all users (no role condition) | ✅ Complete |
 | Pass `projectId` to `getDashboardMetricsAction` and `getRecentPhotosAction` with undefined fallback       | ✅ Complete |
 | TypeScript: No errors in modified files                                                                   | ✅ Complete |
 | Commit: `feat(dashboard): integrate project selector into analytics dashboard`                            | ✅ Complete |
@@ -29,7 +29,7 @@ Add project selector dropdown to dashboard allowing users to filter dashboard da
 - Imported `ProjectSelector` from `./project-selector` and `getCurrentUserDetails` from `@/features/auth/lib/user-context`.
 - Fetched current user via `const user = await getCurrentUserDetails();` with early return `<div>User not found</div>` if null.
 - Updated `getDashboardMetricsAction` and `getRecentPhotosAction` calls to include `projectId: projectId ?? undefined` (converts `null` → `undefined` for type compatibility).
-- Updated header layout: wrapped `TimeRangeSelector` and `ProjectSelector` in a flex container with `gap-4`. ProjectSelector rendered only if `user.role === 'ADMIN'`, passed `userRole={user.role}`.
+- Updated header layout: wrapped `TimeRangeSelector` and `ProjectSelector` in a flex container with `gap-4`. ProjectSelector rendered unconditionally, passed `userRole={user.role}`.
 - No `'use client'` directive — remains a Server Component.
 
 **Existing Component** (`src/app/(main)/_components/project-selector.tsx`)
@@ -43,7 +43,7 @@ Add project selector dropdown to dashboard allowing users to filter dashboard da
 ```
 AnalyticsDashboard (server)
   └── getCurrentUserDetails() → user
-  └── conditionally render <ProjectSelector userRole={user.role} />
+   └── render <ProjectSelector userRole={user.role} />
   └── calls: getDashboardMetricsAction({ timeRange, projectId: projectId ?? undefined })
   └── calls: getRecentPhotosAction({ limit: 12, projectId: projectId ?? undefined })
 ```
@@ -57,15 +57,13 @@ AnalyticsDashboard (server)
 ### Technical Notes
 
 - The `projectId` parameter flows from URL query (set by ProjectSelector) → AnalyticsDashboard props → server actions → Prisma query filter.
-- Server component pattern preserved: user fetched server-side, conditional rendering based on `user.role`.
+- Server component pattern preserved: user fetched server-side; ProjectSelector rendered for all authenticated users.
 - Conversion `projectId ?? undefined` ensures compatibility with action signatures that likely accept `string | undefined`.
 - No new packages added; uses existing shadcn/ui Select, lucide-react Loader2, Next.js navigation hooks.
 
 ### Next Steps
 
-- Update parent pages/routes that render `AnalyticsDashboard` to pass `projectId` from URL search params if needed (e.g., `app/(main)/page.tsx` or dashboard layout).
-- Verify server action implementations (`getDashboardMetricsAction`, `getRecentPhotosAction`) properly handle `undefined` projectId (returns all projects) vs specific project ID (filtered).
-- Consider adding TypeScript types for action inputs to avoid `?? undefined` workaround (if they already accept `string | null`, adjust accordingly).
+- ✅ All planned integration steps completed and verified.
 
 ### Open Items / Blockers
 

@@ -14,15 +14,21 @@
 - Error handling via `logger.error` with `[CPIS-ERROR]` prefix.
 - Follows client-component pattern; calls server actions directly.
 
-### Files Added
-- `src/app/(main)/_components/project-selector.tsx`
+### Files Modified
+- `src/app/(main)/_components/project-selector.tsx` (new)
+- `src/app/(main)/_components/analytics-dashboard.tsx`
+- `src/app/(main)/page.tsx
 
 ### Integration
-- AnalyticsDashboard server component (`src/app/(main)/_components/analytics-dashboard.tsx`) updated:
-  - Accepts optional `projectId` prop (default `null`), fetched via `getCurrentUserDetails()` for role check.
-  - Conditionally renders `ProjectSelector` for ADMIN users; passes `projectId` to `getDashboardMetricsAction` and `getRecentPhotosAction` (with null-to-undefined conversion).
-  - Layout updated: selector and time range selector now in a flex row.
-- This enables server-side data filtering by project across dashboard metrics and recent photos.
+- AnalyticsDashboard server component updated:
+  - Accepts optional `projectId` prop; passes to metrics and photos actions.
+  - Renders `ProjectSelector` for all users (no role condition).
+  - Layout: selector + time range in flex row; removed unused date vars.
+- Main page (`src/app/(main)/page.tsx`) updated:
+  - Reads `projectId` from `searchParams`.
+  - Forwards `projectId` to `AnalyticsDashboard` and `RecentActivitySection` in both render paths.
+- RecentActivitySection already supported `projectId`; no change required.
+- This feature enables project-scoped data across all dashboard visuals and activity feed.
 
 ---
 
