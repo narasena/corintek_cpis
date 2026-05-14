@@ -25,10 +25,14 @@ export function WorkReportPageClient({
   const router = useRouter();
   const { user: actor } = useSession();
 
+  const clientRoles = ['CLIENT', 'CLIENT_SUPERVISOR', 'CLIENT_TECHNICIAN'];
   const canEdit =
-    actor?.role !== 'CLIENT' &&
-    actor?.role !== 'CLIENT_SUPERVISOR' &&
+    !clientRoles.includes(actor?.role ?? '') &&
     canAccess(actor?.role ?? '', RbacResource.WORK_REPORTS, 'update');
+
+  const canCreate =
+    !clientRoles.includes(actor?.role ?? '') &&
+    canAccess(actor?.role ?? '', RbacResource.WORK_REPORTS, 'create');
 
   const canDelete = canAccess(
     actor?.role ?? '',
@@ -60,10 +64,12 @@ export function WorkReportPageClient({
             Laporan Kerja
           </h1>
         </div>
+      {canCreate && (
         <WorkReportCreateDialog
           projectId={projectId}
           defaultOpen={defaultOpen}
         />
+      )}
       </div>
 
       <WorkReportList

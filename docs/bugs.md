@@ -397,27 +397,32 @@ export default function Page() {
 
 ---
 
-## 🟡 P2 — Medium Priority
+## 🟠 P1 — High Priority
 
-| Bug ID  | Module      | Title                                                                                                              | Status |
-| :------ | :---------- | :----------------------------------------------------------------------------------------------------------------- | :----- |
-| BUG-018 | Input       | Number inputs (all forms) increment/decrement on scroll — unintended value changes                                 | Open   |
-| BUG-019 | Logsheet    | Note field feels laggy when typing — needs debouncing or deferred save                                             | Open   |
-| BUG-020 | Logsheet    | Consumption total shows negative when "after" < "before"                                                           | Fixed  |
-| BUG-021 | Logsheet    | Unselected machine units are hidden on desktop (should show greyed-out)                                            | Open   |
-| BUG-022 | Logsheet    | Consumption and Notes sections are visible at unit-level — misleading on mobile                                    | Open   |
-| BUG-023 | Logsheet    | CT progress tracker shown regardless of data state (should only show when CT water cooling quality data exists)    | Open   |
-| BUG-024 | Logsheet    | Technician view shows client signature input field (should be hidden until client signs)                           | Open   |
-| BUG-025 | Logsheet    | Signature dialog shows two Submit buttons — one is non-functional                                                  | Open   |
-| BUG-026 | Logsheet    | Numeric input position shifts when check icon appears after valid input                                            | Open   |
-| BUG-027 | Logsheet    | Boolean checkbox position changes depending on label text length                                                   | Open   |
-| BUG-028 | Logsheet    | Logsheet photo (water meter) shows before/after vertically — should be side-by-side in one row                     | Open   |
-| BUG-029 | Work Report | Unit machine select dropdown cannot scroll to see all options                                                      | Fixed  |
-| BUG-030 | Navigation  | Mobile sidebar remains open after navigating to another page                                                       | Fixed  |
-| BUG-031 | Permissions | Admin can add client signature to bypass submission requirement (workaround)                                       | Open   |
-| BUG-032 | Permissions | Admin can create logsheets and work reports without attribution tag                                                | Open   |
-| BUG-033 | Permissions | Client role can see logsheet Create button (should be read-only portal)                                            | Open   |
-| BUG-034 | UI          | All dialog headers should use primary background color with matching text (consistent with sidebar content header) | Fixed  |
+| Bug ID  | Module       | Title                                                                                                                                                                                                                                                       | Status |
+| :------ | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- |
+| BUG-018 | Input        | Number inputs (all forms) increment/decrement on scroll — unintended value changes                                                                                                                                                                          | Open   |
+| BUG-019 | Logsheet     | Note field feels laggy when typing — needs debouncing or deferred save                                                                                                                                                                                      | Open   |
+| BUG-020 | Logsheet     | Consumption total shows negative when "after" < "before"                                                                                                                                                                                                     | Fixed  |
+| BUG-021 | Logsheet     | Unselected machine units are hidden on desktop (should show greyed-out)                                                                                                                                                                                     | Open   |
+| BUG-022 | Logsheet     | Consumption and Notes sections are visible at unit-level — misleading on mobile                                                                                                                                                                             | Open   |
+| BUG-023 | Logsheet     | CT progress tracker shown regardless of data state (should only show when CT water cooling quality data exists)                                                                                                                                             | Open   |
+| BUG-024 | Logsheet     | Technician view shows client signature input field (should be hidden until client signs)                                                                                                                                                                     | Open   |
+| BUG-025 | Logsheet     | Signature dialog shows two Submit buttons — one is non-functional                                                                                                                                                                                            | Open   |
+| BUG-026 | Logsheet     | Numeric input position shifts when check icon appears after valid input                                                                                                                                                                                      | Open   |
+| BUG-027 | Logsheet     | Boolean checkbox position changes depending on label text length                                                                                                                                                                                             | Open   |
+| BUG-028 | Logsheet     | Logsheet photo (water meter) shows before/after vertically — should be side-by-side in one row                                                                                                                                                               | Open   |
+| BUG-029 | Work Report  | Unit machine select dropdown cannot scroll to see all options                                                                                                                                                                                               | Fixed  |
+| BUG-030 | Navigation   | Mobile sidebar remains open after navigating to another page                                                                                                                                                                                                | Fixed  |
+| BUG-031 | Permissions  | Admin can add client signature to bypass submission requirement (workaround)                                                                                                                                                                                 | Open   |
+| BUG-032 | Permissions  | Admin can create logsheets and work reports without attribution tag                                                                                                                                                                                         | Open   |
+| BUG-033 | Permissions  | Client role can see logsheet Create button (should be read-only portal)                                                                                                                                                                                     | Open   |
+| BUG-034 | UI           | All dialog headers should use primary background color with matching text (consistent with sidebar content header)                                                                                                                                          | Fixed  |
+| BUG-WR-001 | Work Report | Stale `existingPhotos` state after signature refresh prevents form submission. Form's local photo state not synchronized with updated `photos` prop from parent after signature-triggered refetch, causing "Failed to upload photos" error on submit.       | Fixed  |
+| BUG-WR-002 | Work Report | CLIENT_TECHNICIAN can sign as client PIC without active `CLIENT_PIC` assignment — authorization bypass. Should require assignment like TECHNICIAN role.                                                                                                      | Fixed  |
+| BUG-WR-003 | Work Report | SUPERVISOR fallback for technician signature missing — supervisor should be able to sign as technician when no technician assigned, mirroring logsheet policy.                                                                                              | Fixed  |
+| BUG-WR-004 | Work Report | CLIENT_SUPERVISOR fallback for client PIC signature missing — should sign without explicit assignment.                                                                                                                                                      | Fixed  |
+| BUG-WR-005 | Work Report | Work report SUBMITTED status transition allowed without both signatures. Missing guard in `updateWorkReportStatus`.                                                                                                                                         | Fixed  |
 
 ### BUG-018 — Scroll-to-Increment on Number Inputs
 
@@ -522,11 +527,11 @@ console.log('[DEBUG] Checking for limit breaches...');
 | Category                            | Count |
 | :---------------------------------- | ----: |
 | P0 Blocker                          |     0 |
-| P1 High                             |    15 |
+| P1 High                             |    20 |
 | P2 Medium                           |    17 |
 | P3 Low / Needs Clarity              |     5 |
 | Phase 3 — Source-Scan (BUG-040–049) |    10 |
-| **Total unique bugs**               |    46 |
+| **Total unique bugs**               |    52 |
 
 > Note: BUG-044 is a source-level confirmation of BUG-016 (same issue, different layer) and is not counted twice.
 

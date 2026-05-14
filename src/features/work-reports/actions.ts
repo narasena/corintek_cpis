@@ -75,6 +75,8 @@ export const saveWorkReportSignatureAction = actionFactory.protected(
     const result = await service.saveWorkReportSignature(input.workReportId, {
       signatureDataUrl: input.dataUrl,
       signedByUserId: actor.id,
+      role: input.role,
+      actorRole: actor.role,
     });
     if (result?.projectId) {
       revalidatePath(`/projects/${result.projectId}`);
