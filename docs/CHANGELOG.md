@@ -1,3 +1,24 @@
+## [Unreleased] — Dashboard Project Filter (2026-05-14)
+
+### New Features
+
+- [DB-04] Added project selector dropdown to dashboard: displays "Semua Proyek" + accessible projects list; updates `projectId` URL query parameter on change.
+- Implemented role-based project fetching: scoped roles (SUPERVISOR, TECHNICIAN, CLIENT, CLIENT_SUPERVISOR, CLIENT_TECHNICIAN) use `getDashboardProjectsAction`; others use `getProjectsAction`.
+- Added loading spinner and disabled states; handles empty project lists gracefully.
+
+### Technical Changes
+
+- New client component: `src/app/(main)/_components/project-selector.tsx`.
+- Uses shadcn/ui `Select` with Tailwind styling (`w-[240px]`).
+- Integrates `next/navigation` router and search params for URL sync.
+- Error handling via `logger.error` with `[CPIS-ERROR]` prefix.
+- Follows client-component pattern; calls server actions directly.
+
+### Files Added
+- `src/app/(main)/_components/project-selector.tsx`
+
+---
+
 ## [Unreleased] — Parameters Category Filter (2026-05-14)
 
 ### New Features
