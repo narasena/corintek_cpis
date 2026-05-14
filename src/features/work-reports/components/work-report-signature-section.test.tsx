@@ -96,13 +96,24 @@ describe('getSignatureVisibility', () => {
     });
   });
 
-  it('returns technician-only controls for technician roles', () => {
-    for (const role of ['TECHNICIAN', 'CLIENT_TECHNICIAN'] as TUserRole[]) {
+  it('returns technician-only controls for internal technician and supervisor roles', () => {
+    for (const role of ['TECHNICIAN', 'SUPERVISOR'] as TUserRole[]) {
       const caps = getSignatureVisibility(role);
       expect(caps).toEqual({
         showSection: true,
         showTechnicianButton: true,
         showClientButton: false,
+      });
+    }
+  });
+
+  it('returns client-only controls for client technician and client supervisor roles', () => {
+    for (const role of ['CLIENT_TECHNICIAN', 'CLIENT_SUPERVISOR'] as TUserRole[]) {
+      const caps = getSignatureVisibility(role);
+      expect(caps).toEqual({
+        showSection: true,
+        showTechnicianButton: false,
+        showClientButton: true,
       });
     }
   });
@@ -116,19 +127,19 @@ describe('getSignatureVisibility', () => {
     });
   });
 
-  it('hides section and controls for unsupported roles', () => {
-    for (const role of ['SUPERVISOR', 'REPORTING', 'DIRECTOR'] as TUserRole[]) {
-      const caps = getSignatureVisibility(role);
-      expect(caps).toEqual({
-        showSection: false,
-        showTechnicianButton: false,
-        showClientButton: false,
-      });
-    }
-  });
-});
+   it('hides section and controls for unsupported roles', () => {
+     for (const role of ['REPORTING', 'DIRECTOR'] as TUserRole[]) {
+       const caps = getSignatureVisibility(role);
+       expect(caps).toEqual({
+         showSection: false,
+         showTechnicianButton: false,
+         showClientButton: false,
+       });
+     }
+   });
+ });
 
-describe('getPreviewVisibility', () => {
+ describe('getPreviewVisibility', () => {
   it('returns both previews for admin', () => {
     const result = getPreviewVisibility('ADMIN');
     expect(result).toEqual({
@@ -137,8 +148,8 @@ describe('getPreviewVisibility', () => {
     });
   });
 
-  it('returns only technician preview for technician roles', () => {
-    for (const role of ['TECHNICIAN', 'CLIENT_TECHNICIAN'] as TUserRole[]) {
+  it('returns only technician preview for internal and supervisor roles', () => {
+    for (const role of ['TECHNICIAN', 'SUPERVISOR'] as TUserRole[]) {
       const result = getPreviewVisibility(role);
       expect(result).toEqual({
         showTechnicianPreview: true,
@@ -147,16 +158,18 @@ describe('getPreviewVisibility', () => {
     }
   });
 
-  it('returns only client preview for client supervisor', () => {
-    const result = getPreviewVisibility('CLIENT_SUPERVISOR');
-    expect(result).toEqual({
-      showTechnicianPreview: false,
-      showClientPreview: true,
-    });
+  it('returns only client preview for client roles', () => {
+    for (const role of ['CLIENT_TECHNICIAN', 'CLIENT_SUPERVISOR'] as TUserRole[]) {
+      const result = getPreviewVisibility(role);
+      expect(result).toEqual({
+        showTechnicianPreview: false,
+        showClientPreview: true,
+      });
+    }
   });
 
   it('hides previews for unsupported roles', () => {
-    for (const role of ['SUPERVISOR', 'REPORTING', 'DIRECTOR'] as TUserRole[]) {
+    for (const role of ['REPORTING', 'DIRECTOR'] as TUserRole[]) {
       const result = getPreviewVisibility(role);
       expect(result).toEqual({
         showTechnicianPreview: false,

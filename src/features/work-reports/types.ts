@@ -24,6 +24,7 @@ export const UpdateWorkReportSchema = WorkReportSchema.extend({
 
 export const WorkReportSignatureSchema = z.object({
   workReportId: z.string().uuid('Work report ID tidak valid'),
+  role: z.enum(['TECHNICIAN', 'CLIENT_PIC']),
   dataUrl: z
     .string()
     .regex(
@@ -62,4 +63,10 @@ export type WorkReportRow = {
     caption: string | null;
     type: WorkReportPhotoType;
   }[];
+  technicianSignatureUrl: string | null;
+  technicianSignedAt: Date | null;
+  technicianSignedByUserId: string | null;
+  clientPicSignatureUrl: string | null;
+  clientPicSignedAt: Date | null;
+  clientPicSignedByUserId: string | null;
 };

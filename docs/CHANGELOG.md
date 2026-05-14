@@ -1,3 +1,65 @@
+## [Unreleased] — Work Report Signature & UI Fixes (2026-05-14)
+
+### Bug Fixes
+
+- [WR-SIGN-001] Fixed signature authorization to mirror logsheet policy: internal technicians require active assignment; client roles (CLIENT_TECHNICIAN, CLIENT_SUPERVISOR) can sign as CLIENT_PIC without assignment; SUPERVISOR can sign as technician fallback.
+- [WR-UI-002] Fixed photo upload error on submit caused by stale `existingPhotos` state after signature refresh.
+- [WR-UI-003] Blocked all client roles (CLIENT, CLIENT_SUPERVISOR, CLIENT_TECHNICIAN) from editing/creating work reports.
+- [WR-FLOW-004] Enabled photo upload during create flow; pending photos now uploaded after draft creation using returned reportId.
+- [WR-ROLE-005] Corrected UI role mapping: CLIENT_TECHNICIAN now sees client signature button (not technician); preview visibility adjusted accordingly.
+
+### Technical Changes
+
+- Split photo state effects in WorkReportForm: reset pending on id change; sync existing on photos change.
+- Extended `WorkReportRow` with signature columns (`technicianSignatureUrl`, `clientPicSignatureUrl`, timestamps, signer IDs). Extended `WorkReportSignatureSchema` with `role` field.
+- Hardened `saveWorkReportSignature` service: project access assertion, role-based authorization, R2 storage upload, direct column update (no longer creates `WorkReportPhoto`).
+- Updated `canEdit`/`canCreate` in work-report-page-client to exclude all client roles.
+- Adjusted signature visibility: `technicianViewerRoles` = `['TECHNICIAN','SUPERVISOR']`; `clientViewerRoles` = `['CLIENT_TECHNICIAN','CLIENT_SUPERVISOR']`.
+- `updateWorkReport` and `updateWorkReportStatus` now enforce both signatures present before allowing SUBMITTED transition.
+
+### Tests & Verification
+
+- Added `save-work-report-signature-service.test.ts` with 5 unit tests covering authorization matrix.
+- Updated `work-report-signature-section.test.tsx` for new role mapping (16 tests).
+- All work-report tests pass: **44/44**.
+- TypeScript clean; build passes.
+
+**Files Modified:**
+- `src/features/work-reports/types.ts`
+- `src/features/work-reports/service.ts`
+- `src/features/work-reports/actions.ts`
+- `src/features/work-reports/components/work-report-form.tsx`
+- `src/app/(main)/work-reports/[projectId]/components/work-report-create-dialog.tsx`
+- `src/app/(main)/work-reports/[projectId]/components/work-report-page-client.tsx`
+- `src/features/work-reports/components/work-report-signature-section.tsx`
+- `src/features/work-reports/components/work-report-signature-section.test.tsx`
+- `src/features/work-reports/save-work-report-signature-action.test.ts`
+- New: `src/features/work-reports/save-work-report-signature-service.test.ts`
+
+---
+
+## [Unreleased] — Logsheet Validation Relaxation (2026-05-14)
+
+### Bug Fixes
+
+- [LOG-051] Relaxed numeric range validation on logsheet submission: out-of-range values now generate warnings instead of blocking.
+  - `validateLogSheetForSubmission` no longer checks numeric ranges; only signatures are mandatory.
+  - Range breaches still reported via `notifyLimitBreachesOnSubmission` as warning notifications.
+- [LOG-052] Relaxed numeric range validation on logsheet approval: out-of-range values no longer block approval.
+  - `validateLogSheetApprovalDetail` no longer checks numeric ranges; required-field validation remains enforced.
+  - This aligns approval behavior with submission; range issues are warnings only.
+- Updated all affected characterization tests (service, approval, actions, status).
+
+**Files Modified:**
+- `src/features/log-sheets/log-sheet-status.service.ts`
+- `src/features/log-sheets/approval-validation.ts`
+- `src/features/log-sheets/service.characterization.test.ts`
+- `src/features/log-sheets/approval-validation.characterization.test.ts`
+- `src/features/log-sheets/status-with-notifications.test.ts`
+- `src/features/log-sheets/actions.characterization.test.ts`
+
+---
+
 ## [Unreleased] — Supervisor/Replacement Logsheet Permissions & Attendance Fixes (2026-05-13)
 
 ### New Features

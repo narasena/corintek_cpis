@@ -25,9 +25,17 @@ vi.mock('@/features/log-sheets/service', () => ({
   assertCanCreateLogSheet: vi.fn(),
 }));
 
-vi.mock('@/features/log-sheets/status-with-notifications', () => ({
-  updateLogSheetStatusWithNotifications: vi.fn(),
-}));
+vi.mock('@/features/log-sheets/status-with-notifications', async () => {
+  const actual = await vi.importActual(
+    '@/features/log-sheets/status-with-notifications'
+  );
+  return {
+    ...actual,
+    updateLogSheetStatusWithNotifications: vi.fn(
+      actual.updateLogSheetStatusWithNotifications
+    ),
+  };
+});
 
 vi.mock('@/features/projects/service', () => ({
   assertCanAccessProject: vi.fn(),
@@ -393,7 +401,8 @@ describe('submitLogSheetAction (characterization)', () => {
     expect(mockLogSheetService.updateLogSheetStatus).toHaveBeenCalledWith(
       expect.anything(),
       validUUID,
-      'SUBMITTED'
+      'SUBMITTED',
+      undefined
     );
   });
 });

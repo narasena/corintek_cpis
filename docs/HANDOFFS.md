@@ -1,3 +1,150 @@
+# Session Handoff — 2026-05-14 (Work Report Signature Authorization & Storage)
+
+**Branch:** `feat/work-reports/signature-authorization-fixes`
+
+### Completed This Session
+
+| Task                                                                                                      | Status      |
+| --------------------------------------------------------------------------------------------------------- | ----------- |
+| Extend WorkReportRow with signature columns (technician/client signatures, timestamps, signer IDs)        | ✅ Complete |
+| Add role field to WorkReportSignatureSchema for policy enforcement                                        | ✅ Complete |
+| Rewrite saveWorkReportSignature: R2 storage, project access assert, role-based authorization              | ✅ Complete |
+| Enforce signature presence before SUBMITTED in updateWorkReport and updateWorkReportStatus               | ✅ Complete |
+| WorkReportSignatureSection UI: separate technician vs client viewer roles                                 | ✅ Complete |
+| WorkReportForm: integrate signature section with refreshTrigger; split draft/submit callbacks            | ✅ Complete |
+| Fix photo state synchronization to prevent stale existingPhotos error on submit                           | ✅ Complete |
+| WorkReportCreateDialog: two-step draft creation with ID storage; pending photos uploaded after draft     | ✅ Complete |
+| WorkReportPageClient: block all client roles (CLIENT, CLIENT_SUPERVISOR, CLIENT_TECHNICIAN) from create/edit | ✅ Complete |
+| Add service unit tests for authorization matrix (5 tests)                                                 | ✅ Complete |
+| Update signature section tests; all work-report tests pass (44/44)                                        | ✅ Complete |
+| TypeScript clean; build passes                                                                           | ✅ Complete |
+
+### Objective
+
+Implement robust signature authorization, storage, and UI role handling for work reports:
+
+- **Storage Policy:** Replace photo-based signatures with direct column storage (`technicianSignatureUrl`, `clientPicSignatureUrl`, `technicianSignedAt`, `clientPicSignedAt`, `technicianSignedByUserId`, `clientPicSignedByUserId`) using R2.
+- **Authorization:** Enforce role-based signing rights mirroring log sheet policy:
+  - CLIENT_SUPERVISOR: can sign as CLIENT_PIC without explicit assignment (fallback).
+  - CLIENT_TECHNICIAN: requires active `CLIENT_PIC` assignment on the project.
+  - TECHNICIAN: requires active `TECHNICIAN` assignment.
+  - SUPERVISOR: can sign as technician fallback without assignment.
+  - ADMIN: bypasses all checks.
+- **UI Separation:** Technician roles see "Tanda Tangan Teknisi" button; client roles see "Tanda Tangan PIC Klien" button only. Preview visibility respects viewer roles.
+- **Workflow Guard:** Both signatures required before status can transition to SUBMITTED.
+- **Client Restrictions:** All client roles (CLIENT, CLIENT_SUPERVISOR, CLIENT_TECHNICIAN) prohibited from creating or editing work reports.
+
+### Key Changes
+
+**Types** (`src/features/work-reports/types.ts`)
+
+- Extended `WorkReportRow` with signature columns and metadata fields.
+- Extended `WorkReportSignatureSchema` with `role` discriminator.
+
+**Service Layer** (`src/features/work-reports/service.ts`)
+
+- `saveWorkReportSignature`: complete rewrite
+  - Accepts `reportId`, `role`, `signatureUrl`, `userId`.
+  - Asserts project access via `assertCanAccessProject`.
+  - Enforces DRAFT-only mutation.
+  - Authorization matrix:
+    - CLIENT_SUPERVISOR → allowed (no assignment check).
+    - CLIENT_TECHNICIAN → allowed only if user has `ProjectAssignment` with role `CLIENT_PIC` on the project.
+    - TECHNICIAN → allowed only if user has `ProjectAssignment` with role `TECHNICIAN` on the project.
+    - SUPERVISOR → allowed (no assignment check; fallback signing).
+    - ADMIN → bypasses all checks.
+  - Updates correct column based on `role` (`technicianSignatureUrl` / `clientPicSignatureUrl`) along with timestamp and `signedByUserId`.
+  - Uploads signature image to R2 using `uploadWorkReportSignature` with signed URL.
+- `updateWorkReport` and `updateWorkReportStatus`: added validation to prevent transition to SUBMITTED unless both `technicianSignatureUrl` and `clientPicSignatureUrl` are present.
+
+**Actions** (`src/features/work-reports/actions.ts`)
+
+- `saveWorkReportSignatureAction`: wrapper passing `session.user` to service.
+
+**UI Components**
+
+- `WorkReportSignatureSection` (`src/features/work-reports/components/work-report-signature-section.tsx`):
+  - Split `technicianViewerRoles` (`['TECHNICIAN','SUPERVISOR']`) and `clientViewerRoles` (`['CLIENT_TECHNICIAN','CLIENT_SUPERVISOR']`).
+  - CLIENT_TECHNICIAN sees only client signature button; preview respects viewer roles.
+- `WorkReportForm` (`src/features/work-reports/components/work-report-form.tsx`):
+  - Import `useSession` to obtain current user for signature section.
+  - Add `refreshTrigger` prop to `WorkReportSignatureSection` connected to `refreshKey` state.
+  - Split submit handler: `handleSubmitDraft` vs `handleSubmitSubmitted` to support post-draft photo upload.
+  - Fixed `existingPhotos` state: reset to empty on `reportId` change; sync when `photos` prop changes — prevents stale state blocking submission.
+- `WorkReportCreateDialog` (`src/app/(main)/work-reports/[projectId]/components/work-report-create-dialog.tsx`):
+  - Two-step flow: create draft without photos first; after receiving `reportId`, upload pending photos then refresh report.
+- `WorkReportPageClient` (`src/app/(main)/work-reports/[projectId]/components/work-report-page-client.tsx`):
+  - `canEdit` function: excludes `CLIENT`, `CLIENT_SUPERVISOR`, `CLIENT_TECHNICIAN`.
+  - `canCreate`: hides create button for all client roles.
+  - `isViewOnly`: enforced at page-level with "Hanya bisa membaca" toast.
+
+**Tests**
+
+- New `src/features/work-reports/save-work-report-signature-service.test.ts`:
+  - 5 unit tests covering authorization scenarios: CLIENT_SUPERVISOR fallback allowed; CLIENT_TECHNICIAN allowed only with assignment; TECHNICIAN requires assignment; SUPERVISOR allowed; ADMIN bypasses.
+- Updated `work-report-signature-section.test.tsx`: role mapping changes.
+- All work-report tests pass: **44/44**.
+
+### Verification
+
+- Build: `npm run build` passes cleanly.
+- Lint: Pre-commit format applied; no new errors in modified files.
+- Tests: `npm run test:run` reports all work-report tests passing (service, actions, components).
+- Authorization: CLIENT_SUPERVISOR can sign without assignment; CLIENT_TECHNICIAN blocked when no `CLIENT_PIC` assignment exists; TECHNICIAN blocked without `TECHNICIAN` assignment.
+- UI: Role-based button visibility confirmed; client roles cannot access create/edit dialogs.
+- Photo upload: pending photos correctly attached after draft creation; no stale state errors on submit.
+
+### Acceptance Criteria Met
+
+1. Supervisor can sign work report as technician fallback without explicit assignment. ✅
+2. Client supervisor can sign as client PIC without explicit CLIENT_PIC assignment. ✅
+3. Client technician requires active CLIENT_PIC assignment to sign; blocked otherwise. ✅
+4. Technician requires active TECHNICIAN assignment to sign. ✅
+5. Both signatures present before status SUBMITTED allowed. ✅
+6. CLIENT, CLIENT_SUPERVISOR, CLIENT_TECHNICIAN cannot create or edit work reports. ✅
+7. Signature stored in dedicated columns, not as photos. ✅
+8. R2 storage used for signature image upload. ✅
+9. UI shows correct signature button based on role. ✅
+10. Preview visibility respects viewer role. ✅
+
+---
+
+# Session Handoff — 2026-05-14 (Logsheet Submission Validation Relaxation)
+
+**Branch:** `fix/logsheet-submission-validation`
+
+### Completed This Session
+
+| Task                                                                                                      | Status      |
+| --------------------------------------------------------------------------------------------------------- | ----------- |
+| Remove numeric range validation from `validateLogSheetForSubmission`; allow out-of-range values          | ✅ Complete |
+| Update characterization tests to accept warnings-only behavior                                           | ✅ Complete |
+| Fix mock implementation in actions tests and align expectations                                          | ✅ Complete |
+| Remove numeric range validation from `validateLogSheetApprovalDetail`; approve with warnings-only            | ✅ Complete |
+| Verify all logsheet tests pass (service, actions, notifications)                                          | ✅ Complete |
+
+### Problem
+Logsheet submission and approval blocked when numeric entries exceed parameter boundaries. Expected: out-of-range values should be accepted with warnings; only signatures and required-field completeness are mandatory.
+
+### Solution
+- **Submission:** `validateLogSheetForSubmission` now only checks signatures. Range violations handled by `notifyLimitBreachesOnSubmission` as non-blocking warnings.
+- **Approval:** `validateLogSheetApprovalDetail` no longer checks numeric ranges; only required-field validation remains enforced.
+
+### Verification
+- All tests pass: service (78), approval-validation (15), status-with-notifications (4), actions (50).
+- Manual: submission with out-of-range value succeeds; approval now succeeds as well.
+- Required-field validation still functional (e.g., missing Temp In for active chiller blocks).
+
+### Files Modified
+- `src/features/log-sheets/log-sheet-status.service.ts`
+- `src/features/log-sheets/approval-validation.ts`
+- `src/features/log-sheets/service.characterization.test.ts`
+- `src/features/log-sheets/approval-validation.characterization.test.ts`
+- `src/features/log-sheets/status-with-notifications.test.ts`
+- `src/features/log-sheets/actions.characterization.test.ts`
+
+---
+
 # Session Handoff — 2026-05-13 (Logsheet Supervisor & Replacement Permissions)
 
 **Branch:** `fix/log-sheets-supervisor-replacement-permissions`

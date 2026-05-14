@@ -37,6 +37,9 @@ import {
 } from '@/features/work-reports/types';
 import type { IMachine } from '@/features/machines/types';
 import type { WorkReportRow } from '@/features/work-reports/types';
+import type { TUserRole } from '@/@types/user.type';
+import { useSession } from '@/hooks/use-session';
+import { WorkReportSignatureSection } from '@/features/work-reports/components/work-report-signature-section';
 
 interface IWorkReportFormProps {
   projectId: string;
@@ -44,6 +47,7 @@ interface IWorkReportFormProps {
   onSuccess?: () => void;
   onSuccessWithId?: (workReportId: string) => void;
   onCancel: () => void;
+  onDraftSaved?: (workReportId: string) => void;
 }
 
 export function WorkReportForm({
@@ -52,7 +56,11 @@ export function WorkReportForm({
   onSuccess,
   onSuccessWithId,
   onCancel,
+  onDraftSaved,
 }: IWorkReportFormProps) {
+  const { user } = useSession();
+  const viewerRole = (user?.role ?? 'ADMIN') as TUserRole;
+
   const [isPending, startTransition] = useTransition();
   const [isLoading, setIsLoading] = useState(false);
   const [fetchedData, setFetchedData] = useState<WorkReportRow | null>(null);
@@ -66,9 +74,9 @@ export function WorkReportForm({
   const statusIntentRef = useRef<'DRAFT' | 'SUBMITTED'>(
     effectiveData?.status === 'SUBMITTED' ? 'SUBMITTED' : 'DRAFT'
   );
-  const [machineOptions, setMachineOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
+  const [machineOptions, setMachineOptions] = useState<{ label: string; value: string }[]>([]);
+
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Photo State Management
   const [existingPhotos, setExistingPhotos] = useState<
@@ -78,7 +86,7 @@ export function WorkReportForm({
       caption: string | null;
       type: 'BEFORE' | 'AFTER' | 'GENERAL';
     }[]
-  >((effectiveData?.photos as any) || []);
+  >([]);
 
   const [pendingPhotos, setPendingPhotos] = useState<
     {
@@ -97,37 +105,41 @@ export function WorkReportForm({
     deletedPhotoIdsRef.current = deletedPhotoIds;
   }, [deletedPhotoIds]);
 
-  // Fetch work report data when in edit mode
+  // Fetch work report data when in edit mode or after draft creation
+  const fetchWorkReport = async (id: string) => {
+    setIsLoading(true);
+    const res = await getWorkReportByIdAction(id);
+    if (res.success && res.data) {
+      setFetchedData(res.data as WorkReportRow);
+    } else {
+      const errorMsg =
+        (res as any).message || 'Terjadi kesalahan';
+      toast.error('Gagal memuat data laporan', {
+        description: errorMsg,
+      });
+    }
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     if (workReportId) {
-      // Reset fetchedData to ensure we always get fresh data when dialog reopens
-      // This handles the case where same workReportId is opened after close
-      setFetchedData(null);
-      setIsLoading(true);
-      getWorkReportByIdAction(workReportId).then(res => {
-        if (res.success && res.data) {
-          setFetchedData(res.data as WorkReportRow);
-        } else {
-          const errorMsg =
-            (res as { message?: string }).message || 'Terjadi kesalahan';
-          toast.error('Gagal memuat data laporan', {
-            description: errorMsg,
-          });
-        }
-        setIsLoading(false);
-      });
+      fetchWorkReport(workReportId);
     }
   }, [workReportId]);
 
-  // Reset photo state when form loads with effectiveData (edit mode)
-  useEffect(() => {
-    if (effectiveData) {
-      setPendingPhotos([]);
-      setDeletedPhotoIds([]);
-      // Reset existingPhotos to match the current work report's photos
-      setExistingPhotos((effectiveData?.photos as any) || []);
-    }
-  }, [effectiveData?.id]);
+   // Re-fetch data after signature saved (triggered by refreshTrigger)
+   useEffect(() => {
+     if (refreshTrigger > 0 && workReportId) {
+       fetchWorkReport(workReportId);
+     }
+   }, [refreshTrigger, workReportId]);
+
+   // Sync existingPhotos when server photos change (refresh)
+   useEffect(() => {
+     if (effectiveData) {
+       setExistingPhotos(effectiveData.photos as any);
+     }
+   }, [effectiveData?.id, effectiveData?.photos]);
 
   // Combine for display
   const allPhotos = [
@@ -271,10 +283,8 @@ export function WorkReportForm({
         }
 
         // Get the report ID from result (for create case) or use existing
-        // We cast result to expected shape since we updated the action
-        const resultData = (
-          result as { success: boolean; data?: { id: string } }
-        ).data;
+        const resultData =
+          (result as { success: boolean; data?: { id: string } }).data;
         if (resultData?.id) {
           reportId = resultData.id;
         }
@@ -284,10 +294,9 @@ export function WorkReportForm({
           return;
         }
 
-        // 2. Upload Pending Photos (ONLY for Update mode)
-        // For Create, photos are already handled transactionally in the action above.
+        // 2. Upload Pending Photos (for BOTH create and update)
         let uploadErrors = false;
-        if (effectiveData?.id && pendingPhotos.length > 0) {
+        if (reportId && pendingPhotos.length > 0) {
           setSubmitStatus(`Mengupload ${pendingPhotos.length} foto...`);
           const uploadPromises = pendingPhotos.map(photo => {
             const fd = new FormData();
@@ -375,24 +384,23 @@ export function WorkReportForm({
         await revalidateWorkReportPathAction(projectId, reportId);
 
         if (!uploadErrors) {
-          toast.success(
-            intent === 'SUBMITTED'
-              ? 'Laporan berhasil dikirim'
-              : effectiveData
-                ? 'Laporan diperbarui'
-                : 'Laporan dibuat',
-            {
+          if (intent === 'SUBMITTED') {
+            toast.success('Laporan berhasil dikirim', {
               description: 'Data dan foto berhasil disimpan',
+            });
+            onSuccess?.();
+            if (reportId && onSuccessWithId) {
+              onSuccessWithId(reportId);
             }
-          );
-          // Call both callbacks - onSuccess for dialog close, onSuccessWithId for navigation
-          onSuccess?.();
-          if (reportId && onSuccessWithId) {
-            onSuccessWithId(reportId);
+          } else {
+            toast.success('Draft laporan berhasil disimpan', {
+              description: 'Silakan tambah tanda tangan sebelum mengirim',
+            });
+            onDraftSaved?.(reportId);
+            // Keep dialog open for signature
           }
         } else {
-          // If upload errors occurred, DO NOT close the dialog (don't call onSuccess)
-          // The user can retry uploading the remaining pending photos.
+          // If upload errors occurred, DO NOT close the dialog
           setSubmitStatus(''); // Clear loading state
         }
       } catch (error) {
@@ -545,41 +553,56 @@ export function WorkReportForm({
             )}
           />
 
-          {/* Photo Sections */}
-          <div className="space-y-4">
-            <h3 className="font-medium">Dokumentasi Foto</h3>
+           {/* Photo Sections */}
+           <div className="space-y-4">
+             <h3 className="font-medium">Dokumentasi Foto</h3>
 
-            {/* Before Photos */}
-            <PhotoSection
-              title="Foto Sebelum (Before)"
-              photos={allPhotos.filter(p => p.type === 'BEFORE')}
-              onUpload={handlePhotoUpload('BEFORE')}
-              onDelete={handleDeletePhoto}
-              disabled={isPending}
-            />
+             {/* Before Photos */}
+             <PhotoSection
+               title="Foto Sebelum (Before)"
+               photos={allPhotos.filter(p => p.type === 'BEFORE')}
+               onUpload={handlePhotoUpload('BEFORE')}
+               onDelete={handleDeletePhoto}
+               disabled={isPending}
+             />
 
-            {/* After Photos */}
-            <PhotoSection
-              title="Foto Sesudah (After)"
-              photos={allPhotos.filter(p => p.type === 'AFTER')}
-              onUpload={handlePhotoUpload('AFTER')}
-              onDelete={handleDeletePhoto}
-              disabled={isPending}
-            />
+             {/* After Photos */}
+             <PhotoSection
+               title="Foto Sesudah (After)"
+               photos={allPhotos.filter(p => p.type === 'AFTER')}
+               onUpload={handlePhotoUpload('AFTER')}
+               onDelete={handleDeletePhoto}
+               disabled={isPending}
+             />
 
-            {/* General/Legacy Photos */}
-            {allPhotos.some(p => p.type === 'GENERAL' || !p.type) && (
-              <PhotoSection
-                title="Foto Lainnya (General)"
-                photos={allPhotos.filter(p => p.type === 'GENERAL' || !p.type)}
-                onUpload={handlePhotoUpload('GENERAL')}
-                onDelete={handleDeletePhoto}
-                disabled={isPending}
-              />
-            )}
-          </div>
+             {/* General/Legacy Photos */}
+             {allPhotos.some(p => p.type === 'GENERAL' || !p.type) && (
+               <PhotoSection
+                 title="Foto Lainnya (General)"
+                 photos={allPhotos.filter(p => p.type === 'GENERAL' || !p.type)}
+                 onUpload={handlePhotoUpload('GENERAL')}
+                 onDelete={handleDeletePhoto}
+                 disabled={isPending}
+               />
+             )}
+           </div>
 
-          <div className="flex justify-end space-x-2 pt-4 border-t">
+           {/* Signature Section (visible only when workReportId exists) */}
+           {workReportId && (
+             <WorkReportSignatureSection
+               projectId={projectId}
+               workReportId={workReportId}
+               viewerRole={viewerRole}
+               isLocked={effectiveData?.status !== 'DRAFT'}
+               technicianSignatureUrl={effectiveData?.technicianSignatureUrl ?? null}
+               technicianSignedAt={effectiveData?.technicianSignedAt ?? null}
+               clientPicSignatureUrl={effectiveData?.clientPicSignatureUrl ?? null}
+               clientPicSignedAt={effectiveData?.clientPicSignedAt ?? null}
+               onSigned={() => setRefreshTrigger(t => t + 1)}
+             />
+           )}
+
+           <div className="flex justify-end space-x-2 pt-4 border-t">
             <Button
               variant="outline"
               type="button"
@@ -613,7 +636,9 @@ export function WorkReportForm({
               type="submit"
               disabled={
                 isPending ||
-                (effectiveData ? effectiveData.status !== 'DRAFT' : false)
+                (effectiveData ? effectiveData.status !== 'DRAFT' : false) ||
+                !effectiveData?.technicianSignatureUrl ||
+                !effectiveData?.clientPicSignatureUrl
               }
               onClick={() => {
                 statusIntentRef.current = 'SUBMITTED';
