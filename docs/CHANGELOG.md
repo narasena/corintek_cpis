@@ -17,6 +17,13 @@
 ### Files Added
 - `src/app/(main)/_components/project-selector.tsx`
 
+### Integration
+- AnalyticsDashboard server component (`src/app/(main)/_components/analytics-dashboard.tsx`) updated:
+  - Accepts optional `projectId` prop (default `null`), fetched via `getCurrentUserDetails()` for role check.
+  - Conditionally renders `ProjectSelector` for ADMIN users; passes `projectId` to `getDashboardMetricsAction` and `getRecentPhotosAction` (with null-to-undefined conversion).
+  - Layout updated: selector and time range selector now in a flex row.
+- This enables server-side data filtering by project across dashboard metrics and recent photos.
+
 ---
 
 ## [Unreleased] — Parameters Category Filter (2026-05-14)
