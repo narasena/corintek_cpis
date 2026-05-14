@@ -57,7 +57,7 @@ export async function AnalyticsDashboard({
           </p>
         </div>
         <div className="flex items-center gap-4">
-          {user.role === 'ADMIN' && <ProjectSelector userRole={user.role} />}
+          <ProjectSelector userRole={user.role} />
           <TimeRangeSelector defaultValue={timeRange} />
         </div>
       </div>
