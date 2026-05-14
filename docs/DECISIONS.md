@@ -1021,3 +1021,130 @@ Additionally, admin page gains a **project dropdown** that filters attendance to
 - Technicians not assigned to any project are visible only when no project filter is active.
 - CSV export automatically reflects current filter selection (date, technician, project).
 - No future developer can inadvertently add edit/delete UI without a deliberate decision (documented in `docs/CONTEXT.md`).
+
+---
+
+## ADR-018: Work Report Signature Storage, Authorization, and Role Separation
+
+**Date:** 2026-05-14  
+**Status:** Accepted  
+**Scope:** Work Reports, Signatures, Authorization, Storage Policy
+
+### Context
+
+Work reports required digital signatures from two parties: a technician (internal) and a client PIC (client-side). The initial implementation suffered from multiple flaws:
+
+1. **Storage confusion:** Signatures were stored as `WorkReportPhoto` records, mixing them with regular photo attachments and complicating retrieval.
+2. **Authorization gaps:** No role-based checks prevented unauthorized users from adding signatures; any user could theoretically overwrite another's signature.
+3. **Role handling unclear:** UI did not clearly separate which roles could sign or preview which signature type; client technicians could see technician signature button incorrectly.
+4. **Missing workflow guard:** Work reports could be submitted without either signature present.
+5. **Client role exploitation:** All client roles could create and edit work reports, violating read-only principles for CLIENT role.
+
+Additionally, the log sheet module had already established a mature authorization pattern for signatures (see `src/features/log-sheets/service.ts:assertCanSignLogSheet`). The work report feature needed to converge to the same policy.
+
+### Decision
+
+1. **Storage Policy Change**  
+   Add dedicated signature columns to `WorkReport` table:
+   - `technicianSignatureUrl`, `technicianSignedAt`, `technicianSignedByUserId`
+   - `clientPicSignatureUrl`, `clientPicSignedAt`, `clientPicSignedByUserId`  
+   Signatures are now stored directly on the work report record, not as `WorkReportPhoto` entries.
+
+2. **Role-Based Authorization Matrix**  
+   Mirroring the log sheet policy, service `saveWorkReportSignature` enforces:
+   | Actor Role       | Technician Signature | Client PIC Signature | Notes                                    |
+   | ---------------- | ------------------- | -------------------- | ---------------------------------------- |
+   | `ADMIN`          | ✅ Bypass           | ✅ Bypass            | All-powerful                             |
+   | `SUPERVISOR`    | ✅ Allowed (fallback)| ❌ Not allowed       | Can sign as technician if needed         |
+   | `TECHNICIAN`    | ✅ Requires assignment | ❌ Not allowed     | Must have active `ProjectAssignment`     |
+   | `CLIENT_SUPERVISOR` | ❌ Not allowed | ✅ Allowed (fallback) | Can sign as CLIENT_PIC without assignment |
+   | `CLIENT_TECHNICIAN` | ❌ Not allowed | ✅ Requires assignment | Must have active `CLIENT_PIC` assignment |
+   | `CLIENT`        | ❌ Not allowed       | ❌ Not allowed       | Read-only; no signature rights           |
+
+3. **UI Role Separation**  
+   - `technicianViewerRoles` = `['TECHNICIAN','SUPERVISOR']` → see "Tanda Tangan Teknisi" button and preview.
+   - `clientViewerRoles` = `['CLIENT_TECHNICIAN','CLIENT_SUPERVISOR']` → see "Tanda Tangan PIC Klien" button and preview.
+   - CLIENT role sees neither button (read-only report view only).
+   - The button visibility now matches the authorization enforcement.
+
+4. **Workflow Guard**  
+   `updateWorkReport` and `updateWorkReportStatus` reject status transition to `SUBMITTED` unless both signature URLs are present. Draft → SUBMITTED requires complete sign-off.
+
+5. **Client Edit/Create Block**  
+   `WorkReportPageClient` enforces:
+   - `canCreate` returns `false` for all client roles — create button hidden.
+   - `canEdit` excludes `CLIENT`, `CLIENT_SUPERVISOR`, `CLIENT_TECHNICIAN`.
+   - Page-level toast "Hanya bisa membaca" for any client attempting access.
+
+6. **Photo State Synchronization Fix**  
+   The `WorkReportForm` stale `existingPhotos` bug caused submission failures after signature refresh. Fixed by:
+   - Resetting `existingPhotos` to empty when `reportId` changes (new draft).
+   - Syncing `existingPhotos` when the `photos` prop updates (after server refetch).
+   - This permits normal photo upload flow on both draft and submit.
+
+7. **Two-Step Create Flow**  
+   `WorkReportCreateDialog` now creates draft without photos first, receives `reportId`, then uploads pending photos and refreshes the report. This avoids needing photos before having a report ID.
+
+### Implementation Highlights
+
+- **Service** (`src/features/work-reports/service.ts`):
+  - `saveWorkReportSignature(projectId, reportId, role, signatureUrl, userId)` handles R2 upload, access assertion, role checks, column updates.
+  - `assertCanSignWorkReport` inline logic uses `getProjectAssignment` to verify assignment for TECHNICIAN and CLIENT_TECHNICIAN; CLIENT_SUPERVISOR skips assignment; SUPERVISOR skips; ADMIN bypasses.
+  - `updateWorkReportStatus` checks both signatures before allowing SUBMITTED.
+- **Actions** (`src/features/work-reports/actions.ts`): pass `session.user.id` implicitly.
+- **UI** (`work-report-signature-section.tsx`, `work-report-form.tsx`, `work-report-create-dialog.tsx`, `work-report-page-client.tsx`): reflect role changes, photo state fixes, and permission guards.
+- **Types** (`src/features/work-reports/types.ts`): schema extensions.
+- **Tests**: New unit test file (5 tests), updated component tests; **44/44** work-report tests pass.
+
+### Rationale
+
+- **Security**: Only authorized personnel can sign; cross-role overwrites prevented.
+- **Clarity**: Signature storage is explicit, not conflated with photos.
+- **Consistency**: Matches the proven log sheet signature policy.
+- **Compliance**: Client role restrictions enforce read-only scope for CLIENT users.
+- **Reliability**: Photo upload flow works consistently across draft and submit phases.
+
+### Consequences
+
+- Existing work reports without signature columns will have `NULL` values — handled gracefully by UI.
+- Direct DB migration required to add new signature columns to `WorkReport` table.
+- Authorization is now enforced at the service layer; any future callers must respect the same checks.
+- Future changes to signature policy should be made in both log sheet and work report services simultaneously to maintain convergence.
+
+---
+
+## ADR-019: Work Report Photo State Synchronization
+
+**Date:** 2026-05-14  
+**Status:** Accepted  
+**Scope:** Work Reports, Form State, React Hooks
+
+### Context
+
+During testing, submitting a work report after signing triggered an error: "Failed to upload photos". Root cause: the `existingPhotos` state in `WorkReportForm` became stale after the signature refresh triggered a parent-driven `photos` prop update. The form did not reconcile its local `existingPhotos` with the fresh server state, leading to a duplicate-upload attempt.
+
+### Decision
+
+Implement two-way state synchronization:
+1. On `reportId` change (new draft): reset `existingPhotos` to `[]`.
+2. On `photos` prop change (after server data refresh): set `existingPhotos` to `photos.filter(p => !p.isNew)`.
+
+### Implementation
+
+- Modified `WorkReportForm` (`src/features/work-reports/components/work-report-form.tsx`):
+  - Added `useEffect` for `reportId` → reset local `existingPhotos`.
+  - Changed `useEffect` for `photos` to always sync `existingPhotos` from server `photos` filtered by `!isNew`.
+- Created `useExistingPhotos` custom hook for clarity (inline within component for expedience).
+
+### Rationale
+
+- **Correctness:** Local form state must reflect the authoritative server state for existing photos to prevent re-upload attempts.
+- **User Experience:** Users can sign, refresh, and submit without manual page reloads.
+
+### Consequences
+
+- Photo upload now succeeds on draft → sign → submit flow.
+- No regression observed in create flow (new photos remain `isNew` until saved).
+- The pattern may be reused for other nested-mutation forms in the future.
+
+---
