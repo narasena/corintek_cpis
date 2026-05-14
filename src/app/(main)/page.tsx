@@ -9,10 +9,11 @@ import { Activity, Briefcase, FileText, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function Page(props: {
-  searchParams: Promise<{ timeRange?: string }>;
+  searchParams: Promise<{ timeRange?: string; projectId?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const timeRange = (searchParams.timeRange as any) || '30d';
+  const projectId = searchParams.projectId || undefined;
   const user = await getCurrentUserDetails();
 
   if (!user) {
@@ -37,10 +38,10 @@ export default async function Page(props: {
       <DashboardScoped user={user} projects={projects}>
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2">
-            <AnalyticsDashboard timeRange={timeRange} />
+            <AnalyticsDashboard timeRange={timeRange} projectId={projectId} />
           </div>
           <div className="md:col-span-1">
-            <RecentActivitySection />
+            <RecentActivitySection projectId={projectId} />
           </div>
         </div>
       </DashboardScoped>
@@ -168,10 +169,10 @@ export default async function Page(props: {
       {/* Admin/Director global analytics view */}
       <div className="grid gap-6 md:grid-cols-3 mt-8">
         <div className="md:col-span-2">
-          <AnalyticsDashboard timeRange={timeRange} />
+          <AnalyticsDashboard timeRange={timeRange} projectId={projectId} />
         </div>
         <div className="md:col-span-1">
-          <RecentActivitySection />
+          <RecentActivitySection projectId={projectId} />
         </div>
       </div>
     </div>
