@@ -14,7 +14,6 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { subDays } from 'date-fns';
 import { getCurrentUserDetails } from '@/features/auth/lib/user-context';
 
 export async function AnalyticsDashboard({
@@ -28,11 +27,6 @@ export async function AnalyticsDashboard({
   if (!user) {
     return <div>User not found</div>;
   }
-
-  // We can default to the last 30 days for metrics
-  const days = timeRange === '90d' ? 90 : timeRange === '30d' ? 30 : 7;
-  const to = new Date();
-  const from = subDays(to, days);
 
   const [metricsRes, photosRes] = await Promise.all([
     getDashboardMetricsAction({ timeRange, projectId: projectId ?? undefined }),
