@@ -1,3 +1,91 @@
+# Session Handoff — 2026-05-14 (Lab Analysis — Limits Display, Delete & Bugfixes)
+
+**Branch:** `staging`
+
+### Completed This Session
+
+| Task                                                                                                      | Status      |
+| --------------------------------------------------------------------------------------------------------- | ----------- |
+| Add `getEffectiveParameterLimits` service to compute project-specific parameter limits                   | ✅ Complete |
+| Add `deleteLabAnalysis` service (soft delete with lock check)                                            | ✅ Complete |
+| Add `deleteLabAnalysisAction` server action with RBAC                                                   | ✅ Complete |
+| Add Delete button to Lab Analysis table (hidden when locked)                                             | ✅ Complete |
+| Display boundary limits in Lab Analysis form (two extra columns: Batas Raw Water & Batas Standard)       | ✅ Complete |
+| Add "Preview Print" button on edit page                                                                  | ✅ Complete |
+| Fix duplicate parameters in lab analysis list (dedup by name, prefer LAB_ANALYSIS category)              | ✅ Complete |
+| Fix print preview showing blank limit values — now uses effective limits                                 | ✅ Complete |
+
+### Objective
+
+Enhance the Lab Analysis feature by displaying parameter boundary limits during data entry and adding a soft-delete functionality. Also fix two bugs:
+- Duplicate parameters appearing in parameter selection dropdown.
+- Limit values not showing in print preview (showing blank/-).
+
+### Key Changes
+
+**Service** (`src/features/lab-analyses/service.ts`)
+- New `getEffectiveParameterLimits(projectId)`:
+  - Fetches project's `parameterLimitProfile` and its `limits`.
+  - Fetches project `parameterOverrides`.
+  - Computes effective limits per parameter by applying profile limits then overrides using `applyProjectOverridesToParameters`.
+  - Returns plain object: `{ [parameterId]: { minValue, maxValue, rawWaterMinValue, rawWaterMaxValue } }`.
+- New `deleteLabAnalysis(id)`:
+  - Performs soft delete (sets `deletedAt`).
+  - Throws if record is `locked`.
+- Modified `getCoolingWaterQualityParameters()`:
+  - Deduplicates parameters by `name`.
+  - When both `COOLING_WATER_QUALITY` and `LAB_ANALYSIS` categories contain same name, keep the `LAB_ANALYSIS` version.
+  - Prevents duplicate entries like "Conductivity" and "Cycle".
+
+**Actions** (`src/features/lab-analyses/actions.ts`)
+- New `deleteLabAnalysisAction`:
+  - Protected, UUID validation.
+  - Access check via `assertCanAccessProject`.
+  - RBAC: `RbacResource.LAB_ANALYSES, capability: 'delete'`.
+  - Returns `{ success: true }`.
+
+**UI — Table Columns** (`src/app/(main)/lab-analyses/[projectId]/components/columns.tsx`)
+- Extended `LabAnalysisActions` dropdown:
+  - Added "Hapus" (Trash2) item with confirmation.
+  - Only shown when `!locked`.
+  - Calls `deleteLabAnalysisAction`, shows toast, refreshes on success.
+
+**UI — Form** (`src/features/lab-analyses/components/lab-analysis-form.tsx`)
+- New prop `effectiveLimits?: EffectiveLimits`.
+- Added two limit columns to parameter table header: "Batas Raw Water" and "Batas Standard".
+- Each parameter row displays:
+  - `formatRawWaterLimit` from limits-format for raw water values.
+  - `formatNumericLimit` for standard values.
+- Limits fetched in page components and passed as prop.
+
+**UI — Edit Page** (`src/app/(main)/lab-analyses/[projectId]/[labAnalysisId]/edit/page.tsx`)
+- Added "Preview Print" button (opens print view in new tab).
+- Button placed alongside page title for easy access.
+
+**UI — Print Page & Component**
+- `src/app/(main)/lab-analyses/[projectId]/[labAnalysisId]/print/page.tsx`:
+  - Now fetches `getEffectiveParameterLimits(projectId)` and passes as `effectiveLimits` prop to `LabAnalysisPrint`.
+- `src/features/lab-analyses/components/lab-analysis-print.tsx`:
+  - Accepts `effectiveLimits` prop.
+  - Replaced `project.parameterOverrides` lookup with `effectiveLimitsMap`.
+  - Limit cells now display computed effective limits (profile + overrides) instead of only overrides.
+
+**Pages** (`new/page.tsx`, `edit/page.tsx`)
+- Fetch effective limits via `getEffectiveParameterLimits` and pass to `LabAnalysisForm`.
+
+### Verification
+
+- Build: `npm run build` passes cleanly.
+- TypeScript: No type errors in modified files.
+- Lint: Prettier formatted; no new errors introduced.
+- Tests: All 3 lab-analysis service tests pass.
+- Delete: Button respects `locked` status; action throws when locked; soft delete works.
+- Duplicate parameters: `getCoolingWaterQualityParameters` and `getEffectiveParameterLimits` now deduplicate by name; LAB_ANALYSIS category wins when duplicates exist. Tested by checking parameter list — no duplicate "Conductivity" or "Cycle".
+- Print preview limits: `LabAnalysisPrint` receives `effectiveLimits` prop; both "Batas Raw Water" and "Batas Standard" columns now show correct min-max ranges for all numeric parameters (including COOLING_WATER_QUALITY category).
+- Limit display in form: Two new columns show per-parameter min/max ranges based on project's profile and overrides; works for all numeric parameter categories.
+
+---
+
 # Session Handoff — 2026-05-14 (Parameters Category Filter)
 
 **Branch:** `feat/parameters-category-filter`
