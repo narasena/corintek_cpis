@@ -1,4 +1,9 @@
-## [Unreleased] — Dashboard Project Filter (2026-05-14)
+## [Unreleased]
+
+### Infrastructure
+
+- [INFRA-001] Added GitHub Actions `supabase-keep-alive.yaml` workflow to ping Supabase REST API on schedule (Mon + Thu at 00:00 UTC), preventing free-tier project dormancy.
+- BMC-001 documented secrets setup process (`Settings → Secrets and variables → Actions`) for `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
 
 ### New Features
 
