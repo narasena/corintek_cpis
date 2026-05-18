@@ -1,11 +1,6 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '10mb',
-    },
-  },
   // CG-05: Enable Next.js 16 Cache Components
   cacheComponents: true,
   // Define cache TTL profiles (stale/revalidate in seconds)
@@ -29,6 +24,11 @@ const nextConfig: NextConfig = {
     max: {
       stale: 31536000, // 1 year
       revalidate: 31536000,
+    },
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
     },
   },
   images: {
