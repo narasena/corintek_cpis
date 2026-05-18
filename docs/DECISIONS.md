@@ -870,6 +870,45 @@ Implement an automated video generation suite using Playwright.
 
 ---
 
+## ADR-022: Supabase Free-Tier Keep-Alive via GitHub Actions
+
+**Date:** 2026-05-18
+**Status:** Accepted
+**Scope:** Infrastructure, CI/CD, External Services
+
+### Context
+
+Supabase free tier pauses after 7 days of inactivity. On-boarding new developers, preview environments, or QA sessions every 1–2 weeks means the project database can go dormant and degraded performance at resume time.
+
+### Decision
+
+Implement a GitHub Actions scheduled workflow (`.github/workflows/supabase-keep-alive.yaml`) that pings the Supabase REST API endpoint twice weekly (Monday and Thursday at 00:00 UTC).
+
+### Implementation
+
+1. **Workflow file** (`.github/workflows/supabase-keep-alive.yaml`):
+   - Trigger: `schedule` (cron: `0 0 * * 1,4`) + `workflow_dispatch` (manual trigger)
+   - Runner: `ubuntu-latest`
+   - Step: Single `curl` request to `${{ secrets.SUPABASE_URL }}/rest/v1/` with `apikey` and `Authorization: Bearer` headers using `${{ secrets.SUPABASE_ANON_KEY }}`
+2. **Secrets** stored in GitHub (`Settings → Secrets and variables → Actions`):
+   - `SUPABASE_URL` — Supabase project URL from dashboard API settings
+   - `SUPABASE_ANON_KEY` — Supabase anon/public key from dashboard API settings
+
+### Rationale
+
+- **Zero cost:** GitHub Actions minutes (~2000/month free) far exceed ~2 minutes/week consumed.
+- **Zero downtime:** Two-second HTTP GET prevents the 7-day inactivity threshold.
+- **Minimal maintenance:** Single YAML file; no new SDK, no code changes.
+- **Manual override:** `workflow_dispatch` allows immediate ping from the Actions UI without waiting for schedule.
+
+### Consequences
+
+- Secrets are GitHub-level, not project-code — cannot be accidentally committed.
+- Requires manual setup of secrets on the GitHub repo after first push.
+- Two pings/week = ~416 pings/year; free GitHub Actions minutes remain comfortable.
+
+---
+
 ## How to Add New Decisions
 
 1. Use format: `ADR-XXX: Title`
