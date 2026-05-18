@@ -11,9 +11,11 @@
     "precommit": "lint-staged"
   },
   "dependencies": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "next": "15.5.9"
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "next": "^16.1.6",
+    "zod": "^4.3.6",
+    "react-hook-form": "^7.55.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
@@ -26,7 +28,7 @@
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
     "eslint": "^9",
-    "eslint-config-next": "15.5.3",
+    "eslint-config-next": "^16.1.6",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-react-hooks": "^5.2.0",
