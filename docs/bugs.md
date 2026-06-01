@@ -403,8 +403,18 @@ export default function Page() {
 **Fix:** Two-step:
 1. (interim) Added `environment: Preview` to the `ping` job. Verified by push to `staging` retriggering the workflow — run `26758920652` concluded `success`. (commit `3aff6c8`)
 2. (final) Replaced the entire GHA mechanism with Supabase's built-in `pg_cron` (in-DB scheduler). Deleted `.github/workflows/supabase-keep-alive.yaml`. Each project (UAT `igrnumqjyffzirwzklch` and main preview `krzxfiofhvvsildjgi`) gets its own `cron.schedule('keep-alive', '0 0 * * 1,4', $$ SELECT 1 $$)` job.  
+**Verification (2026-06-01):** User ran the per-minute self-test in ≥1 project:
+```sql
+SELECT cron.schedule('keep-alive-probe', '* * * * *', $$ SELECT 1 $$);
+-- waited 2-3 min
+SELECT start_time, status FROM cron.job_run_details
+WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'keep-alive-probe')
+ORDER BY start_time DESC LIMIT 5;
+SELECT cron.unschedule('keep-alive-probe');
+```
+Result: 2 rows with `status='succeeded'`. pg_cron scheduler is operational in the tested project.  
 **Why P3:** does not block dev or affect app data; defeats a keep-alive guard for the free-tier Supabase project only. Cron failure went unnoticed because GHA schedules do not page on failure.  
-**Status:** Fixed (final fix: pg_cron migration; GHA workflow removed)
+**Status:** Verified
 
 **Status:** Fixed
 
@@ -467,7 +477,7 @@ export default function Page() {
 | BUG-037 | User     | "Client Technician" role has no defined permissions or workflows                                 | Needs Clarity  |
 | BUG-038 | Logsheet | Signature dialog cannot rotate to landscape on mobile                                            | Fixed          |
 | BUG-039 | Logsheet | Logsheet signature save does not trigger optimistic update — full SSR re-fetch is too aggressive | Open (derived) |
-| BUG-053 | CI       | Supabase keep-alive workflow fails silently — env-scoped secrets not attached to job | Fixed  |
+| BUG-053 | CI       | Supabase keep-alive workflow fails silently — env-scoped secrets not attached to job | Verified |
 
 ---
 
