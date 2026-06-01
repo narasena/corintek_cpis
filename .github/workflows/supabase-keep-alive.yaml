@@ -2,7 +2,7 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    # Runs every Monday and Thursday at 00:00 UTC (Adjust as needed)
+    # Runs every Monday and Thursday at 00:00 UTC
     - cron: '0 0 * * 1,4'
 
   workflow_dispatch:
