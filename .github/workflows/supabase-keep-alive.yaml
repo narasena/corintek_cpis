@@ -1,6 +1,10 @@
 name: Keep Supabase Alive
 
 on:
+
+  push:
+    branches: [ staging, development_v2 ] 
+
   schedule:
     # Runs every Monday and Thursday at 00:00 UTC
     - cron: '0 0 * * 1,4'
