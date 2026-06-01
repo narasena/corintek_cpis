@@ -14,6 +14,7 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
+    environment: Preview
     steps:
       - name: Ping Supabase Database API
         run: |
