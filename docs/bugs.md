@@ -397,12 +397,14 @@ export default function Page() {
 
 ### BUG-053 — Supabase Keep-Alive Workflow Fails Silently (Env-Scoped Secrets Not Attached)
 
-**Location:** `.github/workflows/supabase-keep-alive.yaml`  
+**Location:** `.github/workflows/supabase-keep-alive.yaml` (deleted)  
 **Symptom:** The scheduled (Mon/Thu 00:00 UTC) and `workflow_dispatch` runs of "Keep Supabase Alive" exit with code 3 (`curl: (3) URL rejected: No host part in the URL`). Rendered curl command shows `apikey:` and `Authorization: Bearer` headers with empty values. The intended Supabase REST API ping never happened, so the free-tier inactivity-pause guard was non-functional.  
-**Root Cause:** `SUPABASE_URL` and `SUPABASE_ANON_KEY` are configured in the `Preview` environment (and other app envs), not at the repository level. The `ping` job had no `environment:` field, so env-scoped secrets did not propagate to the run context and rendered as empty strings.  
-**Fix:** Added `environment: Preview` to the `ping` job so the env's secrets are injected. Verified by push to `staging` retriggering the workflow — run `26758920652` concluded `success` with masked secret values in logs.  
+**Root Cause:** `SUPABASE_URL` and `SUPABASE_ANON_KEY` are configured in GitHub `Preview` environment(s), not at the repository level. The `ping` job had no `environment:` field, so env-scoped secrets did not propagate to the run context and rendered as empty strings.  
+**Fix:** Two-step:
+1. (interim) Added `environment: Preview` to the `ping` job. Verified by push to `staging` retriggering the workflow — run `26758920652` concluded `success`. (commit `3aff6c8`)
+2. (final) Replaced the entire GHA mechanism with Supabase's built-in `pg_cron` (in-DB scheduler). Deleted `.github/workflows/supabase-keep-alive.yaml`. Each project (UAT `igrnumqjyffzirwzklch` and main preview `krzxfiofhvvsildjgi`) gets its own `cron.schedule('keep-alive', '0 0 * * 1,4', $$ SELECT 1 $$)` job.  
 **Why P3:** does not block dev or affect app data; defeats a keep-alive guard for the free-tier Supabase project only. Cron failure went unnoticed because GHA schedules do not page on failure.  
-**Status:** Fixed (commit `3aff6c8`)
+**Status:** Fixed (final fix: pg_cron migration; GHA workflow removed)
 
 **Status:** Fixed
 
