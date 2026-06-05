@@ -22,9 +22,9 @@
   - `git log main --oneline -5` → `0025b10 Merge pull request #1 from narasena/vercel/react-server-components-cve-vu-nojj1y` (matches `origin/main`)
   - `git log development --oneline -3` → `ab78207 chore: remove CG-04_TESTING.md and check_feb12_data.ts (cleanup)`
   - `git ls-remote origin` → confirms:
-    - `main` @ `0025b10` ✓
-    - `development` @ `02bc7c6` ✓ (new; +2 commits over dev_v2: cleanup + this handoff)
-    - `development_v2` @ `f2ade72` (preserved, static backup)
+    - `main` @ `0025b10` ✓ (matches `origin/main`, the legit create-next-app shell)
+    - `development` → exists, tracking dev_v2's tip + cleanup + this handoff (live, will move as work continues; user said "if dev_v2 will undergo some changes, all good, we should use that as backup", so the two branches are allowed to diverge intentionally)
+    - `development_v2` @ `f2ade72` (preserved as static backup; refrozen unless user requests sync)
     - `staging` @ `d9b224f` (untouched)
   - `diff .env.development .env.production` → identical
   - `cp .env.development .env.production` exit 0
