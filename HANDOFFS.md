@@ -1,88 +1,59 @@
-## [Monday, 01-06-2026 20:48] — Migrated supabase-keep-alive from GHA to pg_cron (BUG-053)
+## [Friday, 05-06-2026 09:50] — Branch hygiene: rename dev_v2 → development, reset main, copy env
 
 ### Session Target
-- Make the Supabase free-tier keep-alive actually work. Originally framed as a GHA workflow fix; pivoted to retiring GHA in favor of Supabase's built-in `pg_cron` after a better mechanism surfaced mid-session.
+- Replace `development_v2` with `development` as the canonical working branch, and align `main` with the legit `origin/main` state (4-commit create-next-app shell) by discarding the 47+ commits of "real work" that had been erroneously merged into it. Stage the production env to mirror dev while the production deploy is on hold.
 
 ### Current State
-- Status: shipped; pg_cron self-test **passed** in at least one project; full schedule (Mon/Thu 00:00 UTC) pending first real run on Thu 04-06.
-- Scope: `.github/workflows/supabase-keep-alive.yaml` (deleted), `.github/workflows/.gitkeep` (added), `docs/bugs.md`, `HANDOFFS.md`
+- Status: **shipped**. All branch ops and the env copy completed; remote verified.
+- Scope: branch references + `.env.production` (local only, gitignored)
 
 ### What Changed
-- `.github/workflows/supabase-keep-alive.yaml` — **deleted**. Env-vs-secret mismatch was a symptom of the wrong mechanism; pg_cron is the right tool. (commit `f3b916c`)
-- `.github/workflows/.gitkeep` — added to preserve the now-empty workflows directory in git. (this session)
-- `docs/bugs.md` — BUG-053 logged, then root-cause expanded to cover both the interim GHA `environment:` fix and the final pg_cron migration; status set to `Verified` after self-test pass. (commits `4e09ec5`, `f3b916c`, this session)
-- `HANDOFFS.md` — this file (overwritten per § 1.1)
+- `CG-04_TESTING.md` — **deleted** (commit `ab78207`, 20 lines)
+- `check_feb12_data.ts` — **deleted** (commit `ab78207`, 56 lines)
+- `.env.production` — **replaced**. Was 407B (DB host `cztkicmjbokoisdchfyr`, `WORKER_AUTH_SECRET` only). Now 1.0K and identical to `.env.development` (DB host `krzxfiofhvvsriildjgi`, `JWT_SECRET`, `R2_*`, `NEXT_PUBLIC_*`). Local-only, file is gitignored.
+- Branch `development` — **created** at `ab78207` (same SHA as local `development_v2` after the cleanup commit). Tracked to `origin/development`.
+- Branch `development_v2` — **preserved** at `ab78207` local / `f2ade72` remote. No deletion per user decision. Acts as a backup if `development` ever needs to be recreated.
+- Branch `main` (local) — **reset --hard** to `origin/main` (`0025b10`). The 47+ spurious "real work" commits (formerly tip `f846594`) are now unreachable from any ref. Recoverable via `git reflog` for ~30 days.
+- Branch `main` (remote) — **force-push issued** with `--force-with-lease`. Result: `Everything up-to-date` (no-op, because local had already been reset to the same SHA the remote was on). Net effect: the remote `main` ref is now confirmed at `0025b10` and any future accidental push from the old local main tip is blocked by the SHA mismatch.
 
 ### Verification
-- Commands run: `gh workflow run/view`, `gh api .../actions/secrets`, `gh api .../environments/.../secrets`, `git log`, `git push` (staging + development_v2).
-- Results:
-  - Pre-fix GHA dispatches (`26757943486`, `26758804358`) failed with `curl: (3) URL rejected` — confirmed symptom.
-  - Interim fix (commit `3aff6c8`): push-triggered runs `26758920652` and `26759115374` concluded `success`. GHA was functioning.
-  - Final fix: GHA workflow removed. User ran per-minute self-test in ≥1 project; `cron.job_run_details` returned 2 rows with `status='succeeded'` → **pg_cron is operational in that project**.
-  - Self-test in the second project is **not yet confirmed** — see Risks.
+- Commands run:
+  - `git status` — clean on `main` (only untracked dev artifacts remain: `.kilo/`, `_archives/`, `playwright-report/`, `src/generated/`, `temp/`, `test-results/`, `worker/`)
+  - `git log main --oneline -5` → `0025b10 Merge pull request #1 from narasena/vercel/react-server-components-cve-vu-nojj1y` (matches `origin/main`)
+  - `git log development --oneline -3` → `ab78207 chore: remove CG-04_TESTING.md and check_feb12_data.ts (cleanup)`
+  - `git ls-remote origin` → confirms:
+    - `main` @ `0025b10` ✓
+    - `development` @ `ab78207` ✓ (new)
+    - `development_v2` @ `f2ade72` (preserved)
+    - `staging` @ `d9b224f` (untouched)
+  - `diff .env.development .env.production` → identical
+  - `cp .env.development .env.production` exit 0
+  - `git push --force-with-lease origin main` → `Everything up-to-date` (no-op)
+- Results: all pass.
 
 ### Decisions
-- D-001: Target **both** UAT (`igrnumqjyffzirwzklch`) and main preview (`krzxfiofhvvsildjgi`).
-- D-002: Use **Supabase pg_cron only**. Runs in-DB, removes GHA as a single point of failure, eliminates the `environment:` secret-scoping footgun.
-- D-003: **Delete** the GHA workflow file (not keep as disabled reference). pg_cron is now the source of truth.
-- D-004: Keep **Mon/Thu 00:00 UTC** schedule. 3.5d max gap, well under the 7d pause threshold.
-- D-005: Use a trivial `SELECT 1` SQL snippet (not `pg_net` HTTP self-ping). Free-tier pause triggers on DB inactivity, so any query satisfies it; one fewer extension dependency.
-- D-006: Add `.gitkeep` to `.github/workflows/` to preserve the now-empty directory in git.
-- D-007: Land new commits on `development_v2` via merge commit (preserves dev_v2's 2 unique deploy/build commits).
-
-### Knowledge Captured (for the user's reference)
-
-**Why `SELECT 1` is enough:**
-- The Supabase free-tier pause triggers on **database inactivity** (no queries for 7 days). Any successful query resets the timer — content doesn't matter, just that one ran.
-- `SELECT 1` returns one row with the integer `1`, reads no tables, writes nothing, requires no schema. It is the canonical "is the DB alive?" probe used by connection poolers and health checks.
-- Alternatives that would also work: `SELECT now()`, `SELECT version()`, `SELECT 1 AS keepalive`.
-
-**Why pg_cron is more reliable than the GHA workflow it replaced:**
-
-| Failure surface | GHA workflow | pg_cron |
-|---|---|---|
-| External dependency (GitHub uptime) | yes | none — runs in-DB |
-| Runner availability / queueing | can queue during peak | none |
-| Network: CI → Supabase public internet | yes, depends on auth/secrets | internal, no network |
-| Secret-injection footgun (`environment:` scoping) | yes — this was the bug | none — DB has the URL by definition |
-| Auth/credential expiry | possible | impossible (no creds) |
-| GHA minutes quota | consumes them | free |
-| Counts as DB activity for free-tier pause | only if curl succeeded | the cron firing itself counts |
-
-The only way pg_cron can fail is if the Supabase project itself is paused/deleted/extinct.
-
-**Failure modes to watch for (all unlikely):**
-- `SELECT 1` errors — ~0% probability. `cron.job_run_details` would show `status='failed'`.
-- Job gets toggled inactive — only if you/team do it manually. `cron.job` row would show `active=false`.
-- pg_cron extension disabled — only if you do it manually. Jobs disappear from `cron.job`.
-- Project pauses anyway — if Supabase's inactivity rule works differently than documented. Visible in dashboard.
+- **D-008**: `main` is the legit `create-next-app + strict tools + RSC CVE fix` shell. All "real work" lives on `development`. This matches the user's branch-policy intent ("the only time I commit/push on main") and the agent's accidental-merge history.
+- **D-009**: `.env.production` = `.env.development` while production is on hold. Switches the active Supabase project from `cztkicmjbokoisdchfyr` → `krzxfiofhvvsriildjgi` and adds `JWT_SECRET`, `R2_*`, `NEXT_PUBLIC_*`. When production go-live is unblocked, env must be rebuilt with prod-specific secrets.
+- **D-010**: Keep `development_v2` (local + remote) as a backup. If `development` ever needs to be recreated, `development_v2` is the snapshot. User explicitly approved this.
+- **D-011**: Force-push to main is a no-op in this session (local = remote = `0025b10` after reset), but executed with `--force-with-lease` for safety. The reset itself is the destructive step; the force-push is a defensive confirmation.
 
 ### Known Issues / Risks
-- **Second project self-test not yet confirmed.** User ran self-test in ≥1 project (saw 2 rows). If only one project was tested, the other is still exposed. Acceptance: user runs the per-minute self-test in the second project and confirms 2 rows back.
-- **First real `keep-alive` run is ~51 hours away** (Thu 04-06 ~00:00 UTC). If you want multiple data points faster, `cron.alter_job` to `0 0 * * *` (daily) for 1–2 weeks, observe 7–14 runs, then back to `0 0 * * 1,4`.
-- `cron.job_run_details` is **never auto-cleaned**. For a twice-weekly job, ~104 rows/year per project. Negligible.
-- I cannot directly verify pg_cron from outside the projects. The `cron.job_run_details` table inside each project is the only authoritative check.
+- **GHA push trigger references `development_v2`**: commit `5e35a45` added a push trigger scoped to `staging` and `development_v2`. After this rename, pushes to `development` will NOT trigger that workflow. Follow-up: update the trigger to include `development`. Acceptance: file a small follow-up to edit the workflow file and re-test.
+- **Untracked working-tree artifacts** on `main` after reset: `.kilo/`, `_archives/`, `playwright-report/`, `src/generated/`, `temp/`, `test-results/`, `worker/`. These are not in `origin/main` and not tracked anywhere. They were part of the old local `main`'s history. Decision needed: keep as dev artifacts or `git clean` (most are likely gitignored already). **Do not clean** without explicit user approval.
+- **Lost commits**: 47+ commits between `f846594` (old main tip) and `0025b10` (new main tip) are unreachable. Old tip SHA: `f84659474ad161b1059c419952d8731e40c30acd` — saved to `/tmp/opencode/old_main_sha.txt` for recovery via `git cherry-pick` if any of the dashboard-specific commits (`30d7c75`, `9a76b43`, `ced370f`, `52081a6`, `cfe77f2`, `56f8b3f`) turn out to be wanted on `development`. Reflog window: ~30 days.
+- **Collaborator clones**: anyone with a stale local clone of this repo will see divergence on `main`. They must `git fetch && git reset --hard origin/main`. Worth a heads-up via Slack/email.
+- **Production security posture** (carryover from prior session + new): JWT secret is dev-default; DB is dev instance. Per D-009, accepted for now. **Must be remediated before any real production traffic.**
+- **Security audit note**: I read `.env.development` and `.env.production` contents during this session for env-copy verification. Going forward, will not read or print env file contents. Recommend rotating the dev JWT secret if it was exposed in any logs.
+- **pg_cron self-test in second project**: still unconfirmed (carryover from BUG-053 handoff).
+- **First real keep-alive cron run**: scheduled for Thu 11-06 ~00:00 UTC. Verify via `cron.job_run_details` after that date.
 
 ### Next Steps (ordered, for the user)
-1. **Run the per-minute self-test in the second project** if not already done. Steps:
-   ```sql
-   SELECT cron.schedule('keep-alive-probe', '* * * * *', $$ SELECT 1 $$);
-   -- wait 2-3 min
-   SELECT start_time, status FROM cron.job_run_details
-   WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'keep-alive-probe')
-   ORDER BY start_time DESC LIMIT 5;
-   SELECT cron.unschedule('keep-alive-probe');
-   ```
-2. **Set a calendar reminder for Thu 04-06 ~01:00 UTC.** Verify the real `keep-alive` job fired:
-   ```sql
-   SELECT start_time, status FROM cron.job_run_details
-   WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'keep-alive')
-   ORDER BY start_time DESC LIMIT 1;
-   ```
-   Expect one row, `status='succeeded'`.
-3. **Optional paranoia:** tighten to daily for the first 2 weeks, observe, then back to Mon/Thu.
-4. **Weekly health check (optional):** visit `https://supabase.com/dashboard/project/<project-ref>/integrations/cron/jobs` for each project. Visual run history.
+1. **Announce the main reset** to any collaborators with clones.
+2. **Update GHA push trigger** to include `development` instead of `development_v2` (small follow-up: edit `.github/workflows/*.yaml`).
+3. **Decide on lost commits**: review the 6 dashboard commits on the old main tip and cherry-pick any that are wanted onto `development`. Use `git log f846594 --not 0025b10 --oneline` to enumerate.
+4. **Production env rebuild** (when unblocked): regenerate `JWT_SECRET`, create prod Supabase project, populate `.env.production` with prod-specific values.
+5. **Optional cleanup of untracked dev artifacts** on `main` (only with explicit approval).
+6. **pg_cron verification** on Thu 11-06 (per prior handoff).
 
 ### Blockers (if any)
-- None on the agent side. User action required to confirm the second project and to verify the first real run on Thu 04-06.
-
+- None on the agent side. User action required: items 1–2 above are time-sensitive.
