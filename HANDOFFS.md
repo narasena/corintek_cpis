@@ -23,8 +23,8 @@
   - `git log development --oneline -3` → `ab78207 chore: remove CG-04_TESTING.md and check_feb12_data.ts (cleanup)`
   - `git ls-remote origin` → confirms:
     - `main` @ `0025b10` ✓
-    - `development` @ `ab78207` ✓ (new)
-    - `development_v2` @ `f2ade72` (preserved)
+    - `development` @ `02bc7c6` ✓ (new; +2 commits over dev_v2: cleanup + this handoff)
+    - `development_v2` @ `f2ade72` (preserved, static backup)
     - `staging` @ `d9b224f` (untouched)
   - `diff .env.development .env.production` → identical
   - `cp .env.development .env.production` exit 0
