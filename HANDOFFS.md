@@ -1,59 +1,61 @@
-## [Friday, 05-06-2026 09:50] — Branch hygiene: rename dev_v2 → development, reset main, copy env
+## [Friday, 05-06-2026 10:28] — Branch rename + dev → staging → main promotion (job-application repo)
 
 ### Session Target
-- Replace `development_v2` with `development` as the canonical working branch, and align `main` with the legit `origin/main` state (4-commit create-next-app shell) by discarding the 47+ commits of "real work" that had been erroneously merged into it. Stage the production env to mirror dev while the production deploy is on hold.
+- Two-part session: (1) replace `development_v2` with `development`, reset `main` to the legit create-next-app shell, and copy dev env to prod env. (2) Promote the dev work to `staging` and `main` (fast-forward only) so the repo is presentable for a job application.
 
 ### Current State
-- Status: **shipped**. All branch ops and the env copy completed; remote verified.
-- Scope: branch references + `.env.production` (local only, gitignored)
+- Status: **shipped**. All branches promoted; remote verified.
+- Scope: branch references, `.env.production` (local, gitignored), git history.
 
 ### What Changed
-- `CG-04_TESTING.md` — **deleted** (commit `ab78207`, 20 lines)
-- `check_feb12_data.ts` — **deleted** (commit `ab78207`, 56 lines)
-- `.env.production` — **replaced**. Was 407B (DB host `cztkicmjbokoisdchfyr`, `WORKER_AUTH_SECRET` only). Now 1.0K and identical to `.env.development` (DB host `krzxfiofhvvsriildjgi`, `JWT_SECRET`, `R2_*`, `NEXT_PUBLIC_*`). Local-only, file is gitignored.
-- Branch `development` — **created** at `ab78207` (same SHA as local `development_v2` after the cleanup commit). Tracked to `origin/development`.
-- Branch `development_v2` — **preserved** at `ab78207` local / `f2ade72` remote. No deletion per user decision. Acts as a backup if `development` ever needs to be recreated.
-- Branch `main` (local) — **reset --hard** to `origin/main` (`0025b10`). The 47+ spurious "real work" commits (formerly tip `f846594`) are now unreachable from any ref. Recoverable via `git reflog` for ~30 days.
-- Branch `main` (remote) — **force-push issued** with `--force-with-lease`. Result: `Everything up-to-date` (no-op, because local had already been reset to the same SHA the remote was on). Net effect: the remote `main` ref is now confirmed at `0025b10` and any future accidental push from the old local main tip is blocked by the SHA mismatch.
+- **Cleanup commit** `ab78207` — deleted `CG-04_TESTING.md` (20 lines) and `check_feb12_data.ts` (56 lines). Working-tree debris from prior session.
+- **Branch `development`** — created at `ab78207` (same SHA as `development_v2` after the cleanup commit). Pushed to `origin/development`.
+- **Branch `development_v2`** — preserved at `f2ade72` remote / `ab78207` local. Static backup per user decision: "if dev_v2 will undergo some changes, all good, we should use that as backup".
+- **Branch `main` (local)** — reset `--hard` to `origin/main` (`0025b10`) at 09:50. Discarded the 47+ spurious "real work" commits. Recoverable via `git reflog` for ~30 days.
+- **Branch `main` (remote)** — was force-pushed at 09:50 to `0025b10`; re-promoted at 10:28 via fast-forward to `17d2314` (the new dev work). Force-push was a no-op the first time (local = remote = `0025b10`); the second push was a regular FF, not force.
+- **Branch `staging`** — fast-forward merged from `development` (5 commits: `8722674`, `5369b80`, `ab78207`, `02bc7c6`, `959407c`, `17d2314`). Pushed to `origin/staging`.
+- **`.env.production`** — replaced. Was 407B (DB host `cztkicmjbokoisdchfyr`, `WORKER_AUTH_SECRET` only). Now 1.0K and identical to `.env.development` (DB host `krzxfiofhvvsriildjgi`, `JWT_SECRET`, `R2_*`, `NEXT_PUBLIC_*`). Local-only, file is gitignored.
+- **HANDOFFS.md** — three commits: `02bc7c6` (record session), `959407c` (correct SHA), `17d2314` (stop chasing SHA). All on `development`, now also on `staging` and `main`.
 
 ### Verification
-- Commands run:
-  - `git status` — clean on `main` (only untracked dev artifacts remain: `.kilo/`, `_archives/`, `playwright-report/`, `src/generated/`, `temp/`, `test-results/`, `worker/`)
-  - `git log main --oneline -5` → `0025b10 Merge pull request #1 from narasena/vercel/react-server-components-cve-vu-nojj1y` (matches `origin/main`)
-  - `git log development --oneline -3` → `ab78207 chore: remove CG-04_TESTING.md and check_feb12_data.ts (cleanup)`
-  - `git ls-remote origin` → confirms:
-    - `main` @ `0025b10` ✓ (matches `origin/main`, the legit create-next-app shell)
-    - `development` → exists, tracking dev_v2's tip + cleanup + this handoff (live, will move as work continues; user said "if dev_v2 will undergo some changes, all good, we should use that as backup", so the two branches are allowed to diverge intentionally)
-    - `development_v2` @ `f2ade72` (preserved as static backup; refrozen unless user requests sync)
-    - `staging` @ `d9b224f` (untouched)
-  - `diff .env.development .env.production` → identical
-  - `cp .env.development .env.production` exit 0
-  - `git push --force-with-lease origin main` → `Everything up-to-date` (no-op)
-- Results: all pass.
+- Pre-merge ancestry checks (before any push):
+  - `git merge-base --is-ancestor origin/staging development` → **true** (staging FF-able)
+  - `git merge-base --is-ancestor origin/main development` → **true** (main FF-able)
+  - `git log development ^origin/staging --oneline` → 6 commits ahead of staging
+  - `git log development ^origin/main --oneline` → 849 commits ahead of main
+- Auto-deploy audit: `.github/workflows/` contains only `.gitkeep` (the supabase-keep-alive workflow was deleted in commit `f3b916c` per BUG-053). **No CI/CD will trigger on push to main.**
+- Push dry-runs both succeeded with expected ref updates (`d9b224f..17d2314` for staging, `0025b10..17d2314` for main).
+- Final `git ls-remote origin`:
+  - `main` @ `17d2314` ✓
+  - `staging` @ `17d2314` ✓
+  - `development` @ `17d2314` ✓
+  - `development_v2` @ `f2ade72` (preserved, static backup)
+- Working tree on `main` post-merge: clean (untracked dev artifacts `.kilo/`, `_archives/`, `playwright-report/`, `src/generated/`, `temp/`, `test-results/`, `worker/` are not in `origin/main` and not tracked anywhere — not committed).
 
 ### Decisions
-- **D-008**: `main` is the legit `create-next-app + strict tools + RSC CVE fix` shell. All "real work" lives on `development`. This matches the user's branch-policy intent ("the only time I commit/push on main") and the agent's accidental-merge history.
-- **D-009**: `.env.production` = `.env.development` while production is on hold. Switches the active Supabase project from `cztkicmjbokoisdchfyr` → `krzxfiofhvvsriildjgi` and adds `JWT_SECRET`, `R2_*`, `NEXT_PUBLIC_*`. When production go-live is unblocked, env must be rebuilt with prod-specific secrets.
-- **D-010**: Keep `development_v2` (local + remote) as a backup. If `development` ever needs to be recreated, `development_v2` is the snapshot. User explicitly approved this.
-- **D-011**: Force-push to main is a no-op in this session (local = remote = `0025b10` after reset), but executed with `--force-with-lease` for safety. The reset itself is the destructive step; the force-push is a defensive confirmation.
+- **D-008**: `main` is now a showcase of the real work (not a clean shell). User reversed D-008 from the first half of this session after clarifying intent: "main is unused anyway for now, the previous reset is just me thinking it would be different. I wanna use this repo as my project example [for a job application]." Net: main now contains all the development work, identical to staging and development.
+- **D-009**: `.env.production` = `.env.development` (intentional, unchanged from prior decision). Production deploy remains on hold.
+- **D-010**: `development_v2` kept as static backup (unchanged from prior decision).
+- **D-011**: All promotions via `git merge --ff-only`. No merge commits created. Linear history preserved.
+- **D-012**: Main push was a regular fast-forward, NOT a force-push. The earlier `--force-with-lease` was for the reset; this push is a clean FF. No data loss on remote.
+- **D-013**: Three working branches (`main`, `staging`, `development`) now share the same tip. Intentional — they represent the same code at different "intent" levels: main = public/job-app showcase, staging = integration testing, development = active dev line. None of them are auto-deploying in the current workflow setup.
 
 ### Known Issues / Risks
-- **GHA push trigger references `development_v2`**: commit `5e35a45` added a push trigger scoped to `staging` and `development_v2`. After this rename, pushes to `development` will NOT trigger that workflow. Follow-up: update the trigger to include `development`. Acceptance: file a small follow-up to edit the workflow file and re-test.
-- **Untracked working-tree artifacts** on `main` after reset: `.kilo/`, `_archives/`, `playwright-report/`, `src/generated/`, `temp/`, `test-results/`, `worker/`. These are not in `origin/main` and not tracked anywhere. They were part of the old local `main`'s history. Decision needed: keep as dev artifacts or `git clean` (most are likely gitignored already). **Do not clean** without explicit user approval.
-- **Lost commits**: 47+ commits between `f846594` (old main tip) and `0025b10` (new main tip) are unreachable. Old tip SHA: `f84659474ad161b1059c419952d8731e40c30acd` — saved to `/tmp/opencode/old_main_sha.txt` for recovery via `git cherry-pick` if any of the dashboard-specific commits (`30d7c75`, `9a76b43`, `ced370f`, `52081a6`, `cfe77f2`, `56f8b3f`) turn out to be wanted on `development`. Reflog window: ~30 days.
-- **Collaborator clones**: anyone with a stale local clone of this repo will see divergence on `main`. They must `git fetch && git reset --hard origin/main`. Worth a heads-up via Slack/email.
-- **Production security posture** (carryover from prior session + new): JWT secret is dev-default; DB is dev instance. Per D-009, accepted for now. **Must be remediated before any real production traffic.**
-- **Security audit note**: I read `.env.development` and `.env.production` contents during this session for env-copy verification. Going forward, will not read or print env file contents. Recommend rotating the dev JWT secret if it was exposed in any logs.
-- **pg_cron self-test in second project**: still unconfirmed (carryover from BUG-053 handoff).
-- **First real keep-alive cron run**: scheduled for Thu 11-06 ~00:00 UTC. Verify via `cron.job_run_details` after that date.
+- **Main, staging, development at same SHA**: any future change to development will only land on development until a manual promotion. Risk: drift. Mitigation: always promote through the chain (dev → staging → main) when shipping.
+- **`.env.production` mirrors dev**: if any CI/CD is added later that deploys on main push, it will use dev credentials. Per D-009, accepted. Mitigation: rebuild env before any production deploy is enabled.
+- **Job application exposure**: `main` now publicly shows real project code. If applying externally, be aware: the README, FSD, and project structure are visible. Recommend a quick `git log --oneline --all --graph` review to make sure no PII, secrets, or internal notes are in history. (None spotted in handoff; full audit not done.)
+- **GHA push trigger still references `development_v2`**: commit `5e35a45` added a push trigger scoped to `staging` and `development_v2`. The trigger was in the deleted `supabase-keep-alive.yaml` workflow, so the file no longer exists — the trigger is effectively dead. No action needed.
+- **Lost commits** (from prior session, still relevant): the 6 dashboard commits on the old main tip (`f846594`) remain unreachable. SHA saved to `/tmp/opencode/old_main_sha.txt` (likely expired). Recoverable via `git reflog` only if you remembered the SHA: `f84659474ad161b1059c419952d8731e40c30acd`. Beyond that, gone. If any of `30d7c75`, `9a76b43`, `ced370f`, `52081a6`, `cfe77f2`, `56f8b3f` are actually wanted, cherry-pick before reflog expires.
+- **Production security posture** (carryover): JWT secret = dev-default, DB = dev instance. Per D-009, accepted for now. **Must be remediated before any real production traffic.**
+- **pg_cron self-test in second project** (carryover from BUG-053): still unconfirmed.
+- **First real keep-alive cron run**: scheduled for Thu 11-06 ~00:00 UTC.
 
 ### Next Steps (ordered, for the user)
-1. **Announce the main reset** to any collaborators with clones.
-2. **Update GHA push trigger** to include `development` instead of `development_v2` (small follow-up: edit `.github/workflows/*.yaml`).
-3. **Decide on lost commits**: review the 6 dashboard commits on the old main tip and cherry-pick any that are wanted onto `development`. Use `git log f846594 --not 0025b10 --oneline` to enumerate.
+1. **Audit `main` for the job application**: skim the README, FSD, and project tree. If anything looks off for a public-facing showcase, consider a follow-up commit to fix or `git rebase` to rewrite history (heavily destructive — only do this BEFORE going public with the repo).
+2. **Decide on lost commits** (see Risks): review the 6 dashboard commits and cherry-pick any that are wanted onto `development`. **Time-sensitive** — reflog window is ~30 days.
+3. **Optional cleanup of untracked dev artifacts** on `main` (only with explicit approval).
 4. **Production env rebuild** (when unblocked): regenerate `JWT_SECRET`, create prod Supabase project, populate `.env.production` with prod-specific values.
-5. **Optional cleanup of untracked dev artifacts** on `main` (only with explicit approval).
-6. **pg_cron verification** on Thu 11-06 (per prior handoff).
+5. **pg_cron verification** on Thu 11-06 (per prior handoff).
 
 ### Blockers (if any)
-- None on the agent side. User action required: items 1–2 above are time-sensitive.
+- None on the agent side. User action: item 1 is most time-sensitive for the job application.
