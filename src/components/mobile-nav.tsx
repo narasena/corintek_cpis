@@ -122,7 +122,7 @@ export function MobileNav({ role }: { role: string }) {
   if (!isMobile) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t bg-background/80 px-2 pb-safe backdrop-blur-md md:hidden supports-[backdrop-filter]:bg-background/60">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 grid h-16 auto-cols-fr grid-flow-col border-t bg-background/80 px-2 pb-safe backdrop-blur-md md:hidden supports-[backdrop-filter]:bg-background/60">
       {filteredPrimary.map(link => (
         <Link
           key={link.href}
