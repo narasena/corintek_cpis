@@ -86,8 +86,8 @@ async function MainLayoutInner({ children }: { children: React.ReactNode }) {
       <div className="Print:hidden">
         <AppSidebar user={sidebarUser} />
       </div>
-      <SidebarInset className="print:m-0 bg-background/50">
-        <header className="flex sticky top-0 z-40 w-full h-20 shrink-0 items-center justify-between border-b border-primary/20 bg-gradient-to-r from-primary via-primary to-primary/95 shadow-lg transition-all duration-300 px-4 md:px-6 lg:px-8 print:hidden">
+      <SidebarInset className="print:m-0 bg-background/50 overflow-x-hidden print:!overflow-visible">
+        <header className="flex sticky top-0 z-40 w-full h-20 shrink-0 items-center justify-between border-b border-primary/20 bg-gradient-to-r from-primary via-primary to-primary/95 shadow-lg transition-all duration-300 px-4 md:px-6 lg:px-8 print:hidden max-w-full">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="-ml-2 hidden md:flex text-primary-foreground hover:bg-white/10 transition-colors scale-110" />
             <Separator

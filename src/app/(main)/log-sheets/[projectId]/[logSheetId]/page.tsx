@@ -288,7 +288,7 @@ export default function LogSheetDetailPage() {
   } = derivedUsers;
 
   return (
-    <div className="space-y-4 md:space-y-8 pb-28 md:pb-0 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
+    <div className="space-y-4 md:space-y-8 pb-16 md:pb-0 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
       {!isClientRole && (
         <LogSheetToolbar
           projectId={projectId}
