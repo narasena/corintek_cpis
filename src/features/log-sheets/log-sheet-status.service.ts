@@ -35,10 +35,6 @@ export async function updateLogSheetStatus(
     actor.role === 'ADMIN' ||
     (actor.role === 'SUPERVISOR' &&
       (await hasProjectAssignment(actor.id, row.projectId, 'PROJECT_PIC')));
-  const isClientPic =
-    actor.role === 'CLIENT_SUPERVISOR' &&
-    (await hasProjectAssignment(actor.id, row.projectId, 'CLIENT_PIC'));
-  const isPic = isInternalPic || isClientPic;
   const isInternalTechnician =
     (actor.role === 'TECHNICIAN' &&
       (await hasProjectAssignment(actor.id, row.projectId, 'TECHNICIAN'))) ||
@@ -57,7 +53,7 @@ export async function updateLogSheetStatus(
   const decision = decideLogSheetStatusTransition({
     current: current as TLogSheetStatus,
     target: status as TLogSheetStatus,
-    isInternalPic: isPic,
+    isInternalPic,
     isInternalTechnician,
   });
 
@@ -93,14 +89,18 @@ export async function updateLogSheetStatus(
   return updated as unknown as ILogSheet;
 }
 
-export async function validateLogSheetForSubmission(id: string) {
+export async function validateLogSheetForSubmission(
+  id: string,
+  options?: { actorRole?: string }
+) {
   const detail = await getLogSheetDetail(id);
   const errors: string[] = [];
 
   if (!detail.logSheet.technicianSignatureUrl) {
     errors.push('Tanda tangan teknisi belum diisi');
   }
-  if (!detail.logSheet.clientPicSignatureUrl) {
+  // Admin can override — client PIC signature not required
+  if (!detail.logSheet.clientPicSignatureUrl && options?.actorRole !== 'ADMIN') {
     errors.push('Tanda tangan PIC klien belum diisi');
   }
   // Numeric range validation removed: out-of-range values are warnings, not blockers.

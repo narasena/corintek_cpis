@@ -222,32 +222,13 @@ export async function submitLogSheetAction(id: string) {
 
 export const approveLogSheetAction = actionFactory.protected(
   async ({ input, actor }) => {
-    // RBAC: Only CLIENT_SUPERVISOR with CLIENT_PIC assignment or ADMIN/SUPERVISOR can approve
-    const isClientSupervisor = actor.role === 'CLIENT_SUPERVISOR';
+    // RBAC: Only ADMIN or SUPERVISOR (internal PIC) can approve
     const isInternalPic = actor.role === 'ADMIN' || actor.role === 'SUPERVISOR';
 
-    if (!isClientSupervisor && !isInternalPic) {
+    if (!isInternalPic) {
       throw new Error(
-        'Unauthorized: Hanya PIC yang dapat menyetujui log sheet'
+        'Unauthorized: Hanya PIC internal yang dapat menyetujui log sheet'
       );
-    }
-
-    // If CLIENT_SUPERVISOR, verify they have CLIENT_PIC assignment
-    if (isClientSupervisor) {
-      const projectId = await logSheetService.getLogSheetProjectId(input.id);
-      if (!projectId) {
-        throw new Error('Log sheet tidak ditemukan');
-      }
-      const hasClientPicAssignment = await logSheetService.hasProjectAssignment(
-        actor.id,
-        projectId,
-        'CLIENT_PIC'
-      );
-      if (!hasClientPicAssignment) {
-        throw new Error(
-          'Unauthorized: Hanya PIC yang ditugaskan pada proyek ini yang dapat menyetujui'
-        );
-      }
     }
 
     const logSheet = await updateLogSheetStatusWithNotifications(actor, {
@@ -269,30 +250,13 @@ export const approveLogSheetAction = actionFactory.protected(
 
 export const rejectLogSheetAction = actionFactory.protected(
   async ({ input, actor }) => {
-    // RBAC: Only CLIENT_SUPERVISOR with CLIENT_PIC assignment or ADMIN/SUPERVISOR can reject
-    const isClientSupervisor = actor.role === 'CLIENT_SUPERVISOR';
+    // RBAC: Only ADMIN or SUPERVISOR (internal PIC) can reject
     const isInternalPic = actor.role === 'ADMIN' || actor.role === 'SUPERVISOR';
 
-    if (!isClientSupervisor && !isInternalPic) {
-      throw new Error('Unauthorized: Hanya PIC yang dapat menolak log sheet');
-    }
-
-    // If CLIENT_SUPERVISOR, verify they have CLIENT_PIC assignment
-    if (isClientSupervisor) {
-      const projectId = await logSheetService.getLogSheetProjectId(input.id);
-      if (!projectId) {
-        throw new Error('Log sheet tidak ditemukan');
-      }
-      const hasClientPicAssignment = await logSheetService.hasProjectAssignment(
-        actor.id,
-        projectId,
-        'CLIENT_PIC'
+    if (!isInternalPic) {
+      throw new Error(
+        'Unauthorized: Hanya PIC internal yang dapat menolak log sheet'
       );
-      if (!hasClientPicAssignment) {
-        throw new Error(
-          'Unauthorized: Hanya PIC yang ditugaskan pada proyek ini yang dapat menolak'
-        );
-      }
     }
 
     const logSheet = await updateLogSheetStatusWithNotifications(actor, {
@@ -515,11 +479,6 @@ export const saveLogSheetSignatureAction = actionFactory.protected(
     const projectId = await logSheetService.getLogSheetProjectId(logSheetId);
     if (!projectId) {
       throw new Error('Log sheet tidak ditemukan');
-    }
-
-    // Prevent ADMIN from signing as CLIENT_PIC
-    if (signatureRole === 'CLIENT_PIC' && actor.role === 'ADMIN') {
-      throw new Error('Unauthorized: Admin cannot sign as client PIC');
     }
 
     const matches = dataUrl.match(

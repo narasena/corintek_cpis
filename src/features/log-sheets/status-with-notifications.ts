@@ -18,7 +18,9 @@ export async function updateLogSheetStatusWithNotifications(
 ): Promise<ILogSheet> {
   if (input.status === 'SUBMITTED') {
     const detail = await logSheetService.getLogSheetDetail(input.id);
-    await logSheetService.validateLogSheetForSubmission(input.id);
+    await logSheetService.validateLogSheetForSubmission(input.id, {
+      actorRole: actor.role,
+    });
     const technicianUserIds = getTechnicianUserIds(detail);
 
     await notifyLimitBreachesOnSubmission({
