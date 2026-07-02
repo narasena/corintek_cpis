@@ -481,11 +481,6 @@ export const saveLogSheetSignatureAction = actionFactory.protected(
       throw new Error('Log sheet tidak ditemukan');
     }
 
-    // Prevent ADMIN from signing as CLIENT_PIC
-    if (signatureRole === 'CLIENT_PIC' && actor.role === 'ADMIN') {
-      throw new Error('Unauthorized: Admin cannot sign as client PIC');
-    }
-
     const matches = dataUrl.match(
       /^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/
     );
