@@ -34,6 +34,28 @@ export type TClockOutInput = {
   clockOutPhotoUrl: string;
 };
 
+export const supervisorAttendanceFilterSchema = z.object({
+  dateFrom: dateLocalSchema.optional(),
+  dateTo: dateLocalSchema.optional(),
+  search: z.string().optional(),
+  projectId: z.string().uuid().optional(),
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(10),
+});
+
+export type TSupervisorAttendanceFilter = z.infer<
+  typeof supervisorAttendanceFilterSchema
+>;
+
+export type TSupervisorAttendanceResponse = {
+  technicians: TTechnicianAttendanceStatus[];
+  projects: { id: string; name: string }[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
 export type TTechnicianAttendanceStatus = {
   id: string;
   firstName: string;
@@ -44,4 +66,6 @@ export type TTechnicianAttendanceStatus = {
   clockInAt: Date | null;
   clockOutAt: Date | null;
   dateLocal: string;
+  projectNames: string[];
 };
+
