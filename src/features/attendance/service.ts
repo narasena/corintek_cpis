@@ -274,6 +274,7 @@ export async function getTechniciansForSupervisor(
 
   const technicians = await prisma.user.findMany({
     where: userWhere as any,
+    orderBy: [{ firstName: 'asc' }, { id: 'asc' }],
     skip,
     take: limit,
     select: {

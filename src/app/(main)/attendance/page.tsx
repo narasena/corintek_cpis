@@ -282,59 +282,106 @@ function SupervisorAttendanceView() {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">Teknisi</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
-                {showProjectColumn && (
-                  <th className="px-4 py-3 text-left text-sm font-medium">Proyek</th>
-                )}
-                <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Jam Masuk</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Jam Pulang</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {technicians.map(tech => (
-                <tr key={tech.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      {tech.avatarUrl ? (
-                        <img
-                          src={tech.avatarUrl}
-                          alt={tech.firstName}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-xs font-medium">
-                            {tech.firstName.charAt(0)}
-                          </span>
-                        </div>
-                      )}
-                      <span className="font-medium">
-                        {[tech.firstName, tech.lastName].filter(Boolean).join(' ')}
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block rounded-lg border overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium">Teknisi</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
+                  {showProjectColumn && (
+                    <th className="px-4 py-3 text-left text-sm font-medium">Proyek</th>
+                  )}
+                  <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">Jam Masuk</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">Jam Pulang</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {technicians.map(tech => (
+                  <tr key={tech.id} className="hover:bg-muted/30">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        {tech.avatarUrl ? (
+                          <img
+                            src={tech.avatarUrl}
+                            alt={tech.firstName}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-xs font-medium">
+                              {tech.firstName.charAt(0)}
+                            </span>
+                          </div>
+                        )}
+                        <span className="font-medium">
+                          {[tech.firstName, tech.lastName].filter(Boolean).join(' ')}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {tech.email}
+                    </td>
+                    {showProjectColumn && (
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {tech.projectNames?.join(', ') || '-'}
+                      </td>
+                    )}
+                    <td className="px-4 py-3">{getStatusBadge(tech.attendanceStatus)}</td>
+                    <td className="px-4 py-3 text-sm">{formatTime(tech.clockInAt)}</td>
+                    <td className="px-4 py-3 text-sm">{formatTime(tech.clockOutAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-3">
+            {technicians.map(tech => (
+              <div key={tech.id} className="rounded-lg border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  {tech.avatarUrl ? (
+                    <img
+                      src={tech.avatarUrl}
+                      alt={tech.firstName}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-sm font-medium text-primary">
+                        {tech.firstName.charAt(0)}
                       </span>
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {tech.email}
-                  </td>
-                  {showProjectColumn && (
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {tech.projectNames?.join(', ') || '-'}
-                    </td>
                   )}
-                  <td className="px-4 py-3">{getStatusBadge(tech.attendanceStatus)}</td>
-                  <td className="px-4 py-3 text-sm">{formatTime(tech.clockInAt)}</td>
-                  <td className="px-4 py-3 text-sm">{formatTime(tech.clockOutAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">
+                      {[tech.firstName, tech.lastName].filter(Boolean).join(' ')}
+                    </p>
+                    <p className="text-sm text-muted-foreground truncate">{tech.email}</p>
+                  </div>
+                  {getStatusBadge(tech.attendanceStatus)}
+                </div>
+                {showProjectColumn && tech.projectNames.length > 0 && (
+                  <div className="flex justify-between items-center py-1.5 border-t border-border/50">
+                    <span className="text-sm font-medium text-muted-foreground">Proyek</span>
+                    <span className="text-sm text-right pl-2">{tech.projectNames.join(', ')}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center py-1.5 border-t border-border/50">
+                  <span className="text-sm font-medium text-muted-foreground">Jam Masuk</span>
+                  <span className="text-sm">{formatTime(tech.clockInAt)}</span>
+                </div>
+                <div className="flex justify-between items-center py-1.5 border-t border-border/50">
+                  <span className="text-sm font-medium text-muted-foreground">Jam Pulang</span>
+                  <span className="text-sm">{formatTime(tech.clockOutAt)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Pagination */}
