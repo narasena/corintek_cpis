@@ -159,9 +159,9 @@ export default function LogSheetDetailPage() {
     viewerRole === 'CLIENT_SUPERVISOR';
   const effectiveMode = isClientRole ? 'preview' : mode;
 
-  // For showing approval actions in preview: SUPERVISOR or CLIENT_SUPERVISOR
+  // Only internal roles (ADMIN, SUPERVISOR) can approve/reject
   const canApproveInPreview =
-    viewerRole === 'SUPERVISOR' || viewerRole === 'CLIENT_SUPERVISOR';
+    viewerRole === 'ADMIN' || viewerRole === 'SUPERVISOR';
 
   const handleSave = () => {
     if (isLocked) {
@@ -306,39 +306,36 @@ export default function LogSheetDetailPage() {
           onBack={() => router.push(`/log-sheets/${projectId}`)}
         />
       )}
-      {/* PIC: Show approval buttons at TOP when status is SUBMITTED */}
-      {canApproveInPreview &&
-        effectiveMode === 'preview' &&
-        detail.logSheet.status === 'SUBMITTED' && (
-          <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 print:hidden">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="font-medium text-amber-800">
-                  Menunggu Persetujuan
-                </p>
-                <p className="text-sm text-amber-600">
-                  Log sheet ini telah dikirim oleh teknisi dan menunggu
-                  persetujuan Anda.
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setIsApproveOpen(true)}
-                  disabled={isPending}
-                >
-                  Setuju
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => setIsRejectOpen(true)}
-                  disabled={isPending}
-                >
-                  Tolak
-                </Button>
-              </div>
+      {/* Approval banner: visible for ADMIN/SUPERVISOR when status is SUBMITTED */}
+      {canApproveInPreview && detail.logSheet.status === 'SUBMITTED' && (
+        <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 print:hidden">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="font-medium text-amber-800">
+                Menunggu Persetujuan
+              </p>
+              <p className="text-sm text-amber-600">
+                Log sheet ini menunggu persetujuan Anda.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setIsApproveOpen(true)}
+                disabled={isPending}
+              >
+                Setuju
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setIsRejectOpen(true)}
+                disabled={isPending}
+              >
+                Tolak
+              </Button>
             </div>
           </div>
-        )}
+        </div>
+      )}
       <AlertDialog open={isSubmitOpen} onOpenChange={setIsSubmitOpen}>
         <AlertDialogContent>
           <AlertDialogHeader
@@ -614,76 +611,37 @@ export default function LogSheetDetailPage() {
         />
       )}
 
-      {/* CLIENT_SUPERVISOR: Show signature section in preview mode */}
-      {canApproveInPreview && effectiveMode === 'preview' && (
-        <div className="rounded-lg border bg-card p-4 space-y-4 print:hidden">
-          {/* Status Banner */}
-          {detail.logSheet.status === 'SUBMITTED' && (
-            <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="font-medium text-amber-800">
-                    Menunggu Persetujuan
-                  </p>
-                  <p className="text-sm text-amber-600">
-                    Log sheet ini telah dikirim oleh teknisi dan menunggu
-                    persetujuan Anda.
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setIsApproveOpen(true)}
-                    disabled={isPending}
-                  >
-                    Setuju
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => setIsRejectOpen(true)}
-                    disabled={isPending}
-                  >
-                    Tolak
-                  </Button>
-                </div>
+      {/* Client role signature section in preview mode */}
+      {(viewerRole === 'CLIENT_SUPERVISOR' ||
+        viewerRole === 'CLIENT_TECHNICIAN') &&
+        effectiveMode === 'preview' && (
+          <div className="rounded-lg border bg-card p-4 space-y-4 print:hidden">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-semibold">Tanda Tangan</h3>
+                <p className="text-xs text-muted-foreground">
+                  Tanda tangan PIC klien diperlukan.
+                </p>
               </div>
-              {detail.logSheet.rejectionReason && (
-                <div className="mt-3 p-3 bg-red-50 rounded border border-red-200">
-                  <p className="text-sm font-medium text-red-800">
-                    Alasan Penolakan:
-                  </p>
-                  <p className="text-sm text-red-700">
-                    {detail.logSheet.rejectionReason}
-                  </p>
-                </div>
-              )}
             </div>
-          )}
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h3 className="font-semibold">Tanda Tangan</h3>
-              <p className="text-xs text-muted-foreground">
-                Tanda tangan PIC klien diperlukan untuk menyetujui log sheet.
-              </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <SignatureSection
+                logSheetId={logSheetId}
+                role="CLIENT_PIC"
+                canSign={canSignClientPic}
+                existingUrl={
+                  localSignatureUrls.CLIENT_PIC ??
+                  detail.logSheet.clientPicSignatureUrl
+                }
+                signedAt={detail.logSheet.clientPicSignedAt}
+                signedByName={clientPicSignedByName}
+                isLocked={isLocked}
+                onSigned={handleSignatureUpdate}
+                onSuccess={handleClientPicSignatureSuccess}
+              />
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <SignatureSection
-              logSheetId={logSheetId}
-              role="CLIENT_PIC"
-              canSign={canSignClientPic}
-              existingUrl={
-                localSignatureUrls.CLIENT_PIC ??
-                detail.logSheet.clientPicSignatureUrl
-              }
-              signedAt={detail.logSheet.clientPicSignedAt}
-              signedByName={clientPicSignedByName}
-              isLocked={isLocked}
-              onSigned={handleSignatureUpdate}
-              onSuccess={handleClientPicSignatureSuccess}
-            />
-          </div>
-        </div>
-      )}
+        )}
 
       {/* Sticky Action Bar for Mobile */}
       {effectiveMode === 'input' && detail.logSheet.status === 'DRAFT' && (

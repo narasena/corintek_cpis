@@ -35,10 +35,6 @@ export async function updateLogSheetStatus(
     actor.role === 'ADMIN' ||
     (actor.role === 'SUPERVISOR' &&
       (await hasProjectAssignment(actor.id, row.projectId, 'PROJECT_PIC')));
-  const isClientPic =
-    actor.role === 'CLIENT_SUPERVISOR' &&
-    (await hasProjectAssignment(actor.id, row.projectId, 'CLIENT_PIC'));
-  const isPic = isInternalPic || isClientPic;
   const isInternalTechnician =
     (actor.role === 'TECHNICIAN' &&
       (await hasProjectAssignment(actor.id, row.projectId, 'TECHNICIAN'))) ||
@@ -57,7 +53,7 @@ export async function updateLogSheetStatus(
   const decision = decideLogSheetStatusTransition({
     current: current as TLogSheetStatus,
     target: status as TLogSheetStatus,
-    isInternalPic: isPic,
+    isInternalPic,
     isInternalTechnician,
   });
 
