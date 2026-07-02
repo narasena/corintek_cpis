@@ -89,14 +89,18 @@ export async function updateLogSheetStatus(
   return updated as unknown as ILogSheet;
 }
 
-export async function validateLogSheetForSubmission(id: string) {
+export async function validateLogSheetForSubmission(
+  id: string,
+  options?: { actorRole?: string }
+) {
   const detail = await getLogSheetDetail(id);
   const errors: string[] = [];
 
   if (!detail.logSheet.technicianSignatureUrl) {
     errors.push('Tanda tangan teknisi belum diisi');
   }
-  if (!detail.logSheet.clientPicSignatureUrl) {
+  // Admin can override — client PIC signature not required
+  if (!detail.logSheet.clientPicSignatureUrl && options?.actorRole !== 'ADMIN') {
     errors.push('Tanda tangan PIC klien belum diisi');
   }
   // Numeric range validation removed: out-of-range values are warnings, not blockers.
