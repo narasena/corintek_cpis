@@ -8,6 +8,7 @@ import type {
   TSupervisorAttendanceFilter,
   TSupervisorAttendanceResponse,
 } from './types';
+import { calculateOffset } from '@/lib/pagination-helpers';
 
 function getJakartaDateLocal(date: Date) {
   return new Intl.DateTimeFormat('en-CA', {
@@ -186,6 +187,8 @@ export async function getTechniciansForSupervisor(
 ): Promise<TSupervisorAttendanceResponse> {
   const dateFrom = filters?.dateFrom ?? getJakartaDateLocal(new Date());
   const dateTo = filters?.dateTo ?? dateFrom;
+  const page = filters?.page ?? 1;
+  const limit = filters?.limit ?? 10;
 
   // Get project IDs where this user is PROJECT_PIC (internal PIC / SUPERVISOR)
   const picAssignments = await prisma.projectAssignment.findMany({
@@ -199,7 +202,7 @@ export async function getTechniciansForSupervisor(
 
   const allProjectIds = picAssignments.map(p => p.projectId);
   if (allProjectIds.length === 0) {
-    return { technicians: [], projects: [] };
+    return { technicians: [], projects: [], total: 0, page, limit, totalPages: 0 };
   }
 
   // If projectId filter is set, scope to that project
@@ -208,7 +211,7 @@ export async function getTechniciansForSupervisor(
     : allProjectIds;
 
   if (projectIds.length === 0) {
-    return { technicians: [], projects: [] };
+    return { technicians: [], projects: [], total: 0, page, limit, totalPages: 0 };
   }
 
   // Get supervisor's projects for the dropdown
@@ -232,7 +235,7 @@ export async function getTechniciansForSupervisor(
   });
 
   if (technicianAssignments.length === 0) {
-    return { technicians: [], projects: supervisorProjects };
+    return { technicians: [], projects: supervisorProjects, total: 0, page, limit, totalPages: 0 };
   }
 
   // Group by technician, collecting project names
@@ -261,8 +264,18 @@ export async function getTechniciansForSupervisor(
     ];
   }
 
+  // Count total matching technicians (for pagination)
+  const total = await prisma.user.count({
+    where: userWhere as any,
+  });
+
+  const totalPages = Math.ceil(total / limit);
+  const skip = calculateOffset(page, limit);
+
   const technicians = await prisma.user.findMany({
     where: userWhere as any,
+    skip,
+    take: limit,
     select: {
       id: true,
       firstName: true,
@@ -311,5 +324,9 @@ export async function getTechniciansForSupervisor(
       };
     }),
     projects: supervisorProjects,
+    total,
+    page,
+    limit,
+    totalPages,
   };
 }

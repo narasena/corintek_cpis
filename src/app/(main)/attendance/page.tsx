@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/data-table';
+import { ServerPaginationControls } from '@/components/data-table/pagination-controls';
 import { Input } from '@/components/ui/input';
 import {
   clockInAction,
@@ -33,6 +34,7 @@ import { useSession } from '@/hooks/use-session';
 import type {
   TTechnicianAttendanceStatus,
   TSupervisorAttendanceFilter,
+  TSupervisorAttendanceResponse,
 } from '@/features/attendance/types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -103,41 +105,92 @@ function getStatusBadge(
   );
 }
 
+type TDatePreset = 'today' | '7days' | '30days' | 'custom';
+
+const DATE_PRESETS: { value: TDatePreset; label: string }[] = [
+  { value: 'today', label: 'Hari Ini' },
+  { value: '7days', label: '7 Hari' },
+  { value: '30days', label: '30 Hari' },
+  { value: 'custom', label: 'Kustom' },
+];
+
+function getDateDaysAgo(days: number): string {
+  return getJakartaDateLocal(new Date(Date.now() - days * 24 * 60 * 60 * 1000));
+}
+
 function SupervisorAttendanceView() {
   const [technicians, setTechnicians] = useState<TTechnicianAttendanceStatus[]>([]);
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [projectId, setProjectId] = useState('');
-  const [dateFrom, setDateFrom] = useState(todayJakarta());
-  const [dateTo, setDateTo] = useState(todayJakarta());
+  const [datePreset, setDatePreset] = useState<TDatePreset>('today');
+  const [customDateFrom, setCustomDateFrom] = useState('');
+  const [customDateTo, setCustomDateTo] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
-  const filters: TSupervisorAttendanceFilter = {
-    dateFrom,
-    dateTo,
-    search: search || undefined,
-    projectId: projectId || undefined,
-  };
+  const today = useMemo(() => todayJakarta(), []);
+
+  const dateFrom = datePreset === 'custom'
+    ? customDateFrom || today
+    : datePreset === 'today'
+      ? today
+      : getDateDaysAgo(datePreset === '7days' ? 7 : 30);
+
+  const dateTo = datePreset === 'custom' ? customDateTo || today : today;
+
+  const filtersKey = useMemo(
+    () => JSON.stringify({ dateFrom, dateTo, search, projectId }),
+    [dateFrom, dateTo, search, projectId]
+  );
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const result = await getTechniciansForSupervisorAction(filters);
+    const result = await getTechniciansForSupervisorAction({
+      dateFrom,
+      dateTo,
+      search: search || undefined,
+      projectId: projectId || undefined,
+      page,
+      limit,
+    } satisfies TSupervisorAttendanceFilter);
     if (result.success && result.data) {
-      const data = result.data as { technicians: TTechnicianAttendanceStatus[]; projects: { id: string; name: string }[] };
+      const data = result.data as TSupervisorAttendanceResponse;
       setTechnicians(data.technicians);
       setProjects(data.projects);
+      setTotal(data.total);
+      setTotalPages(data.totalPages);
     } else {
       toast.error('Gagal mengambil daftar teknisi', {
         description: (result as any).error,
       });
       setTechnicians([]);
+      setTotal(0);
+      setTotalPages(0);
     }
     setLoading(false);
-  }, [dateFrom, dateTo, search, projectId]);
+  }, [dateFrom, dateTo, search, projectId, page, limit]);
+
+  const handlePageChange = useCallback((newPage: number) => {
+    setPage(newPage);
+  }, []);
+
+  const handleLimitChange = useCallback((newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1);
+  }, []);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // Reset to page 1 when filters (search, project, date) change
+  useEffect(() => {
+    setPage(1);
+  }, [filtersKey]);
 
   const showProjectColumn = projects.some(p => p.name);
 
@@ -151,42 +204,66 @@ function SupervisorAttendanceView() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-64">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Teknisi</label>
           <Input
             placeholder="Cari teknisi..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <div className="w-full md:w-48">
-          <Select value={projectId} onValueChange={v => setProjectId(v)}>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Proyek</label>
+          <Select value={projectId || 'all'} onValueChange={v => setProjectId(v === 'all' ? '' : v)}>
             <SelectTrigger>
               <SelectValue placeholder="Semua proyek" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Semua proyek</SelectItem>
+              <SelectItem value="all">Semua proyek</SelectItem>
               {projects.map(p => (
                 <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        <div className="w-full md:w-auto">
-          <Input
-            type="date"
-            value={dateFrom}
-            onChange={e => setDateFrom(e.target.value)}
-            className="w-full md:w-[160px]"
-          />
-        </div>
-        <div className="w-full md:w-auto">
-          <Input
-            type="date"
-            value={dateTo}
-            onChange={e => setDateTo(e.target.value)}
-            className="w-full md:w-[160px]"
-          />
+        <div className="md:col-span-2">
+          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Tanggal</label>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-1">
+              {DATE_PRESETS.map(p => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setDatePreset(p.value)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                    datePreset === p.value
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            {datePreset === 'custom' && (
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  value={customDateFrom}
+                  onChange={e => setCustomDateFrom(e.target.value)}
+                  className="w-full md:w-[160px]"
+                />
+                <span className="flex items-center text-sm text-muted-foreground">-</span>
+                <Input
+                  type="date"
+                  value={customDateTo}
+                  onChange={e => setCustomDateTo(e.target.value)}
+                  className="w-full md:w-[160px]"
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -258,6 +335,18 @@ function SupervisorAttendanceView() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && total > 0 && (
+        <ServerPaginationControls
+          total={total}
+          page={page}
+          limit={limit}
+          onPageChange={handlePageChange}
+          onLimitChange={handleLimitChange}
+          isLoading={loading}
+        />
       )}
     </div>
   );
