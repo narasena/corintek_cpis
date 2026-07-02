@@ -4,8 +4,8 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useState,
   useTransition,
+  useState,
 } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -21,9 +21,19 @@ import {
 } from '@/features/attendance/actions';
 import { CameraInput } from '@/components/camera-input';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { columns, type TAttendanceTechnicianRow } from './components/columns';
 import { useSession } from '@/hooks/use-session';
-import type { TTechnicianAttendanceStatus } from '@/features/attendance/types';
+import type {
+  TTechnicianAttendanceStatus,
+  TSupervisorAttendanceFilter,
+} from '@/features/attendance/types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
@@ -37,6 +47,19 @@ type TAttendance = {
   totalHours: number | null;
   status: 'OPEN' | 'CLOSED';
 };
+
+function getJakartaDateLocal(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function todayJakarta(): string {
+  return getJakartaDateLocal(new Date());
+}
 
 function formatTime(value: string | Date | null | undefined) {
   if (!value) return '-';
@@ -81,16 +104,28 @@ function getStatusBadge(
 }
 
 function SupervisorAttendanceView() {
-  const [technicians, setTechnicians] = useState<TTechnicianAttendanceStatus[]>(
-    []
-  );
+  const [technicians, setTechnicians] = useState<TTechnicianAttendanceStatus[]>([]);
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [projectId, setProjectId] = useState('');
+  const [dateFrom, setDateFrom] = useState(todayJakarta());
+  const [dateTo, setDateTo] = useState(todayJakarta());
+
+  const filters: TSupervisorAttendanceFilter = {
+    dateFrom,
+    dateTo,
+    search: search || undefined,
+    projectId: projectId || undefined,
+  };
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const result = await getTechniciansForSupervisorAction({});
-    if (result.success) {
-      setTechnicians(result.data as TTechnicianAttendanceStatus[]);
+    const result = await getTechniciansForSupervisorAction(filters);
+    if (result.success && result.data) {
+      const data = result.data as { technicians: TTechnicianAttendanceStatus[]; projects: { id: string; name: string }[] };
+      setTechnicians(data.technicians);
+      setProjects(data.projects);
     } else {
       toast.error('Gagal mengambil daftar teknisi', {
         description: (result as any).error,
@@ -98,36 +133,75 @@ function SupervisorAttendanceView() {
       setTechnicians([]);
     }
     setLoading(false);
-  }, []);
+  }, [dateFrom, dateTo, search, projectId]);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h3 className="text-2xl font-bold tracking-tight">Absensi</h3>
-          <p className="text-muted-foreground">Memuat...</p>
-        </div>
-      </div>
-    );
-  }
+  const showProjectColumn = projects.some(p => p.name);
 
   return (
     <div className="space-y-4 md:space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Absensi Teknisi</h1>
         <p className="text-muted-foreground mt-2">
-          Daftar teknisi yang bertugas di proyek Anda hari ini
+          Pantau absensi teknisi yang bertugas di proyek Anda
         </p>
       </div>
 
-      {technicians.length === 0 ? (
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="w-full md:w-64">
+          <Input
+            placeholder="Cari teknisi..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="w-full md:w-48">
+          <Select value={projectId} onValueChange={v => setProjectId(v)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Semua proyek" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Semua proyek</SelectItem>
+              {projects.map(p => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-full md:w-auto">
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={e => setDateFrom(e.target.value)}
+            className="w-full md:w-[160px]"
+          />
+        </div>
+        <div className="w-full md:w-auto">
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={e => setDateTo(e.target.value)}
+            className="w-full md:w-[160px]"
+          />
+        </div>
+      </div>
+
+      {/* Technician list */}
+      {loading ? (
+        <div className="flex items-center justify-center p-8 border rounded-lg h-64 bg-muted/20">
+          <div className="flex flex-col items-center gap-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <p className="text-muted-foreground">Memuat...</p>
+          </div>
+        </div>
+      ) : technicians.length === 0 ? (
         <div className="rounded-lg border p-8 text-center">
           <p className="text-muted-foreground">
-            Tidak ada teknisi yang ditugaskan ke proyek Anda
+            Tidak ada teknisi yang ditemukan
           </p>
         </div>
       ) : (
@@ -135,21 +209,14 @@ function SupervisorAttendanceView() {
           <table className="w-full">
             <thead className="bg-muted/50">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">
-                  Teknisi
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium">
-                  Jam Masuk
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium">
-                  Jam Pulang
-                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Teknisi</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
+                {showProjectColumn && (
+                  <th className="px-4 py-3 text-left text-sm font-medium">Proyek</th>
+                )}
+                <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Jam Masuk</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Jam Pulang</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -171,24 +238,21 @@ function SupervisorAttendanceView() {
                         </div>
                       )}
                       <span className="font-medium">
-                        {[tech.firstName, tech.lastName]
-                          .filter(Boolean)
-                          .join(' ')}
+                        {[tech.firstName, tech.lastName].filter(Boolean).join(' ')}
                       </span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">
                     {tech.email}
                   </td>
-                  <td className="px-4 py-3">
-                    {getStatusBadge(tech.attendanceStatus)}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    {formatTime(tech.clockInAt)}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    {formatTime(tech.clockOutAt)}
-                  </td>
+                  {showProjectColumn && (
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {tech.projectNames?.join(', ') || '-'}
+                    </td>
+                  )}
+                  <td className="px-4 py-3">{getStatusBadge(tech.attendanceStatus)}</td>
+                  <td className="px-4 py-3 text-sm">{formatTime(tech.clockInAt)}</td>
+                  <td className="px-4 py-3 text-sm">{formatTime(tech.clockOutAt)}</td>
                 </tr>
               ))}
             </tbody>

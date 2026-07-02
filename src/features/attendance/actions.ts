@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { attendanceListFiltersSchema } from './types';
+import { attendanceListFiltersSchema, supervisorAttendanceFilterSchema } from './types';
 import * as service from './service';
 import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
@@ -184,15 +184,17 @@ export const getMyAttendanceHistoryAction = actionFactory.protected(
  * Server Action: Get technicians assigned to SUPERVISOR's projects with today's attendance
  */
 export const getTechniciansForSupervisorAction = actionFactory.protected(
-  async ({ actor }) => {
+  async ({ input, actor }) => {
     // Only SUPERVISOR (internal PIC) can access this
     if (actor.role !== 'SUPERVISOR') {
       throw new Error('Unauthorized: Only SUPERVISOR can view technicians');
     }
 
-    return service.getTechniciansForSupervisor(actor.id);
+    const filters = supervisorAttendanceFilterSchema.parse(input);
+    return service.getTechniciansForSupervisor(actor.id, filters);
   },
   {
+    schema: supervisorAttendanceFilterSchema,
     metadata: {
       rbac: { resource: RbacResource.ATTENDANCE, capability: 'read' },
     },

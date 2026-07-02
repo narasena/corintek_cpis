@@ -5,6 +5,8 @@ import type {
   TClockInInput,
   TClockOutInput,
   TTechnicianAttendanceStatus,
+  TSupervisorAttendanceFilter,
+  TSupervisorAttendanceResponse,
 } from './types';
 
 function getJakartaDateLocal(date: Date) {
@@ -179,9 +181,11 @@ export async function exportAttendanceCsv(
 }
 
 export async function getTechniciansForSupervisor(
-  supervisorUserId: string
-): Promise<TTechnicianAttendanceStatus[]> {
-  const dateLocal = getJakartaDateLocal(new Date());
+  supervisorUserId: string,
+  filters?: TSupervisorAttendanceFilter
+): Promise<TSupervisorAttendanceResponse> {
+  const dateFrom = filters?.dateFrom ?? getJakartaDateLocal(new Date());
+  const dateTo = filters?.dateTo ?? dateFrom;
 
   // Get project IDs where this user is PROJECT_PIC (internal PIC / SUPERVISOR)
   const picAssignments = await prisma.projectAssignment.findMany({
@@ -193,33 +197,72 @@ export async function getTechniciansForSupervisor(
     select: { projectId: true },
   });
 
-  const projectIds = picAssignments.map(p => p.projectId);
-  if (projectIds.length === 0) {
-    return [];
+  const allProjectIds = picAssignments.map(p => p.projectId);
+  if (allProjectIds.length === 0) {
+    return { technicians: [], projects: [] };
   }
 
-  // Get technicians assigned to these projects
+  // If projectId filter is set, scope to that project
+  const projectIds = filters?.projectId
+    ? allProjectIds.filter(id => id === filters.projectId)
+    : allProjectIds;
+
+  if (projectIds.length === 0) {
+    return { technicians: [], projects: [] };
+  }
+
+  // Get supervisor's projects for the dropdown
+  const supervisorProjects = await prisma.project.findMany({
+    where: { id: { in: allProjectIds }, deletedAt: null },
+    select: { id: true, name: true },
+  });
+
+  // Get technicians assigned to these projects, with their project info
   const technicianAssignments = await prisma.projectAssignment.findMany({
     where: {
       projectId: { in: projectIds },
       role: 'TECHNICIAN',
       isActive: true,
     },
-    select: { userId: true },
+    select: {
+      userId: true,
+      projectId: true,
+      project: { select: { id: true, name: true } },
+    },
   });
 
-  const technicianIds = [...new Set(technicianAssignments.map(t => t.userId))];
-  if (technicianIds.length === 0) {
-    return [];
+  if (technicianAssignments.length === 0) {
+    return { technicians: [], projects: supervisorProjects };
   }
 
-  // Get technicians with their today's attendance
+  // Group by technician, collecting project names
+  const techProjectMap = new Map<string, Set<string>>();
+  for (const ta of technicianAssignments) {
+    if (!techProjectMap.has(ta.userId)) {
+      techProjectMap.set(ta.userId, new Set());
+    }
+    techProjectMap.get(ta.userId)!.add(ta.project.name);
+  }
+
+  const technicianIds = [...techProjectMap.keys()];
+
+  // Build user query with optional search filter
+  const userWhere: Record<string, unknown> = {
+    id: { in: technicianIds },
+    isActive: true,
+    deletedAt: null,
+  };
+
+  if (filters?.search) {
+    const s = filters.search;
+    userWhere.OR = [
+      { firstName: { contains: s, mode: 'insensitive' } },
+      { lastName: { contains: s, mode: 'insensitive' } },
+    ];
+  }
+
   const technicians = await prisma.user.findMany({
-    where: {
-      id: { in: technicianIds },
-      isActive: true,
-      deletedAt: null,
-    },
+    where: userWhere as any,
     select: {
       id: true,
       firstName: true,
@@ -228,39 +271,45 @@ export async function getTechniciansForSupervisor(
       avatarUrl: true,
       attendances: {
         where: {
-          dateLocal,
+          dateLocal: { gte: dateFrom, lte: dateTo },
           deletedAt: null,
         },
+        orderBy: { dateLocal: 'desc' },
+        take: 1,
         select: {
           clockInAt: true,
           clockOutAt: true,
           status: true,
+          dateLocal: true,
         },
-        take: 1,
       },
     },
   });
 
-  return technicians.map(tech => {
-    const attendance = tech.attendances[0];
-    let attendanceStatus: TTechnicianAttendanceStatus['attendanceStatus'] =
-      'BELUM_ABSEN';
+  return {
+    technicians: technicians.map(tech => {
+      const attendance = tech.attendances[0];
+      let attendanceStatus: TTechnicianAttendanceStatus['attendanceStatus'] =
+        'BELUM_ABSEN';
 
-    if (attendance) {
-      attendanceStatus =
-        attendance.status === 'OPEN' ? 'SUDAH_ABSEN' : 'SUDAH_PULANG';
-    }
+      if (attendance) {
+        attendanceStatus =
+          attendance.status === 'OPEN' ? 'SUDAH_ABSEN' : 'SUDAH_PULANG';
+      }
 
-    return {
-      id: tech.id,
-      firstName: tech.firstName,
-      lastName: tech.lastName,
-      email: tech.email,
-      avatarUrl: tech.avatarUrl,
-      attendanceStatus,
-      clockInAt: attendance?.clockInAt ?? null,
-      clockOutAt: attendance?.clockOutAt ?? null,
-      dateLocal,
-    };
-  });
+      return {
+        id: tech.id,
+        firstName: tech.firstName,
+        lastName: tech.lastName,
+        email: tech.email,
+        avatarUrl: tech.avatarUrl,
+        attendanceStatus,
+        clockInAt: attendance?.clockInAt ?? null,
+        clockOutAt: attendance?.clockOutAt ?? null,
+        dateLocal: attendance?.dateLocal ?? dateFrom,
+        projectNames: [...(techProjectMap.get(tech.id) ?? [])],
+      };
+    }),
+    projects: supervisorProjects,
+  };
 }
