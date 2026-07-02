@@ -181,25 +181,6 @@ export const getMyAttendanceHistoryAction = actionFactory.protected(
 );
 
 /**
- * Server Action: Get technicians assigned to PIC's projects with today's attendance
- */
-export const getTechniciansForPicAction = actionFactory.protected(
-  async ({ actor }) => {
-    // Only CLIENT_SUPERVISOR can access this
-    if (actor.role !== 'CLIENT_SUPERVISOR') {
-      throw new Error('Unauthorized: Only PIC can view technicians');
-    }
-
-    return service.getTechniciansForPic(actor.id);
-  },
-  {
-    metadata: {
-      rbac: { resource: RbacResource.ATTENDANCE, capability: 'read' },
-    },
-  }
-);
-
-/**
  * Server Action: Get technicians assigned to SUPERVISOR's projects with today's attendance
  */
 export const getTechniciansForSupervisorAction = actionFactory.protected(

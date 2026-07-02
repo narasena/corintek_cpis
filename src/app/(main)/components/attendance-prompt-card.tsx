@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 import { Check, Clock, LogIn, LogOut, Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
@@ -14,16 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  getTodayAttendanceAction,
-  clockInAction,
-  clockOutAction,
-} from '@/features/attendance/actions';
+import { getTodayAttendanceAction } from '@/features/attendance/actions';
 import type { AttendanceModel } from '@/generated/prisma/models';
 
 type TodayAttendance = AttendanceModel | null;
 
-const ATTENDANCE_ROLES = ['TECHNICIAN', 'SUPERVISOR', 'STAFF'] as const;
+const ATTENDANCE_ROLES = ['TECHNICIAN'] as const;
 
 interface AttendancePromptCardProps {
   userRole: string;
@@ -33,12 +28,8 @@ export function AttendancePromptCard({ userRole }: AttendancePromptCardProps) {
   const router = useRouter();
   const [attendance, setAttendance] = useState<TodayAttendance>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isClockingIn, setIsClockingIn] = useTransition();
-  const [isClockingOut, setIsClockingOut] = useTransition();
 
-  const isPending = isClockingIn || isClockingOut;
-
-  // Only show for TECHNICIAN and SUPERVISOR
+  // Only show for TECHNICIAN
   const isAllowedRole = ATTENDANCE_ROLES.includes(
     userRole as (typeof ATTENDANCE_ROLES)[number]
   );
@@ -63,61 +54,8 @@ export function AttendancePromptCard({ userRole }: AttendancePromptCardProps) {
     return null;
   }
 
-  const handleClockIn = () => {
-    // Create a dummy file to trigger the action - in production user would select a photo
-    const photo = new File([''], 'photo.jpg', { type: 'image/jpeg' });
-
-    setIsClockingIn(async () => {
-      try {
-        const formData = new FormData();
-        formData.append('photo', photo);
-
-        const result = await clockInAction(formData);
-        if (result.success) {
-          toast.success('Berhasil absen masuk');
-          router.refresh();
-          // Refresh attendance data
-          const res = await getTodayAttendanceAction({});
-          if (res.success) {
-            setAttendance(res.data as TodayAttendance);
-          }
-        } else {
-          toast.error(result.error ?? 'Gagal absen masuk');
-        }
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Gagal absen masuk';
-        toast.error(message);
-      }
-    });
-  };
-
-  const handleClockOut = () => {
-    const photo = new File([''], 'photo.jpg', { type: 'image/jpeg' });
-
-    setIsClockingOut(async () => {
-      try {
-        const formData = new FormData();
-        formData.append('photo', photo);
-
-        const result = await clockOutAction(formData);
-        if (result.success) {
-          toast.success('Berhasil absen pulang');
-          router.refresh();
-          // Refresh attendance data
-          const res = await getTodayAttendanceAction({});
-          if (res.success) {
-            setAttendance(res.data as TodayAttendance);
-          }
-        } else {
-          toast.error(result.error ?? 'Gagal absen pulang');
-        }
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Gagal absen pulang';
-        toast.error(message);
-      }
-    });
+  const goToAttendance = () => {
+    router.push('/attendance');
   };
 
   const getStatus = () => {
@@ -180,17 +118,12 @@ export function AttendancePromptCard({ userRole }: AttendancePromptCardProps) {
               </div>
             </div>
             <Button
-              onClick={handleClockOut}
-              disabled={isPending}
+              onClick={goToAttendance}
               size="sm"
               className="gap-2 bg-amber-600 hover:bg-amber-700"
             >
-              {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <LogOut className="h-4 w-4" />
-              )}
-              {isPending ? 'Memproses...' : 'Absen Pulang'}
+              <LogOut className="h-4 w-4" />
+              Absen Pulang
             </Button>
           </div>
         </CardHeader>
@@ -217,17 +150,12 @@ export function AttendancePromptCard({ userRole }: AttendancePromptCardProps) {
             </div>
           </div>
           <Button
-            onClick={handleClockIn}
-            disabled={isPending}
+            onClick={goToAttendance}
             size="sm"
             className="gap-2"
           >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <LogIn className="h-4 w-4" />
-            )}
-            {isPending ? 'Memproses...' : 'Absen Masuk'}
+            <LogIn className="h-4 w-4" />
+            Absen Masuk
           </Button>
         </div>
       </CardHeader>

@@ -19,9 +19,10 @@ interface CameraInputProps {
   value?: string | null;
   onChange: (url: string | null, file?: File | null) => void;
   disabled?: boolean;
+  hideUpload?: boolean;
 }
 
-export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
+export function CameraInput({ value, onChange, disabled, hideUpload }: CameraInputProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -224,29 +225,31 @@ export function CameraInput({ value, onChange, disabled }: CameraInputProps) {
           <span className="text-xs text-muted-foreground">Ambil Foto</span>
         </Button>
 
-        <div className="relative">
-          <input
-            type="file"
-            accept="image/*"
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-            onChange={handleFileChange}
-            disabled={disabled || isProcessing}
-          />
-          <Button
-            variant="outline"
-            className="h-32 w-32 flex flex-col gap-2 border-dashed pointer-events-none"
-            disabled={disabled || isProcessing}
-          >
-            {isProcessing ? (
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            ) : (
-              <ImageIcon className="h-8 w-8 text-muted-foreground" />
-            )}
-            <span className="text-xs text-muted-foreground">
-              {isProcessing ? 'Mengompresi...' : 'Upload Galeri'}
-            </span>
-          </Button>
-        </div>
+        {!hideUpload && (
+          <div className="relative">
+            <input
+              type="file"
+              accept="image/*"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+              onChange={handleFileChange}
+              disabled={disabled || isProcessing}
+            />
+            <Button
+              variant="outline"
+              className="h-32 w-32 flex flex-col gap-2 border-dashed pointer-events-none"
+              disabled={disabled || isProcessing}
+            >
+              {isProcessing ? (
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              ) : (
+                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+              )}
+              <span className="text-xs text-muted-foreground">
+                {isProcessing ? 'Mengompresi...' : 'Upload Galeri'}
+              </span>
+            </Button>
+          </div>
+        )}
       </div>
 
       <Dialog open={isOpen} onOpenChange={open => !open && handleClose()}>

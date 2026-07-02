@@ -17,7 +17,6 @@ import {
   clockOutAction,
   getMyAttendanceHistoryAction,
   getTodayAttendanceAction,
-  getTechniciansForPicAction,
   getTechniciansForSupervisorAction,
 } from '@/features/attendance/actions';
 import { CameraInput } from '@/components/camera-input';
@@ -78,125 +77,6 @@ function getStatusBadge(
     >
       {labels[status]}
     </span>
-  );
-}
-
-function PicAttendanceView() {
-  const [technicians, setTechnicians] = useState<TTechnicianAttendanceStatus[]>(
-    []
-  );
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    const result = await getTechniciansForPicAction({});
-    if (result.success) {
-      setTechnicians(result.data as TTechnicianAttendanceStatus[]);
-    } else {
-      toast.error('Gagal mengambil daftar teknisi', {
-        description: (result as any).error,
-      });
-      setTechnicians([]);
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h3 className="text-2xl font-bold tracking-tight">Absensi</h3>
-          <p className="text-muted-foreground">Memuat...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4 md:space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Absensi Teknisi</h1>
-        <p className="text-muted-foreground mt-2">
-          Daftar teknisi yang bertugas di proyek Anda hari ini
-        </p>
-      </div>
-
-      {technicians.length === 0 ? (
-        <div className="rounded-lg border p-8 text-center">
-          <p className="text-muted-foreground">
-            Tidak ada teknisi yang ditugaskan ke proyek Anda
-          </p>
-        </div>
-      ) : (
-        <div className="rounded-lg border overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">
-                  Teknisi
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium">
-                  Jam Masuk
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium">
-                  Jam Pulang
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {technicians.map(tech => (
-                <tr key={tech.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      {tech.avatarUrl ? (
-                        <img
-                          src={tech.avatarUrl}
-                          alt={tech.firstName}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-xs font-medium">
-                            {tech.firstName.charAt(0)}
-                          </span>
-                        </div>
-                      )}
-                      <span className="font-medium">
-                        {[tech.firstName, tech.lastName]
-                          .filter(Boolean)
-                          .join(' ')}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {tech.email}
-                  </td>
-                  <td className="px-4 py-3">
-                    {getStatusBadge(tech.attendanceStatus)}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    {formatTime(tech.clockInAt)}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    {formatTime(tech.clockOutAt)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -468,6 +348,12 @@ export default function AttendancePage() {
     );
   }
 
+  // Supervisor view: show technician attendance table only
+  if (actor.role === 'SUPERVISOR') {
+    return <SupervisorAttendanceView />;
+  }
+
+  // Technician view: clock-in/out + own history
   return (
     <div className="space-y-4 md:space-y-8">
       <div>
@@ -516,6 +402,7 @@ export default function AttendancePage() {
               setClockInFile(file ?? null);
             }}
             disabled={isPending}
+            hideUpload
           />
           <Button onClick={handleClockIn} disabled={isPending || !clockInFile}>
             Absen Masuk
@@ -544,6 +431,7 @@ export default function AttendancePage() {
               setClockOutFile(file ?? null);
             }}
             disabled={isPending}
+            hideUpload
           />
           <Button
             onClick={handleClockOut}

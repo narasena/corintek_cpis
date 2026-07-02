@@ -30,7 +30,7 @@ export const CLIENT_POLICIES: Partial<Record<TRbacRole, IRbacRoleConfig>> = {
   },
   CLIENT_TECHNICIAN: {
     label: 'Teknisi (Klien)',
-    landingPage: '/attendance',
+    landingPage: '/my-projects',
     permissions: {
       DASHBOARD: 'R',
       SUMMARY_REPORTS: '-',
@@ -38,7 +38,6 @@ export const CLIENT_POLICIES: Partial<Record<TRbacRole, IRbacRoleConfig>> = {
       WORK_REPORTS: 'CRU',
       REPORTS: 'R',
       LAB_ANALYSES: '-',
-      ATTENDANCE: 'CRU',
       PROJECTS_LIST: 'R',
       CHEMICALS: '-',
       PARAMETERS: '-',
