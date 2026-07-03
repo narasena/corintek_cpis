@@ -69,6 +69,7 @@ export const updateWorkReportStatusAction = actionFactory.protected(
 
 /**
  * Server Action: Save a signature for a work report
+ * Self-authorizes internally — clients can sign despite read-only RBAC.
  */
 export const saveWorkReportSignatureAction = actionFactory.protected(
   async ({ input, actor }) => {
@@ -85,9 +86,6 @@ export const saveWorkReportSignatureAction = actionFactory.protected(
   },
   {
     schema: WorkReportSignatureSchema,
-    metadata: {
-      rbac: { resource: RbacResource.WORK_REPORTS, capability: 'update' },
-    },
   }
 );
 

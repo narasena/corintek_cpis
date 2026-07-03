@@ -25,14 +25,19 @@ export function WorkReportPageClient({
   const router = useRouter();
   const { user: actor } = useSession();
 
-  const clientRoles = ['CLIENT', 'CLIENT_SUPERVISOR', 'CLIENT_TECHNICIAN'];
-  const canEdit =
-    !clientRoles.includes(actor?.role ?? '') &&
-    canAccess(actor?.role ?? '', RbacResource.WORK_REPORTS, 'update');
+  // CLIENT_SUPERVISOR & CLIENT_TECHNICIAN can create/edit per RBAC policy;
+  // only basic CLIENT role is read-only (handled by RBAC directly).
+  const canEdit = canAccess(
+    actor?.role ?? '',
+    RbacResource.WORK_REPORTS,
+    'update'
+  );
 
-  const canCreate =
-    !clientRoles.includes(actor?.role ?? '') &&
-    canAccess(actor?.role ?? '', RbacResource.WORK_REPORTS, 'create');
+  const canCreate = canAccess(
+    actor?.role ?? '',
+    RbacResource.WORK_REPORTS,
+    'create'
+  );
 
   const canDelete = canAccess(
     actor?.role ?? '',

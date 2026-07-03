@@ -509,9 +509,6 @@ export const saveLogSheetSignatureAction = actionFactory.protected(
   },
   {
     schema: SaveLogSheetSignatureSchema,
-    metadata: {
-      rbac: { resource: RbacResource.LOG_SHEETS, capability: 'update' },
-    },
   }
 );
 

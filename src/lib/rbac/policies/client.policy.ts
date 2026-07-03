@@ -22,11 +22,6 @@ export const CLIENT_POLICIES: Partial<Record<TRbacRole, IRbacRoleConfig>> = {
   CLIENT_SUPERVISOR: {
     label: 'PIC Klien',
     ...BASE_CLIENT_POLICY,
-    permissions: {
-      ...BASE_CLIENT_POLICY.permissions,
-      LOG_SHEETS: 'CRU',
-      WORK_REPORTS: 'CRU',
-    },
   },
   CLIENT_TECHNICIAN: {
     label: 'Teknisi (Klien)',
@@ -34,8 +29,8 @@ export const CLIENT_POLICIES: Partial<Record<TRbacRole, IRbacRoleConfig>> = {
     permissions: {
       DASHBOARD: 'R',
       SUMMARY_REPORTS: '-',
-      LOG_SHEETS: 'CRU',
-      WORK_REPORTS: 'CRU',
+      LOG_SHEETS: 'R',
+      WORK_REPORTS: 'R',
       REPORTS: 'R',
       LAB_ANALYSES: '-',
       PROJECTS_LIST: 'R',
