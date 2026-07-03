@@ -25,10 +25,11 @@ export default function ProjectLogSheetsPage() {
   const projectId = params.projectId;
   const { user: actor } = useSession();
 
-  const canEdit =
-    actor?.role !== 'CLIENT' &&
-    actor?.role !== 'CLIENT_SUPERVISOR' &&
-    canAccess(actor?.role ?? '', RbacResource.LOG_SHEETS, 'update');
+  const canEdit = canAccess(
+    actor?.role ?? '',
+    RbacResource.LOG_SHEETS,
+    'update'
+  );
 
   const canDelete = canAccess(
     actor?.role ?? '',
@@ -36,10 +37,11 @@ export default function ProjectLogSheetsPage() {
     'delete'
   );
 
-  const canCreate =
-    actor?.role !== 'CLIENT' &&
-    actor?.role !== 'CLIENT_SUPERVISOR' &&
-    canAccess(actor?.role ?? '', RbacResource.LOG_SHEETS, 'create');
+  const canCreate = canAccess(
+    actor?.role ?? '',
+    RbacResource.LOG_SHEETS,
+    'create'
+  );
 
   const [project, setProject] = useState<IProject | null>(null);
   const [logSheets, setLogSheets] = useState<TLogSheetRow[]>([]);
