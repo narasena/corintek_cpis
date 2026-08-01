@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import { DatePicker } from '@/components/date-picker';
 import { Button } from '@/components/ui/button';
+import { FormActionBar } from '@/components/form-action-bar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -542,19 +543,23 @@ export function LabAnalysisForm({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push(`/lab-analyses/${projectId}`)}
-          disabled={isPending}
-        >
-          Batal
-        </Button>
-        <Button type="button" onClick={handleSubmit} disabled={isPending}>
-          {isPending ? 'Menyimpan...' : 'Simpan'}
-        </Button>
-      </div>
+      <FormActionBar
+        variant="page"
+        actions={[
+          {
+            label: 'Batal',
+            onClick: () => router.push(`/lab-analyses/${projectId}`),
+            variant: 'outline',
+            disabled: isPending,
+          },
+          {
+            label: isPending ? 'Menyimpan...' : 'Simpan',
+            onClick: handleSubmit,
+            disabled: isPending,
+            loading: isPending,
+          },
+        ]}
+      />
     </div>
   );
 }
