@@ -4,10 +4,11 @@ import { useTransition, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Trash2, Loader2, Save } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
+import { FormActionBar } from '@/components/form-action-bar';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -74,6 +75,7 @@ export function WorkReportForm({
   const statusIntentRef = useRef<'DRAFT' | 'SUBMITTED'>(
     effectiveData?.status === 'SUBMITTED' ? 'SUBMITTED' : 'DRAFT'
   );
+  const formRef = useRef<HTMLFormElement>(null);
   const [machineOptions, setMachineOptions] = useState<{ label: string; value: string }[]>([]);
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -427,7 +429,7 @@ export function WorkReportForm({
   return (
     <div className="space-y-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
               control={form.control}
@@ -602,59 +604,50 @@ export function WorkReportForm({
              />
            )}
 
-           <div className="flex justify-end space-x-2 pt-4 border-t">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={onCancel}
-              disabled={isPending}
-            >
-              Batal
-            </Button>
-            <Button
-              type="submit"
-              variant="outline"
-              disabled={isPending}
-              onClick={() => {
-                statusIntentRef.current = 'DRAFT';
-                setStatusIntent('DRAFT');
-              }}
-            >
-              {isPending && statusIntent === 'DRAFT' ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {submitStatus || 'Menyimpan...'}
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Simpan Draft
-                </>
-              )}
-            </Button>
-            <Button
-              type="submit"
-              disabled={
-                isPending ||
-                (effectiveData ? effectiveData.status !== 'DRAFT' : false) ||
-                !effectiveData?.technicianSignatureUrl ||
-                !effectiveData?.clientPicSignatureUrl
-              }
-              onClick={() => {
-                statusIntentRef.current = 'SUBMITTED';
-                setStatusIntent('SUBMITTED');
-              }}
-            >
-              {isPending && statusIntent === 'SUBMITTED' ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {submitStatus || 'Mengirim...'}
-                </>
-              ) : (
-                'Kirim ke PIC'
-              )}
-            </Button>
-          </div>
+           <FormActionBar
+            variant="dialog"
+            actions={[
+              {
+                label: 'Batal',
+                onClick: onCancel,
+                variant: 'outline',
+                disabled: isPending,
+              },
+              {
+                label:
+                  isPending && statusIntent === 'DRAFT'
+                    ? submitStatus || 'Menyimpan...'
+                    : 'Simpan Draft',
+                onClick: () => {
+                  statusIntentRef.current = 'DRAFT';
+                  setStatusIntent('DRAFT');
+                  formRef.current?.requestSubmit();
+                },
+                variant: 'outline',
+                disabled: isPending,
+                loading: isPending && statusIntent === 'DRAFT',
+              },
+              {
+                label:
+                  isPending && statusIntent === 'SUBMITTED'
+                    ? submitStatus || 'Mengirim...'
+                    : 'Kirim ke PIC',
+                onClick: () => {
+                  statusIntentRef.current = 'SUBMITTED';
+                  setStatusIntent('SUBMITTED');
+                  formRef.current?.requestSubmit();
+                },
+                disabled:
+                  isPending ||
+                  (effectiveData
+                    ? effectiveData.status !== 'DRAFT'
+                    : false) ||
+                  !effectiveData?.technicianSignatureUrl ||
+                  !effectiveData?.clientPicSignatureUrl,
+                loading: isPending && statusIntent === 'SUBMITTED',
+              },
+            ]}
+          />
         </form>
       </Form>
     </div>

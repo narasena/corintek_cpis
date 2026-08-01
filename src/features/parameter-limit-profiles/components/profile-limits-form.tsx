@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod/v4';
-import { Loader2, Copy, Save, Plus } from 'lucide-react';
+import { Loader2, Copy, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { FormActionBar } from '@/components/form-action-bar';
 import { Input } from '@/components/ui/input';
 import {
   Form,
@@ -124,6 +125,7 @@ export function ProfileLimitsForm({
   const [profileData, setProfileData] = useState<IProfileWithLimits | null>(
     null
   );
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Add Parameter Dialog State
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -456,7 +458,7 @@ export function ProfileLimitsForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {/* Actions */}
         <div className="flex justify-between items-center">
           <p className="text-sm text-muted-foreground">
@@ -485,11 +487,6 @@ export function ProfileLimitsForm({
               {isCopying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <Copy className="mr-2 h-4 w-4" />
               Salin dari Master
-            </Button>
-            <Button type="submit" size="sm" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              <Save className="mr-2 h-4 w-4" />
-              Simpan
             </Button>
           </div>
         </div>
@@ -661,14 +658,18 @@ export function ProfileLimitsForm({
           ))}
         </Accordion>
 
-        {/* Bottom Save Button */}
-        <div className="flex justify-end pt-4 border-t">
-          <Button type="submit" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            <Save className="mr-2 h-4 w-4" />
-            Simpan Semua Batas
-          </Button>
-        </div>
+        <FormActionBar
+          variant="dialog"
+          show={groupedLimits.length > 0}
+          actions={[
+            {
+              label: isPending ? 'Menyimpan...' : 'Simpan Semua Batas',
+              onClick: () => formRef.current?.requestSubmit(),
+              disabled: isPending,
+              loading: isPending,
+            },
+          ]}
+        />
       </form>
 
       {/* Add Parameter Dialog */}

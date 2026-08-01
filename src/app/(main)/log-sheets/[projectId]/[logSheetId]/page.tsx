@@ -1,18 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,36 +14,46 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { FormActionBar } from '@/components/form-action-bar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-preview';
 import { SignatureSection } from '@/features/log-sheets/components/signature-section';
 
 import {
-  submitLogSheetAction,
-  rejectLogSheetAction,
   approveLogSheetAction,
+  rejectLogSheetAction,
+  submitLogSheetAction,
 } from '@/features/log-sheets/actions';
+import { MobileLayoutWrapper } from '@/features/log-sheets/option-a/components/mobile-layout-wrapper';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSession } from '@/hooks/use-session';
-import { useLogSheetDetailData } from './hooks/use-log-sheet-detail-data';
-import { useLogSheetDerived } from './hooks/use-log-sheet-derived';
-import { useLogSheetDraftState } from './hooks/use-log-sheet-draft-state';
-import { useLogSheetDraftSaver } from './hooks/use-log-sheet-draft-saver';
-import { useLogSheetActiveMachines } from './hooks/use-log-sheet-active-machines';
-import { useLogSheetDerivedUsers } from './hooks/use-log-sheet-derived-users';
-import { useMobileUnitViewModel } from './hooks/use-mobile-unit-view-model';
 import { formatUserName } from '@/lib/utils/user';
-import { MobileLayoutWrapper } from '@/features/log-sheets/option-a/components/mobile-layout-wrapper';
+import { useLogSheetActiveMachines } from './hooks/use-log-sheet-active-machines';
+import { useLogSheetDerived } from './hooks/use-log-sheet-derived';
+import { useLogSheetDerivedUsers } from './hooks/use-log-sheet-derived-users';
+import { useLogSheetDetailData } from './hooks/use-log-sheet-detail-data';
+import { useLogSheetDraftSaver } from './hooks/use-log-sheet-draft-saver';
+import { useLogSheetDraftState } from './hooks/use-log-sheet-draft-state';
+import { useMobileUnitViewModel } from './hooks/use-mobile-unit-view-model';
 
+import { ConsumptionChemicalsSection } from '@/features/log-sheets/components/consumption-chemicals-section';
+import { LogSheetCategorySection } from '@/features/log-sheets/components/log-sheet-category-section';
 import { LogSheetToolbar } from '@/features/log-sheets/components/log-sheet-toolbar';
 import { MachineSelectionPanel } from '@/features/log-sheets/components/machine-selection-panel';
-import { LogSheetCategorySection } from '@/features/log-sheets/components/log-sheet-category-section';
-import { ConsumptionChemicalsSection } from '@/features/log-sheets/components/consumption-chemicals-section';
 import { EntryStateProvider } from '@/features/log-sheets/context';
-import { formatDate } from './utils';
 import {
   hasCompleteMachine,
   type TValidationParameter,
 } from '@/features/log-sheets/validation';
+import { formatDate } from './utils';
 
 function LoadingState() {
   return (
@@ -288,7 +289,7 @@ export default function LogSheetDetailPage() {
   } = derivedUsers;
 
   return (
-    <div className="space-y-4 md:space-y-8 pb-16 md:pb-0 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
+    <div className="space-y-4 md:space-y-8 print:p-0 print:max-w-none print:mx-0 print:space-y-0">
       {!isClientRole && (
         <LogSheetToolbar
           projectId={projectId}
@@ -311,9 +312,7 @@ export default function LogSheetDetailPage() {
         <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 print:hidden">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="font-medium text-amber-800">
-                Menunggu Persetujuan
-              </p>
+              <p className="font-medium text-amber-800">Menunggu Persetujuan</p>
               <p className="text-sm text-amber-600">
                 Log sheet ini menunggu persetujuan Anda.
               </p>
@@ -643,26 +642,42 @@ export default function LogSheetDetailPage() {
           </div>
         )}
 
-      {/* Sticky Action Bar for Mobile */}
-      {effectiveMode === 'input' && detail.logSheet.status === 'DRAFT' && (
-        <div className="fixed bottom-16 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t flex gap-2 md:hidden z-50">
-          <Button
-            className="flex-1"
-            variant="outline"
-            onClick={handleSave}
-            disabled={isPending}
-          >
-            Simpan Draft
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={handleSubmitRequest}
-            disabled={isPending}
-          >
-            Kirim
-          </Button>
-        </div>
-      )}
+      <FormActionBar
+        variant="page"
+        show={!isClientRole}
+        actions={[
+          {
+            label: 'Tindakan',
+            items: [
+              {
+                label: 'Simpan Draft',
+                onClick: handleSave,
+                disabled: isLocked || isPending,
+              },
+              ...(detail.logSheet.status === 'DRAFT'
+                ? [
+                    {
+                      label: 'Kirim',
+                      onClick: handleSubmitRequest,
+                      disabled: isPending,
+                    },
+                  ]
+                : []),
+              ...(canAdminOverride
+                ? [
+                    {
+                      label: adminOverride
+                        ? 'Kunci Kembali'
+                        : 'Buka Kunci (Admin)',
+                      onClick: () => setAdminOverride(v => !v),
+                      disabled: isPending,
+                    },
+                  ]
+                : []),
+            ],
+          },
+        ]}
+      />
     </div>
   );
 }
