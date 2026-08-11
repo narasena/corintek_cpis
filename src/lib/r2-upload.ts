@@ -19,6 +19,7 @@ export async function uploadToR2(params: TUploadToR2Params): Promise<string> {
     headers: {
       Authorization: `Bearer ${authSecret}`,
       'Content-Type': contentType,
+      'X-R2-Bucket': process.env.R2_BUCKET ?? 'dev',
     },
     body,
   });

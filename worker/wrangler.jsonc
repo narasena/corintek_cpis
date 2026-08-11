@@ -13,27 +13,13 @@
 	},
 	"r2_buckets": [
 		{
-			"binding": "MY_BUCKET",
+			"binding": "DEV_BUCKET",
 			"bucket_name": "corintek-cpis-dev-assets",
 			"preview_bucket_name": "corintek-cpis-preview-assets",
 		},
+		{
+			"binding": "PROD_BUCKET",
+			"bucket_name": "corintek-cpis-prod-assets",
+		},
 	],
-	"env": {
-		"staging": {
-			"r2_buckets": [
-				{
-					"binding": "MY_BUCKET",
-					"bucket_name": "corintek-cpis-staging-assets",
-				},
-			],
-		},
-		"production": {
-			"r2_buckets": [
-				{
-					"binding": "MY_BUCKET",
-					"bucket_name": "corintek-cpis-prod-assets",
-				},
-			],
-		},
-	},
 }
