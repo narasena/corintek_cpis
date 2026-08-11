@@ -27,10 +27,11 @@ export default class extends WorkerEntrypoint<Env> {
 
 			// Select bucket: dev (default) or prod, via X-R2-Bucket header.
 			// Both buckets are bound so the single worker can serve all envs.
-			const bucket =
-				request.headers.get('X-R2-Bucket') === 'prod'
-					? this.env.PROD_BUCKET!
-					: this.env.DEV_BUCKET!;
+			// GET has no header (browser <img>), so reads fall back to the
+			// other bucket to find the object wherever it lives.
+			const isProd = request.headers.get('X-R2-Bucket') === 'prod';
+			const bucket = isProd ? this.env.PROD_BUCKET! : this.env.DEV_BUCKET!;
+			const otherBucket = isProd ? this.env.DEV_BUCKET! : this.env.PROD_BUCKET!;
 
 			// List files with optional prefix
 			if (request.method === 'GET' && key === '') {
@@ -52,7 +53,7 @@ export default class extends WorkerEntrypoint<Env> {
 				}
 
 				case 'GET': {
-					const object = await bucket.get(key);
+					const object = (await bucket.get(key)) ?? (await otherBucket.get(key));
 					if (!object) {
 						return new Response('Object not found', { status: 404, headers: corsHeaders });
 					}
