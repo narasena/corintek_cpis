@@ -3,8 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"deploy": "wrangler deploy --env production",
-		"deploy:dev": "wrangler deploy",
+		"deploy": "wrangler deploy",
 		"dev": "wrangler dev --env-file .env --port 8787",
 		"start": "wrangler dev --env-file .env",
 		"test": "vitest",

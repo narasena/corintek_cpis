@@ -25,11 +25,18 @@ export default class extends WorkerEntrypoint<Env> {
 				}
 			}
 
+			// Select bucket: dev (default) or prod, via X-R2-Bucket header.
+			// Both buckets are bound so the single worker can serve all envs.
+			const bucket =
+				request.headers.get('X-R2-Bucket') === 'prod'
+					? this.env.PROD_BUCKET!
+					: this.env.DEV_BUCKET!;
+
 			// List files with optional prefix
 			if (request.method === 'GET' && key === '') {
 				const url = new URL(request.url);
 				const prefix = url.searchParams.get('prefix') || '';
-				const objects = await this.env.MY_BUCKET.list({ prefix });
+				const objects = await bucket.list({ prefix });
 				return new Response(JSON.stringify(objects), {
 					headers: { 'Content-Type': 'application/json', ...corsHeaders },
 				});
@@ -38,14 +45,14 @@ export default class extends WorkerEntrypoint<Env> {
 			switch (request.method) {
 				case 'PUT': {
 					// Simple upload without image processing for now
-					await this.env.MY_BUCKET.put(key, request.body, {
+					await bucket.put(key, request.body, {
 						httpMetadata: { contentType: request.headers.get('content-type') || 'application/octet-stream' },
 					});
 					return new Response(`Put ${key} successfully!`, { headers: corsHeaders });
 				}
 
 				case 'GET': {
-					const object = await this.env.MY_BUCKET.get(key);
+					const object = await bucket.get(key);
 					if (!object) {
 						return new Response('Object not found', { status: 404, headers: corsHeaders });
 					}
@@ -58,7 +65,7 @@ export default class extends WorkerEntrypoint<Env> {
 				}
 
 				case 'DELETE': {
-					await this.env.MY_BUCKET.delete(key);
+					await bucket.delete(key);
 					return new Response(`Deleted ${key}!`, { headers: corsHeaders });
 				}
 

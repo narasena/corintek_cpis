@@ -48,6 +48,7 @@ export function createR2WorkReportSignatureStorage(): ISignatureStorage {
         headers: {
           Authorization: `Bearer ${authSecret}`,
           'Content-Type': mimeType,
+          'X-R2-Bucket': process.env.R2_BUCKET ?? 'dev',
         },
         body: buffer,
       });

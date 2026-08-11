@@ -27,6 +27,7 @@ export async function uploadWorkReportFile(
     headers: {
       Authorization: `Bearer ${authSecret}`,
       'Content-Type': file.type,
+      'X-R2-Bucket': process.env.R2_BUCKET ?? 'dev',
     },
     body: buffer,
   });
