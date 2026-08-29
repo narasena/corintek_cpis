@@ -73,11 +73,18 @@ async function MainLayoutInner({ children }: { children: React.ReactNode }) {
     ? `${currentUser.firstName} ${currentUser.lastName ?? ''}`.trim()
     : 'User';
 
+  // Demo-mode badge: mark users that are demo personas (dev-only)
+  const isDemoUser = [
+    process.env.DEMO_ADMIN_EMAIL,
+    process.env.DEMO_CLIENT_EMAIL,
+  ].includes(currentUser?.email ?? '');
+
   const sidebarUser = {
     name,
     email: currentUser?.email ?? '',
     avatar: currentUser?.avatarUrl ?? '',
     role: userRole,
+    isDemoUser,
   };
 
   return (
