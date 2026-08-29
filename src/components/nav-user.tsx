@@ -19,6 +19,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { Badge } from '@/components/ui/badge';
 import { logoutAction } from '@/features/auth/actions';
 import { getRoleLabel } from '@/lib/rbac';
 
@@ -27,6 +28,7 @@ interface User {
   email: string;
   avatar: string | null;
   role: string;
+  isDemoUser?: boolean;
 }
 
 function getInitials(name: string | null): string {
@@ -88,6 +90,14 @@ export function NavUser({ user }: { user: User }) {
                     {roleLabel}
                   </span>
                 </div>
+                {user.isDemoUser && (
+                  <Badge
+                    variant="secondary"
+                    className="shrink-0 text-[10px] px-1.5 py-0"
+                  >
+                    DEMO
+                  </Badge>
+                )}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
