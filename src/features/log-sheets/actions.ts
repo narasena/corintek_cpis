@@ -139,10 +139,7 @@ export const createLogSheetAction = actionFactory.protected(
   async ({ input, actor }) => {
     await projectService.assertCanAccessProject(actor, input.projectId);
     await logSheetService.assertCanCreateLogSheet(actor, input.projectId);
-    const logSheet = await logSheetService.createLogSheet({
-      ...input,
-      createdByAdmin: actor.role === 'ADMIN' ? true : undefined,
-    });
+    const logSheet = await logSheetService.createLogSheet(input);
 
     revalidateLogSheetPaths(input.projectId);
     return logSheet;

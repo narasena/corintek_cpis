@@ -140,14 +140,8 @@ export const deleteWorkReportPhotoAction = actionFactory.protected(
  */
 export const createWorkReportAction = actionFactory.protected(
   async ({ input, actor }) => {
-    const isAdmin = actor.role === 'ADMIN';
-
     let reportData: CreateWorkReportInput;
     if (input instanceof FormData) {
-      // Add createdByAdmin to formData before parsing
-      if (isAdmin) {
-        input.append('createdByAdmin', 'true');
-      }
       reportData = parseWorkReportFormData(input);
     } else {
       const inp = input as unknown as CreateWorkReportInput;
@@ -162,7 +156,6 @@ export const createWorkReportAction = actionFactory.protected(
         zone: inp.zone,
         machineIds: inp.machineIds,
         status: inp.status,
-        createdByAdmin: isAdmin || inp.createdByAdmin,
       };
     }
 
@@ -205,8 +198,6 @@ function parseWorkReportFormData(formData: FormData) {
     | 'DRAFT'
     | 'SUBMITTED';
 
-  const createdByAdmin = formData.get('createdByAdmin') === 'true';
-
   const machineIds = formData.getAll('machineIds') as string[];
 
   return {
@@ -220,7 +211,6 @@ function parseWorkReportFormData(formData: FormData) {
     workResult,
     status: status as 'DRAFT' | 'SUBMITTED',
     machineIds: machineIds.length > 0 ? machineIds : [],
-    createdByAdmin: createdByAdmin || undefined,
   };
 }
 

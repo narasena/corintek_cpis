@@ -65,6 +65,7 @@ export function WorkReportForm({
   const [isPending, startTransition] = useTransition();
   const [isLoading, setIsLoading] = useState(false);
   const [fetchedData, setFetchedData] = useState<WorkReportRow | null>(null);
+  const isSubmittingRef = useRef(false);
 
   const isEditMode = !!workReportId;
   const effectiveData = fetchedData || undefined;
@@ -235,6 +236,8 @@ export function WorkReportForm({
   };
 
   const onSubmit = (data: CreateWorkReportInput) => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     startTransition(async () => {
       try {
         const intent = statusIntentRef.current;
@@ -318,10 +321,11 @@ export function WorkReportForm({
 
           uploadResults.forEach((res, index) => {
             const photo = pendingPhotos[index];
-            if (res.success && (res as any).id) {
+            const photoData = (res as any).data;
+            if (res.success && photoData?.id) {
               successfulUploads.push({
-                id: (res as any).id,
-                url: (res as any).url,
+                id: photoData.id,
+                url: photoData.url,
                 caption: null,
                 type: photo.type,
               });
@@ -413,9 +417,17 @@ export function WorkReportForm({
         });
       } finally {
         setSubmitStatus('');
+        isSubmittingRef.current = false;
       }
     });
   };
+
+  // Reset submitting ref when dialog closes
+  useEffect(() => {
+    if (!workReportId && !fetchedData) {
+      isSubmittingRef.current = false;
+    }
+  }, [workReportId, fetchedData]);
 
   if (isLoading) {
     return (
