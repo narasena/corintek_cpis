@@ -8,6 +8,11 @@ import type { TWorkReportSignatureRole } from './signature';
 import { createR2WorkReportSignatureStorage } from './signature-storage-r2';
 import { CreateWorkReportInput, UpdateWorkReportInput } from './types';
 
+/** Strip time to midnight UTC so date-only comparisons work */
+function normalizeDate(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+}
+
 export async function getWorkReportsByProject(projectId: string) {
   return await prisma.workReport.findMany({
     where: {
@@ -41,9 +46,11 @@ export async function getWorkReportById(id: string) {
 
 export async function createWorkReport(data: CreateWorkReportInput) {
   const { machineIds, ...rest } = data;
+  // Normalize date to midnight UTC so duplicate check works regardless of timezone
+  const dateOnly = normalizeDate(data.date);
   const duplicate = await workReportRepo.findDuplicateInProject({
     projectId: data.projectId,
-    date: data.date,
+    date: dateOnly,
   });
   if (duplicate) {
     throw new Error('Laporan kerja untuk proyek dan tanggal ini sudah ada');
@@ -51,6 +58,7 @@ export async function createWorkReport(data: CreateWorkReportInput) {
   return await prisma.workReport.create({
     data: {
       ...rest,
+      date: dateOnly,
       status: 'DRAFT', // Always create as DRAFT; submission requires signatures
       machines: {
         connect: machineIds?.map(id => ({ id })) || [],
@@ -80,7 +88,9 @@ export async function updateWorkReport(data: UpdateWorkReportInput) {
     // Only enforce if not already SUBMITTED (idempotent)
     if (existing.status !== 'SUBMITTED') {
       if (!existing.technicianSignatureUrl || !existing.clientPicSignatureUrl) {
-        throw new Error('Tanda tangan teknisi dan PIC klien wajib sebelum submit');
+        throw new Error(
+          'Tanda tangan teknisi dan PIC klien wajib sebelum submit'
+        );
       }
     }
   }
@@ -141,7 +151,9 @@ export async function updateWorkReportStatus(
   // Additional validation for SUBMITTED: both signatures required
   if (status === 'SUBMITTED') {
     if (!row.technicianSignatureUrl || !row.clientPicSignatureUrl) {
-      throw new Error('Tanda tangan teknisi dan PIC klien wajib sebelum submit');
+      throw new Error(
+        'Tanda tangan teknisi dan PIC klien wajib sebelum submit'
+      );
     }
   }
 
@@ -242,14 +254,18 @@ export async function saveWorkReportSignature(
         isTechnician = assignments.some(a => a.role === 'TECHNICIAN');
       }
       if (!isTechnician && !isSupervisor) {
-        throw new Error('Hanya teknisi proyek atau supervisor yang dapat menandatangani');
+        throw new Error(
+          'Hanya teknisi proyek atau supervisor yang dapat menandatangani'
+        );
       }
     } else {
       // CLIENT_PIC: both CLIENT_TECHNICIAN and CLIENT_SUPERVISOR are allowed
       const isClientRole =
         actorRole === 'CLIENT_TECHNICIAN' || actorRole === 'CLIENT_SUPERVISOR';
       if (!isClientRole) {
-        throw new Error('Hanya PIC klien proyek atau supervisor klien yang dapat menandatangani');
+        throw new Error(
+          'Hanya PIC klien proyek atau supervisor klien yang dapat menandatangani'
+        );
       }
     }
   }
