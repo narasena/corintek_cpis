@@ -1,11 +1,12 @@
-import { prisma } from '@/lib/prisma';
-import { CreateWorkReportInput, UpdateWorkReportInput } from './types';
-import { WorkReportPhotoType } from '@/generated/prisma/client';
 import type { IJwtPayload } from '@/@types/auth.type';
 import * as projectService from '@/features/projects/service';
 import { assertValidStatusTransition } from '@/features/work-reports/status-policy';
-import { createR2WorkReportSignatureStorage } from './signature-storage-r2';
+import { WorkReportPhotoType } from '@/generated/prisma/client';
+import { prisma } from '@/lib/prisma';
+import * as workReportRepo from './repositories';
 import type { TWorkReportSignatureRole } from './signature';
+import { createR2WorkReportSignatureStorage } from './signature-storage-r2';
+import { CreateWorkReportInput, UpdateWorkReportInput } from './types';
 
 export async function getWorkReportsByProject(projectId: string) {
   return await prisma.workReport.findMany({
@@ -40,6 +41,13 @@ export async function getWorkReportById(id: string) {
 
 export async function createWorkReport(data: CreateWorkReportInput) {
   const { machineIds, ...rest } = data;
+  const duplicate = await workReportRepo.findDuplicateInProject({
+    projectId: data.projectId,
+    date: data.date,
+  });
+  if (duplicate) {
+    throw new Error('Laporan kerja untuk proyek dan tanggal ini sudah ada');
+  }
   return await prisma.workReport.create({
     data: {
       ...rest,
