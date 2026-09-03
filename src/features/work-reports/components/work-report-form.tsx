@@ -245,7 +245,12 @@ export function WorkReportForm({
         // 1. Submit the report data first
         const formData = new FormData();
         formData.append('projectId', data.projectId);
-        formData.append('date', data.date.toISOString());
+        // Send date as YYYY-MM-DD (local) so server gets correct day regardless of timezone
+        const d = data.date;
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        formData.append('date', `${y}-${m}-${day}`);
         if (data.timeStart) formData.append('timeStart', data.timeStart);
         if (data.timeEnd) formData.append('timeEnd', data.timeEnd);
         if (data.zone) formData.append('zone', data.zone);
