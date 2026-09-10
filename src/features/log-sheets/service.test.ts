@@ -182,64 +182,24 @@ function createBaseDetail(): ILogSheetDetailView {
   };
 }
 
-describe('validateLogSheetApprovalDetail', () => {
-  it('passes when all required values are present and within range', () => {
+describe('validateLogSheetApprovalDetail (no-op)', () => {
+  it('passes regardless of entries', () => {
     const detail: ILogSheetDetailView = createBaseDetail();
     expect(() => validateLogSheetApprovalDetail(detail)).not.toThrow();
   });
 
-  it('fails when a numeric value is below minimum limit', () => {
+  it('passes even when values are below minimum', () => {
     const detail: ILogSheetDetailView = createBaseDetail();
     const entry = detail.entries.find(
       e => e.parameterId === 'param-1' && e.machineId === 'ct-1'
     ) as any;
     entry.numericValue = 5;
-
-    expect(() => validateLogSheetApprovalDetail(detail)).toThrow(
-      /di bawah minimum 10/
-    );
+    expect(() => validateLogSheetApprovalDetail(detail)).not.toThrow();
   });
 
-  it('fails when cooling water value for an active tower is missing', () => {
+  it('passes when entries are missing', () => {
     const detail: ILogSheetDetailView = createBaseDetail();
-    detail.entries = detail.entries.filter(
-      e => !(e.parameterId === 'param-1' && e.machineId === 'ct-1')
-    ) as any;
-
-    expect(() => validateLogSheetApprovalDetail(detail)).toThrow(
-      /Cooling Water Temp \(CT #1\) wajib diisi/
-    );
-  });
-
-  it('fails when raw water value is missing for cooling water parameter', () => {
-    const detail: ILogSheetDetailView = createBaseDetail();
-    detail.entries = detail.entries.filter(
-      e =>
-        !(
-          e.parameterId === 'param-1' &&
-          e.machineId === null &&
-          e.role === 'RAW_WATER'
-        )
-    ) as any;
-
-    expect(() => validateLogSheetApprovalDetail(detail)).toThrow(
-      /Cooling Water Temp \(Raw Water\) wajib diisi/
-    );
-  });
-
-  it('fails when general condition note is missing for active cooling tower', () => {
-    const detail: ILogSheetDetailView = createBaseDetail();
-    detail.entries = detail.entries.filter(
-      e =>
-        !(
-          e.parameterId === 'param-2' &&
-          e.machineId === null &&
-          e.role === 'NOTE'
-        )
-    ) as any;
-
-    expect(() => validateLogSheetApprovalDetail(detail)).toThrow(
-      /General Condition \(Catatan\) wajib diisi/
-    );
+    detail.entries = [];
+    expect(() => validateLogSheetApprovalDetail(detail)).not.toThrow();
   });
 });

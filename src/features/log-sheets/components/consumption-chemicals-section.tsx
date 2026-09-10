@@ -297,11 +297,13 @@ function ConsumptionRow({
   const entryKey = entryKeys.value(paramId, null);
   const state = getEntry(entryKey);
 
-  const handleNumberBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value) {
-      updateNumber(entryKey, value);
-    }
+  const displayValue =
+    state?.numericValue !== null && state?.numericValue !== undefined
+      ? String(state.numericValue)
+      : '';
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateNumber(entryKey, e.target.value);
   };
 
   return (
@@ -315,13 +317,9 @@ function ConsumptionRow({
           type="number"
           inputMode="decimal"
           placeholder="0"
-          defaultValue={
-            state?.numericValue !== null && state?.numericValue !== undefined
-              ? String(state.numericValue)
-              : ''
-          }
+          value={displayValue}
+          onChange={handleChange}
           onWheel={e => e.currentTarget.blur()}
-          onBlur={handleNumberBlur}
           disabled={disabled}
           className="flex-1"
         />
