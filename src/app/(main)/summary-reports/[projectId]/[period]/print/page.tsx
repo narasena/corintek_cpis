@@ -21,6 +21,10 @@ import {
   WaterQualityTable,
   CondenserApproachTable,
 } from '@/features/summary-reports/components';
+import {
+  getCoolingWaterQualityParameters,
+  getEffectiveParameterLimits,
+} from '@/features/lab-analyses/service';
 import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-preview';
 import { makeEntryKey } from '@/features/log-sheets/utils';
 import type {
@@ -72,12 +76,24 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
 
   if (!project || !summaryReport) return notFound();
 
-  const chemicalSummary = await getMonthlyChemicalUsageSummary(
-    projectId,
-    periodDate
-  );
+  const [chemicalSummary, parameters, analytics] = await Promise.all([
+    getMonthlyChemicalUsageSummary(projectId, periodDate),
+    getCoolingWaterQualityParameters(),
+    getAnalyticsData(projectId, periodDate),
+  ]);
 
-  const analytics = await getAnalyticsData(projectId, periodDate);
+  // Limits are project-specific; lab analyses may span multiple projects in scope
+  const limitMaps = new Map(
+    await Promise.all(
+      labAnalyses.map(
+        async la =>
+          [
+            la.projectId,
+            await getEffectiveParameterLimits(la.projectId),
+          ] as const
+      )
+    )
+  );
 
   const periodLabel = format(periodDate, 'MMMM yyyy', { locale: idLocale });
   const tocItems = [
@@ -361,7 +377,8 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
                 >
                   <LabAnalysisPrint
                     labAnalysis={la}
-                    parameters={logSheetConfig.labParameters as any}
+                    parameters={parameters}
+                    effectiveLimits={limitMaps.get(la.projectId) ?? {}}
                   />
                 </div>
               ))}
