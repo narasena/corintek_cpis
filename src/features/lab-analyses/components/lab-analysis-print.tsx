@@ -1,9 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { formatRawWaterLimit as formatRawWaterLimitCore } from '@/features/parameters/limits-format';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { formatRawWaterLimit as formatRawWaterLimitCore } from '@/features/parameters/limits-format';
+import { useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { LabAnalysisColumnKind, ValueType } from '@/generated/prisma/enums';
@@ -147,9 +147,7 @@ export function LabAnalysisPrint({
       <div className="bg-white text-black text-sm leading-tight w-[210mm] mx-auto shadow-xl print:shadow-none print:w-full print:mx-0">
         <div className="min-h-[297mm] p-8 print:p-0 flex flex-col">
           <div className="text-center mb-6">
-            <div className="text-lg font-bold uppercase">
-              Cooling Water Treatment Service Report
-            </div>
+            <div className="text-lg font-bold uppercase">Lab Analysis</div>
           </div>
 
           <div className="flex justify-between gap-6 mb-6">
