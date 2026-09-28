@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useMemo } from 'react';
 
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { LabAnalysisColumnKind, ValueType } from '@/generated/prisma/enums';
 
@@ -146,8 +147,30 @@ export function LabAnalysisPrint({
 
       <div className="bg-white text-black text-sm leading-tight w-[210mm] mx-auto shadow-xl print:shadow-none print:w-full print:mx-0">
         <div className="min-h-[297mm] p-8 print:p-0 flex flex-col">
-          <div className="text-center mb-6">
-            <div className="text-lg font-bold uppercase">Lab Analysis</div>
+          {/* Company Header */}
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="relative w-10 h-10">
+              <Image
+                src="/logo.png"
+                alt="Corintek Logo"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div className="text-center">
+              <h1 className="text-base font-bold text-blue-900 uppercase leading-none">
+                PT. CORINTEK INTI SEJAHTERA
+              </h1>
+              <p className="text-blue-900 text-xs leading-none">
+                Water Treatment and Chemicals Specialist
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mb-4">
+            <div className="text-lg font-bold uppercase">
+              COOLING WATER TREATMENT LAB REPORT
+            </div>
           </div>
 
           <div className="flex justify-between gap-6 mb-6">
