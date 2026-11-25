@@ -6,7 +6,6 @@ import { WorkReportPhotoType } from '@/generated/prisma/client';
 
 import * as service from './service';
 import {
-  WorkReportSchema,
   WorkReportSignatureSchema,
   CreateWorkReportInput,
   UpdateWorkReportInput,
@@ -120,9 +119,13 @@ export const deleteWorkReportPhotoAction = actionFactory.protected(
       select: { workReportId: true },
     });
 
-    if (!photo) {
-      return { success: false, error: 'Photo not found' };
-    }
+    // Authorize against the photo's own report before revealing whether the
+    // photo exists, so lookups cannot be used as a cross-tenant oracle.
+    if (!photo) return { success: false, error: 'Photo not found' };
+
+    const workReport = await service.getWorkReportById(photo.workReportId);
+    if (!workReport) throw new Error('Work report tidak ditemukan');
+    await projectService.assertCanAccessProject(actor, workReport.projectId);
 
     if (photo.workReportId !== data.workReportId) {
       return {
@@ -130,13 +133,6 @@ export const deleteWorkReportPhotoAction = actionFactory.protected(
         error: 'Photo does not belong to this work report',
       };
     }
-
-    // Resolve project from server state to prevent cross-project deletion.
-    const workReport = await service.getWorkReportById(photo.workReportId);
-    if (!workReport) {
-      return { success: false, error: 'Work report not found' };
-    }
-    await projectService.assertCanAccessProject(actor, workReport.projectId);
 
     await service.deleteWorkReportPhoto(data.photoId);
     revalidatePath(

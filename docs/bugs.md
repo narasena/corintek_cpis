@@ -183,25 +183,25 @@
 
 ## 🟠 P1 — High Priority
 
-| Bug ID  | Module      | Title                                                                                             | Status |
-| :------ | :---------- | :------------------------------------------------------------------------------------------------ | :----- |
-| BUG-004 | Logsheet    | No loading indicator when creating a logsheet (~3s delay)                                         | Fixed  |
-| BUG-005 | Logsheet    | No duplicate logsheet guard — two logsheets can be created for the same project on the same day   | Fixed  |
-| BUG-006 | Logsheet    | No PIC approval workflow after technician submits logsheet                                        | Fixed  |
-| BUG-007 | Logsheet    | Rejected logsheet remains locked instead of unlocking for re-entry                                | Fixed  |
-| BUG-008 | Logsheet    | Action buttons not sticky — require scrolling to the top on long mobile forms                     | Fixed  |
-| BUG-009 | Work Report | Work report photo button overlaps with preview and overflows left                                 | Fixed  |
-| BUG-010 | Summary Rpt | Technician can access summary reports (FSD: admin/client only)                                    | Fixed  |
-| BUG-011 | Summary Rpt | No loading indicator when generating a summary report                                             | Fixed  |
-| BUG-012 | Summary Rpt | Print preview content does not fit the page (tables overflow)                                     | Fixed  |
-| BUG-013 | Attendance  | Absence input is not restricted to technician role                                                | Fixed  |
-| BUG-014 | Attendance  | No attendance history table shown to technician                                                   | Fixed  |
-| BUG-015 | Attendance  | No "Not checked in today" prompt or checkout button on technician dashboard                       | Fixed  |
-| BUG-016 | Project     | New project can be created without assigning a CLIENT_PIC                                         | Fixed  |
-| BUG-017 | Permissions | Chemicals and Parameters pages are accessible to non-admin roles (nav hidden but route unguarded) | Fixed  |
-| BUG-018 | Input       | Number inputs (all forms) increment/decrement on scroll — unintended value changes                | Open   |
-| BUG-050 | Project     | Personnel assignments ignored on project creation                                                  | Fixed  |
-| BUG-051 | Logsheet    | Logsheet submission blocked by strict numeric range validation — out-of-range values should be warnings-only | Fixed  |
+| Bug ID  | Module      | Title                                                                                                                          | Status |
+| :------ | :---------- | :----------------------------------------------------------------------------------------------------------------------------- | :----- |
+| BUG-004 | Logsheet    | No loading indicator when creating a logsheet (~3s delay)                                                                      | Fixed  |
+| BUG-005 | Logsheet    | No duplicate logsheet guard — two logsheets can be created for the same project on the same day                                | Fixed  |
+| BUG-006 | Logsheet    | No PIC approval workflow after technician submits logsheet                                                                     | Fixed  |
+| BUG-007 | Logsheet    | Rejected logsheet remains locked instead of unlocking for re-entry                                                             | Fixed  |
+| BUG-008 | Logsheet    | Action buttons not sticky — require scrolling to the top on long mobile forms                                                  | Fixed  |
+| BUG-009 | Work Report | Work report photo button overlaps with preview and overflows left                                                              | Fixed  |
+| BUG-010 | Summary Rpt | Technician can access summary reports (FSD: admin/client only)                                                                 | Fixed  |
+| BUG-011 | Summary Rpt | No loading indicator when generating a summary report                                                                          | Fixed  |
+| BUG-012 | Summary Rpt | Print preview content does not fit the page (tables overflow)                                                                  | Fixed  |
+| BUG-013 | Attendance  | Absence input is not restricted to technician role                                                                             | Fixed  |
+| BUG-014 | Attendance  | No attendance history table shown to technician                                                                                | Fixed  |
+| BUG-015 | Attendance  | No "Not checked in today" prompt or checkout button on technician dashboard                                                    | Fixed  |
+| BUG-016 | Project     | New project can be created without assigning a CLIENT_PIC                                                                      | Fixed  |
+| BUG-017 | Permissions | Chemicals and Parameters pages are accessible to non-admin roles (nav hidden but route unguarded)                              | Fixed  |
+| BUG-018 | Input       | Number inputs (all forms) increment/decrement on scroll — unintended value changes                                             | Open   |
+| BUG-050 | Project     | Personnel assignments ignored on project creation                                                                              | Fixed  |
+| BUG-051 | Logsheet    | Logsheet submission blocked by strict numeric range validation — out-of-range values should be warnings-only                   | Fixed  |
 | BUG-052 | Logsheet    | Logsheet approval blocked by strict numeric range validation — out-of-range values should be warnings-only on approval as well | Fixed  |
 
 ### BUG-017 — Parameters/Chemicals Routes Unguarded for Non-Admin
@@ -361,12 +361,14 @@ export default function Page() {
 **Fix:** Removed numeric range validation loop from `validateLogSheetForSubmission`. Range violations are now handled solely by `notifyLimitBreachesOnSubmission` in log-sheet-notifications.ts, which creates warning notifications without blocking. Signature checks remain mandatory.
 
 **Files Modified:**
+
 - `src/features/log-sheets/log-sheet-status.service.ts` — removed range validation loop; cleaned unused import.
 - `src/features/log-sheets/service.characterization.test.ts` — updated 3 test cases to accept out-of-range values.
 - `src/features/log-sheets/status-with-notifications.test.ts` — corrected expectations to include `undefined` options argument.
 - `src/features/log-sheets/actions.characterization.test.ts` — updated mock to use real implementation; fixed call expectations.
 
 **Verification:**
+
 - All 78 service characterization tests pass.
 - All 4 status-with-notifications tests pass.
 - All 50 actions characterization tests pass.
@@ -386,9 +388,11 @@ export default function Page() {
 **Fix:** Removed numeric range validation from approval flow. Deleted `collectApprovalRangeErrors` function and its call. Required field checks remain enforced.
 
 **Files Modified:**
+
 - `src/features/log-sheets/approval-validation.ts`
 
 **Verification:**
+
 - All logsheet tests pass.
 - Approval with out-of-range numeric values now succeeds.
 - Required field validation still functional.
@@ -401,9 +405,11 @@ export default function Page() {
 **Symptom:** The scheduled (Mon/Thu 00:00 UTC) and `workflow_dispatch` runs of "Keep Supabase Alive" exit with code 3 (`curl: (3) URL rejected: No host part in the URL`). Rendered curl command shows `apikey:` and `Authorization: Bearer` headers with empty values. The intended Supabase REST API ping never happened, so the free-tier inactivity-pause guard was non-functional.  
 **Root Cause:** `SUPABASE_URL` and `SUPABASE_ANON_KEY` are configured in GitHub `Preview` environment(s), not at the repository level. The `ping` job had no `environment:` field, so env-scoped secrets did not propagate to the run context and rendered as empty strings.  
 **Fix:** Two-step:
+
 1. (interim) Added `environment: Preview` to the `ping` job. Verified by push to `staging` retriggering the workflow — run `26758920652` concluded `success`. (commit `3aff6c8`)
 2. (final) Replaced the entire GHA mechanism with Supabase's built-in `pg_cron` (in-DB scheduler). Deleted `.github/workflows/supabase-keep-alive.yaml`. Each project (UAT `igrnumqjyffzirwzklch` and main preview `krzxfiofhvvsildjgi`) gets its own `cron.schedule('keep-alive', '0 0 * * 1,4', $$ SELECT 1 $$)` job.  
-**Verification (2026-06-01):** User ran the per-minute self-test in ≥1 project:
+   **Verification (2026-06-01):** User ran the per-minute self-test in ≥1 project:
+
 ```sql
 SELECT cron.schedule('keep-alive-probe', '* * * * *', $$ SELECT 1 $$);
 -- waited 2-3 min
@@ -412,6 +418,7 @@ WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'keep-alive-probe')
 ORDER BY start_time DESC LIMIT 5;
 SELECT cron.unschedule('keep-alive-probe');
 ```
+
 Result: 2 rows with `status='succeeded'`. pg_cron scheduler is operational in the tested project.  
 **Why P3:** does not block dev or affect app data; defeats a keep-alive guard for the free-tier Supabase project only. Cron failure went unnoticed because GHA schedules do not page on failure.  
 **Status:** Verified
@@ -422,30 +429,30 @@ Result: 2 rows with `status='succeeded'`. pg_cron scheduler is operational in th
 
 ## 🟠 P1 — High Priority
 
-| Bug ID  | Module       | Title                                                                                                                                                                                                                                                       | Status |
-| :------ | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- |
-| BUG-018 | Input        | Number inputs (all forms) increment/decrement on scroll — unintended value changes                                                                                                                                                                          | Open   |
-| BUG-019 | Logsheet     | Note field feels laggy when typing — needs debouncing or deferred save                                                                                                                                                                                      | Open   |
-| BUG-020 | Logsheet     | Consumption total shows negative when "after" < "before"                                                                                                                                                                                                     | Fixed  |
-| BUG-021 | Logsheet     | Unselected machine units are hidden on desktop (should show greyed-out)                                                                                                                                                                                     | Open   |
-| BUG-022 | Logsheet     | Consumption and Notes sections are visible at unit-level — misleading on mobile                                                                                                                                                                             | Open   |
-| BUG-023 | Logsheet     | CT progress tracker shown regardless of data state (should only show when CT water cooling quality data exists)                                                                                                                                             | Open   |
-| BUG-024 | Logsheet     | Technician view shows client signature input field (should be hidden until client signs)                                                                                                                                                                     | Open   |
-| BUG-025 | Logsheet     | Signature dialog shows two Submit buttons — one is non-functional                                                                                                                                                                                            | Open   |
-| BUG-026 | Logsheet     | Numeric input position shifts when check icon appears after valid input                                                                                                                                                                                      | Open   |
-| BUG-027 | Logsheet     | Boolean checkbox position changes depending on label text length                                                                                                                                                                                             | Open   |
-| BUG-028 | Logsheet     | Logsheet photo (water meter) shows before/after vertically — should be side-by-side in one row                                                                                                                                                               | Open   |
-| BUG-029 | Work Report  | Unit machine select dropdown cannot scroll to see all options                                                                                                                                                                                               | Fixed  |
-| BUG-030 | Navigation   | Mobile sidebar remains open after navigating to another page                                                                                                                                                                                                | Fixed  |
-| BUG-031 | Permissions  | Admin can add client signature to bypass submission requirement (workaround)                                                                                                                                                                                 | Open   |
-| BUG-032 | Permissions  | Admin can create logsheets and work reports without attribution tag                                                                                                                                                                                         | Open   |
-| BUG-033 | Permissions  | Client role can see logsheet Create button (should be read-only portal)                                                                                                                                                                                     | Open   |
-| BUG-034 | UI           | All dialog headers should use primary background color with matching text (consistent with sidebar content header)                                                                                                                                          | Fixed  |
-| BUG-WR-001 | Work Report | Stale `existingPhotos` state after signature refresh prevents form submission. Form's local photo state not synchronized with updated `photos` prop from parent after signature-triggered refetch, causing "Failed to upload photos" error on submit.       | Fixed  |
-| BUG-WR-002 | Work Report | CLIENT_TECHNICIAN can sign as client PIC without active `CLIENT_PIC` assignment — authorization bypass. Should require assignment like TECHNICIAN role.                                                                                                      | Fixed  |
-| BUG-WR-003 | Work Report | SUPERVISOR fallback for technician signature missing — supervisor should be able to sign as technician when no technician assigned, mirroring logsheet policy.                                                                                              | Fixed  |
-| BUG-WR-004 | Work Report | CLIENT_SUPERVISOR fallback for client PIC signature missing — should sign without explicit assignment.                                                                                                                                                      | Fixed  |
-| BUG-WR-005 | Work Report | Work report SUBMITTED status transition allowed without both signatures. Missing guard in `updateWorkReportStatus`.                                                                                                                                         | Fixed  |
+| Bug ID     | Module      | Title                                                                                                                                                                                                                                                 | Status |
+| :--------- | :---------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- |
+| BUG-018    | Input       | Number inputs (all forms) increment/decrement on scroll — unintended value changes                                                                                                                                                                    | Open   |
+| BUG-019    | Logsheet    | Note field feels laggy when typing — needs debouncing or deferred save                                                                                                                                                                                | Open   |
+| BUG-020    | Logsheet    | Consumption total shows negative when "after" < "before"                                                                                                                                                                                              | Fixed  |
+| BUG-021    | Logsheet    | Unselected machine units are hidden on desktop (should show greyed-out)                                                                                                                                                                               | Open   |
+| BUG-022    | Logsheet    | Consumption and Notes sections are visible at unit-level — misleading on mobile                                                                                                                                                                       | Open   |
+| BUG-023    | Logsheet    | CT progress tracker shown regardless of data state (should only show when CT water cooling quality data exists)                                                                                                                                       | Open   |
+| BUG-024    | Logsheet    | Technician view shows client signature input field (should be hidden until client signs)                                                                                                                                                              | Open   |
+| BUG-025    | Logsheet    | Signature dialog shows two Submit buttons — one is non-functional                                                                                                                                                                                     | Open   |
+| BUG-026    | Logsheet    | Numeric input position shifts when check icon appears after valid input                                                                                                                                                                               | Open   |
+| BUG-027    | Logsheet    | Boolean checkbox position changes depending on label text length                                                                                                                                                                                      | Open   |
+| BUG-028    | Logsheet    | Logsheet photo (water meter) shows before/after vertically — should be side-by-side in one row                                                                                                                                                        | Open   |
+| BUG-029    | Work Report | Unit machine select dropdown cannot scroll to see all options                                                                                                                                                                                         | Fixed  |
+| BUG-030    | Navigation  | Mobile sidebar remains open after navigating to another page                                                                                                                                                                                          | Fixed  |
+| BUG-031    | Permissions | Admin can add client signature to bypass submission requirement (workaround)                                                                                                                                                                          | Open   |
+| BUG-032    | Permissions | Admin can create logsheets and work reports without attribution tag                                                                                                                                                                                   | Open   |
+| BUG-033    | Permissions | Client role can see logsheet Create button (should be read-only portal)                                                                                                                                                                               | Open   |
+| BUG-034    | UI          | All dialog headers should use primary background color with matching text (consistent with sidebar content header)                                                                                                                                    | Fixed  |
+| BUG-WR-001 | Work Report | Stale `existingPhotos` state after signature refresh prevents form submission. Form's local photo state not synchronized with updated `photos` prop from parent after signature-triggered refetch, causing "Failed to upload photos" error on submit. | Fixed  |
+| BUG-WR-002 | Work Report | CLIENT_TECHNICIAN can sign as client PIC without active `CLIENT_PIC` assignment — authorization bypass. Should require assignment like TECHNICIAN role.                                                                                               | Fixed  |
+| BUG-WR-003 | Work Report | SUPERVISOR fallback for technician signature missing — supervisor should be able to sign as technician when no technician assigned, mirroring logsheet policy.                                                                                        | Fixed  |
+| BUG-WR-004 | Work Report | CLIENT_SUPERVISOR fallback for client PIC signature missing — should sign without explicit assignment.                                                                                                                                                | Fixed  |
+| BUG-WR-005 | Work Report | Work report SUBMITTED status transition allowed without both signatures. Missing guard in `updateWorkReportStatus`.                                                                                                                                   | Fixed  |
 
 ### BUG-018 — Scroll-to-Increment on Number Inputs
 
@@ -477,7 +484,7 @@ Result: 2 rows with `status='succeeded'`. pg_cron scheduler is operational in th
 | BUG-037 | User     | "Client Technician" role has no defined permissions or workflows                                 | Needs Clarity  |
 | BUG-038 | Logsheet | Signature dialog cannot rotate to landscape on mobile                                            | Fixed          |
 | BUG-039 | Logsheet | Logsheet signature save does not trigger optimistic update — full SSR re-fetch is too aggressive | Open (derived) |
-| BUG-053 | CI       | Supabase keep-alive workflow fails silently — env-scoped secrets not attached to job | Verified |
+| BUG-053 | CI       | Supabase keep-alive workflow fails silently — env-scoped secrets not attached to job             | Verified       |
 
 ---
 
@@ -546,16 +553,53 @@ console.log('[DEBUG] Checking for limit breaches...');
 
 ---
 
-## Summary
+## 🔐 P0 Authorization Hardening (2026-11-25)
 
-| Category                            | Count |
-| :---------------------------------- | ----: |
-| P0 Blocker                          |     0 |
-| P1 High                             |    20 |
-| P2 Medium                           |    17 |
-| P3 Low / Needs Clarity              |     6 |
-| Phase 3 — Source-Scan (BUG-040–049) |    10 |
-| **Total unique bugs**               |    53 |
+### BUG-054 — Lab analysis pages served data without authorization
+
+**Location:** `src/app/(main)/lab-analyses/[projectId]/**`  
+**Symptom:** All five lab-analysis routes (list, new, edit, print, and the `/lab-analyses` picker) rendered any project's data to any visitor. No authentication, no `LAB_ANALYSES` RBAC, no project-access check. Direct URLs and print views leaked lab results across projects.  
+**Fix:** Server-side guard in `lab-analyses/layout.tsx` (`getCurrentUserDetails` + `canAccess(LAB_ANALYSES, 'read')` → `/forbidden`), plus per-page `getProjectById(actor, projectId)` and an explicit `labAnalysis.projectId !== projectId` check before rendering. RBAC capability split per route: `read` (list/print), `create` (new), `update` (edit).  
+**Status:** Fixed
+
+---
+
+### BUG-055 — Work-report Server Actions had no project-scoped authorization
+
+**Location:** `src/features/work-reports/actions.ts`  
+**Symptom:** `getWorkReportByIdAction`, `getWorkReportsByProjectAction`, `updateWorkReportAction`, `deleteWorkReportAction`, `deleteWorkReportPhotoAction`, and `createWorkReportAction` enforced only the role capability, never project scope. A SUPERVISOR not assigned to a project could read, edit, delete reports, and delete photos in it. `deleteWorkReportPhotoAction` additionally trusted a client-supplied `projectId` for its revalidation paths.  
+**Fix:** Each action resolves the target project from server state (`getWorkReportById(...).projectId` or the action input for creation) and calls `assertCanAccessProject(actor, projectId)`. `updateWorkReportAction` overrides the client-supplied `projectId` with the server-resolved one. The photo action derives the project from the photo's own report and authorizes before revealing existence.  
+**Status:** Fixed
+
+---
+
+### BUG-056 — `APPROVED` could be injected through the generic work-report update
+
+**Location:** `src/features/work-reports/{actions,service}.ts`, `status-policy.ts`  
+**Symptom:** `parseWorkReportFormData` cast the client-supplied `status` straight to `'DRAFT' | 'SUBMITTED'`, and the JSON path passed validation only via `UpdateWorkReportSchema`. Since `updateWorkReport` spread the whole input into `prisma.workReport.update`, any client could set `status: 'APPROVED'`, bypassing `assertValidStatusTransition` and the project-PIC restriction in `updateWorkReportStatus`. Arbitrary scalars (`technicianSignatureUrl`, `approvedAt`, `deletedAt`) passed through the same spread.  
+**Fix:** Added `EDITABLE_WORK_REPORT_STATUSES = ['DRAFT','SUBMITTED']` + `assertEditableWorkReportStatus`, enforced in `parseWorkReportFormData` and in `updateWorkReport`. `updateWorkReport` now loads the current row, only permits a status change while the row is `DRAFT`, and writes an explicit field whitelist instead of spreading client input.  
+**Status:** Fixed
+
+---
+
+### BUG-057 — Unused work-report Server Actions exposed without authorization
+
+**Location:** `src/features/work-reports/actions-paginated.ts` (deleted)  
+**Symptom:** `getWorkReportsByProjectPaginatedAction` and `getWorkReportCountAction` were exported server actions with no RBAC and no project check. The backing `WorkReportService.assertCanAccessProject` was an empty stub with a `TODO`. Neither action had any caller.  
+**Fix:** Deleted the module. The authorized actions in `actions.ts` cover the same reads.  
+**Status:** Fixed
+
+---
+
+| Category                                 | Count |
+| :--------------------------------------- | ----: |
+| P0 Blocker                               |     0 |
+| P1 High                                  |    20 |
+| P2 Medium                                |    17 |
+| P3 Low / Needs Clarity                   |     6 |
+| Phase 3 — Source-Scan (BUG-040–049)      |    10 |
+| P0 Authorization Hardening (BUG-054–057) |     4 |
+| **Total unique bugs**                    |    57 |
 
 > Note: BUG-044 is a source-level confirmation of BUG-016 (same issue, different layer) and is not counted twice.
 
