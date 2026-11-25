@@ -1,7 +1,12 @@
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
+
 import { Button } from '@/components/ui/button';
 import { getLabAnalysesByProject } from '@/features/lab-analyses/service';
 import { LabAnalysisRow } from '@/features/lab-analyses/types';
+import { getProjectById } from '@/features/projects/service';
+import { getCurrentUser } from '@/lib/auth-helpers';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 import { LabAnalysisList } from './components/lab-analysis-list';
 
 interface PageProps {
@@ -9,7 +14,14 @@ interface PageProps {
 }
 
 export default async function LabAnalysesPage({ params }: PageProps) {
+  const actor = await getCurrentUser();
+  if (!actor) return notFound();
+  ensureAccess(actor.role, RbacResource.LAB_ANALYSES, 'read');
+
   const { projectId } = await params;
+  const project = await getProjectById(actor, projectId);
+  if (!project) return notFound();
+
   const data = await getLabAnalysesByProject(projectId);
   const formattedData = data as unknown as LabAnalysisRow[];
 

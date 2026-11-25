@@ -1,6 +1,9 @@
 import type { IJwtPayload } from '@/@types/auth.type';
 import * as projectService from '@/features/projects/service';
-import { assertValidStatusTransition } from '@/features/work-reports/status-policy';
+import {
+  assertEditableWorkReportStatus,
+  assertValidStatusTransition,
+} from '@/features/work-reports/status-policy';
 import { WorkReportPhotoType } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import * as workReportRepo from './repositories';
@@ -10,7 +13,9 @@ import { CreateWorkReportInput, UpdateWorkReportInput } from './types';
 
 /** Strip time to midnight UTC so date-only comparisons work */
 function normalizeDate(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+  );
 }
 
 export async function getWorkReportsByProject(projectId: string) {
@@ -69,6 +74,10 @@ export async function createWorkReport(data: CreateWorkReportInput) {
 
 export async function updateWorkReport(data: UpdateWorkReportInput) {
   const { id, machineIds, ...rest } = data;
+
+  // Generic edits may only persist statuses from the explicit whitelist.
+  // APPROVED must go through updateWorkReportStatus (PIC-only workflow).
+  assertEditableWorkReportStatus(data.status);
 
   // If transitioning to SUBMITTED, ensure required signatures exist
   if (data.status === 'SUBMITTED') {
