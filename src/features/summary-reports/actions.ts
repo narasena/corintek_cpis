@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod/v4';
 import { actionFactory } from '@/features/auth/di';
-import { stripR2Signature } from '@/lib/r2-sign';
+import { signR2UrlOrNull, stripR2Signature } from '@/lib/r2-sign';
 import { RbacResource } from '@/lib/rbac';
 import * as service from './service';
 import * as projectService from '@/features/projects/service';
@@ -161,10 +161,22 @@ export const getSummaryReportByPeriodAction = actionFactory.protected(
     });
 
     await projectService.assertCanAccessProject(actor, validated.projectId);
-    return service.getSummaryReportByPeriod(
+    const report = await service.getSummaryReportByPeriod(
       validated.projectId,
       validated.period
     );
+    if (!report) return report;
+
+    // Sign attachment URLs after access is asserted.
+    return {
+      ...report,
+      dataTemuanUrl: (await signR2UrlOrNull(report.dataTemuanUrl)) ?? undefined,
+      dataBlowdownUrl:
+        (await signR2UrlOrNull(report.dataBlowdownUrl)) ?? undefined,
+      dataSuhuUrl: (await signR2UrlOrNull(report.dataSuhuUrl)) ?? undefined,
+      dataSuratJalanUrl:
+        (await signR2UrlOrNull(report.dataSuratJalanUrl)) ?? undefined,
+    };
   },
   {
     metadata: {

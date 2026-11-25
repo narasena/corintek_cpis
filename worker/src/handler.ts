@@ -11,8 +11,27 @@
  * - Exactly one bucket is bound per deployment; there is no fallback.
  */
 
+/**
+ * The subset of R2Bucket this handler uses. Declared structurally so the file
+ * has no dependency on the Workers type package and can be imported by the
+ * Next.js contract test.
+ */
+export type TBucketLike = {
+	put(
+		key: string,
+		value: BodyInit | null,
+		options?: { httpMetadata?: { contentType?: string } }
+	): Promise<unknown>;
+	get(key: string): Promise<{
+		body: ReadableStream | string | null;
+		httpEtag: string;
+		writeHttpMetadata(headers: Headers): void;
+	} | null>;
+	delete(key: string): Promise<unknown>;
+};
+
 export type THandlerEnv = {
-	BUCKET: R2Bucket;
+	BUCKET: TBucketLike;
 	AUTH_SECRET?: string;
 	SIGNING_SECRET?: string;
 };
@@ -63,11 +82,15 @@ async function hmacHex(secret: string, message: string): Promise<string> {
 }
 
 /** Must match `buildSignaturePayload` in src/lib/r2-sign.ts. */
-function buildSignaturePayload(key: string, exp: string): string {
+export function buildSignaturePayload(key: string, exp: string): string {
 	return `${key}\n${exp}`;
 }
 
-async function verifyReadSignature(
+/**
+ * Verifies the `exp`/`sig` pair for a GET. Exported so the contract test can
+ * assert the Next.js signer against the real verifier instead of a copy.
+ */
+export async function verifyReadSignature(
 	env: THandlerEnv,
 	key: string,
 	exp: string | null,
@@ -179,8 +202,9 @@ export async function handleRequest(
 				});
 		}
 	} catch (error) {
-		// Do not echo internals back to the caller.
-		console.error('[R2-WORKER] request failed', {
+		// Do not echo internals back to the caller. The Worker subproject cannot
+		// import @/lib/logger, so follow the project's log-prefix convention.
+		console.error('[CPIS-ERROR] R2Worker.handleRequest: request failed', {
 			method: request.method,
 			error,
 		});

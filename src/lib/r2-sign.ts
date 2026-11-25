@@ -53,17 +53,8 @@ export function extractR2ObjectKey(
   }
   if (parsed.origin !== new URL(base).origin) return null;
 
-  const path = parsed.pathname;
-  if (!path.startsWith('/')) return null;
-
-  // Normalize dot-segments so the signed key matches the requested path.
-  const normalized = path.split('/').reduce<string>((acc, segment) => {
-    if (segment === '.') return acc;
-    if (segment === '..') return acc.split('/').slice(0, -1).join('/');
-    return acc ? `${acc}/${segment}` : segment;
-  }, '');
-
-  const key = normalized.replace(/^\/+/, '');
+  // `new URL` already resolved dot-segments, so pathname is canonical.
+  const key = parsed.pathname.replace(/^\/+/, '');
   if (!key) return null;
 
   // The Worker decodes the raw pathname before verifying; match that form.
@@ -122,6 +113,25 @@ export async function signR2UrlOrNull(
 ): Promise<string | null> {
   if (!url) return null;
   return signR2Url(url);
+}
+
+/**
+ * Sign the `avatarUrl` of a user-shaped record.
+ *
+ * User avatars are returned by several read paths; this keeps the shape in one
+ * place instead of repeating the spread at each call site.
+ */
+export async function signAvatarUrl<T extends { avatarUrl: string | null }>(
+  user: T
+): Promise<T> {
+  return { ...user, avatarUrl: await signR2UrlOrNull(user.avatarUrl) };
+}
+
+/** Sign `avatarUrl` on every record in a list. */
+export async function signAvatarUrls<T extends { avatarUrl: string | null }>(
+  users: T[]
+): Promise<T[]> {
+  return Promise.all(users.map(signAvatarUrl));
 }
 
 /**

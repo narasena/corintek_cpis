@@ -22,19 +22,11 @@ import { cacheTag, cacheLife } from 'next/cache';
 import { ECacheTag } from '../cache/tags';
 import { CACHE_LIFE } from '../cache/life-profiles';
 import { canAccess, RbacResource } from '@/lib/rbac';
-import { signR2UrlOrNull } from '@/lib/r2-sign';
 
-/**
- * Signing must happen OUTSIDE `'use cache'`: cached entries outlive the
- * 10-minute URL signature, so a signed URL stored in the cache would 401.
- */
-async function signAvatar<T extends { avatarUrl: string | null }>(
-  row: T
-): Promise<T> {
-  return { ...row, avatarUrl: await signR2UrlOrNull(row.avatarUrl) };
-}
+// Cached wrappers.
+// NOTE: these functions never sign avatar URLs. Cached entries outlive the
+// 10-minute URL signature, so signing belongs at the Server Action boundary.
 
-// Cached wrappers
 async function getAllUsersCached(actor: IJwtPayload) {
   'use cache';
   cacheTag(ECacheTag.USERS);
@@ -74,7 +66,7 @@ async function getCurrentUserProfileCached(userId: string) {
 
 export class CachedUserService {
   async getAllUsers(actor: IJwtPayload) {
-    return Promise.all((await getAllUsersCached(actor)).map(signAvatar));
+    return await getAllUsersCached(actor);
   }
 
   async getTechniciansList(actor: IJwtPayload) {
@@ -83,11 +75,11 @@ export class CachedUserService {
   }
 
   async getUserById(actor: IJwtPayload, id: string) {
-    return signAvatar(await getUserByIdCached(actor, id));
+    return await getUserByIdCached(actor, id);
   }
 
   async getCurrentUserProfile(userId: string) {
-    return signAvatar(await getCurrentUserProfileCached(userId));
+    return await getCurrentUserProfileCached(userId);
   }
 
   async createUser(

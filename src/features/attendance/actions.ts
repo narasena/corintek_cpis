@@ -1,12 +1,15 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { attendanceListFiltersSchema, supervisorAttendanceFilterSchema } from './types';
+import {
+  attendanceListFiltersSchema,
+  supervisorAttendanceFilterSchema,
+} from './types';
 import * as service from './service';
 import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
 import { uploadToR2 } from '@/lib/r2-upload';
-import { signR2UrlOrNull } from '@/lib/r2-sign';
+import { signR2UrlOrNull, signAvatarUrls } from '@/lib/r2-sign';
 
 function getJakartaDateLocal(date: Date) {
   return new Intl.DateTimeFormat('en-CA', {
@@ -142,7 +145,15 @@ export const clockOutAction = actionFactory.protected(
  */
 export const getAttendanceListAction = actionFactory.protected(
   async ({ input, actor }) => {
-    return service.listAttendance(actor, input);
+    const rows = await service.listAttendance(actor, input);
+
+    return Promise.all(
+      rows.map(async row => ({
+        ...row,
+        clockInPhotoUrl: await signR2UrlOrNull(row.clockInPhotoUrl),
+        clockOutPhotoUrl: await signR2UrlOrNull(row.clockOutPhotoUrl),
+      }))
+    );
   },
   {
     schema: attendanceListFiltersSchema,
@@ -211,12 +222,7 @@ export const getTechniciansForSupervisorAction = actionFactory.protected(
 
     return {
       ...result,
-      technicians: await Promise.all(
-        result.technicians.map(async tech => ({
-          ...tech,
-          avatarUrl: await signR2UrlOrNull(tech.avatarUrl),
-        }))
-      ),
+      technicians: await signAvatarUrls(result.technicians),
     };
   },
   {

@@ -14,8 +14,8 @@ import {
   userResponseSelect,
   profileResponseSelect,
   toProfileResponse,
-  withSignedAvatarUrl,
 } from '../utils';
+import { signAvatarUrl } from '@/lib/r2-sign';
 
 function ensureUsersWriteAccess(
   actor: IJwtPayload,
@@ -87,7 +87,7 @@ export async function createUser(
     select: userResponseSelect,
   });
 
-  return withSignedAvatarUrl(toUserResponse(user as any));
+  return signAvatarUrl(toUserResponse(user as any));
 }
 
 /**
@@ -141,7 +141,7 @@ export async function updateUser(
     select: userResponseSelect,
   });
 
-  return withSignedAvatarUrl(toUserResponse(user as any));
+  return signAvatarUrl(toUserResponse(user as any));
 }
 
 /**
@@ -208,7 +208,7 @@ export async function updateCurrentUserProfile(
     select: profileResponseSelect,
   });
 
-  return withSignedAvatarUrl(toProfileResponse(user));
+  return signAvatarUrl(toProfileResponse(user));
 }
 
 /**

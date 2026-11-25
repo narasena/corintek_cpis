@@ -58,12 +58,15 @@ cpis/
 │   │   ├── action-helpers.ts  # TActionResponse standard
 │   │   ├── rbac.ts            # Role-Based Access Control logic
 │   │   ├── jwt.ts             # JWT handling
-│   │   └── r2-upload.ts       # Cloudflare R2 upload helpers
+│   │   ├── r2-upload.ts       # Cloudflare R2 upload helpers
+│   │   └── r2-sign.ts         # R2 signed-URL helpers (server-only)
 │   ├── @types/                # Domain-specific TypeScript types
 │   └── types/                 # Shared/Global TypeScript types
-├── worker/                    # Cloudflare Worker (R2 uploads)
+├── worker/                    # Cloudflare Worker (R2 storage)
 │   ├── src/index.ts           # Worker entry point
-│   └── wrangler.jsonc         # Worker configuration
+│   ├── src/handler.ts         # Request handler (signed GET, bearer PUT/DELETE)
+│   ├── wrangler.production.jsonc  # Production deployment (prod bucket only)
+│   └── wrangler.development.jsonc # Development deployment (dev bucket only)
 ├── scripts/                   # Maintenance & automation scripts
 └── public/                    # Static assets
 ```
@@ -115,7 +118,7 @@ cpis/
 | System        | Protocol      | Purpose               | Config                                 |
 | ------------- | ------------- | --------------------- | -------------------------------------- |
 | PostgreSQL    | Prisma ORM    | Primary database      | `prisma/schema.prisma`, `DATABASE_URL` |
-| Cloudflare R2 | S3-compatible | File storage (photos) | `worker/wrangler.jsonc`                |
+| Cloudflare R2 | S3-compatible | File storage (photos) | `worker/wrangler.*.jsonc`              |
 | NextAuth      | JWT sessions  | Authentication        | `src/features/auth/config.ts`          |
 
 ## Database Schema (Simplified)
@@ -153,4 +156,4 @@ Client ───┐                 │
 | App config     | `next.config.ts`                      | Turbopack, redirects       |
 | DB connection  | `.env` → `DATABASE_URL`, `DIRECT_URL` | Never commit `.env` files  |
 | Auth secrets   | `.env` → `NEXTAUTH_SECRET`            | Rotate quarterly           |
-| R2 credentials | `worker/wrangler.jsonc`               | Cloudflare Worker env vars |
+| R2 credentials | `worker/wrangler.*.jsonc`, `R2_SIGNING_SECRET` | Worker secrets; see `.env.r2.example` |

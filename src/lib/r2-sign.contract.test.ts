@@ -1,28 +1,35 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { signR2Url, stripR2Signature, extractR2ObjectKey } from './r2-sign';
+// The real worker verifier, not a copy: if the two implementations drift,
+// these tests fail.
+import {
+  verifyReadSignature,
+  buildSignaturePayload,
+} from '../../worker/src/handler';
 
 const WORKER_URL = 'https://assets.example.com';
 const SECRET = 'test-signing-secret';
 
-/**
- * End-to-end contract check between the Next.js signer and the worker
- * verifier: a URL produced here must satisfy the verification the worker
- * performs (see worker/src/handler.ts and worker/test/index.spec.ts).
- */
-async function verifyLikeWorker(url: string, secret: string): Promise<boolean> {
+function envWith(secret: string | undefined) {
+  return {
+    BUCKET: {} as R2Bucket,
+    SIGNING_SECRET: secret,
+  };
+}
+
+/** Run the worker's own verification against a signed URL. */
+async function verifyLikeWorker(
+  url: string,
+  secret: string | undefined
+): Promise<boolean> {
   const parsed = new URL(url);
   const key = decodeURIComponent(parsed.pathname.slice(1));
-  const exp = parsed.searchParams.get('exp');
-  const sig = parsed.searchParams.get('sig');
-  if (!exp || !sig) return false;
-  if (Number(exp) * 1000 <= Date.now()) return false;
-
-  const { createHmac } = await import('node:crypto');
-  const expected = createHmac('sha256', secret)
-    .update(`${key}\n${exp}`)
-    .digest('hex');
-
-  return expected === sig.toLowerCase();
+  return verifyReadSignature(
+    envWith(secret),
+    key,
+    parsed.searchParams.get('exp'),
+    parsed.searchParams.get('sig')
+  );
 }
 
 describe('authorized rendering contract', () => {
@@ -74,6 +81,15 @@ describe('authorized rendering contract', () => {
     const signed = await signR2Url(`${WORKER_URL}/a.jpg`);
 
     expect(await verifyLikeWorker(signed, 'a-different-secret')).toBe(false);
+  });
+
+  it('the app and worker build the same signature payload', async () => {
+    const { buildR2SignaturePayload } = await import('./r2-sign');
+
+    // Same input must produce the same bytes on both sides.
+    expect(buildR2SignaturePayload('k.jpg', '1700000600')).toBe(
+      buildSignaturePayload('k.jpg', '1700000600')
+    );
   });
 
   it('round-trips signed URLs back to their canonical stored form', async () => {
