@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { WorkReportPhotoType } from '@/generated/prisma/client';
+import { signR2Url, signR2UrlOrNull } from '@/lib/r2-sign';
 
 import * as service from './service';
 import {
@@ -275,7 +276,8 @@ export const uploadWorkReportPhotoAction = actionFactory.protected(
       type as WorkReportPhotoType
     );
 
-    return { url, id: photo.id };
+    // Signed for immediate browser rendering; the stored value is unsigned.
+    return { url: await signR2Url(url), id: photo.id };
   },
   {
     metadata: {
@@ -325,7 +327,26 @@ export const deleteWorkReportAction = actionFactory.protected(
 export const getWorkReportsByProjectAction = actionFactory.protected(
   async ({ input, actor }) => {
     await projectService.assertCanAccessProject(actor, input);
-    return service.getWorkReportsByProject(input);
+    const reports = await service.getWorkReportsByProject(input);
+
+    // Sign media URLs only after project access has been asserted.
+    return Promise.all(
+      reports.map(async report => ({
+        ...report,
+        photos: await Promise.all(
+          (report.photos ?? []).map(async photo => ({
+            ...photo,
+            url: await signR2Url(photo.url),
+          }))
+        ),
+        technicianSignatureUrl: await signR2UrlOrNull(
+          report.technicianSignatureUrl
+        ),
+        clientPicSignatureUrl: await signR2UrlOrNull(
+          report.clientPicSignatureUrl
+        ),
+      }))
+    );
   },
   {
     schema: z.string().uuid(),
@@ -344,7 +365,23 @@ export const getWorkReportByIdAction = actionFactory.protected(
     if (!report) return null;
 
     await projectService.assertCanAccessProject(actor, report.projectId);
-    return report;
+
+    // Sign media URLs only after project access has been asserted.
+    return {
+      ...report,
+      photos: await Promise.all(
+        (report.photos ?? []).map(async photo => ({
+          ...photo,
+          url: await signR2Url(photo.url),
+        }))
+      ),
+      technicianSignatureUrl: await signR2UrlOrNull(
+        report.technicianSignatureUrl
+      ),
+      clientPicSignatureUrl: await signR2UrlOrNull(
+        report.clientPicSignatureUrl
+      ),
+    };
   },
   {
     schema: z.string().uuid(),

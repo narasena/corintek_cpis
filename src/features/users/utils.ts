@@ -5,6 +5,7 @@ import {
   ICurrentUserProfile,
 } from '@/@types/user.type';
 import type { Prisma } from '@/generated/prisma/client';
+import { signR2UrlOrNull } from '@/lib/r2-sign';
 import { z } from 'zod';
 
 /**
@@ -128,6 +129,19 @@ export function toUserResponse(user: TUserInternal): TUserResponse {
  */
 export function toProfileResponse(data: unknown): ICurrentUserProfile {
   return profileResponseSchema.parse(data) as ICurrentUserProfile;
+}
+
+/**
+ * Sign a user response's avatar URL for browser rendering.
+ * Stored URLs remain unsigned; only the returned copy is signed.
+ */
+export async function withSignedAvatarUrl<
+  T extends { avatarUrl: string | null },
+>(user: T): Promise<T> {
+  return {
+    ...user,
+    avatarUrl: await signR2UrlOrNull(user.avatarUrl),
+  };
 }
 
 /**

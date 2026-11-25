@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod/v4';
 import { actionFactory } from '@/features/auth/di';
+import { stripR2Signature } from '@/lib/r2-sign';
 import { RbacResource } from '@/lib/rbac';
 import * as service from './service';
 import * as projectService from '@/features/projects/service';
@@ -85,7 +86,17 @@ export const updateSummaryReportAction = actionFactory.protected(
     if (!projectId) throw new Error('Not found');
 
     await projectService.assertCanAccessProject(actor, projectId);
-    await service.updateSummaryReport(actor, validated);
+
+    // Clients may round-trip a signed attachment URL; persist the canonical
+    // unsigned form so stored attachments do not expire.
+    await service.updateSummaryReport(actor, {
+      ...validated,
+      dataTemuanUrl: stripR2Signature(validated.dataTemuanUrl) ?? undefined,
+      dataBlowdownUrl: stripR2Signature(validated.dataBlowdownUrl) ?? undefined,
+      dataSuhuUrl: stripR2Signature(validated.dataSuhuUrl) ?? undefined,
+      dataSuratJalanUrl:
+        stripR2Signature(validated.dataSuratJalanUrl) ?? undefined,
+    });
 
     revalidatePath('/summary-reports');
     return { success: true };

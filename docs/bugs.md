@@ -589,6 +589,33 @@ console.log('[DEBUG] Checking for limit breaches...');
 **Fix:** Deleted the module. The authorized actions in `actions.ts` cover the same reads.  
 **Status:** Fixed
 
+### BUG-058 — Unauthenticated R2 bucket listing and object retrieval
+
+**Location:** `worker/src/index.ts`  
+**Symptom:** `GET /` returned a JSON listing of every object, and any `GET /<key>` served the object with no credentials. Any party who knew the Worker URL could enumerate and download all stored photos, signatures, and attachment PDFs.  
+**Fix:** Root path now returns 404 (no listing). GET requires an `exp` + HMAC-SHA256 `sig` pair covering the object key and expiry, verified with a constant-time comparison.  
+**Status:** Fixed
+
+---
+
+### BUG-059 — Request-controlled bucket selection and cross-bucket GET fallback
+
+**Location:** `worker/src/index.ts`, `worker/wrangler.jsonc`, `src/lib/r2-upload.ts`, `src/features/work-reports/storage.ts`, `src/features/work-reports/signature-storage-r2.ts`  
+**Symptom:** An `X-R2-Bucket: prod` request header selected the production bucket, so any caller could write to or read production storage. GET additionally fell back to the other bucket when the object was missing, so development deployments could serve production objects. One Worker bound both `DEV_BUCKET` and `PROD_BUCKET`.  
+**Fix:** Split into two deployments (`wrangler.production.jsonc`, `wrangler.development.jsonc`), each binding a single `BUCKET`. The header is ignored, bucket selection is no longer request-controlled, and the fallback was removed. Callers stopped sending the header.  
+**Status:** Fixed
+
+---
+
+### BUG-060 — Signed read URLs could be persisted back to the database
+
+**Location:** `src/features/log-sheets/actions.ts`, `src/features/users/services/user-mutations.ts`  
+**Symptom:** Log-sheet entries (`fileUrl`), log-sheet photos (`url`), and user avatars round-trip a URL that the client was shown. Once reads are signed with a 10-minute expiry, persisting the displayed URL would store a URL that stops working minutes later.  
+**Fix:** `stripR2Signature` is applied at each persistence boundary so only the canonical unsigned URL is stored; signing happens only on the way out to the browser.  
+**Status:** Fixed
+
+---
+
 ---
 
 | Category                                 | Count |
@@ -599,7 +626,8 @@ console.log('[DEBUG] Checking for limit breaches...');
 | P3 Low / Needs Clarity                   |     6 |
 | Phase 3 — Source-Scan (BUG-040–049)      |    10 |
 | P0 Authorization Hardening (BUG-054–057) |     4 |
-| **Total unique bugs**                    |    57 |
+| P0 R2 Storage Hardening (BUG-058–060)    |     3 |
+| **Total unique bugs**                    |    60 |
 
 > Note: BUG-044 is a source-level confirmation of BUG-016 (same issue, different layer) and is not counted twice.
 

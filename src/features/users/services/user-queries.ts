@@ -10,6 +10,7 @@ import {
   profileResponseSelect,
   toProfileResponse,
   toTechnicianResponse,
+  withSignedAvatarUrl,
 } from '../utils';
 
 function ensureUsersReadAccess(actor: IJwtPayload) {
@@ -81,7 +82,9 @@ export async function getAllUsers(actor: IJwtPayload) {
     },
   });
 
-  return users.map((u: any) => toUserResponse(u));
+  return Promise.all(
+    users.map(async (u: any) => withSignedAvatarUrl(toUserResponse(u)))
+  );
 }
 
 /**
@@ -92,7 +95,7 @@ export async function getUserById(actor: IJwtPayload, id: string) {
 
   const user = await findActiveUserOrThrow(id, userResponseSelect);
 
-  return toUserResponse(user as any);
+  return withSignedAvatarUrl(toUserResponse(user as any));
 }
 
 /**
@@ -103,5 +106,5 @@ export async function getCurrentUserProfile(
 ): Promise<ICurrentUserProfile> {
   const user = await findActiveUserOrThrow(userId, profileResponseSelect);
 
-  return toProfileResponse(user);
+  return withSignedAvatarUrl(toProfileResponse(user));
 }

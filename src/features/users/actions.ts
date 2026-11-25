@@ -22,6 +22,7 @@ import { uploadUserAvatar } from './services/user-media';
 import { revalidatePath } from 'next/cache';
 import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
+import { signR2Url } from '@/lib/r2-sign';
 import { z } from 'zod/v4';
 
 const USER_PATHS = ['/users', '/test/users'] as const;
@@ -160,7 +161,8 @@ export const uploadAvatarAction = actionFactory.protected(
     const file = formData.get('file') as File | null;
     const url = await uploadUserAvatar(actor.id, file);
 
-    return { url };
+    // Signed for immediate browser rendering; the stored value is unsigned.
+    return { url: await signR2Url(url) };
   }
 ) as (
   formData: FormData
