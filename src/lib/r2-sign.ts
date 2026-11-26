@@ -31,27 +31,38 @@ async function hmacSha256Hex(secret: string, message: string): Promise<string> {
 
 /**
  * Extract the R2 object key from a stored URL, or null when the URL does not
- * point at the configured Worker (external links, data URLs, legacy hosts).
+ * point at a configured Worker host (external links, data URLs).
+ *
+ * Both the current Worker and the explicitly configured legacy Worker are
+ * accepted, so stored URLs from before a host migration stay readable. Only
+ * these exact configured origins match: an arbitrary `workers.dev` host does
+ * not.
  */
 export function extractR2ObjectKey(
   url: string,
   workerBaseUrl: string | undefined = process.env.R2_WORKER_URL
 ): string | null {
-  if (!workerBaseUrl) return null;
+  const bases = [workerBaseUrl, process.env.R2_LEGACY_WORKER_URL]
+    .filter((base): base is string => Boolean(base))
+    .map(base => base.replace(/\/+$/, ''));
 
-  const base = workerBaseUrl.replace(/\/+$/, '');
-  if (!url.startsWith(`${base}/`)) return null;
+  const base = bases.find(candidate => url.startsWith(`${candidate}/`));
+  if (!base) return null;
 
   // Parse instead of string-slicing so fragments, query strings, and
   // dot-segments are normalized exactly as the Worker's URL parser will.
   let parsed: URL;
+  let baseOrigin: string;
   try {
     parsed = new URL(url);
+    // A misconfigured base (e.g. a truncated `https://`) would prefix-match
+    // every https URL; reject it here instead of throwing on every call.
+    baseOrigin = new URL(base).origin;
   } catch {
     // Malformed URL (e.g. a raw `%` from an unsanitized filename).
     return null;
   }
-  if (parsed.origin !== new URL(base).origin) return null;
+  if (parsed.origin !== baseOrigin) return null;
 
   // `new URL` already resolved dot-segments, so pathname is canonical.
   const key = parsed.pathname.replace(/^\/+/, '');
@@ -80,6 +91,20 @@ export async function signR2Url(
   const key = extractR2ObjectKey(url);
   if (key === null) return url;
 
+  // Without a current Worker there is nowhere to serve the object from: a
+  // legacy-host URL can only match, so return it unchanged rather than sign it
+  // for a host that will not verify the signature.
+  const currentBase = process.env.R2_WORKER_URL;
+  if (!currentBase) {
+    logger.error(
+      'R2Sign',
+      'signR2Url',
+      'R2_WORKER_URL is not configured; returning unsigned URL',
+      { key }
+    );
+    return url;
+  }
+
   const secret = process.env.R2_SIGNING_SECRET;
   if (!secret) {
     logger.error(
@@ -100,6 +125,14 @@ export async function signR2Url(
   // Rebuild via the URL API so a fragment or pre-existing query in the stored
   // URL never swallows exp/sig.
   const signed = new URL(url);
+
+  // A legacy-host URL must be served from the current Worker; sign it there.
+  const target = new URL(currentBase);
+  if (signed.origin !== target.origin) {
+    signed.protocol = target.protocol;
+    signed.host = target.host;
+  }
+
   signed.hash = '';
   signed.search = '';
   signed.searchParams.set('exp', exp);

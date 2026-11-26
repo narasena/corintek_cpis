@@ -9,7 +9,87 @@ import {
 } from './r2-sign';
 
 const WORKER_URL = 'https://assets.example.com';
+const LEGACY_WORKER_URL = 'https://legacy-assets.example.com';
 const SECRET = 'test-signing-secret';
+
+function stubCurrentAndLegacy() {
+  vi.stubEnv('R2_WORKER_URL', WORKER_URL);
+  vi.stubEnv('R2_LEGACY_WORKER_URL', LEGACY_WORKER_URL);
+  vi.stubEnv('R2_SIGNING_SECRET', SECRET);
+}
+
+describe('legacy worker URLs', () => {
+  beforeEach(stubCurrentAndLegacy);
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('extracts the object key from a legacy worker URL', () => {
+    expect(extractR2ObjectKey(`${LEGACY_WORKER_URL}/projects/p1/a.jpg`)).toBe(
+      'projects/p1/a.jpg'
+    );
+  });
+
+  it('does not extract from an unconfigured legacy host', () => {
+    vi.stubEnv('R2_LEGACY_WORKER_URL', '');
+    expect(extractR2ObjectKey(`${LEGACY_WORKER_URL}/a.jpg`)).toBeNull();
+  });
+
+  it('signs a legacy URL as a URL on the current worker', async () => {
+    const signed = await signR2Url(`${LEGACY_WORKER_URL}/projects/p1/a.jpg`, {
+      now: 1_700_000_000_000,
+    });
+    const url = new URL(signed);
+
+    expect(url.origin).toBe(WORKER_URL);
+    expect(url.pathname).toBe('/projects/p1/a.jpg');
+    expect(url.searchParams.get('exp')).toBe(
+      String(1_700_000_000 + R2_URL_TTL_SECONDS)
+    );
+  });
+
+  it('signs the legacy URL against its object key and expiry', async () => {
+    const { createHmac } = await import('node:crypto');
+    const key = 'projects/p1/a.jpg';
+    const exp = String(1_700_000_000 + R2_URL_TTL_SECONDS);
+    const expected = createHmac('sha256', SECRET)
+      .update(buildR2SignaturePayload(key, exp))
+      .digest('hex');
+
+    const signed = await signR2Url(`${LEGACY_WORKER_URL}/${key}`, {
+      now: 1_700_000_000_000,
+    });
+
+    expect(new URL(signed).searchParams.get('sig')).toBe(expected);
+  });
+
+  it('leaves an unrelated workers.dev host untouched', async () => {
+    const external =
+      'https://someone-elses-worker.some-account.workers.dev/a.jpg';
+    expect(await signR2Url(external)).toBe(external);
+    expect(stripR2Signature(external)).toBe(external);
+  });
+
+  it('strips the signature from a legacy URL', () => {
+    expect(stripR2Signature(`${LEGACY_WORKER_URL}/a.jpg?exp=1&sig=abc`)).toBe(
+      `${LEGACY_WORKER_URL}/a.jpg`
+    );
+  });
+
+  it('round-trips a legacy URL through signing back to its canonical form', async () => {
+    const canonical = `${WORKER_URL}/a.jpg`;
+    const signed = await signR2Url(`${LEGACY_WORKER_URL}/a.jpg`);
+
+    expect(stripR2Signature(signed)).toBe(canonical);
+  });
+
+  it('leaves a legacy URL unsigned when no current worker is configured', async () => {
+    vi.stubEnv('R2_WORKER_URL', '');
+    const stored = `${LEGACY_WORKER_URL}/a.jpg`;
+
+    expect(await signR2Url(stored)).toBe(stored);
+  });
+});
 
 describe('extractR2ObjectKey', () => {
   beforeEach(() => {
@@ -42,6 +122,11 @@ describe('extractR2ObjectKey', () => {
   it('tolerates a trailing slash on the configured worker URL', () => {
     vi.stubEnv('R2_WORKER_URL', `${WORKER_URL}/`);
     expect(extractR2ObjectKey(`${WORKER_URL}/a.jpg`)).toBe('a.jpg');
+  });
+
+  it('rejects a malformed configured base instead of throwing', () => {
+    vi.stubEnv('R2_LEGACY_WORKER_URL', 'https:');
+    expect(extractR2ObjectKey('https://anything.example.com/a.jpg')).toBeNull();
   });
 
   it('drops an existing query string so re-signing does not compound', () => {

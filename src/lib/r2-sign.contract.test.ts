@@ -49,6 +49,18 @@ describe('authorized rendering contract', () => {
     expect(await verifyLikeWorker(signed, SECRET)).toBe(true);
   });
 
+  it('a legacy-host URL is signed for the current worker and verifies there', async () => {
+    vi.stubEnv('R2_LEGACY_WORKER_URL', 'https://legacy-assets.example.com');
+    const stored = `https://legacy-assets.example.com/projects/p1/work-reports/w1/photos/before.jpg`;
+
+    const signed = await signR2Url(stored);
+
+    // Rewriting the host must not disturb the signed key: verify with the
+    // real worker verifier, which decodes the pathname itself.
+    expect(new URL(signed).origin).toBe(WORKER_URL);
+    expect(await verifyLikeWorker(signed, SECRET)).toBe(true);
+  });
+
   it('the signed URL points at the same object as the stored URL', async () => {
     const stored = `${WORKER_URL}/projects/p1/work-reports/w1/photos/before.jpg`;
 

@@ -616,6 +616,14 @@ console.log('[DEBUG] Checking for limit breaches...');
 
 ---
 
+### BUG-061 — Leading-slash drift between app object key and Worker key
+
+**Location:** `src/lib/r2-sign.ts` (`extractR2ObjectKey`), `worker/src/handler.ts` (`handleRequest`)  
+**Symptom:** The app strips **all** leading slashes (`pathname.replace(/^\/+/, '')`); the Worker strips exactly one (`pathname.slice(1)`). A stored URL with a doubled slash — `https://host//projects/a.jpg`, produced by uploads when `R2_WORKER_URL` carries a trailing slash — yields app key `projects/a.jpg` and Worker key `/projects/a.jpg`. The signature is computed over the app key, so the Worker rejects the read with 401.  
+**Status:** Open (P2). Not reachable with the current configs (no trailing slash on `R2_WORKER_URL`); fix by mirroring `slice(1)` on the app side or normalizing the base at config load.
+
+---
+
 ---
 
 | Category                                 | Count |
