@@ -105,69 +105,78 @@ function hasEntryValue(entry: {
 export async function createLabAnalysis(input: CreateLabAnalysisInput) {
   const header = buildLabAnalysisHeader(input);
 
-  return await prisma.$transaction(async tx => {
-    const labAnalysis = await tx.labAnalysis.create({
-      data: {
-        projectId: input.projectId,
-        ...header,
-      },
-    });
+  return await prisma.$transaction(
+    async tx => {
+      const labAnalysis = await tx.labAnalysis.create({
+        data: {
+          projectId: input.projectId,
+          ...header,
+        },
+      });
 
-    const createdColumns = await createLabAnalysisColumns(
-      tx,
-      input,
-      labAnalysis.id
-    );
-    const columnIdByTempId = mapLabAnalysisColumnTempIds(input, createdColumns);
+      const createdColumns = await createLabAnalysisColumns(
+        tx,
+        input,
+        labAnalysis.id
+      );
+      const columnIdByTempId = mapLabAnalysisColumnTempIds(
+        input,
+        createdColumns
+      );
 
-    await createLabAnalysisEntries(
-      tx,
-      labAnalysis.id,
-      input.entries,
-      columnIdByTempId
-    );
+      await createLabAnalysisEntries(
+        tx,
+        labAnalysis.id,
+        input.entries,
+        columnIdByTempId
+      );
 
-    await ensureDefaultRawWaterColumn(tx, labAnalysis.id, createdColumns);
+      await ensureDefaultRawWaterColumn(tx, labAnalysis.id, createdColumns);
 
-    return labAnalysis;
-  });
+      return labAnalysis;
+    },
+    { timeout: 20000 }
+  );
 }
 
 export async function updateLabAnalysis(input: UpdateLabAnalysisInput) {
   const header = buildLabAnalysisHeader(input);
 
-  return await prisma.$transaction(async tx => {
-    const labAnalysis = await tx.labAnalysis.update({
-      where: { id: input.id },
-      data: header,
-    });
+  return await prisma.$transaction(
+    async tx => {
+      const labAnalysis = await tx.labAnalysis.update({
+        where: { id: input.id },
+        data: header,
+      });
 
-    const existingColumns = await tx.labAnalysisColumn.findMany({
-      where: { labAnalysisId: input.id, deletedAt: null },
-      select: { id: true },
-    });
+      const existingColumns = await tx.labAnalysisColumn.findMany({
+        where: { labAnalysisId: input.id, deletedAt: null },
+        select: { id: true },
+      });
 
-    const removedColumnIds = findRemovedLabAnalysisColumnIds(
-      existingColumns,
-      input.columns
-    );
+      const removedColumnIds = findRemovedLabAnalysisColumnIds(
+        existingColumns,
+        input.columns
+      );
 
-    if (removedColumnIds.length > 0) {
-      await softDeleteLabAnalysisColumns(tx, input.id, removedColumnIds);
-    }
+      if (removedColumnIds.length > 0) {
+        await softDeleteLabAnalysisColumns(tx, input.id, removedColumnIds);
+      }
 
-    await updateExistingLabAnalysisColumns(tx, input);
+      await updateExistingLabAnalysisColumns(tx, input);
 
-    const createdColumns = await createNewLabAnalysisColumns(tx, input);
-    const columnIdByTempId = mapUpdatedLabAnalysisColumnTempIds(
-      input,
-      createdColumns
-    );
+      const createdColumns = await createNewLabAnalysisColumns(tx, input);
+      const columnIdByTempId = mapUpdatedLabAnalysisColumnTempIds(
+        input,
+        createdColumns
+      );
 
-    await upsertLabAnalysisEntries(tx, input, columnIdByTempId);
+      await upsertLabAnalysisEntries(tx, input, columnIdByTempId);
 
-    return labAnalysis;
-  });
+      return labAnalysis;
+    },
+    { timeout: 20000 }
+  );
 }
 
 function buildLabAnalysisHeader(
@@ -451,7 +460,10 @@ export async function getEffectiveParameterLimits(projectId: string) {
   const numericParameters = await prisma.parameter.findMany({
     where: {
       category: {
-        in: [ParameterCategory.COOLING_WATER_QUALITY, ParameterCategory.LAB_ANALYSIS],
+        in: [
+          ParameterCategory.COOLING_WATER_QUALITY,
+          ParameterCategory.LAB_ANALYSIS,
+        ],
       },
       valueType: 'NUMBER',
       deletedAt: null,
@@ -461,7 +473,7 @@ export async function getEffectiveParameterLimits(projectId: string) {
   });
 
   // Deduplicate by name: prefer LAB_ANALYSIS over COOLING_WATER_QUALITY
-  const dedupedMap = new Map<string, typeof numericParameters[0]>();
+  const dedupedMap = new Map<string, (typeof numericParameters)[0]>();
   for (const param of numericParameters) {
     const existing = dedupedMap.get(param.name);
     if (!existing) {
@@ -474,7 +486,8 @@ export async function getEffectiveParameterLimits(projectId: string) {
     }
   }
   const uniqueParameters = Array.from(dedupedMap.values()).sort((a, b) => {
-    if (a.displayOrder !== b.displayOrder) return a.displayOrder - b.displayOrder;
+    if (a.displayOrder !== b.displayOrder)
+      return a.displayOrder - b.displayOrder;
     return a.name.localeCompare(b.name);
   });
 
@@ -511,12 +524,15 @@ export async function getEffectiveParameterLimits(projectId: string) {
   );
 
   // Convert to plain object indexed by parameterId
-  const result: Record<string, {
-    minValue: number | null;
-    maxValue: number | null;
-    rawWaterMinValue: number | null;
-    rawWaterMaxValue: number | null;
-  }> = {};
+  const result: Record<
+    string,
+    {
+      minValue: number | null;
+      maxValue: number | null;
+      rawWaterMinValue: number | null;
+      rawWaterMaxValue: number | null;
+    }
+  > = {};
 
   for (const param of parametersWithOverrides) {
     result[param.id] = {

@@ -10,6 +10,7 @@ import type { IGetRecentActivitiesActionResult } from './types';
 import { getVisibleActivityTypes } from './config';
 import { composeDashboardModule } from './di';
 import { prisma } from '@/lib/prisma';
+import { signR2Url, signR2UrlOrNull } from '@/lib/r2-sign';
 
 const GetDashboardMetricsSchema = z.object({
   projectId: z.string().uuid().optional(),
@@ -79,9 +80,17 @@ export const getRecentPhotosAction = actionFactory.protected(
     );
     if (targetProjectIds === 'empty') return [];
 
-    return await dashboardService.getRecentLogSheetPhotos(
+    const photos = await dashboardService.getRecentLogSheetPhotos(
       targetProjectIds,
       input.limit
+    );
+
+    // Sign media URLs only after project scope has been resolved.
+    return Promise.all(
+      photos.map(async photo => ({
+        ...photo,
+        url: await signR2Url(photo.url),
+      }))
     );
   },
   {
@@ -114,7 +123,12 @@ export const getRecentActivitiesAction = actionFactory.protected(
     });
 
     return {
-      activities: result.activities,
+      activities: await Promise.all(
+        result.activities.map(async activity => ({
+          ...activity,
+          userAvatarUrl: await signR2UrlOrNull(activity.userAvatarUrl),
+        }))
+      ),
       hasMore: result.hasMore,
       nextCursor: result.nextCursor,
     };

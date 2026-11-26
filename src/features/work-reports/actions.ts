@@ -3,10 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { WorkReportPhotoType } from '@/generated/prisma/client';
+import { signR2Url, signR2UrlOrNull } from '@/lib/r2-sign';
 
 import * as service from './service';
 import {
-  WorkReportSchema,
   WorkReportSignatureSchema,
   CreateWorkReportInput,
   UpdateWorkReportInput,
@@ -14,6 +14,7 @@ import {
 import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
 import { z } from 'zod/v4';
+import { assertEditableWorkReportStatus } from './status-policy';
 
 // =============================================================================
 // Work Report Actions - Server Action Layer
@@ -32,7 +33,16 @@ export const updateWorkReportAction = actionFactory.protected(
     } else {
       data = input as UpdateWorkReportInput;
     }
-    const report = await service.updateWorkReport(data);
+
+    // Resolve the target project from server state, never from client input.
+    const existing = await service.getWorkReportById(data.id);
+    if (!existing) throw new Error('Work report tidak ditemukan');
+    await projectService.assertCanAccessProject(actor, existing.projectId);
+
+    const report = await service.updateWorkReport({
+      ...data,
+      projectId: existing.projectId,
+    });
     if (report) revalidatePath(`/projects/${report.projectId}`);
     return report;
   },
@@ -99,12 +109,10 @@ export const deleteWorkReportPhotoAction = actionFactory.protected(
         ? {
             photoId: input.get('photoId') as string,
             workReportId: input.get('workReportId') as string,
-            projectId: input.get('projectId') as string,
           }
         : (input as {
             photoId: string;
             workReportId: string;
-            projectId: string;
           });
 
     const photo = await prisma.workReportPhoto.findUnique({
@@ -112,9 +120,13 @@ export const deleteWorkReportPhotoAction = actionFactory.protected(
       select: { workReportId: true },
     });
 
-    if (!photo) {
-      return { success: false, error: 'Photo not found' };
-    }
+    // Authorize against the photo's own report before revealing whether the
+    // photo exists, so lookups cannot be used as a cross-tenant oracle.
+    if (!photo) return { success: false, error: 'Photo not found' };
+
+    const workReport = await service.getWorkReportById(photo.workReportId);
+    if (!workReport) throw new Error('Work report tidak ditemukan');
+    await projectService.assertCanAccessProject(actor, workReport.projectId);
 
     if (photo.workReportId !== data.workReportId) {
       return {
@@ -124,8 +136,10 @@ export const deleteWorkReportPhotoAction = actionFactory.protected(
     }
 
     await service.deleteWorkReportPhoto(data.photoId);
-    revalidatePath(`/work-reports/${data.projectId}/${data.workReportId}`);
-    revalidatePath(`/work-reports/${data.projectId}`);
+    revalidatePath(
+      `/work-reports/${workReport.projectId}/${data.workReportId}`
+    );
+    revalidatePath(`/work-reports/${workReport.projectId}`);
     return { success: true };
   },
   {
@@ -158,6 +172,8 @@ export const createWorkReportAction = actionFactory.protected(
         status: inp.status,
       };
     }
+
+    await projectService.assertCanAccessProject(actor, reportData.projectId);
 
     const report = await service.createWorkReport(reportData);
     if (report) revalidatePath(`/projects/${report.projectId}`);
@@ -194,6 +210,11 @@ function parseWorkReportFormData(formData: FormData) {
   if (typeof workResult !== 'string') throw new Error('Invalid workResult');
 
   const statusRaw = formData.get('status');
+  // Only editable statuses are accepted from client-controlled FormData;
+  // APPROVED is reserved for the dedicated approval workflow.
+  assertEditableWorkReportStatus(
+    typeof statusRaw === 'string' ? statusRaw : undefined
+  );
   const status = (typeof statusRaw === 'string' ? statusRaw : 'DRAFT') as
     | 'DRAFT'
     | 'SUBMITTED';
@@ -255,7 +276,8 @@ export const uploadWorkReportPhotoAction = actionFactory.protected(
       type as WorkReportPhotoType
     );
 
-    return { url, id: photo.id };
+    // Signed for immediate browser rendering; the stored value is unsigned.
+    return { url: await signR2Url(url), id: photo.id };
   },
   {
     metadata: {
@@ -285,6 +307,8 @@ export const deleteWorkReportAction = actionFactory.protected(
     const report = await service.getWorkReportById(input);
     if (!report) throw new Error('Work report tidak ditemukan');
 
+    await projectService.assertCanAccessProject(actor, report.projectId);
+
     await service.deleteWorkReport(input);
     revalidatePath(`/projects/${report.projectId}`);
     return { success: true };
@@ -302,7 +326,27 @@ export const deleteWorkReportAction = actionFactory.protected(
  */
 export const getWorkReportsByProjectAction = actionFactory.protected(
   async ({ input, actor }) => {
-    return service.getWorkReportsByProject(input);
+    await projectService.assertCanAccessProject(actor, input);
+    const reports = await service.getWorkReportsByProject(input);
+
+    // Sign media URLs only after project access has been asserted.
+    return Promise.all(
+      reports.map(async report => ({
+        ...report,
+        photos: await Promise.all(
+          (report.photos ?? []).map(async photo => ({
+            ...photo,
+            url: await signR2Url(photo.url),
+          }))
+        ),
+        technicianSignatureUrl: await signR2UrlOrNull(
+          report.technicianSignatureUrl
+        ),
+        clientPicSignatureUrl: await signR2UrlOrNull(
+          report.clientPicSignatureUrl
+        ),
+      }))
+    );
   },
   {
     schema: z.string().uuid(),
@@ -317,7 +361,27 @@ export const getWorkReportsByProjectAction = actionFactory.protected(
  */
 export const getWorkReportByIdAction = actionFactory.protected(
   async ({ input, actor }) => {
-    return service.getWorkReportById(input);
+    const report = await service.getWorkReportById(input);
+    if (!report) return null;
+
+    await projectService.assertCanAccessProject(actor, report.projectId);
+
+    // Sign media URLs only after project access has been asserted.
+    return {
+      ...report,
+      photos: await Promise.all(
+        (report.photos ?? []).map(async photo => ({
+          ...photo,
+          url: await signR2Url(photo.url),
+        }))
+      ),
+      technicianSignatureUrl: await signR2UrlOrNull(
+        report.technicianSignatureUrl
+      ),
+      clientPicSignatureUrl: await signR2UrlOrNull(
+        report.clientPicSignatureUrl
+      ),
+    };
   },
   {
     schema: z.string().uuid(),

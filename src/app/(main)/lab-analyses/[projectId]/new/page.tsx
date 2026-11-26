@@ -4,6 +4,9 @@ import {
   getCoolingWaterQualityParameters,
   getEffectiveParameterLimits,
 } from '@/features/lab-analyses/service';
+import { getProjectById } from '@/features/projects/service';
+import { getCurrentUser } from '@/lib/auth-helpers';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 import { LabAnalysisForm } from '@/features/lab-analyses/components/lab-analysis-form';
 
 interface PageProps {
@@ -11,7 +14,13 @@ interface PageProps {
 }
 
 export default async function NewLabAnalysisPage({ params }: PageProps) {
+  const actor = await getCurrentUser();
+  if (!actor) return notFound();
+  ensureAccess(actor.role, RbacResource.LAB_ANALYSES, 'create');
+
   const { projectId } = await params;
+  const accessibleProject = await getProjectById(actor, projectId);
+  if (!accessibleProject) return notFound();
 
   const project = await prisma.project.findUnique({
     where: { id: projectId, deletedAt: null },

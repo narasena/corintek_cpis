@@ -1,6 +1,9 @@
 import type { IJwtPayload } from '@/@types/auth.type';
 import * as projectService from '@/features/projects/service';
-import { assertValidStatusTransition } from '@/features/work-reports/status-policy';
+import {
+  assertEditableWorkReportStatus,
+  assertValidStatusTransition,
+} from '@/features/work-reports/status-policy';
 import { WorkReportPhotoType } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import * as workReportRepo from './repositories';
@@ -10,7 +13,9 @@ import { CreateWorkReportInput, UpdateWorkReportInput } from './types';
 
 /** Strip time to midnight UTC so date-only comparisons work */
 function normalizeDate(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+  );
 }
 
 export async function getWorkReportsByProject(projectId: string) {
@@ -70,35 +75,53 @@ export async function createWorkReport(data: CreateWorkReportInput) {
 export async function updateWorkReport(data: UpdateWorkReportInput) {
   const { id, machineIds, ...rest } = data;
 
-  // If transitioning to SUBMITTED, ensure required signatures exist
-  if (data.status === 'SUBMITTED') {
-    const existing = await prisma.workReport.findUnique({
-      where: { id },
-      select: {
-        status: true,
-        technicianSignatureUrl: true,
-        clientPicSignatureUrl: true,
-      },
-    });
+  // Generic edits may only persist statuses from the explicit whitelist.
+  // APPROVED must go through updateWorkReportStatus (PIC-only workflow).
+  assertEditableWorkReportStatus(data.status);
 
-    if (!existing) {
-      throw new Error('Work report tidak ditemukan');
-    }
+  const existing = await prisma.workReport.findFirst({
+    where: { id, deletedAt: null },
+    select: {
+      status: true,
+      technicianSignatureUrl: true,
+      clientPicSignatureUrl: true,
+    },
+  });
 
-    // Only enforce if not already SUBMITTED (idempotent)
-    if (existing.status !== 'SUBMITTED') {
-      if (!existing.technicianSignatureUrl || !existing.clientPicSignatureUrl) {
-        throw new Error(
-          'Tanda tangan teknisi dan PIC klien wajib sebelum submit'
-        );
-      }
+  if (!existing) {
+    throw new Error('Work report tidak ditemukan');
+  }
+
+  // A report may only change status while it is still DRAFT. Once submitted,
+  // transitions (approve/reject) belong to updateWorkReportStatus; otherwise a
+  // plain edit could silently revert an APPROVED report to DRAFT. Content
+  // edits on a non-DRAFT report are allowed, but its status is preserved.
+  const statusChange =
+    data.status !== undefined && existing.status === 'DRAFT'
+      ? data.status
+      : undefined;
+
+  if (statusChange === 'SUBMITTED') {
+    if (!existing.technicianSignatureUrl || !existing.clientPicSignatureUrl) {
+      throw new Error(
+        'Tanda tangan teknisi dan PIC klien wajib sebelum submit'
+      );
     }
   }
 
+  // Only editable fields reach Prisma. Spread arbitrary client input here and
+  // callers can forge signatures or set deletedAt/approvedAt directly.
   return await prisma.workReport.update({
     where: { id },
     data: {
-      ...rest,
+      date: rest.date,
+      situation: rest.situation,
+      workDone: rest.workDone,
+      workResult: rest.workResult,
+      timeStart: rest.timeStart,
+      timeEnd: rest.timeEnd,
+      zone: rest.zone,
+      ...(statusChange !== undefined ? { status: statusChange } : {}),
       machines: {
         set: [], // Clear existing relations
         connect: machineIds?.map(id => ({ id })) || [],

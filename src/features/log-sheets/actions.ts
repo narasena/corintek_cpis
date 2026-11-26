@@ -26,6 +26,11 @@ import { chemicalUsageSchema } from '@/@types/chemical.type';
 import type { IJwtPayload } from '@/@types/auth.type';
 import { isLogSheetEntryEmpty } from './utils';
 import { uploadToR2 } from '@/lib/r2-upload';
+import {
+  signR2Url,
+  signR2UrlOrNull,
+  stripR2Signature,
+} from '@/lib/r2-sign';
 
 const MachineIdSchema = z
   .string()
@@ -308,8 +313,30 @@ export const getLogSheetDetailAction = actionFactory.protected(
       actor.role === 'CLIENT_TECHNICIAN' ||
       actor.role === 'CLIENT_SUPERVISOR';
 
+    // Sign media URLs only after access has been asserted.
     return {
       ...detail,
+      logSheet: {
+        ...detail.logSheet,
+        technicianSignatureUrl: await signR2UrlOrNull(
+          detail.logSheet.technicianSignatureUrl
+        ),
+        clientPicSignatureUrl: await signR2UrlOrNull(
+          detail.logSheet.clientPicSignatureUrl
+        ),
+      },
+      entries: await Promise.all(
+        (detail.entries ?? []).map(async entry => ({
+          ...entry,
+          fileUrl: await signR2UrlOrNull(entry.fileUrl),
+        }))
+      ),
+      photos: await Promise.all(
+        (detail.photos ?? []).map(async photo => ({
+          ...photo,
+          url: await signR2Url(photo.url),
+        }))
+      ),
       viewerRole: actor.role,
       canSignTechnician,
       canSignClientPic,
@@ -344,6 +371,8 @@ export const saveLogSheetEntriesAction = actionFactory.protected(
       input.entries.map(entry => ({
         ...entry,
         logSheetId: input.logSheetId,
+        // Entries round-trip signed photo URLs; store the unsigned form.
+        fileUrl: stripR2Signature(entry.fileUrl) ?? entry.fileUrl,
       })),
       { allowAdminOverride }
     );
@@ -390,7 +419,12 @@ export const saveLogSheetPhotosAction = actionFactory.protected(
     await logSheetService.upsertLogSheetPhotos(
       actor,
       input.logSheetId,
-      input.photos,
+      // Clients round-trip the signed URLs they were shown; persist the
+      // canonical unsigned form so stored media does not expire.
+      input.photos.map(photo => ({
+        ...photo,
+        url: stripR2Signature(photo.url) ?? photo.url,
+      })),
       { allowAdminOverride }
     );
 
@@ -502,7 +536,9 @@ export const saveLogSheetSignatureAction = actionFactory.protected(
 
     // revalidateLogSheetPaths(projectId, logSheetId);
 
-    return { url, data: updated };
+    // The client renders this URL immediately; sign it for that read. The
+    // stored value stays unsigned.
+    return { url: await signR2Url(url), data: updated };
   },
   {
     schema: SaveLogSheetSignatureSchema,
@@ -538,7 +574,8 @@ export const uploadLogSheetImageAction = actionFactory.protected(
 
     const url = await uploadToR2({ key, body: buffer, contentType: file.type });
 
-    return { url };
+    // Signed for immediate browser rendering; the stored value is unsigned.
+    return { url: await signR2Url(url) };
   },
   {
     metadata: {

@@ -8,6 +8,7 @@ import { PrintButton } from '@/components/print-button';
 import { getProjectById } from '@/features/projects/service';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
+import { signR2Url } from '@/lib/r2-sign';
 import {
   ensureSummaryReport,
   getMonthlyChemicalUsageSummary,
@@ -21,6 +22,10 @@ import {
   WaterQualityTable,
   CondenserApproachTable,
 } from '@/features/summary-reports/components';
+import {
+  getCoolingWaterQualityParameters,
+  getEffectiveParameterLimits,
+} from '@/features/lab-analyses/service';
 import { LogSheetPreview } from '@/features/log-sheets/components/log-sheet-preview';
 import { makeEntryKey } from '@/features/log-sheets/utils';
 import type {
@@ -72,12 +77,56 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
 
   if (!project || !summaryReport) return notFound();
 
-  const chemicalSummary = await getMonthlyChemicalUsageSummary(
-    projectId,
-    periodDate
-  );
+  // Access is asserted above; sign the media the previews render.
+  const [signedLogSheets, signedWorkReports] = await Promise.all([
+    Promise.all(
+      logSheets.map(async ls => ({
+        ...ls,
+        entries: await Promise.all(
+          ls.entries.map(async entry => ({
+            ...entry,
+            fileUrl: entry.fileUrl ? await signR2Url(entry.fileUrl) : null,
+          }))
+        ),
+        photos: await Promise.all(
+          ls.photos.map(async photo => ({
+            ...photo,
+            url: await signR2Url(photo.url),
+          }))
+        ),
+      }))
+    ),
+    Promise.all(
+      workReports.map(async wr => ({
+        ...wr,
+        photos: await Promise.all(
+          wr.photos.map(async photo => ({
+            ...photo,
+            url: await signR2Url(photo.url),
+          }))
+        ),
+      }))
+    ),
+  ]);
 
-  const analytics = await getAnalyticsData(projectId, periodDate);
+  const [chemicalSummary, parameters, analytics] = await Promise.all([
+    getMonthlyChemicalUsageSummary(projectId, periodDate),
+    getCoolingWaterQualityParameters(),
+    getAnalyticsData(projectId, periodDate),
+  ]);
+
+  // Limits are project-specific; lab analyses may span multiple projects in scope
+  const limitMaps = new Map(
+    await Promise.all(
+      labAnalyses.map(
+        async la =>
+          [
+            la.projectId,
+            await getEffectiveParameterLimits(la.projectId),
+          ] as const
+      )
+    )
+  );
 
   const periodLabel = format(periodDate, 'MMMM yyyy', { locale: idLocale });
   const tocItems = [
@@ -281,14 +330,14 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
                 <h2 className="text-3xl font-bold uppercase mb-4">
                   Bab II — Log Sheet Reports
                 </h2>
-                {logSheets.length === 0 && (
+                {signedLogSheets.length === 0 && (
                   <div className="text-sm text-gray-500">
                     Tidak ada log sheet pada periode ini.
                   </div>
                 )}
               </div>
 
-              {logSheets.map(ls => {
+              {signedLogSheets.map(ls => {
                 const valuesByKey: Record<string, TEntryState> = {};
                 ls.entries.forEach(entry => {
                   const key = makeEntryKey(
@@ -361,7 +410,8 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
                 >
                   <LabAnalysisPrint
                     labAnalysis={la}
-                    parameters={logSheetConfig.labParameters as any}
+                    parameters={parameters}
+                    effectiveLimits={limitMaps.get(la.projectId) ?? {}}
                   />
                 </div>
               ))}
@@ -374,14 +424,14 @@ export default async function SummaryReportPrintPage({ params }: PageProps) {
                 <h2 className="text-3xl font-bold uppercase mb-4">
                   Bab IV — Work Reports
                 </h2>
-                {workReports.length === 0 && (
+                {signedWorkReports.length === 0 && (
                   <div className="text-sm text-gray-500">
                     Tidak ada work report pada periode ini.
                   </div>
                 )}
               </div>
 
-              {workReports.map(wr => (
+              {signedWorkReports.map(wr => (
                 <div
                   key={wr.id}
                   className="break-before-page min-h-[297mm] print:p-0"

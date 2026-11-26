@@ -1,0 +1,22 @@
+/**
+ * Production Worker: production assets bucket only.
+ *
+ * Deploy with: npx wrangler deploy --config wrangler.production.jsonc
+ * Never add a second bucket binding here.
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "corintek-cpis-assets",
+	"main": "src/index.ts",
+	"compatibility_date": "2024-12-30",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true
+	},
+	"r2_buckets": [
+		{
+			"binding": "BUCKET",
+			"bucket_name": "corintek-cpis-prod-assets"
+		}
+	]
+}

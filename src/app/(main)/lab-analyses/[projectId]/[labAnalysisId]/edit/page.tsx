@@ -5,6 +5,9 @@ import {
   getLabAnalysisDetail,
   getEffectiveParameterLimits,
 } from '@/features/lab-analyses/service';
+import { getProjectById } from '@/features/projects/service';
+import { getCurrentUser } from '@/lib/auth-helpers';
+import { ensureAccess, RbacResource } from '@/lib/rbac';
 import { LabAnalysisForm } from '@/features/lab-analyses/components/lab-analysis-form';
 import { Button } from '@/components/ui/button';
 
@@ -13,7 +16,13 @@ interface PageProps {
 }
 
 export default async function EditLabAnalysisPage({ params }: PageProps) {
+  const actor = await getCurrentUser();
+  if (!actor) return notFound();
+  ensureAccess(actor.role, RbacResource.LAB_ANALYSES, 'update');
+
   const { projectId, labAnalysisId } = await params;
+  const project = await getProjectById(actor, projectId);
+  if (!project) return notFound();
 
   const [parameters, labAnalysis, effectiveLimits] = await Promise.all([
     getCoolingWaterQualityParameters(),

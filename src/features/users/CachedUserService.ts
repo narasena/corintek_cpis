@@ -23,7 +23,10 @@ import { ECacheTag } from '../cache/tags';
 import { CACHE_LIFE } from '../cache/life-profiles';
 import { canAccess, RbacResource } from '@/lib/rbac';
 
-// Cached wrappers
+// Cached wrappers.
+// NOTE: these functions never sign avatar URLs. Cached entries outlive the
+// 10-minute URL signature, so signing belongs at the Server Action boundary.
+
 async function getAllUsersCached(actor: IJwtPayload) {
   'use cache';
   cacheTag(ECacheTag.USERS);
@@ -67,6 +70,7 @@ export class CachedUserService {
   }
 
   async getTechniciansList(actor: IJwtPayload) {
+    // Technician responses carry no avatarUrl; nothing to sign.
     return await getTechniciansListCached(actor);
   }
 

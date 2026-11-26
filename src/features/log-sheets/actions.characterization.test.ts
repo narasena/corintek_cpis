@@ -799,6 +799,7 @@ describe('R2 Upload Failure Tests (P1 Critical)', () => {
     beforeEach(() => {
       vi.stubEnv('R2_WORKER_URL', 'https://r2-worker.example.com');
       vi.stubEnv('R2_AUTH_SECRET', 'test-secret');
+      vi.stubEnv('R2_SIGNING_SECRET', 'test-signing-secret');
     });
 
     afterEach(() => {
@@ -944,6 +945,7 @@ describe('R2 Upload Failure Tests (P1 Critical)', () => {
     beforeEach(() => {
       vi.stubEnv('R2_WORKER_URL', 'https://r2-worker.example.com');
       vi.stubEnv('R2_AUTH_SECRET', 'test-secret');
+      vi.stubEnv('R2_SIGNING_SECRET', 'test-signing-secret');
     });
 
     afterEach(() => {
