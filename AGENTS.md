@@ -1,7 +1,5 @@
 # CPIS — Project Agent Rules
 
-> **RESCUE MODE:** 2 Months Behind Schedule | Speed > Perfection | Functionality > Abstraction
-
 ## Stack
 
 - **Core:** Next.js 16 (App Router), React 19, TypeScript 5.9
