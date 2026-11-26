@@ -8,12 +8,14 @@ import {
 import type { IJwtPayload } from '@/@types/auth.type';
 import { canAccess, RbacResource } from '@/lib/rbac';
 import { hashPassword } from '@/features/auth/crypto';
+import { stripR2Signature } from '@/lib/r2-sign';
 import {
   toUserResponse,
   userResponseSelect,
   profileResponseSelect,
   toProfileResponse,
 } from '../utils';
+import { signAvatarUrl } from '@/lib/r2-sign';
 
 function ensureUsersWriteAccess(
   actor: IJwtPayload,
@@ -76,7 +78,7 @@ export async function createUser(
       email: data.email,
       phoneNumber: data.phoneNumber,
       password: hashedPassword,
-      avatarUrl: data.avatarUrl ?? null,
+      avatarUrl: stripR2Signature(data.avatarUrl) ?? null,
       address: data.address ?? null,
       role: data.role as any,
       employmentStatus: data.employmentStatus as any,
@@ -85,7 +87,7 @@ export async function createUser(
     select: userResponseSelect,
   });
 
-  return toUserResponse(user as any);
+  return signAvatarUrl(toUserResponse(user as any));
 }
 
 /**
@@ -125,6 +127,9 @@ export async function updateUser(
   if (data.password) {
     updateData.password = await hashPassword(data.password);
   }
+  if (updateData.avatarUrl) {
+    updateData.avatarUrl = stripR2Signature(updateData.avatarUrl) ?? null;
+  }
 
   const user = await prisma.user.update({
     where: { id },
@@ -136,7 +141,7 @@ export async function updateUser(
     select: userResponseSelect,
   });
 
-  return toUserResponse(user as any);
+  return signAvatarUrl(toUserResponse(user as any));
 }
 
 /**
@@ -198,12 +203,12 @@ export async function updateCurrentUserProfile(
       firstName: data.firstName,
       lastName: data.lastName ?? null,
       phoneNumber: data.phoneNumber,
-      avatarUrl: data.avatarUrl ?? null,
+      avatarUrl: stripR2Signature(data.avatarUrl) ?? null,
     },
     select: profileResponseSelect,
   });
 
-  return toProfileResponse(user);
+  return signAvatarUrl(toProfileResponse(user));
 }
 
 /**

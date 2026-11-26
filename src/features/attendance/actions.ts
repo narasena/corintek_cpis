@@ -1,11 +1,15 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { attendanceListFiltersSchema, supervisorAttendanceFilterSchema } from './types';
+import {
+  attendanceListFiltersSchema,
+  supervisorAttendanceFilterSchema,
+} from './types';
 import * as service from './service';
 import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
 import { uploadToR2 } from '@/lib/r2-upload';
+import { signR2UrlOrNull, signAvatarUrls } from '@/lib/r2-sign';
 
 function getJakartaDateLocal(date: Date) {
   return new Intl.DateTimeFormat('en-CA', {
@@ -22,7 +26,14 @@ function getJakartaDateLocal(date: Date) {
 export const getTodayAttendanceAction = actionFactory.protected(
   async ({ actor }) => {
     const dateLocal = getJakartaDateLocal(new Date());
-    return service.getTodayAttendance(actor.id, dateLocal);
+    const attendance = await service.getTodayAttendance(actor.id, dateLocal);
+    if (!attendance) return attendance;
+
+    return {
+      ...attendance,
+      clockInPhotoUrl: await signR2UrlOrNull(attendance.clockInPhotoUrl),
+      clockOutPhotoUrl: await signR2UrlOrNull(attendance.clockOutPhotoUrl),
+    };
   },
   {
     metadata: {
@@ -134,7 +145,15 @@ export const clockOutAction = actionFactory.protected(
  */
 export const getAttendanceListAction = actionFactory.protected(
   async ({ input, actor }) => {
-    return service.listAttendance(actor, input);
+    const rows = await service.listAttendance(actor, input);
+
+    return Promise.all(
+      rows.map(async row => ({
+        ...row,
+        clockInPhotoUrl: await signR2UrlOrNull(row.clockInPhotoUrl),
+        clockOutPhotoUrl: await signR2UrlOrNull(row.clockOutPhotoUrl),
+      }))
+    );
   },
   {
     schema: attendanceListFiltersSchema,
@@ -166,10 +185,18 @@ export const exportAttendanceCsvAction = actionFactory.protected(
 export const getMyAttendanceHistoryAction = actionFactory.protected(
   async ({ input, actor }) => {
     const filters = attendanceListFiltersSchema.parse(input);
-    return service.listOwnAttendance(
+    const rows = await service.listOwnAttendance(
       actor.id,
       filters.dateFrom,
       filters.dateTo
+    );
+
+    return Promise.all(
+      rows.map(async row => ({
+        ...row,
+        clockInPhotoUrl: await signR2UrlOrNull(row.clockInPhotoUrl),
+        clockOutPhotoUrl: await signR2UrlOrNull(row.clockOutPhotoUrl),
+      }))
     );
   },
   {
@@ -191,7 +218,12 @@ export const getTechniciansForSupervisorAction = actionFactory.protected(
     }
 
     const filters = supervisorAttendanceFilterSchema.parse(input);
-    return service.getTechniciansForSupervisor(actor.id, filters);
+    const result = await service.getTechniciansForSupervisor(actor.id, filters);
+
+    return {
+      ...result,
+      technicians: await signAvatarUrls(result.technicians),
+    };
   },
   {
     schema: supervisorAttendanceFilterSchema,

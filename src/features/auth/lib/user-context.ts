@@ -1,4 +1,5 @@
 import { getCurrentUser, AuthenticationError } from '@/lib/auth-helpers';
+import { signR2UrlOrNull } from '@/lib/r2-sign';
 import { IJwtPayload } from '@/@types/auth.type';
 import { TUserResponse } from '@/@types/user.type';
 import * as authService from '../service';
@@ -19,7 +20,12 @@ export async function getCurrentUserDetails(): Promise<ICurrentUserDetails | nul
 
   // Validate session user status using the centralized auth service
   // and return the standardized response object directly.
-  return authService.validateSessionUser(payload.id);
+  const user = await authService.validateSessionUser(payload.id);
+  if (!user) return null;
+
+  // The session user's avatar is rendered in the sidebar; sign it for the
+  // browser. The stored value stays unsigned.
+  return { ...user, avatarUrl: await signR2UrlOrNull(user.avatarUrl) };
 }
 
 /**

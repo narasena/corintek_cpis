@@ -9,6 +9,7 @@ import { getProjectById } from '@/features/projects/service';
 import { ensureSummaryReport } from '@/features/summary-reports/service';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { ensureAccess, RbacResource } from '@/lib/rbac';
+import { signR2UrlOrNull } from '@/lib/r2-sign';
 
 interface PageProps {
   params: Promise<{ projectId: string; period: string }>;
@@ -22,18 +23,27 @@ function parsePeriod(period: string) {
   return new Date(Date.UTC(year, month - 1, 1));
 }
 
+/** Extension of the URL's path, ignoring any query string (exp/sig). */
+function getPathname(url: string) {
+  try {
+    return new URL(url).pathname.toLowerCase();
+  } catch {
+    return url.split('?')[0].toLowerCase();
+  }
+}
+
 function isPdfUrl(url: string) {
-  return url.toLowerCase().endsWith('.pdf');
+  return getPathname(url).endsWith('.pdf');
 }
 
 function isImageUrl(url: string) {
-  const lower = url.toLowerCase();
+  const path = getPathname(url);
   return (
-    lower.endsWith('.png') ||
-    lower.endsWith('.jpg') ||
-    lower.endsWith('.jpeg') ||
-    lower.endsWith('.webp') ||
-    lower.endsWith('.gif')
+    path.endsWith('.png') ||
+    path.endsWith('.jpg') ||
+    path.endsWith('.jpeg') ||
+    path.endsWith('.webp') ||
+    path.endsWith('.gif')
   );
 }
 
@@ -61,12 +71,15 @@ export default async function SummaryReportAttachmentsPrintPage({
   if (!project || !summaryReport) return notFound();
 
   const periodLabel = format(periodDate, 'MMMM yyyy', { locale: idLocale });
-  const attachments = [
-    { label: 'Data Temuan', url: summaryReport.dataTemuanUrl },
-    { label: 'Data Blowdown Silang', url: summaryReport.dataBlowdownUrl },
-    { label: 'Data Suhu', url: summaryReport.dataSuhuUrl },
-    { label: 'Data Surat Jalan', url: summaryReport.dataSuratJalanUrl },
-  ];
+  // Access has been asserted above; only now may the attachments be signed.
+  const attachments = await Promise.all(
+    [
+      { label: 'Data Temuan', url: summaryReport.dataTemuanUrl },
+      { label: 'Data Blowdown Silang', url: summaryReport.dataBlowdownUrl },
+      { label: 'Data Suhu', url: summaryReport.dataSuhuUrl },
+      { label: 'Data Surat Jalan', url: summaryReport.dataSuratJalanUrl },
+    ].map(async item => ({ ...item, url: await signR2UrlOrNull(item.url) }))
+  );
   const hasAnyAttachment = attachments.some(a => !!a.url);
 
   return (

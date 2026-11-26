@@ -22,6 +22,7 @@ import { uploadUserAvatar } from './services/user-media';
 import { revalidatePath } from 'next/cache';
 import { actionFactory } from '@/features/auth/di';
 import { RbacResource } from '@/lib/rbac';
+import { signAvatarUrl, signAvatarUrls, signR2Url } from '@/lib/r2-sign';
 import { z } from 'zod/v4';
 
 const USER_PATHS = ['/users', '/test/users'] as const;
@@ -59,7 +60,9 @@ export const createUserAction = actionFactory.protected(
  */
 export const getAllUsersAction = actionFactory.protected(
   async ({ actor }) => {
-    return getAllUsers(actor);
+    // Sign at the action boundary: query results may be served from cache,
+    // and a cached signature would expire.
+    return signAvatarUrls(await getAllUsers(actor));
   },
   {
     metadata: {
@@ -73,6 +76,7 @@ export const getAllUsersAction = actionFactory.protected(
  */
 export const getTechniciansListAction = actionFactory.protected(
   async ({ actor }) => {
+    // Technician responses carry no avatarUrl; nothing to sign.
     return getTechniciansList(actor);
   },
   {
@@ -89,7 +93,7 @@ export const getUserByIdAction = actionFactory.protected(
   async ({ input, actor }) => {
     const user = await getUserById(actor, input);
     if (!user) throw new Error('Pengguna tidak ditemukan');
-    return user;
+    return signAvatarUrl(user);
   },
   {
     schema: z.string().uuid(),
@@ -140,7 +144,7 @@ export const deleteUserAction = actionFactory.protected(
 
 export const getCurrentUserProfileAction = actionFactory.protected(
   async ({ actor }) => {
-    return getCurrentUserProfile(actor.id);
+    return signAvatarUrl(await getCurrentUserProfile(actor.id));
   }
 );
 
@@ -160,7 +164,8 @@ export const uploadAvatarAction = actionFactory.protected(
     const file = formData.get('file') as File | null;
     const url = await uploadUserAvatar(actor.id, file);
 
-    return { url };
+    // Signed for immediate browser rendering; the stored value is unsigned.
+    return { url: await signR2Url(url) };
   }
 ) as (
   formData: FormData
